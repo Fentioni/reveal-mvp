@@ -32,7 +32,7 @@
     }
 
     html {
-      scroll-behaviour: smooth;
+      scroll-behavior: smooth;
     }
 
     body {
@@ -80,7 +80,10 @@
 
     .builder-layout {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+      grid-template-columns:
+        minmax(0, 1fr)
+        minmax(360px, 0.85fr);
+
       gap: 32px;
       align-items: start;
     }
@@ -89,11 +92,18 @@
       background: var(--card-bg);
       border-radius: 20px;
       padding: 30px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.07);
+
+      box-shadow:
+        0 12px 35px
+        rgba(0,0,0,0.07);
     }
 
     .section-heading {
-      font-family: Georgia, "Times New Roman", serif;
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
       font-size: 1.55rem;
       font-weight: normal;
       margin: 0 0 26px;
@@ -111,6 +121,7 @@
 
     .field-help {
       margin: -2px 0 9px;
+
       font-size: 0.78rem;
       line-height: 1.5;
       color: #81786d;
@@ -119,18 +130,29 @@
     input,
     textarea {
       width: 100%;
-      border: 1px solid #d6d0c5;
+
+      border:
+        1px solid #d6d0c5;
+
       border-radius: 10px;
-      padding: 14px 15px;
+
+      padding:
+        14px 15px;
+
       font: inherit;
       color: var(--text);
-      background: #fffdf9;
+
+      background:
+        #fffdf9;
     }
 
     input:focus,
     textarea:focus {
-      outline: 2px solid #d8ac55;
-      border-color: transparent;
+      outline:
+        2px solid #d8ac55;
+
+      border-color:
+        transparent;
     }
 
     textarea {
@@ -151,22 +173,43 @@
 
     .warning-box {
       margin-top: 10px;
-      background: #fff7e6;
-      border: 1px solid #ead4a4;
+
+      background:
+        #fff7e6;
+
+      border:
+        1px solid #ead4a4;
+
       border-radius: 10px;
-      padding: 12px 14px;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      color: #6b5733;
+
+      padding:
+        12px 14px;
+
+      font-size:
+        0.78rem;
+
+      line-height:
+        1.5;
+
+      color:
+        #6b5733;
     }
 
     .image-preview-wrap {
       display: none;
+
       margin-top: 14px;
-      border: 1px solid #ded7ca;
-      border-radius: 13px;
+
+      border:
+        1px solid #ded7ca;
+
+      border-radius:
+        13px;
+
       overflow: hidden;
-      background: #f4f0e8;
+
+      background:
+        #f4f0e8;
     }
 
     .image-preview-wrap.visible {
@@ -181,47 +224,115 @@
     }
 
     .image-caption {
-      padding: 9px 12px;
-      background: #faf8f3;
-      color: #776e63;
-      font-size: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+
+      padding:
+        9px 12px;
+
+      background:
+        #faf8f3;
+
+      color:
+        #776e63;
+
+      font-size:
+        0.75rem;
+    }
+
+    .remove-image-button {
+      border: 0;
+      padding: 5px 8px;
+      border-radius: 7px;
+
+      background:
+        #eee8dd;
+
+      color:
+        #5c5349;
+
+      cursor:
+        pointer;
+
+      font-size:
+        0.72rem;
     }
 
     .error-message {
       display: none;
-      background: #fff0ed;
-      border: 1px solid #edc3ba;
-      border-radius: 10px;
-      color: #8b2f22;
-      padding: 13px 15px;
-      margin-bottom: 20px;
-      font-size: 0.85rem;
-      line-height: 1.5;
+
+      background:
+        #fff0ed;
+
+      border:
+        1px solid #edc3ba;
+
+      border-radius:
+        10px;
+
+      color:
+        #8b2f22;
+
+      padding:
+        13px 15px;
+
+      margin-bottom:
+        20px;
+
+      font-size:
+        0.85rem;
+
+      line-height:
+        1.5;
     }
 
     .error-message.visible {
       display: block;
     }
 
-    .preview-button {
+    .review-button {
       width: 100%;
+
       border: none;
       border-radius: 999px;
-      padding: 17px 24px;
-      margin-top: 10px;
+
+      padding:
+        17px 24px;
+
+      margin-top:
+        10px;
+
       cursor: pointer;
-      background: linear-gradient(135deg, #f4d98b, #b47b27);
-      color: #21180d;
-      font-size: 1rem;
-      font-weight: 700;
-      box-shadow: 0 11px 27px rgba(116,79,23,0.2);
+
+      background:
+        linear-gradient(
+          135deg,
+          #f4d98b,
+          #b47b27
+        );
+
+      color:
+        #21180d;
+
+      font-size:
+        1rem;
+
+      font-weight:
+        700;
+
+      box-shadow:
+        0 11px 27px
+        rgba(116,79,23,0.2);
     }
 
-    .preview-button:hover {
-      transform: translateY(-1px);
+    .review-button:hover {
+      transform:
+        translateY(-1px);
     }
 
-    .preview-button:disabled {
+    .review-button:disabled {
       opacity: 0.55;
       cursor: wait;
       transform: none;
@@ -229,13 +340,23 @@
 
     .form-note {
       text-align: center;
-      margin-top: 14px;
-      font-size: 0.75rem;
-      color: #867d72;
-      line-height: 1.5;
+
+      margin-top:
+        14px;
+
+      font-size:
+        0.75rem;
+
+      color:
+        #867d72;
+
+      line-height:
+        1.5;
     }
 
-    /* LIVE PREVIEW */
+
+
+    /* LIVE TEMPLATE PREVIEW */
 
     .preview-column {
       position: sticky;
@@ -244,11 +365,21 @@
 
     .preview-label {
       font-size: 0.72rem;
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-weight: 700;
-      color: #8a7964;
-      margin: 0 0 10px 4px;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.18em;
+
+      font-weight:
+        700;
+
+      color:
+        #8a7964;
+
+      margin:
+        0 0 10px 4px;
     }
 
     .preview-shell {
@@ -260,62 +391,118 @@
           #100c08 100%
         );
 
-      border-radius: 24px;
-      padding: 28px 22px 26px;
+      border-radius:
+        24px;
+
+      padding:
+        28px 22px 26px;
+
       color: white;
-      box-shadow: 0 20px 55px rgba(0,0,0,0.18);
+
+      box-shadow:
+        0 20px 55px
+        rgba(0,0,0,0.18);
+
       overflow: hidden;
       position: relative;
     }
 
     .preview-shell::before {
       content: "";
+
       position: absolute;
+
       width: 220px;
       height: 220px;
-      border-radius: 50%;
+
+      border-radius:
+        50%;
+
       top: -90px;
       right: -90px;
-      background: rgba(216,172,85,0.12);
+
+      background:
+        rgba(216,172,85,0.12);
     }
 
     .preview-top {
       text-align: center;
       position: relative;
       z-index: 2;
-      margin-bottom: 22px;
+
+      margin-bottom:
+        22px;
     }
 
     .preview-small-heading {
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
-      font-size: 0.62rem;
-      color: #f3dc9a;
-      margin-bottom: 9px;
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.18em;
+
+      font-size:
+        0.62rem;
+
+      color:
+        #f3dc9a;
+
+      margin-bottom:
+        9px;
     }
 
     .preview-surprise-text {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 1.15rem;
-      color: #f5e9d0;
-      margin-bottom: 3px;
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size:
+        1.15rem;
+
+      color:
+        #f5e9d0;
+
+      margin-bottom:
+        3px;
     }
 
     .preview-event-name {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2rem, 4vw, 3rem);
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size:
+        clamp(
+          2rem,
+          4vw,
+          3rem
+        );
+
       line-height: 1;
       font-weight: normal;
       margin: 0;
-      overflow-wrap: anywhere;
+
+      overflow-wrap:
+        anywhere;
     }
 
     .live-image-wrap {
       display: none;
-      margin-bottom: 20px;
-      border-radius: 15px;
-      overflow: hidden;
-      box-shadow: 0 16px 35px rgba(0,0,0,0.28);
+
+      margin-bottom:
+        20px;
+
+      border-radius:
+        15px;
+
+      overflow:
+        hidden;
+
+      box-shadow:
+        0 16px 35px
+        rgba(0,0,0,0.28);
     }
 
     .live-image-wrap.visible {
@@ -332,6 +519,7 @@
     .preview-ticket {
       position: relative;
       z-index: 2;
+
       background:
         linear-gradient(
           135deg,
@@ -339,32 +527,62 @@
           var(--cream) 55%,
           #f3e1b8 100%
         );
-      color: #2c241b;
-      border-radius: 17px;
-      padding: 27px 24px;
-      box-shadow: 0 20px 45px rgba(0,0,0,0.32);
+
+      color:
+        #2c241b;
+
+      border-radius:
+        17px;
+
+      padding:
+        27px 24px;
+
+      box-shadow:
+        0 20px 45px
+        rgba(0,0,0,0.32);
     }
 
     .preview-ticket-label {
-      font-size: 0.62rem;
-      font-weight: 700;
-      letter-spacing: 0.22em;
-      color: #98702c;
-      margin-bottom: 11px;
+      font-size:
+        0.62rem;
+
+      font-weight:
+        700;
+
+      letter-spacing:
+        0.22em;
+
+      color:
+        #98702c;
+
+      margin-bottom:
+        11px;
     }
 
     .preview-ticket-title {
-      font-family: Georgia, "Times New Roman", serif;
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
       font-weight: normal;
-      font-size: 2rem;
+
+      font-size:
+        2rem;
+
       line-height: 1;
-      margin: 0 0 20px;
-      overflow-wrap: anywhere;
+
+      margin:
+        0 0 20px;
+
+      overflow-wrap:
+        anywhere;
     }
 
     .preview-divider {
       height: 1px;
       margin: 18px 0;
+
       background:
         repeating-linear-gradient(
           to right,
@@ -377,91 +595,166 @@
 
     .preview-details {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 17px;
-      text-align: left;
+
+      grid-template-columns:
+        1fr 1fr;
+
+      gap:
+        17px;
+
+      text-align:
+        left;
     }
 
     .preview-detail-label {
       display: block;
-      text-transform: uppercase;
-      font-size: 0.58rem;
-      letter-spacing: 0.1em;
-      color: #756a59;
-      margin-bottom: 4px;
+
+      text-transform:
+        uppercase;
+
+      font-size:
+        0.58rem;
+
+      letter-spacing:
+        0.1em;
+
+      color:
+        #756a59;
+
+      margin-bottom:
+        4px;
     }
 
     .preview-detail-value {
       display: block;
-      font-size: 0.82rem;
-      line-height: 1.4;
-      font-weight: 700;
-      overflow-wrap: anywhere;
+
+      font-size:
+        0.82rem;
+
+      line-height:
+        1.4;
+
+      font-weight:
+        700;
+
+      overflow-wrap:
+        anywhere;
     }
 
     .live-message {
-      margin-top: 20px;
-      padding: 18px;
-      border-radius: 14px;
-      background: rgba(255,255,255,0.06);
-      border: 1px solid rgba(243,220,154,0.18);
-      text-align: center;
+      margin-top:
+        20px;
+
+      padding:
+        18px;
+
+      border-radius:
+        14px;
+
+      background:
+        rgba(255,255,255,0.06);
+
+      border:
+        1px solid
+        rgba(243,220,154,0.18);
+
+      text-align:
+        center;
     }
 
     .live-message-title {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: 1rem;
-      margin-bottom: 7px;
+      font-family:
+        Georgia,
+        "Times New Roman",
+        serif;
+
+      font-size:
+        1rem;
+
+      margin-bottom:
+        7px;
     }
 
     .live-message-text {
       margin: 0;
-      font-size: 0.78rem;
-      line-height: 1.55;
-      color: #ddd3c2;
-      white-space: pre-wrap;
-      overflow-wrap: anywhere;
+
+      font-size:
+        0.78rem;
+
+      line-height:
+        1.55;
+
+      color:
+        #ddd3c2;
+
+      white-space:
+        pre-wrap;
+
+      overflow-wrap:
+        anywhere;
     }
 
     .preview-explanation {
-      margin: 14px 3px 0;
-      font-size: 0.75rem;
-      line-height: 1.5;
-      color: #756d63;
+      margin:
+        14px 3px 0;
+
+      font-size:
+        0.75rem;
+
+      line-height:
+        1.5;
+
+      color:
+        #756d63;
     }
 
     @media (max-width: 900px) {
+
       .builder-layout {
-        grid-template-columns: 1fr;
+        grid-template-columns:
+          1fr;
       }
 
       .preview-column {
-        position: static;
+        position:
+          static;
       }
+
     }
 
     @media (max-width: 600px) {
+
       .page {
-        padding: 30px 16px 60px;
+        padding:
+          30px 16px 60px;
       }
 
       .form-card {
-        padding: 22px;
+        padding:
+          22px;
       }
 
       .two-columns {
-        grid-template-columns: 1fr;
-        gap: 0;
+        grid-template-columns:
+          1fr;
+
+        gap:
+          0;
       }
 
       .preview-shell {
-        border-radius: 20px;
-        padding: 23px 17px;
+        border-radius:
+          20px;
+
+        padding:
+          23px 17px;
       }
 
       .preview-ticket {
-        padding: 23px 20px;
+        padding:
+          23px 20px;
       }
+
     }
   </style>
 </head>
@@ -469,6 +762,7 @@
 <body>
 
   <main class="page">
+
 
     <header class="page-header">
 
@@ -481,17 +775,19 @@
       </h1>
 
       <p class="intro">
-        Turn an e-ticket, trip or experience into something special to open.
-        Your preview updates as you create it.
+        Turn an e-ticket, trip or experience into something
+        special to open. Your template preview updates as
+        you create it.
       </p>
 
     </header>
 
 
+
     <div class="builder-layout">
 
 
-      <!-- CREATION FORM -->
+      <!-- FORM -->
 
       <section class="form-card">
 
@@ -499,10 +795,12 @@
           Tell us about the surprise
         </h2>
 
+
         <div
           id="errorMessage"
           class="error-message"
         ></div>
+
 
         <form id="revealForm">
 
@@ -518,7 +816,6 @@
               name="recipient"
               type="text"
               placeholder="Chloe"
-              autocomplete="off"
               required
             >
 
@@ -536,7 +833,6 @@
               name="sender"
               type="text"
               placeholder="Michael"
-              autocomplete="off"
               required
             >
 
@@ -554,12 +850,14 @@
               name="event"
               type="text"
               placeholder="A Night at the Theatre"
-              autocomplete="off"
               required
             >
 
           </div>
 
+
+
+          <!-- IMAGE -->
 
           <div class="field">
 
@@ -568,8 +866,8 @@
             </label>
 
             <p class="field-help">
-              Optional. Add an event image, poster, booking confirmation
-              or cropped screenshot.
+              Optional. Add an event image, poster,
+              booking confirmation or cropped screenshot.
             </p>
 
             <input
@@ -580,9 +878,11 @@
             >
 
             <div class="warning-box">
-              Avoid uploading QR codes, barcodes or other information
-              that could allow somebody else to use the real ticket.
+              Avoid uploading visible QR codes, barcodes
+              or other information that could allow
+              somebody else to use the real ticket.
             </div>
+
 
             <div
               id="imagePreviewWrap"
@@ -592,20 +892,33 @@
               <img
                 id="imagePreview"
                 class="image-preview"
-                alt="Selected image preview"
+                alt="Selected image"
               >
 
-              <div
-                id="imageCaption"
-                class="image-caption"
-              ></div>
+              <div class="image-caption">
+
+                <span id="imageCaption">
+                  Selected image
+                </span>
+
+                <button
+                  id="removeImageButton"
+                  class="remove-image-button"
+                  type="button"
+                >
+                  Remove
+                </button>
+
+              </div>
 
             </div>
 
           </div>
 
 
+
           <div class="two-columns">
+
 
             <div class="field">
 
@@ -637,7 +950,9 @@
 
             </div>
 
+
           </div>
+
 
 
           <div class="field">
@@ -651,10 +966,10 @@
               name="venue"
               type="text"
               placeholder="The Grand Theatre, London"
-              autocomplete="off"
             >
 
           </div>
+
 
 
           <div class="field">
@@ -668,10 +983,10 @@
               name="admit"
               type="text"
               placeholder="Chloe + 1"
-              autocomplete="off"
             >
 
           </div>
+
 
 
           <div class="field">
@@ -689,6 +1004,7 @@
           </div>
 
 
+
           <div class="field">
 
             <label for="ticketUrl">
@@ -696,8 +1012,8 @@
             </label>
 
             <p class="field-help">
-              Optional. This will only be shown to the recipient after
-              the reveal.
+              Optional. This will only become available
+              in the paid recipient reveal.
             </p>
 
             <input
@@ -710,20 +1026,21 @@
           </div>
 
 
+
           <button
-            id="submitButton"
-            class="preview-button"
+            id="reviewButton"
+            class="review-button"
             type="submit"
           >
-            See the actual reveal
+            Review my reveal
           </button>
 
         </form>
 
 
         <div class="form-note">
-          This is still prototype mode. Nothing has been purchased or
-          made public.
+          The full animated recipient reveal is only
+          unlocked after payment.
         </div>
 
       </section>
@@ -737,6 +1054,7 @@
         <div class="preview-label">
           Live template preview
         </div>
+
 
         <div class="preview-shell">
 
@@ -761,6 +1079,7 @@
           </div>
 
 
+
           <div
             id="liveImageWrap"
             class="live-image-wrap"
@@ -775,6 +1094,7 @@
           </div>
 
 
+
           <article class="preview-ticket">
 
             <div class="preview-ticket-label">
@@ -787,7 +1107,6 @@
             >
               A Night at the Theatre
             </h3>
-
 
             <div class="preview-divider"></div>
 
@@ -890,9 +1209,11 @@
 
               </div>
 
+
             </div>
 
           </article>
+
 
 
           <div class="live-message">
@@ -910,25 +1231,30 @@
 
           </div>
 
+
         </div>
 
 
         <p class="preview-explanation">
-          This is the design preview. The next screen lets you experience
-          the reveal exactly as the recipient will see it.
+          This is a design preview only. The full opening
+          animation and recipient experience are not shown
+          before purchase.
         </p>
 
       </aside>
+
 
     </div>
 
   </main>
 
 
+
   <script>
 
     const form =
       document.getElementById("revealForm");
+
 
     const recipientInput =
       document.getElementById("recipient");
@@ -960,8 +1286,9 @@
     const imageInput =
       document.getElementById("eventImage");
 
-    const submitButton =
-      document.getElementById("submitButton");
+
+    const reviewButton =
+      document.getElementById("reviewButton");
 
     const errorMessage =
       document.getElementById("errorMessage");
@@ -1010,6 +1337,173 @@
     const imageCaption =
       document.getElementById("imageCaption");
 
+    const removeImageButton =
+      document.getElementById("removeImageButton");
+
+
+
+    function getDraft() {
+
+      try {
+
+        const stored =
+          sessionStorage.getItem(
+            "revealDraft"
+          );
+
+
+        if (!stored) {
+          return null;
+        }
+
+
+        return JSON.parse(stored);
+
+      } catch {
+
+        return null;
+      }
+
+    }
+
+
+
+    function saveDraft() {
+
+      const draft = {
+
+        recipient:
+          recipientInput.value,
+
+        sender:
+          senderInput.value,
+
+        event:
+          eventInput.value,
+
+        date:
+          dateInput.value,
+
+        time:
+          timeInput.value,
+
+        venue:
+          venueInput.value,
+
+        admit:
+          admitInput.value,
+
+        message:
+          messageInput.value,
+
+        ticketUrl:
+          ticketUrlInput.value
+
+      };
+
+
+      sessionStorage.setItem(
+        "revealDraft",
+        JSON.stringify(draft)
+      );
+
+    }
+
+
+
+    function restoreDraft() {
+
+      const draft =
+        getDraft();
+
+
+      if (!draft) {
+
+        restoreStoredImage();
+
+        return;
+      }
+
+
+      recipientInput.value =
+        draft.recipient || "";
+
+      senderInput.value =
+        draft.sender || "";
+
+      eventInput.value =
+        draft.event || "";
+
+      dateInput.value =
+        draft.date || "";
+
+      timeInput.value =
+        draft.time || "";
+
+      venueInput.value =
+        draft.venue || "";
+
+      admitInput.value =
+        draft.admit || "";
+
+      messageInput.value =
+        draft.message || "";
+
+      ticketUrlInput.value =
+        draft.ticketUrl || "";
+
+
+      restoreStoredImage();
+
+      updateLivePreview();
+
+    }
+
+
+
+    function restoreStoredImage() {
+
+      const storedImage =
+        sessionStorage.getItem(
+          "revealImage"
+        );
+
+
+      if (!storedImage) {
+
+        imagePreviewWrap.classList.remove(
+          "visible"
+        );
+
+        liveImageWrap.classList.remove(
+          "visible"
+        );
+
+        return;
+      }
+
+
+      imagePreview.src =
+        storedImage;
+
+      liveImage.src =
+        storedImage;
+
+
+      imageCaption.textContent =
+        "Saved image";
+
+
+      imagePreviewWrap.classList.add(
+        "visible"
+      );
+
+      liveImageWrap.classList.add(
+        "visible"
+      );
+
+    }
+
 
 
     function valueOrFallback(
@@ -1025,15 +1519,14 @@
         return fallback;
       }
 
+
       return value.trim();
 
     }
 
 
 
-    function formatDate(
-      value
-    ) {
+    function formatDate(value) {
 
       if (!value) {
 
@@ -1043,8 +1536,7 @@
 
       const date =
         new Date(
-          value +
-          "T12:00:00"
+          value + "T12:00:00"
         );
 
 
@@ -1072,9 +1564,7 @@
 
 
 
-    function formatTime(
-      value
-    ) {
+    function formatTime(value) {
 
       if (!value) {
 
@@ -1157,38 +1647,30 @@
       liveEventHeading.textContent =
         eventName;
 
-
       liveTicketTitle.textContent =
         eventName;
-
 
       liveDate.textContent =
         formatDate(
           dateInput.value
         );
 
-
       liveTime.textContent =
         formatTime(
           timeInput.value
         );
 
-
       liveVenue.textContent =
         venue;
-
 
       liveAdmit.textContent =
         admit;
 
-
       liveRecipient.textContent =
         recipient;
 
-
       liveSender.textContent =
         sender;
-
 
       liveMessage.textContent =
         message;
@@ -1198,6 +1680,7 @@
 
 
     const liveInputs = [
+
       recipientInput,
       senderInput,
       eventInput,
@@ -1205,8 +1688,11 @@
       timeInput,
       venueInput,
       admitInput,
-      messageInput
+      messageInput,
+      ticketUrlInput
+
     ];
+
 
 
     liveInputs.forEach(
@@ -1214,12 +1700,23 @@
 
         input.addEventListener(
           "input",
-          updateLivePreview
+          function() {
+
+            updateLivePreview();
+            saveDraft();
+
+          }
         );
+
 
         input.addEventListener(
           "change",
-          updateLivePreview
+          function() {
+
+            updateLivePreview();
+            saveDraft();
+
+          }
         );
 
       }
@@ -1229,7 +1726,7 @@
 
     imageInput.addEventListener(
       "change",
-      function() {
+      async function() {
 
         hideError();
 
@@ -1239,31 +1736,16 @@
 
 
         if (!file) {
-
-          imagePreviewWrap.classList.remove(
-            "visible"
-          );
-
-          liveImageWrap.classList.remove(
-            "visible"
-          );
-
-          imagePreview.removeAttribute(
-            "src"
-          );
-
-          liveImage.removeAttribute(
-            "src"
-          );
-
           return;
         }
 
 
         const permittedTypes = [
+
           "image/jpeg",
           "image/png",
           "image/webp"
+
         ];
 
 
@@ -1302,35 +1784,80 @@
         }
 
 
-        const reader =
-          new FileReader();
+        try {
+
+          const compressed =
+            await compressImage(file);
 
 
-        reader.onload =
-          function(event) {
-
-            imagePreview.src =
-              event.target.result;
-
-            liveImage.src =
-              event.target.result;
-
-            imageCaption.textContent =
-              file.name;
-
-            imagePreviewWrap.classList.add(
-              "visible"
-            );
-
-            liveImageWrap.classList.add(
-              "visible"
-            );
-
-          };
+          sessionStorage.setItem(
+            "revealImage",
+            compressed
+          );
 
 
-        reader.readAsDataURL(
-          file
+          imagePreview.src =
+            compressed;
+
+          liveImage.src =
+            compressed;
+
+
+          imageCaption.textContent =
+            file.name;
+
+
+          imagePreviewWrap.classList.add(
+            "visible"
+          );
+
+          liveImageWrap.classList.add(
+            "visible"
+          );
+
+
+          saveDraft();
+
+        } catch {
+
+          showError(
+            "That image could not be processed. Please try another."
+          );
+
+        }
+
+      }
+    );
+
+
+
+    removeImageButton.addEventListener(
+      "click",
+      function() {
+
+        sessionStorage.removeItem(
+          "revealImage"
+        );
+
+
+        imageInput.value = "";
+
+
+        imagePreview.removeAttribute(
+          "src"
+        );
+
+        liveImage.removeAttribute(
+          "src"
+        );
+
+
+        imagePreviewWrap.classList.remove(
+          "visible"
+        );
+
+        liveImageWrap.classList.remove(
+          "visible"
         );
 
       }
@@ -1340,169 +1867,39 @@
 
     form.addEventListener(
       "submit",
-      async function(event) {
+      function(event) {
 
         event.preventDefault();
 
         hideError();
 
 
-        submitButton.disabled =
-          true;
+        if (!form.checkValidity()) {
 
-        submitButton.textContent =
-          "Preparing your reveal...";
+          form.reportValidity();
 
-
-        try {
-
-          const draft = {
-
-            recipient:
-              recipientInput.value,
-
-            sender:
-              senderInput.value,
-
-            event:
-              eventInput.value,
-
-            date:
-              dateInput.value,
-
-            time:
-              timeInput.value,
-
-            venue:
-              venueInput.value,
-
-            admit:
-              admitInput.value,
-
-            message:
-              messageInput.value,
-
-            ticketUrl:
-              ticketUrlInput.value
-
-          };
-
-
-          sessionStorage.setItem(
-            "revealDraft",
-            JSON.stringify(
-              draft
-            )
-          );
-
-
-          const imageFile =
-            imageInput.files[0];
-
-
-          if (imageFile) {
-
-            const compressedImage =
-              await compressImage(
-                imageFile
-              );
-
-
-            sessionStorage.setItem(
-              "revealImage",
-              compressedImage
-            );
-
-          }
-
-
-          const params =
-            new URLSearchParams();
-
-
-          params.set(
-            "recipient",
-            recipientInput.value
-          );
-
-
-          params.set(
-            "sender",
-            senderInput.value
-          );
-
-
-          params.set(
-            "event",
-            eventInput.value
-          );
-
-
-          params.set(
-            "date",
-            dateInput.value
-          );
-
-
-          params.set(
-            "time",
-            timeInput.value
-          );
-
-
-          params.set(
-            "venue",
-            venueInput.value
-          );
-
-
-          params.set(
-            "admit",
-            admitInput.value
-          );
-
-
-          params.set(
-            "message",
-            messageInput.value
-          );
-
-
-          params.set(
-            "ticketUrl",
-            ticketUrlInput.value
-          );
-
-
-          window.location.href =
-            "reveal.html?" +
-            params.toString();
-
-        } catch (error) {
-
-          showError(
-            error.message ||
-            "Something went wrong while preparing the preview."
-          );
-
-
-          submitButton.disabled =
-            false;
-
-
-          submitButton.textContent =
-            "See the actual reveal";
-
+          return;
         }
+
+
+        saveDraft();
+
+
+        sessionStorage.setItem(
+          "revealStatus",
+          "draft"
+        );
+
+
+        window.location.href =
+          "reveal.html";
 
       }
     );
 
 
 
-    function compressImage(
-      file
-    ) {
+    function compressImage(file) {
 
       return new Promise(
         function(resolve, reject) {
@@ -1570,7 +1967,6 @@
                   canvas.width =
                     width;
 
-
                   canvas.height =
                     height;
 
@@ -1613,15 +2009,7 @@
 
 
               image.onerror =
-                function() {
-
-                  reject(
-                    new Error(
-                      "The selected image could not be processed."
-                    )
-                  );
-
-                };
+                reject;
 
 
               image.src =
@@ -1631,15 +2019,7 @@
 
 
           reader.onerror =
-            function() {
-
-              reject(
-                new Error(
-                  "The selected image could not be read."
-                )
-              );
-
-            };
+            reject;
 
 
           reader.readAsDataURL(
@@ -1653,9 +2033,7 @@
 
 
 
-    function showError(
-      message
-    ) {
+    function showError(message) {
 
       errorMessage.textContent =
         message;
@@ -1664,12 +2042,6 @@
       errorMessage.classList.add(
         "visible"
       );
-
-
-      errorMessage.scrollIntoView({
-        behaviour: "smooth",
-        block: "center"
-      });
 
     }
 
@@ -1688,6 +2060,8 @@
     }
 
 
+
+    restoreDraft();
 
     updateLivePreview();
 
