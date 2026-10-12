@@ -10,7 +10,6 @@
   <style>
     :root {
       --bg-dark: #17120c;
-      --bg-mid: #2a2117;
       --gold: #d8ac55;
       --gold-light: #f3dc9a;
       --cream: #fff8e9;
@@ -90,8 +89,7 @@
 
     .reveal-button {
       border: 1px solid rgba(255,255,255,0.25);
-      background:
-        linear-gradient(135deg, #f4d98b, #b47b27);
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
       color: #20170d;
       border-radius: 999px;
       padding: 17px 34px;
@@ -103,60 +101,6 @@
       box-shadow:
         0 15px 40px rgba(0,0,0,0.32),
         inset 0 1px 0 rgba(255,255,255,0.65);
-      transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-    }
-
-    .reveal-button:hover {
-      transform: translateY(-2px);
-      box-shadow:
-        0 19px 50px rgba(0,0,0,0.38),
-        inset 0 1px 0 rgba(255,255,255,0.65);
-    }
-
-    .reveal-button:active {
-      transform: translateY(1px);
-    }
-
-    .sparkle {
-      position: absolute;
-      border-radius: 50%;
-      background: var(--gold-light);
-      box-shadow: 0 0 14px rgba(243,220,154,0.8);
-      opacity: 0.7;
-      animation: drift 4s ease-in-out infinite alternate;
-    }
-
-    .sparkle.one {
-      width: 5px;
-      height: 5px;
-      top: 18%;
-      left: 15%;
-    }
-
-    .sparkle.two {
-      width: 8px;
-      height: 8px;
-      top: 28%;
-      right: 16%;
-      animation-delay: 0.7s;
-    }
-
-    .sparkle.three {
-      width: 4px;
-      height: 4px;
-      bottom: 20%;
-      left: 25%;
-      animation-delay: 1.3s;
-    }
-
-    .sparkle.four {
-      width: 6px;
-      height: 6px;
-      bottom: 25%;
-      right: 23%;
-      animation-delay: 2s;
     }
 
     .reveal-screen {
@@ -185,7 +129,6 @@
       letter-spacing: 0.2em;
       font-size: 0.72rem;
       color: var(--gold-light);
-      margin-top: 10px;
       margin-bottom: 12px;
     }
 
@@ -201,15 +144,13 @@
       line-height: 1;
       margin: 0 0 32px;
       font-weight: normal;
-      color: white;
     }
 
     .ticket {
       position: relative;
       margin: 0 auto;
       width: min(620px, 100%);
-      background:
-        linear-gradient(135deg, #fffdf6 0%, var(--cream) 55%, #f3e1b8 100%);
+      background: linear-gradient(135deg, #fffdf6, var(--cream), #f3e1b8);
       color: var(--ink);
       border-radius: 18px;
       padding: 40px 34px 32px;
@@ -217,45 +158,7 @@
         0 26px 70px rgba(0,0,0,0.38),
         0 0 0 1px rgba(216,172,85,0.35);
       overflow: hidden;
-      transform-origin: center;
       animation: ticketReveal 0.9s cubic-bezier(.18,.89,.32,1.28) both;
-    }
-
-    .ticket::before,
-    .ticket::after {
-      content: "";
-      position: absolute;
-      top: 52%;
-      transform: translateY(-50%);
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: #17120c;
-    }
-
-    .ticket::before {
-      left: -14px;
-    }
-
-    .ticket::after {
-      right: -14px;
-    }
-
-    .ticket-shine {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      background:
-        linear-gradient(
-          120deg,
-          transparent 0%,
-          transparent 35%,
-          rgba(255,255,255,0.7) 47%,
-          transparent 58%,
-          transparent 100%
-        );
-      transform: translateX(-120%);
-      animation: shine 1.4s 0.6s ease forwards;
     }
 
     .ticket-label {
@@ -295,10 +198,6 @@
       font-family: Arial, Helvetica, sans-serif;
     }
 
-    .detail {
-      min-width: 0;
-    }
-
     .detail-label {
       display: block;
       text-transform: uppercase;
@@ -335,6 +234,7 @@
       line-height: 1.65;
       margin: 0;
       color: #ddd3c2;
+      white-space: pre-wrap;
     }
 
     .cta-section {
@@ -363,18 +263,11 @@
       border-radius: 999px;
       min-width: 210px;
       padding: 16px 28px;
-      background:
-        linear-gradient(135deg, #f4d98b, #b47b27);
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
       color: #20170d;
       font-family: Arial, Helvetica, sans-serif;
       font-size: 1rem;
       font-weight: 700;
-      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
-      transition: transform 0.2s ease;
-    }
-
-    .ticket-link:hover {
-      transform: translateY(-2px);
     }
 
     .disclaimer {
@@ -406,49 +299,25 @@
       }
     }
 
-    @keyframes drift {
-      from {
-        transform: translateY(-5px) scale(0.8);
-        opacity: 0.35;
-      }
-      to {
-        transform: translateY(7px) scale(1.3);
-        opacity: 1;
-      }
-    }
-
     @keyframes ticketReveal {
       from {
         opacity: 0;
-        transform: scale(0.78) rotateX(12deg);
+        transform: scale(0.78);
       }
       to {
         opacity: 1;
-        transform: scale(1) rotateX(0);
-      }
-    }
-
-    @keyframes shine {
-      from {
-        transform: translateX(-120%);
-      }
-      to {
-        transform: translateX(120%);
+        transform: scale(1);
       }
     }
 
     @keyframes confettiFall {
       0% {
-        transform:
-          translate3d(0, -20px, 0)
-          rotate(0deg);
+        transform: translate3d(0, -20px, 0) rotate(0deg);
         opacity: 1;
       }
 
       100% {
-        transform:
-          translate3d(var(--drift), 110vh, 0)
-          rotate(var(--spin));
+        transform: translate3d(var(--drift), 110vh, 0) rotate(var(--spin));
         opacity: 0;
       }
     }
@@ -466,50 +335,23 @@
         grid-template-columns: 1fr;
         gap: 18px;
       }
-
-      .ticket::before,
-      .ticket::after {
-        width: 22px;
-        height: 22px;
-      }
-
-      .ticket::before {
-        left: -11px;
-      }
-
-      .ticket::after {
-        right: -11px;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      *,
-      *::before,
-      *::after {
-        animation-duration: 0.01ms !important;
-        animation-iteration-count: 1 !important;
-        scroll-behavior: auto !important;
-      }
     }
   </style>
 </head>
 
 <body>
 
-  <!-- OPENING SCREEN -->
   <main id="openingScreen" class="screen opening-screen">
-
-    <div class="sparkle one"></div>
-    <div class="sparkle two"></div>
-    <div class="sparkle three"></div>
-    <div class="sparkle four"></div>
 
     <div class="opening-content">
 
-      <div class="eyebrow">Something special is waiting</div>
+      <div class="eyebrow">
+        Something special is waiting
+      </div>
 
       <h1>
-        Chloe, you've got<br>
+        <span id="openingRecipient">Chloe</span>,
+        you've got<br>
         a surprise...
       </h1>
 
@@ -521,7 +363,6 @@
         id="revealButton"
         class="reveal-button"
         type="button"
-        aria-controls="revealScreen"
       >
         Tap to reveal
       </button>
@@ -531,36 +372,39 @@
   </main>
 
 
-  <!-- REVEAL SCREEN -->
   <section
     id="revealScreen"
     class="screen reveal-screen"
-    aria-hidden="true"
   >
 
     <div class="reveal-wrap">
 
-      <div class="mini-heading">Your surprise</div>
+      <div class="mini-heading">
+        Your surprise
+      </div>
 
       <h2 class="youre-going">
         You're going to...
       </h2>
 
-      <h1 class="event-name">
+      <h1
+        id="eventHeading"
+        class="event-name"
+      >
         A Night at the Theatre
       </h1>
 
 
-      <!-- DIGITAL TICKET -->
       <article class="ticket">
-
-        <div class="ticket-shine"></div>
 
         <div class="ticket-label">
           YOUR GIFT
         </div>
 
-        <h2 class="ticket-title">
+        <h2
+          id="ticketTitle"
+          class="ticket-title"
+        >
           A Night at the Theatre
         </h2>
 
@@ -570,43 +414,60 @@
 
           <div class="detail">
             <span class="detail-label">Date</span>
-            <span class="detail-value">
+            <span
+              id="ticketDate"
+              class="detail-value"
+            >
               Saturday 21 November 2026
             </span>
           </div>
 
           <div class="detail">
             <span class="detail-label">Time</span>
-            <span class="detail-value">
+            <span
+              id="ticketTime"
+              class="detail-value"
+            >
               7:30 pm
             </span>
           </div>
 
           <div class="detail">
             <span class="detail-label">Venue</span>
-            <span class="detail-value">
-              The Grand Theatre<br>
-              London
+            <span
+              id="ticketVenue"
+              class="detail-value"
+            >
+              The Grand Theatre, London
             </span>
           </div>
 
           <div class="detail">
             <span class="detail-label">Admit</span>
-            <span class="detail-value">
+            <span
+              id="ticketAdmit"
+              class="detail-value"
+            >
               Chloe + 1
             </span>
           </div>
 
           <div class="detail">
             <span class="detail-label">For</span>
-            <span class="detail-value">
+            <span
+              id="ticketRecipient"
+              class="detail-value"
+            >
               Chloe
             </span>
           </div>
 
           <div class="detail">
             <span class="detail-label">From</span>
-            <span class="detail-value">
+            <span
+              id="ticketSender"
+              class="detail-value"
+            >
               Michael
             </span>
           </div>
@@ -616,12 +477,14 @@
       </article>
 
 
-      <!-- PERSONAL MESSAGE -->
-      <div class="message-card">
+      <div
+        id="messageCard"
+        class="message-card"
+      >
 
         <h3>A little message</h3>
 
-        <p>
+        <p id="personalMessage">
           I thought we should have something to look forward to.
           Get dressed up, clear the evening and enjoy it.
           The rest is a surprise.
@@ -630,7 +493,6 @@
       </div>
 
 
-      <!-- FINAL CTA -->
       <div class="cta-section">
 
         <h2>
@@ -641,14 +503,10 @@
           Your official tickets and booking details are waiting for you.
         </p>
 
-        <!--
-          Later, replace the link below with the buyer's
-          actual ticket or booking URL.
-        -->
-
         <a
+          id="ticketLink"
           class="ticket-link"
-          href="https://example.com"
+          href="#"
           target="_blank"
           rel="noopener noreferrer"
         >
@@ -667,24 +525,208 @@
 
 
   <script>
-    const revealButton = document.getElementById("revealButton");
-    const openingScreen = document.getElementById("openingScreen");
-    const revealScreen = document.getElementById("revealScreen");
 
-    revealButton.addEventListener("click", () => {
+    const params = new URLSearchParams(window.location.search);
 
-      openingScreen.style.display = "none";
 
-      revealScreen.classList.add("visible");
-      revealScreen.setAttribute("aria-hidden", "false");
+    function getValue(name, fallback) {
 
-      window.scrollTo({
-        top: 0,
-        behavior: "smooth"
-      });
+      const value = params.get(name);
 
-      launchConfetti();
-    });
+      if (!value || value.trim() === "") {
+        return fallback;
+      }
+
+      return value.trim();
+    }
+
+
+    const recipient =
+      getValue("recipient", "Chloe");
+
+    const sender =
+      getValue("sender", "Michael");
+
+    const eventName =
+      getValue("event", "A Night at the Theatre");
+
+    const venue =
+      getValue("venue", "The Grand Theatre, London");
+
+    const admit =
+      getValue("admit", "Chloe + 1");
+
+    const message =
+      getValue(
+        "message",
+        "I thought we should have something to look forward to. Get dressed up, clear the evening and enjoy it. The rest is a surprise."
+      );
+
+    const rawDate =
+      getValue("date", "2026-11-21");
+
+    const rawTime =
+      getValue("time", "19:30");
+
+    const ticketUrl =
+      getValue("ticketUrl", "");
+
+
+    function formatDate(dateString) {
+
+      const date =
+        new Date(dateString + "T12:00:00");
+
+      if (isNaN(date.getTime())) {
+        return dateString;
+      }
+
+      return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      ).format(date);
+    }
+
+
+    function formatTime(timeString) {
+
+      if (!timeString) {
+        return "Time to be confirmed";
+      }
+
+      const pieces =
+        timeString.split(":");
+
+      const date =
+        new Date();
+
+      date.setHours(
+        Number(pieces[0]),
+        Number(pieces[1]),
+        0,
+        0
+      );
+
+      return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+          hour: "numeric",
+          minute: "2-digit"
+        }
+      ).format(date);
+    }
+
+
+    document.getElementById(
+      "openingRecipient"
+    ).textContent = recipient;
+
+    document.getElementById(
+      "eventHeading"
+    ).textContent = eventName;
+
+    document.getElementById(
+      "ticketTitle"
+    ).textContent = eventName;
+
+    document.getElementById(
+      "ticketDate"
+    ).textContent = formatDate(rawDate);
+
+    document.getElementById(
+      "ticketTime"
+    ).textContent = formatTime(rawTime);
+
+    document.getElementById(
+      "ticketVenue"
+    ).textContent = venue;
+
+    document.getElementById(
+      "ticketAdmit"
+    ).textContent = admit;
+
+    document.getElementById(
+      "ticketRecipient"
+    ).textContent = recipient;
+
+    document.getElementById(
+      "ticketSender"
+    ).textContent = sender;
+
+    document.getElementById(
+      "personalMessage"
+    ).textContent = message;
+
+
+    const ticketLink =
+      document.getElementById("ticketLink");
+
+    if (ticketUrl) {
+
+      try {
+
+        const url =
+          new URL(ticketUrl);
+
+        if (
+          url.protocol === "https:" ||
+          url.protocol === "http:"
+        ) {
+
+          ticketLink.href =
+            url.href;
+
+        } else {
+
+          ticketLink.style.display =
+            "none";
+        }
+
+      } catch {
+
+        ticketLink.style.display =
+          "none";
+      }
+
+    } else {
+
+      ticketLink.style.display =
+        "none";
+    }
+
+
+    const revealButton =
+      document.getElementById("revealButton");
+
+    const openingScreen =
+      document.getElementById("openingScreen");
+
+    const revealScreen =
+      document.getElementById("revealScreen");
+
+
+    revealButton.addEventListener(
+      "click",
+      function() {
+
+        openingScreen.style.display =
+          "none";
+
+        revealScreen.classList.add(
+          "visible"
+        );
+
+        window.scrollTo(0, 0);
+
+        launchConfetti();
+
+      }
+    );
 
 
     function launchConfetti() {
@@ -697,47 +739,67 @@
         "#b8802a"
       ];
 
-      const totalPieces = 90;
+      for (let i = 0; i < 90; i++) {
 
-      for (let i = 0; i < totalPieces; i++) {
+        const piece =
+          document.createElement("div");
 
-        const piece = document.createElement("div");
+        piece.className =
+          "confetti-piece";
 
-        piece.className = "confetti-piece";
+        const size =
+          Math.random() * 7 + 5;
 
-        const size = Math.random() * 7 + 5;
+        piece.style.width =
+          size + "px";
 
-        piece.style.width = `${size}px`;
-        piece.style.height = `${size * 0.55}px`;
+        piece.style.height =
+          (size * 0.55) + "px";
 
-        piece.style.left = `${Math.random() * 100}vw`;
+        piece.style.left =
+          (Math.random() * 100) + "vw";
 
         piece.style.background =
-          colours[Math.floor(Math.random() * colours.length)];
+          colours[
+            Math.floor(
+              Math.random() *
+              colours.length
+            )
+          ];
 
         piece.style.animationDuration =
-          `${Math.random() * 2.3 + 2.4}s`;
+          (Math.random() * 2.3 + 2.4) +
+          "s";
 
         piece.style.animationDelay =
-          `${Math.random() * 0.5}s`;
+          (Math.random() * 0.5) +
+          "s";
 
         piece.style.setProperty(
           "--drift",
-          `${Math.random() * 240 - 120}px`
+          (Math.random() * 240 - 120) +
+          "px"
         );
 
         piece.style.setProperty(
           "--spin",
-          `${Math.random() * 900 - 450}deg`
+          (Math.random() * 900 - 450) +
+          "deg"
         );
 
-        document.body.appendChild(piece);
+        document.body.appendChild(
+          piece
+        );
 
-        setTimeout(() => {
-          piece.remove();
-        }, 6000);
+        setTimeout(
+          function() {
+            piece.remove();
+          },
+          6000
+        );
       }
     }
+
   </script>
 
 </body>
