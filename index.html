@@ -3,12 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f3eb">
 
   <title>Create your reveal</title>
 
   <style>
     * {
       box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
@@ -24,6 +29,15 @@
       padding: 45px 22px 70px;
     }
 
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.72rem;
+      font-weight: bold;
+      color: #a7792e;
+      margin-bottom: 16px;
+    }
+
     h1 {
       font-family: Georgia, "Times New Roman", serif;
       font-size: clamp(2.5rem, 8vw, 4.5rem);
@@ -35,7 +49,8 @@
     .intro {
       color: #675f55;
       line-height: 1.6;
-      margin-bottom: 40px;
+      margin: 0 0 40px;
+      max-width: 620px;
     }
 
     .card {
@@ -43,6 +58,13 @@
       padding: 30px;
       border-radius: 18px;
       box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    }
+
+    .section-heading {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.45rem;
+      font-weight: normal;
+      margin: 0 0 24px;
     }
 
     .field {
@@ -55,6 +77,13 @@
       margin-bottom: 8px;
     }
 
+    .field-help {
+      margin: -2px 0 9px;
+      color: #81786d;
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+
     input,
     textarea {
       width: 100%;
@@ -63,6 +92,13 @@
       border-radius: 9px;
       font: inherit;
       background: #fffdf9;
+      color: #28231d;
+    }
+
+    input[type="file"] {
+      padding: 11px;
+      background: #faf7f0;
+      cursor: pointer;
     }
 
     input:focus,
@@ -72,7 +108,7 @@
     }
 
     textarea {
-      min-height: 110px;
+      min-height: 115px;
       resize: vertical;
     }
 
@@ -82,7 +118,45 @@
       gap: 18px;
     }
 
-    button {
+    .image-preview-wrap {
+      display: none;
+      margin-top: 14px;
+      border-radius: 14px;
+      overflow: hidden;
+      background: #f1ede5;
+      border: 1px solid #ded7ca;
+    }
+
+    .image-preview-wrap.visible {
+      display: block;
+    }
+
+    .image-preview {
+      display: block;
+      width: 100%;
+      max-height: 320px;
+      object-fit: cover;
+    }
+
+    .image-preview-caption {
+      padding: 10px 12px;
+      font-size: 0.76rem;
+      color: #71685d;
+      background: #faf8f3;
+    }
+
+    .warning-box {
+      margin: 10px 0 0;
+      padding: 12px 14px;
+      background: #fff7e6;
+      border: 1px solid #ebd5a4;
+      border-radius: 9px;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #6b5733;
+    }
+
+    .submit-button {
       width: 100%;
       border: 0;
       border-radius: 999px;
@@ -93,23 +167,59 @@
       font-weight: bold;
       font-size: 1rem;
       margin-top: 12px;
+      box-shadow: 0 10px 25px rgba(116,79,23,0.18);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .submit-button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 13px 30px rgba(116,79,23,0.23);
+    }
+
+    .submit-button:disabled {
+      opacity: 0.55;
+      cursor: wait;
+      transform: none;
     }
 
     .note {
       font-size: 0.78rem;
       color: #81786d;
-      margin-top: 15px;
+      margin-top: 16px;
       text-align: center;
       line-height: 1.5;
+    }
+
+    .error-message {
+      display: none;
+      padding: 13px 15px;
+      margin: 0 0 20px;
+      background: #fff0ed;
+      color: #8b2f22;
+      border: 1px solid #edc3ba;
+      border-radius: 9px;
+      line-height: 1.5;
+      font-size: 0.85rem;
+    }
+
+    .error-message.visible {
+      display: block;
     }
 
     @media (max-width: 600px) {
       .two-columns {
         grid-template-columns: 1fr;
+        gap: 0;
       }
 
       .card {
         padding: 23px;
+      }
+
+      .page {
+        padding-top: 32px;
       }
     }
   </style>
@@ -119,7 +229,13 @@
 
   <main class="page">
 
-    <h1>Create your surprise</h1>
+    <div class="eyebrow">
+      Digital gift reveal
+    </div>
+
+    <h1>
+      Create your surprise
+    </h1>
 
     <p class="intro">
       Turn an e-ticket, trip or experience into something special to open.
@@ -128,106 +244,229 @@
 
     <div class="card">
 
+      <h2 class="section-heading">
+        Tell us about the surprise
+      </h2>
+
+      <div
+        id="errorMessage"
+        class="error-message"
+      ></div>
+
       <form id="revealForm">
 
         <div class="field">
-          <label for="recipient">Who is it for?</label>
+
+          <label for="recipient">
+            Who is it for?
+          </label>
+
           <input
             id="recipient"
             name="recipient"
-            placeholder="Sophie"
+            type="text"
+            placeholder="Chloe"
             required
           >
+
         </div>
 
+
         <div class="field">
-          <label for="sender">Who is it from?</label>
+
+          <label for="sender">
+            Who is it from?
+          </label>
+
           <input
             id="sender"
             name="sender"
+            type="text"
             placeholder="Michael"
             required
           >
+
         </div>
 
+
         <div class="field">
-          <label for="event">What's the surprise?</label>
+
+          <label for="event">
+            What's the surprise?
+          </label>
+
           <input
             id="event"
             name="event"
+            type="text"
             placeholder="A Night at the Theatre"
             required
           >
+
         </div>
+
+
+        <div class="field">
+
+          <label for="eventImage">
+            Add an image
+          </label>
+
+          <p class="field-help">
+            Optional. Add an event image, poster, booking confirmation
+            or cropped screenshot.
+          </p>
+
+          <input
+            id="eventImage"
+            name="eventImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+          >
+
+          <div class="warning-box">
+            If you upload a screenshot of real tickets, avoid including
+            visible QR codes, barcodes or other information that could
+            allow somebody else to use the ticket.
+          </div>
+
+          <div
+            id="imagePreviewWrap"
+            class="image-preview-wrap"
+          >
+
+            <img
+              id="imagePreview"
+              class="image-preview"
+              alt="Selected event preview"
+            >
+
+            <div
+              id="imagePreviewCaption"
+              class="image-preview-caption"
+            ></div>
+
+          </div>
+
+        </div>
+
 
         <div class="two-columns">
 
           <div class="field">
-            <label for="date">Date</label>
+
+            <label for="date">
+              Date
+            </label>
+
             <input
               id="date"
               name="date"
               type="date"
               required
             >
+
           </div>
 
+
           <div class="field">
-            <label for="time">Time</label>
+
+            <label for="time">
+              Time
+            </label>
+
             <input
               id="time"
               name="time"
               type="time"
             >
+
           </div>
 
         </div>
 
+
         <div class="field">
-          <label for="venue">Venue or destination</label>
+
+          <label for="venue">
+            Venue or destination
+          </label>
+
           <input
             id="venue"
             name="venue"
+            type="text"
             placeholder="The Grand Theatre, London"
           >
+
         </div>
 
+
         <div class="field">
-          <label for="admit">Who is going?</label>
+
+          <label for="admit">
+            Who is going?
+          </label>
+
           <input
             id="admit"
             name="admit"
-            placeholder="Sophie + 1"
+            type="text"
+            placeholder="Chloe + 1"
           >
+
         </div>
 
+
         <div class="field">
-          <label for="message">Your message</label>
+
+          <label for="message">
+            Your message
+          </label>
+
           <textarea
             id="message"
             name="message"
             placeholder="I thought we should have something to look forward to..."
           ></textarea>
+
         </div>
 
+
         <div class="field">
-          <label for="ticketUrl">Official ticket or booking link</label>
+
+          <label for="ticketUrl">
+            Official ticket or booking link
+          </label>
+
+          <p class="field-help">
+            Optional. This will become the button shown after the reveal.
+          </p>
+
           <input
             id="ticketUrl"
             name="ticketUrl"
             type="url"
             placeholder="https://..."
           >
+
         </div>
 
-        <button type="submit">
+
+        <button
+          id="submitButton"
+          class="submit-button"
+          type="submit"
+        >
           Preview my reveal
         </button>
 
       </form>
 
+
       <div class="note">
-        This is currently a prototype. Nothing entered here is stored.
+        Prototype mode - the image is currently stored only in your browser
+        for the preview. Nothing is uploaded to a server yet.
       </div>
 
     </div>
@@ -237,63 +476,436 @@
 
   <script>
 
-    document
-      .getElementById("revealForm")
-      .addEventListener("submit", function(event) {
+    const revealForm =
+      document.getElementById("revealForm");
+
+    const eventImageInput =
+      document.getElementById("eventImage");
+
+    const imagePreviewWrap =
+      document.getElementById("imagePreviewWrap");
+
+    const imagePreview =
+      document.getElementById("imagePreview");
+
+    const imagePreviewCaption =
+      document.getElementById("imagePreviewCaption");
+
+    const errorMessage =
+      document.getElementById("errorMessage");
+
+    const submitButton =
+      document.getElementById("submitButton");
+
+
+    eventImageInput.addEventListener(
+      "change",
+      function() {
+
+        hideError();
+
+        const file =
+          eventImageInput.files[0];
+
+        if (!file) {
+
+          imagePreviewWrap.classList.remove(
+            "visible"
+          );
+
+          imagePreview.removeAttribute("src");
+
+          return;
+        }
+
+
+        const permittedTypes = [
+          "image/jpeg",
+          "image/png",
+          "image/webp"
+        ];
+
+
+        if (!permittedTypes.includes(file.type)) {
+
+          eventImageInput.value = "";
+
+          imagePreviewWrap.classList.remove(
+            "visible"
+          );
+
+          showError(
+            "Please choose a JPEG, PNG or WebP image."
+          );
+
+          return;
+        }
+
+
+        const maximumFileSize =
+          10 * 1024 * 1024;
+
+
+        if (file.size > maximumFileSize) {
+
+          eventImageInput.value = "";
+
+          imagePreviewWrap.classList.remove(
+            "visible"
+          );
+
+          showError(
+            "That image is too large. Please choose an image smaller than 10 MB."
+          );
+
+          return;
+        }
+
+
+        const reader =
+          new FileReader();
+
+
+        reader.onload =
+          function(event) {
+
+            imagePreview.src =
+              event.target.result;
+
+            imagePreviewCaption.textContent =
+              file.name;
+
+            imagePreviewWrap.classList.add(
+              "visible"
+            );
+          };
+
+
+        reader.readAsDataURL(file);
+
+      }
+    );
+
+
+
+    revealForm.addEventListener(
+      "submit",
+      async function(event) {
 
         event.preventDefault();
 
-        const params = new URLSearchParams();
+        hideError();
 
-        params.set(
-          "recipient",
-          document.getElementById("recipient").value
-        );
+        submitButton.disabled = true;
+        submitButton.textContent =
+          "Creating preview...";
 
-        params.set(
-          "sender",
-          document.getElementById("sender").value
-        );
 
-        params.set(
-          "event",
-          document.getElementById("event").value
-        );
+        try {
 
-        params.set(
-          "date",
-          document.getElementById("date").value
-        );
+          const imageFile =
+            eventImageInput.files[0];
 
-        params.set(
-          "time",
-          document.getElementById("time").value
-        );
 
-        params.set(
-          "venue",
-          document.getElementById("venue").value
-        );
+          if (imageFile) {
 
-        params.set(
-          "admit",
-          document.getElementById("admit").value
-        );
+            const compressedImage =
+              await compressImage(
+                imageFile
+              );
 
-        params.set(
-          "message",
-          document.getElementById("message").value
-        );
 
-        params.set(
-          "ticketUrl",
-          document.getElementById("ticketUrl").value
-        );
+            try {
 
-        window.location.href =
-          "reveal.html?" + params.toString();
+              sessionStorage.setItem(
+                "revealImage",
+                compressedImage
+              );
 
+            } catch {
+
+              throw new Error(
+                "The selected image is still too large for this prototype. Please choose a smaller image."
+              );
+            }
+
+          } else {
+
+            sessionStorage.removeItem(
+              "revealImage"
+            );
+          }
+
+
+          const params =
+            new URLSearchParams();
+
+
+          params.set(
+            "recipient",
+            document.getElementById(
+              "recipient"
+            ).value
+          );
+
+
+          params.set(
+            "sender",
+            document.getElementById(
+              "sender"
+            ).value
+          );
+
+
+          params.set(
+            "event",
+            document.getElementById(
+              "event"
+            ).value
+          );
+
+
+          params.set(
+            "date",
+            document.getElementById(
+              "date"
+            ).value
+          );
+
+
+          params.set(
+            "time",
+            document.getElementById(
+              "time"
+            ).value
+          );
+
+
+          params.set(
+            "venue",
+            document.getElementById(
+              "venue"
+            ).value
+          );
+
+
+          params.set(
+            "admit",
+            document.getElementById(
+              "admit"
+            ).value
+          );
+
+
+          params.set(
+            "message",
+            document.getElementById(
+              "message"
+            ).value
+          );
+
+
+          params.set(
+            "ticketUrl",
+            document.getElementById(
+              "ticketUrl"
+            ).value
+          );
+
+
+          window.location.href =
+            "reveal.html?" +
+            params.toString();
+
+        } catch (error) {
+
+          showError(
+            error.message ||
+            "Something went wrong while preparing the preview."
+          );
+
+          submitButton.disabled = false;
+
+          submitButton.textContent =
+            "Preview my reveal";
+        }
+
+      }
+    );
+
+
+
+    function compressImage(file) {
+
+      return new Promise(
+        function(resolve, reject) {
+
+          const reader =
+            new FileReader();
+
+
+          reader.onload =
+            function(event) {
+
+              const image =
+                new Image();
+
+
+              image.onload =
+                function() {
+
+                  const maximumWidth =
+                    1200;
+
+                  const maximumHeight =
+                    1200;
+
+
+                  let width =
+                    image.width;
+
+                  let height =
+                    image.height;
+
+
+                  if (
+                    width > maximumWidth ||
+                    height > maximumHeight
+                  ) {
+
+                    const scale =
+                      Math.min(
+                        maximumWidth / width,
+                        maximumHeight / height
+                      );
+
+                    width =
+                      Math.round(
+                        width * scale
+                      );
+
+                    height =
+                      Math.round(
+                        height * scale
+                      );
+                  }
+
+
+                  const canvas =
+                    document.createElement(
+                      "canvas"
+                    );
+
+
+                  canvas.width =
+                    width;
+
+                  canvas.height =
+                    height;
+
+
+                  const context =
+                    canvas.getContext(
+                      "2d"
+                    );
+
+
+                  context.fillStyle =
+                    "#ffffff";
+
+                  context.fillRect(
+                    0,
+                    0,
+                    width,
+                    height
+                  );
+
+
+                  context.drawImage(
+                    image,
+                    0,
+                    0,
+                    width,
+                    height
+                  );
+
+
+                  const compressedImage =
+                    canvas.toDataURL(
+                      "image/jpeg",
+                      0.78
+                    );
+
+
+                  resolve(
+                    compressedImage
+                  );
+                };
+
+
+              image.onerror =
+                function() {
+
+                  reject(
+                    new Error(
+                      "That image could not be processed. Please try another image."
+                    )
+                  );
+                };
+
+
+              image.src =
+                event.target.result;
+
+            };
+
+
+          reader.onerror =
+            function() {
+
+              reject(
+                new Error(
+                  "That image could not be read."
+                )
+              );
+            };
+
+
+          reader.readAsDataURL(
+            file
+          );
+
+        }
+      );
+    }
+
+
+
+    function showError(message) {
+
+      errorMessage.textContent =
+        message;
+
+      errorMessage.classList.add(
+        "visible"
+      );
+
+      errorMessage.scrollIntoView({
+        behavior: "smooth",
+        block: "center"
       });
+    }
+
+
+
+    function hideError() {
+
+      errorMessage.textContent = "";
+
+      errorMessage.classList.remove(
+        "visible"
+      );
+    }
 
   </script>
 
