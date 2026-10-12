@@ -2,12 +2,27 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="theme-color" content="#17120c" />
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
+
+  <meta
+    name="theme-color"
+    content="#17120c"
+  />
+
+  <meta
+    name="robots"
+    content="noindex,nofollow"
+  />
 
   <title>You have a surprise</title>
 
+
   <style>
+
     :root {
       --bg-dark: #17120c;
       --gold: #d8ac55;
@@ -17,331 +32,1273 @@
       --muted: #746957;
     }
 
+
     * {
       box-sizing: border-box;
     }
+
 
     html,
     body {
       margin: 0;
       min-height: 100%;
       font-family: Georgia, "Times New Roman", serif;
+
       background:
-        radial-gradient(circle at top, #49351e 0%, var(--bg-dark) 48%, #0e0b08 100%);
+        radial-gradient(
+          circle at top,
+          #49351e 0%,
+          var(--bg-dark) 48%,
+          #0e0b08 100%
+        );
+
       color: white;
     }
+
 
     body {
       min-height: 100vh;
       overflow-x: hidden;
     }
 
+
     button,
     a {
       font: inherit;
     }
 
+
     .screen {
       min-height: 100vh;
       width: 100%;
+
       display: flex;
       align-items: center;
       justify-content: center;
+
       padding: 24px;
+
       position: relative;
     }
+
+
+
+    /* OPENING SCREEN */
 
     .opening-screen {
       text-align: center;
       overflow: hidden;
     }
 
+
     .opening-content {
       max-width: 620px;
       position: relative;
       z-index: 5;
-      animation: fadeIn 1s ease both;
+
+      animation:
+        fadeIn 1s ease both;
     }
+
 
     .eyebrow {
       text-transform: uppercase;
       letter-spacing: 0.28em;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
       font-size: 0.74rem;
-      color: var(--gold-light);
+
+      color:
+        var(--gold-light);
+
       margin-bottom: 24px;
     }
 
+
     h1 {
-      font-size: clamp(2.4rem, 8vw, 5.2rem);
+      font-size:
+        clamp(
+          2.4rem,
+          8vw,
+          5.2rem
+        );
+
       line-height: 0.98;
-      margin: 0 0 24px;
-      font-weight: normal;
+
+      margin:
+        0 0 24px;
+
+      font-weight:
+        normal;
     }
+
 
     .opening-text {
-      font-family: Arial, Helvetica, sans-serif;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
       font-size: 1.08rem;
+
       line-height: 1.6;
-      color: #ede4d3;
-      margin: 0 auto 36px;
-      max-width: 480px;
+
+      color:
+        #ede4d3;
+
+      margin:
+        0 auto 36px;
+
+      max-width:
+        480px;
     }
+
 
     .reveal-button {
-      border: 1px solid rgba(255,255,255,0.25);
-      background: linear-gradient(135deg, #f4d98b, #b47b27);
-      color: #20170d;
-      border-radius: 999px;
-      padding: 17px 34px;
-      min-width: 210px;
-      cursor: pointer;
-      font-family: Arial, Helvetica, sans-serif;
-      font-weight: 700;
-      font-size: 1rem;
+      border:
+        1px solid
+        rgba(
+          255,
+          255,
+          255,
+          0.25
+        );
+
+      background:
+        linear-gradient(
+          135deg,
+          #f4d98b,
+          #b47b27
+        );
+
+      color:
+        #20170d;
+
+      border-radius:
+        999px;
+
+      padding:
+        17px 34px;
+
+      min-width:
+        210px;
+
+      cursor:
+        pointer;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      font-weight:
+        700;
+
+      font-size:
+        1rem;
+
       box-shadow:
-        0 15px 40px rgba(0,0,0,0.32),
-        inset 0 1px 0 rgba(255,255,255,0.65);
+        0 15px 40px
+        rgba(
+          0,
+          0,
+          0,
+          0.32
+        ),
+        inset 0 1px 0
+        rgba(
+          255,
+          255,
+          255,
+          0.65
+        );
+
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
     }
+
+
+    .reveal-button:hover {
+      transform:
+        translateY(-2px);
+
+      box-shadow:
+        0 19px 50px
+        rgba(
+          0,
+          0,
+          0,
+          0.38
+        ),
+        inset 0 1px 0
+        rgba(
+          255,
+          255,
+          255,
+          0.65
+        );
+    }
+
+
+    .reveal-button:active {
+      transform:
+        translateY(1px);
+    }
+
+
+
+    /* BACKGROUND SPARKLES */
+
+    .sparkle {
+      position:
+        absolute;
+
+      border-radius:
+        50%;
+
+      background:
+        var(--gold-light);
+
+      box-shadow:
+        0 0 14px
+        rgba(
+          243,
+          220,
+          154,
+          0.8
+        );
+
+      opacity:
+        0.7;
+
+      animation:
+        drift 4s
+        ease-in-out
+        infinite alternate;
+    }
+
+
+    .sparkle.one {
+      width: 5px;
+      height: 5px;
+
+      top: 18%;
+      left: 15%;
+    }
+
+
+    .sparkle.two {
+      width: 8px;
+      height: 8px;
+
+      top: 28%;
+      right: 16%;
+
+      animation-delay:
+        0.7s;
+    }
+
+
+    .sparkle.three {
+      width: 4px;
+      height: 4px;
+
+      bottom: 20%;
+      left: 25%;
+
+      animation-delay:
+        1.3s;
+    }
+
+
+    .sparkle.four {
+      width: 6px;
+      height: 6px;
+
+      bottom: 25%;
+      right: 23%;
+
+      animation-delay:
+        2s;
+    }
+
+
+
+    /* REVEAL */
 
     .reveal-screen {
-      display: none;
+      display:
+        none;
+
       background:
-        radial-gradient(circle at top, rgba(216,172,85,0.18), transparent 32%),
-        linear-gradient(180deg, #19130d, #0e0b08);
-      padding-top: 48px;
-      padding-bottom: 70px;
+        radial-gradient(
+          circle at top,
+          rgba(
+            216,
+            172,
+            85,
+            0.18
+          ),
+          transparent 32%
+        ),
+        linear-gradient(
+          180deg,
+          #19130d,
+          #0e0b08
+        );
+
+      padding-top:
+        48px;
+
+      padding-bottom:
+        70px;
     }
+
 
     .reveal-screen.visible {
-      display: block;
-      animation: fadeIn 0.8s ease both;
+      display:
+        block;
+
+      animation:
+        fadeIn 0.8s
+        ease both;
     }
+
 
     .reveal-wrap {
-      width: min(760px, 100%);
-      margin: 0 auto;
-      text-align: center;
+      width:
+        min(
+          760px,
+          100%
+        );
+
+      margin:
+        0 auto;
+
+      text-align:
+        center;
     }
+
 
     .mini-heading {
-      font-family: Arial, Helvetica, sans-serif;
-      text-transform: uppercase;
-      letter-spacing: 0.2em;
-      font-size: 0.72rem;
-      color: var(--gold-light);
-      margin-bottom: 12px;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.2em;
+
+      font-size:
+        0.72rem;
+
+      color:
+        var(--gold-light);
+
+      margin:
+        10px 0 12px;
     }
+
 
     .youre-going {
-      font-size: clamp(1.5rem, 5vw, 2.3rem);
-      margin: 0 0 8px;
-      font-weight: normal;
-      color: #f5e9d0;
+      font-size:
+        clamp(
+          1.5rem,
+          5vw,
+          2.3rem
+        );
+
+      margin:
+        0 0 8px;
+
+      font-weight:
+        normal;
+
+      color:
+        #f5e9d0;
     }
+
 
     .event-name {
-      font-size: clamp(2.5rem, 8vw, 5rem);
-      line-height: 1;
-      margin: 0 0 32px;
-      font-weight: normal;
+      font-size:
+        clamp(
+          2.5rem,
+          8vw,
+          5rem
+        );
+
+      line-height:
+        1;
+
+      margin:
+        0 0 32px;
+
+      font-weight:
+        normal;
+
+      color:
+        white;
     }
+
+
+
+    /* EVENT IMAGE */
+
+    .event-image-wrap {
+      display:
+        none;
+
+      position:
+        relative;
+
+      width:
+        min(
+          620px,
+          100%
+        );
+
+      margin:
+        0 auto 30px;
+
+      border-radius:
+        18px;
+
+      overflow:
+        hidden;
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.05
+        );
+
+      box-shadow:
+        0 22px 55px
+        rgba(
+          0,
+          0,
+          0,
+          0.35
+        );
+
+      animation:
+        imageReveal
+        0.8s
+        0.15s
+        ease both;
+    }
+
+
+    .event-image-wrap.visible {
+      display:
+        block;
+    }
+
+
+    .event-image-wrap::after {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      pointer-events:
+        none;
+
+      box-shadow:
+        inset 0 0 0 1px
+        rgba(
+          255,
+          255,
+          255,
+          0.12
+        );
+
+      border-radius:
+        18px;
+    }
+
+
+    .event-image {
+      display:
+        block;
+
+      width:
+        100%;
+
+      max-height:
+        430px;
+
+      object-fit:
+        cover;
+    }
+
+
+
+    /* TICKET */
 
     .ticket {
-      position: relative;
-      margin: 0 auto;
-      width: min(620px, 100%);
-      background: linear-gradient(135deg, #fffdf6, var(--cream), #f3e1b8);
-      color: var(--ink);
-      border-radius: 18px;
-      padding: 40px 34px 32px;
+      position:
+        relative;
+
+      margin:
+        0 auto;
+
+      width:
+        min(
+          620px,
+          100%
+        );
+
+      background:
+        linear-gradient(
+          135deg,
+          #fffdf6 0%,
+          var(--cream) 55%,
+          #f3e1b8 100%
+        );
+
+      color:
+        var(--ink);
+
+      border-radius:
+        18px;
+
+      padding:
+        40px 34px 32px;
+
       box-shadow:
-        0 26px 70px rgba(0,0,0,0.38),
-        0 0 0 1px rgba(216,172,85,0.35);
-      overflow: hidden;
-      animation: ticketReveal 0.9s cubic-bezier(.18,.89,.32,1.28) both;
+        0 26px 70px
+        rgba(
+          0,
+          0,
+          0,
+          0.38
+        ),
+        0 0 0 1px
+        rgba(
+          216,
+          172,
+          85,
+          0.35
+        );
+
+      overflow:
+        hidden;
+
+      transform-origin:
+        center;
+
+      animation:
+        ticketReveal
+        0.9s
+        cubic-bezier(
+          .18,
+          .89,
+          .32,
+          1.28
+        )
+        both;
     }
+
+
+    .ticket::before,
+    .ticket::after {
+      content:
+        "";
+
+      position:
+        absolute;
+
+      top:
+        52%;
+
+      transform:
+        translateY(-50%);
+
+      width:
+        28px;
+
+      height:
+        28px;
+
+      border-radius:
+        50%;
+
+      background:
+        #17120c;
+    }
+
+
+    .ticket::before {
+      left:
+        -14px;
+    }
+
+
+    .ticket::after {
+      right:
+        -14px;
+    }
+
+
+    .ticket-shine {
+      position:
+        absolute;
+
+      inset:
+        0;
+
+      pointer-events:
+        none;
+
+      background:
+        linear-gradient(
+          120deg,
+          transparent 0%,
+          transparent 35%,
+          rgba(
+            255,
+            255,
+            255,
+            0.7
+          )
+          47%,
+          transparent 58%,
+          transparent 100%
+        );
+
+      transform:
+        translateX(-120%);
+
+      animation:
+        shine
+        1.4s
+        0.6s
+        ease forwards;
+    }
+
 
     .ticket-label {
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 0.74rem;
-      letter-spacing: 0.25em;
-      font-weight: 700;
-      color: #98702c;
-      margin-bottom: 17px;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      font-size:
+        0.74rem;
+
+      letter-spacing:
+        0.25em;
+
+      font-weight:
+        700;
+
+      color:
+        #98702c;
+
+      margin-bottom:
+        17px;
     }
+
 
     .ticket-title {
-      font-size: clamp(2rem, 6vw, 3.4rem);
-      line-height: 1;
-      font-weight: normal;
-      margin: 0 0 28px;
+      font-size:
+        clamp(
+          2rem,
+          6vw,
+          3.4rem
+        );
+
+      line-height:
+        1;
+
+      font-weight:
+        normal;
+
+      margin:
+        0 0 28px;
     }
 
+
     .ticket-divider {
-      height: 1px;
+      height:
+        1px;
+
       background:
         repeating-linear-gradient(
           to right,
-          rgba(44,36,27,0.35) 0,
-          rgba(44,36,27,0.35) 6px,
+          rgba(
+            44,
+            36,
+            27,
+            0.35
+          )
+          0,
+          rgba(
+            44,
+            36,
+            27,
+            0.35
+          )
+          6px,
           transparent 6px,
           transparent 12px
         );
-      margin: 25px 0;
+
+      margin:
+        25px 0;
     }
+
 
     .details-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 24px;
-      text-align: left;
-      font-family: Arial, Helvetica, sans-serif;
+      display:
+        grid;
+
+      grid-template-columns:
+        repeat(
+          2,
+          1fr
+        );
+
+      gap:
+        24px;
+
+      text-align:
+        left;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
     }
+
+
+    .detail {
+      min-width:
+        0;
+    }
+
 
     .detail-label {
-      display: block;
-      text-transform: uppercase;
-      letter-spacing: 0.12em;
-      font-size: 0.68rem;
-      color: var(--muted);
-      margin-bottom: 6px;
+      display:
+        block;
+
+      text-transform:
+        uppercase;
+
+      letter-spacing:
+        0.12em;
+
+      font-size:
+        0.68rem;
+
+      color:
+        var(--muted);
+
+      margin-bottom:
+        6px;
     }
+
 
     .detail-value {
-      font-size: 1rem;
-      line-height: 1.4;
-      font-weight: 700;
+      font-size:
+        1rem;
+
+      line-height:
+        1.4;
+
+      font-weight:
+        700;
+
+      overflow-wrap:
+        anywhere;
     }
+
+
+
+    /* MESSAGE */
 
     .message-card {
-      margin: 28px auto 0;
-      width: min(620px, 100%);
-      padding: 27px 24px;
-      border: 1px solid rgba(243,220,154,0.22);
-      border-radius: 16px;
-      background: rgba(255,255,255,0.055);
-      color: #f3ebde;
+      margin:
+        28px auto 0;
+
+      width:
+        min(
+          620px,
+          100%
+        );
+
+      padding:
+        27px 24px;
+
+      border:
+        1px solid
+        rgba(
+          243,
+          220,
+          154,
+          0.22
+        );
+
+      border-radius:
+        16px;
+
+      background:
+        rgba(
+          255,
+          255,
+          255,
+          0.055
+        );
+
+      color:
+        #f3ebde;
     }
+
 
     .message-card h3 {
-      margin: 0 0 12px;
-      font-size: 1.3rem;
-      font-weight: normal;
+      margin:
+        0 0 12px;
+
+      font-size:
+        1.3rem;
+
+      font-weight:
+        normal;
     }
+
 
     .message-card p {
-      font-family: Arial, Helvetica, sans-serif;
-      line-height: 1.65;
-      margin: 0;
-      color: #ddd3c2;
-      white-space: pre-wrap;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      line-height:
+        1.65;
+
+      margin:
+        0;
+
+      color:
+        #ddd3c2;
+
+      white-space:
+        pre-wrap;
     }
+
+
+
+    /* CTA */
 
     .cta-section {
-      margin: 42px auto 0;
-      max-width: 580px;
+      margin:
+        42px auto 0;
+
+      max-width:
+        580px;
     }
+
 
     .cta-section h2 {
-      font-size: clamp(1.7rem, 5vw, 2.5rem);
-      font-weight: normal;
-      margin: 0 0 10px;
+      font-size:
+        clamp(
+          1.7rem,
+          5vw,
+          2.5rem
+        );
+
+      font-weight:
+        normal;
+
+      margin:
+        0 0 10px;
     }
+
 
     .cta-section p {
-      font-family: Arial, Helvetica, sans-serif;
-      color: #d9cfbf;
-      line-height: 1.55;
-      margin: 0 auto 24px;
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      color:
+        #d9cfbf;
+
+      line-height:
+        1.55;
+
+      margin:
+        0 auto 24px;
     }
+
 
     .ticket-link {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      text-decoration: none;
-      border-radius: 999px;
-      min-width: 210px;
-      padding: 16px 28px;
-      background: linear-gradient(135deg, #f4d98b, #b47b27);
-      color: #20170d;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 1rem;
-      font-weight: 700;
+      display:
+        inline-flex;
+
+      align-items:
+        center;
+
+      justify-content:
+        center;
+
+      text-decoration:
+        none;
+
+      border-radius:
+        999px;
+
+      min-width:
+        210px;
+
+      padding:
+        16px 28px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f4d98b,
+          #b47b27
+        );
+
+      color:
+        #20170d;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      font-size:
+        1rem;
+
+      font-weight:
+        700;
+
+      box-shadow:
+        0 12px 32px
+        rgba(
+          0,
+          0,
+          0,
+          0.25
+        );
+
+      transition:
+        transform
+        0.2s ease;
     }
+
+
+    .ticket-link:hover {
+      transform:
+        translateY(-2px);
+    }
+
 
     .disclaimer {
-      display: block;
-      margin: 20px auto 0;
-      max-width: 520px;
-      font-family: Arial, Helvetica, sans-serif;
-      font-size: 0.72rem;
-      line-height: 1.5;
-      color: #93897b;
+      display:
+        block;
+
+      margin:
+        20px auto 0;
+
+      max-width:
+        520px;
+
+      font-family:
+        Arial,
+        Helvetica,
+        sans-serif;
+
+      font-size:
+        0.72rem;
+
+      line-height:
+        1.5;
+
+      color:
+        #93897b;
     }
+
+
+
+    /* CONFETTI */
 
     .confetti-piece {
-      position: fixed;
-      top: -20px;
-      z-index: 100;
-      pointer-events: none;
-      animation: confettiFall linear forwards;
+      position:
+        fixed;
+
+      top:
+        -20px;
+
+      z-index:
+        100;
+
+      pointer-events:
+        none;
+
+      animation:
+        confettiFall
+        linear forwards;
     }
+
+
+
+    /* ANIMATIONS */
 
     @keyframes fadeIn {
+
       from {
-        opacity: 0;
-        transform: translateY(12px);
+        opacity:
+          0;
+
+        transform:
+          translateY(12px);
       }
+
       to {
-        opacity: 1;
-        transform: translateY(0);
+        opacity:
+          1;
+
+        transform:
+          translateY(0);
       }
+
     }
+
+
+    @keyframes drift {
+
+      from {
+        transform:
+          translateY(-5px)
+          scale(0.8);
+
+        opacity:
+          0.35;
+      }
+
+      to {
+        transform:
+          translateY(7px)
+          scale(1.3);
+
+        opacity:
+          1;
+      }
+
+    }
+
 
     @keyframes ticketReveal {
+
       from {
-        opacity: 0;
-        transform: scale(0.78);
+        opacity:
+          0;
+
+        transform:
+          scale(0.78)
+          rotateX(12deg);
       }
+
       to {
-        opacity: 1;
-        transform: scale(1);
+        opacity:
+          1;
+
+        transform:
+          scale(1)
+          rotateX(0);
       }
+
     }
 
+
+    @keyframes imageReveal {
+
+      from {
+        opacity:
+          0;
+
+        transform:
+          translateY(18px)
+          scale(0.97);
+      }
+
+      to {
+        opacity:
+          1;
+
+        transform:
+          translateY(0)
+          scale(1);
+      }
+
+    }
+
+
+    @keyframes shine {
+
+      from {
+        transform:
+          translateX(-120%);
+      }
+
+      to {
+        transform:
+          translateX(120%);
+      }
+
+    }
+
+
     @keyframes confettiFall {
+
       0% {
-        transform: translate3d(0, -20px, 0) rotate(0deg);
-        opacity: 1;
+        transform:
+          translate3d(
+            0,
+            -20px,
+            0
+          )
+          rotate(0deg);
+
+        opacity:
+          1;
       }
 
       100% {
-        transform: translate3d(var(--drift), 110vh, 0) rotate(var(--spin));
-        opacity: 0;
+        transform:
+          translate3d(
+            var(--drift),
+            110vh,
+            0
+          )
+          rotate(
+            var(--spin)
+          );
+
+        opacity:
+          0;
       }
+
     }
 
-    @media (max-width: 560px) {
+
+
+    /* MOBILE */
+
+    @media (
+      max-width:
+      560px
+    ) {
+
       .screen {
-        padding: 20px;
+        padding:
+          20px;
       }
+
 
       .ticket {
-        padding: 33px 25px 28px;
+        padding:
+          33px 25px 28px;
       }
 
+
       .details-grid {
-        grid-template-columns: 1fr;
-        gap: 18px;
+        grid-template-columns:
+          1fr;
+
+        gap:
+          18px;
       }
+
+
+      .ticket::before,
+      .ticket::after {
+        width:
+          22px;
+
+        height:
+          22px;
+      }
+
+
+      .ticket::before {
+        left:
+          -11px;
+      }
+
+
+      .ticket::after {
+        right:
+          -11px;
+      }
+
+
+      .event-image {
+        max-height:
+          330px;
+      }
+
     }
+
+
+
+    @media (
+      prefers-reduced-motion:
+      reduce
+    ) {
+
+      *,
+      *::before,
+      *::after {
+        animation-duration:
+          0.01ms !important;
+
+        animation-iteration-count:
+          1 !important;
+
+        scroll-behavior:
+          auto !important;
+      }
+
+    }
+
   </style>
 </head>
 
+
 <body>
 
-  <main id="openingScreen" class="screen opening-screen">
+
+  <!-- OPENING SCREEN -->
+
+  <main
+    id="openingScreen"
+    class="screen opening-screen"
+  >
+
+    <div class="sparkle one"></div>
+    <div class="sparkle two"></div>
+    <div class="sparkle three"></div>
+    <div class="sparkle four"></div>
+
 
     <div class="opening-content">
 
@@ -349,15 +1306,26 @@
         Something special is waiting
       </div>
 
+
       <h1>
-        <span id="openingRecipient">Chloe</span>,
-        you've got<br>
+
+        <span id="openingRecipient">
+          Chloe
+        </span>,
+
+        you've got
+
+        <br>
+
         a surprise...
+
       </h1>
+
 
       <p class="opening-text">
         Someone has planned something special for you.
       </p>
+
 
       <button
         id="revealButton"
@@ -372,20 +1340,27 @@
   </main>
 
 
+
+  <!-- REVEAL SCREEN -->
+
   <section
     id="revealScreen"
     class="screen reveal-screen"
+    aria-hidden="true"
   >
 
     <div class="reveal-wrap">
+
 
       <div class="mini-heading">
         Your surprise
       </div>
 
+
       <h2 class="youre-going">
         You're going to...
       </h2>
+
 
       <h1
         id="eventHeading"
@@ -395,11 +1370,35 @@
       </h1>
 
 
+
+      <!-- EVENT IMAGE -->
+
+      <div
+        id="eventImageWrap"
+        class="event-image-wrap"
+      >
+
+        <img
+          id="eventImage"
+          class="event-image"
+          alt="Your surprise"
+        >
+
+      </div>
+
+
+
+      <!-- DIGITAL TICKET -->
+
       <article class="ticket">
+
+        <div class="ticket-shine"></div>
+
 
         <div class="ticket-label">
           YOUR GIFT
         </div>
+
 
         <h2
           id="ticketTitle"
@@ -408,68 +1407,111 @@
           A Night at the Theatre
         </h2>
 
+
         <div class="ticket-divider"></div>
+
 
         <div class="details-grid">
 
+
           <div class="detail">
-            <span class="detail-label">Date</span>
+
+            <span class="detail-label">
+              Date
+            </span>
+
             <span
               id="ticketDate"
               class="detail-value"
             >
               Saturday 21 November 2026
             </span>
+
           </div>
 
+
+
           <div class="detail">
-            <span class="detail-label">Time</span>
+
+            <span class="detail-label">
+              Time
+            </span>
+
             <span
               id="ticketTime"
               class="detail-value"
             >
               7:30 pm
             </span>
+
           </div>
 
+
+
           <div class="detail">
-            <span class="detail-label">Venue</span>
+
+            <span class="detail-label">
+              Venue
+            </span>
+
             <span
               id="ticketVenue"
               class="detail-value"
             >
               The Grand Theatre, London
             </span>
+
           </div>
 
+
+
           <div class="detail">
-            <span class="detail-label">Admit</span>
+
+            <span class="detail-label">
+              Admit
+            </span>
+
             <span
               id="ticketAdmit"
               class="detail-value"
             >
               Chloe + 1
             </span>
+
           </div>
 
+
+
           <div class="detail">
-            <span class="detail-label">For</span>
+
+            <span class="detail-label">
+              For
+            </span>
+
             <span
               id="ticketRecipient"
               class="detail-value"
             >
               Chloe
             </span>
+
           </div>
 
+
+
           <div class="detail">
-            <span class="detail-label">From</span>
+
+            <span class="detail-label">
+              From
+            </span>
+
             <span
               id="ticketSender"
               class="detail-value"
             >
               Michael
             </span>
+
           </div>
 
         </div>
@@ -477,12 +1519,18 @@
       </article>
 
 
+
+      <!-- PERSONAL MESSAGE -->
+
       <div
         id="messageCard"
         class="message-card"
       >
 
-        <h3>A little message</h3>
+        <h3>
+          A little message
+        </h3>
+
 
         <p id="personalMessage">
           I thought we should have something to look forward to.
@@ -493,15 +1541,23 @@
       </div>
 
 
-      <div class="cta-section">
+
+      <!-- FINAL CTA -->
+
+      <div
+        id="ctaSection"
+        class="cta-section"
+      >
 
         <h2>
           Ready for the real thing?
         </h2>
 
+
         <p>
           Your official tickets and booking details are waiting for you.
         </p>
+
 
         <a
           id="ticketLink"
@@ -512,6 +1568,7 @@
         >
           View your tickets
         </a>
+
 
         <small class="disclaimer">
           This reveal is a digital gift presentation and is not an admission ticket.
@@ -524,37 +1581,74 @@
   </section>
 
 
+
   <script>
 
-    const params = new URLSearchParams(window.location.search);
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
 
 
-    function getValue(name, fallback) {
 
-      const value = params.get(name);
+    function getValue(
+      name,
+      fallback
+    ) {
 
-      if (!value || value.trim() === "") {
+      const value =
+        params.get(name);
+
+
+      if (
+        !value ||
+        value.trim() === ""
+      ) {
+
         return fallback;
       }
 
+
       return value.trim();
+
     }
 
 
+
     const recipient =
-      getValue("recipient", "Chloe");
+      getValue(
+        "recipient",
+        "Chloe"
+      );
+
 
     const sender =
-      getValue("sender", "Michael");
+      getValue(
+        "sender",
+        "Michael"
+      );
+
 
     const eventName =
-      getValue("event", "A Night at the Theatre");
+      getValue(
+        "event",
+        "A Night at the Theatre"
+      );
+
 
     const venue =
-      getValue("venue", "The Grand Theatre, London");
+      getValue(
+        "venue",
+        "The Grand Theatre, London"
+      );
+
 
     const admit =
-      getValue("admit", "Chloe + 1");
+      getValue(
+        "admit",
+        "Chloe + 1"
+      );
+
 
     const message =
       getValue(
@@ -562,152 +1656,297 @@
         "I thought we should have something to look forward to. Get dressed up, clear the evening and enjoy it. The rest is a surprise."
       );
 
+
     const rawDate =
-      getValue("date", "2026-11-21");
+      getValue(
+        "date",
+        "2026-11-21"
+      );
+
 
     const rawTime =
-      getValue("time", "19:30");
+      getValue(
+        "time",
+        "19:30"
+      );
+
 
     const ticketUrl =
-      getValue("ticketUrl", "");
+      getValue(
+        "ticketUrl",
+        ""
+      );
 
 
-    function formatDate(dateString) {
+
+    function formatDate(
+      dateString
+    ) {
+
+      if (!dateString) {
+
+        return "Date to be confirmed";
+      }
+
 
       const date =
-        new Date(dateString + "T12:00:00");
+        new Date(
+          dateString +
+          "T12:00:00"
+        );
 
-      if (isNaN(date.getTime())) {
+
+      if (
+        isNaN(
+          date.getTime()
+        )
+      ) {
+
         return dateString;
       }
+
 
       return new Intl.DateTimeFormat(
         "en-GB",
         {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
+          weekday:
+            "long",
+
+          day:
+            "numeric",
+
+          month:
+            "long",
+
+          year:
+            "numeric"
         }
       ).format(date);
+
     }
 
 
-    function formatTime(timeString) {
+
+    function formatTime(
+      timeString
+    ) {
 
       if (!timeString) {
+
         return "Time to be confirmed";
       }
+
 
       const pieces =
         timeString.split(":");
 
+
       const date =
         new Date();
 
+
       date.setHours(
-        Number(pieces[0]),
-        Number(pieces[1]),
+        Number(
+          pieces[0]
+        ),
+
+        Number(
+          pieces[1]
+        ),
+
         0,
         0
       );
 
+
       return new Intl.DateTimeFormat(
         "en-GB",
         {
-          hour: "numeric",
-          minute: "2-digit"
+          hour:
+            "numeric",
+
+          minute:
+            "2-digit"
         }
       ).format(date);
+
     }
+
 
 
     document.getElementById(
       "openingRecipient"
-    ).textContent = recipient;
+    ).textContent =
+      recipient;
+
 
     document.getElementById(
       "eventHeading"
-    ).textContent = eventName;
+    ).textContent =
+      eventName;
+
 
     document.getElementById(
       "ticketTitle"
-    ).textContent = eventName;
+    ).textContent =
+      eventName;
+
 
     document.getElementById(
       "ticketDate"
-    ).textContent = formatDate(rawDate);
+    ).textContent =
+      formatDate(
+        rawDate
+      );
+
 
     document.getElementById(
       "ticketTime"
-    ).textContent = formatTime(rawTime);
+    ).textContent =
+      formatTime(
+        rawTime
+      );
+
 
     document.getElementById(
       "ticketVenue"
-    ).textContent = venue;
+    ).textContent =
+      venue;
+
 
     document.getElementById(
       "ticketAdmit"
-    ).textContent = admit;
+    ).textContent =
+      admit;
+
 
     document.getElementById(
       "ticketRecipient"
-    ).textContent = recipient;
+    ).textContent =
+      recipient;
+
 
     document.getElementById(
       "ticketSender"
-    ).textContent = sender;
+    ).textContent =
+      sender;
+
 
     document.getElementById(
       "personalMessage"
-    ).textContent = message;
+    ).textContent =
+      message;
 
+
+
+    /* LOAD IMAGE FROM BROWSER STORAGE */
+
+    const storedImage =
+      sessionStorage.getItem(
+        "revealImage"
+      );
+
+
+    if (storedImage) {
+
+      const eventImageWrap =
+        document.getElementById(
+          "eventImageWrap"
+        );
+
+
+      const eventImage =
+        document.getElementById(
+          "eventImage"
+        );
+
+
+      eventImage.src =
+        storedImage;
+
+
+      eventImageWrap.classList.add(
+        "visible"
+      );
+
+    }
+
+
+
+    /* OFFICIAL TICKET LINK */
 
     const ticketLink =
-      document.getElementById("ticketLink");
+      document.getElementById(
+        "ticketLink"
+      );
+
+
+    const ctaSection =
+      document.getElementById(
+        "ctaSection"
+      );
+
 
     if (ticketUrl) {
 
       try {
 
-        const url =
-          new URL(ticketUrl);
+        const validUrl =
+          new URL(
+            ticketUrl
+          );
+
 
         if (
-          url.protocol === "https:" ||
-          url.protocol === "http:"
+          validUrl.protocol ===
+          "https:" ||
+
+          validUrl.protocol ===
+          "http:"
         ) {
 
           ticketLink.href =
-            url.href;
+            validUrl.href;
 
         } else {
 
-          ticketLink.style.display =
+          ctaSection.style.display =
             "none";
         }
 
       } catch {
 
-        ticketLink.style.display =
+        ctaSection.style.display =
           "none";
       }
 
     } else {
 
-      ticketLink.style.display =
+      ctaSection.style.display =
         "none";
     }
 
 
+
+    /* REVEAL BUTTON */
+
     const revealButton =
-      document.getElementById("revealButton");
+      document.getElementById(
+        "revealButton"
+      );
+
 
     const openingScreen =
-      document.getElementById("openingScreen");
+      document.getElementById(
+        "openingScreen"
+      );
+
 
     const revealScreen =
-      document.getElementById("revealScreen");
+      document.getElementById(
+        "revealScreen"
+      );
+
 
 
     revealButton.addEventListener(
@@ -717,11 +1956,26 @@
         openingScreen.style.display =
           "none";
 
+
         revealScreen.classList.add(
           "visible"
         );
 
-        window.scrollTo(0, 0);
+
+        revealScreen.setAttribute(
+          "aria-hidden",
+          "false"
+        );
+
+
+        window.scrollTo({
+          top:
+            0,
+
+          behavior:
+            "smooth"
+        });
+
 
         launchConfetti();
 
@@ -729,35 +1983,68 @@
     );
 
 
+
+    /* CONFETTI */
+
     function launchConfetti() {
 
       const colours = [
+
         "#f5d77b",
         "#ffffff",
         "#d6a542",
         "#f7e8b0",
         "#b8802a"
+
       ];
 
-      for (let i = 0; i < 90; i++) {
+
+      const totalPieces =
+        90;
+
+
+      for (
+        let i = 0;
+        i < totalPieces;
+        i++
+      ) {
 
         const piece =
-          document.createElement("div");
+          document.createElement(
+            "div"
+          );
+
 
         piece.className =
           "confetti-piece";
 
+
         const size =
-          Math.random() * 7 + 5;
+          Math.random() *
+          7 +
+          5;
+
 
         piece.style.width =
-          size + "px";
+          size +
+          "px";
+
 
         piece.style.height =
-          (size * 0.55) + "px";
+          (
+            size *
+            0.55
+          ) +
+          "px";
+
 
         piece.style.left =
-          (Math.random() * 100) + "vw";
+          (
+            Math.random() *
+            100
+          ) +
+          "vw";
+
 
         piece.style.background =
           colours[
@@ -767,37 +2054,65 @@
             )
           ];
 
+
         piece.style.animationDuration =
-          (Math.random() * 2.3 + 2.4) +
+          (
+            Math.random() *
+            2.3 +
+            2.4
+          ) +
           "s";
 
+
         piece.style.animationDelay =
-          (Math.random() * 0.5) +
+          (
+            Math.random() *
+            0.5
+          ) +
           "s";
+
 
         piece.style.setProperty(
           "--drift",
-          (Math.random() * 240 - 120) +
+
+          (
+            Math.random() *
+            240 -
+            120
+          ) +
           "px"
         );
 
+
         piece.style.setProperty(
           "--spin",
-          (Math.random() * 900 - 450) +
+
+          (
+            Math.random() *
+            900 -
+            450
+          ) +
           "deg"
         );
+
 
         document.body.appendChild(
           piece
         );
 
+
         setTimeout(
           function() {
+
             piece.remove();
+
           },
+
           6000
         );
+
       }
+
     }
 
   </script>
