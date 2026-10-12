@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Create your reveal</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f7f3eb;
+      color: #28231d;
+    }
+
+    .page {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 45px 22px 70px;
+    }
+
+    h1 {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-weight: normal;
+      line-height: 1;
+      margin: 0 0 15px;
+    }
+
+    .intro {
+      color: #675f55;
+      line-height: 1.6;
+      margin-bottom: 40px;
+    }
+
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 18px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+    }
+
+    .field {
+      margin-bottom: 22px;
+    }
+
+    label {
+      display: block;
+      font-weight: bold;
+      margin-bottom: 8px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      padding: 14px 15px;
+      border: 1px solid #d5cfc5;
+      border-radius: 9px;
+      font: inherit;
+      background: #fffdf9;
+    }
+
+    input:focus,
+    textarea:focus {
+      outline: 2px solid #d8ac55;
+      border-color: transparent;
+    }
+
+    textarea {
+      min-height: 110px;
+      resize: vertical;
+    }
+
+    .two-columns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 18px;
+    }
+
+    button {
+      width: 100%;
+      border: 0;
+      border-radius: 999px;
+      padding: 17px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
+      color: #21180d;
+      font-weight: bold;
+      font-size: 1rem;
+      margin-top: 12px;
+    }
+
+    .note {
+      font-size: 0.78rem;
+      color: #81786d;
+      margin-top: 15px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 600px) {
+      .two-columns {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 23px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="page">
+
+    <h1>Create your surprise</h1>
+
+    <p class="intro">
+      Turn an e-ticket, trip or experience into something special to open.
+      Add the details below and preview your personalised reveal.
+    </p>
+
+    <div class="card">
+
+      <form id="revealForm">
+
+        <div class="field">
+          <label for="recipient">Who is it for?</label>
+          <input
+            id="recipient"
+            name="recipient"
+            placeholder="Sophie"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="sender">Who is it from?</label>
+          <input
+            id="sender"
+            name="sender"
+            placeholder="Michael"
+            required
+          >
+        </div>
+
+        <div class="field">
+          <label for="event">What's the surprise?</label>
+          <input
+            id="event"
+            name="event"
+            placeholder="A Night at the Theatre"
+            required
+          >
+        </div>
+
+        <div class="two-columns">
+
+          <div class="field">
+            <label for="date">Date</label>
+            <input
+              id="date"
+              name="date"
+              type="date"
+              required
+            >
+          </div>
+
+          <div class="field">
+            <label for="time">Time</label>
+            <input
+              id="time"
+              name="time"
+              type="time"
+            >
+          </div>
+
+        </div>
+
+        <div class="field">
+          <label for="venue">Venue or destination</label>
+          <input
+            id="venue"
+            name="venue"
+            placeholder="The Grand Theatre, London"
+          >
+        </div>
+
+        <div class="field">
+          <label for="admit">Who is going?</label>
+          <input
+            id="admit"
+            name="admit"
+            placeholder="Sophie + 1"
+          >
+        </div>
+
+        <div class="field">
+          <label for="message">Your message</label>
+          <textarea
+            id="message"
+            name="message"
+            placeholder="I thought we should have something to look forward to..."
+          ></textarea>
+        </div>
+
+        <div class="field">
+          <label for="ticketUrl">Official ticket or booking link</label>
+          <input
+            id="ticketUrl"
+            name="ticketUrl"
+            type="url"
+            placeholder="https://..."
+          >
+        </div>
+
+        <button type="submit">
+          Preview my reveal
+        </button>
+
+      </form>
+
+      <div class="note">
+        This is currently a prototype. Nothing entered here is stored.
+      </div>
+
+    </div>
+
+  </main>
+
+
+  <script>
+
+    document
+      .getElementById("revealForm")
+      .addEventListener("submit", function(event) {
+
+        event.preventDefault();
+
+        const params = new URLSearchParams();
+
+        params.set(
+          "recipient",
+          document.getElementById("recipient").value
+        );
+
+        params.set(
+          "sender",
+          document.getElementById("sender").value
+        );
+
+        params.set(
+          "event",
+          document.getElementById("event").value
+        );
+
+        params.set(
+          "date",
+          document.getElementById("date").value
+        );
+
+        params.set(
+          "time",
+          document.getElementById("time").value
+        );
+
+        params.set(
+          "venue",
+          document.getElementById("venue").value
+        );
+
+        params.set(
+          "admit",
+          document.getElementById("admit").value
+        );
+
+        params.set(
+          "message",
+          document.getElementById("message").value
+        );
+
+        params.set(
+          "ticketUrl",
+          document.getElementById("ticketUrl").value
+        );
+
+        window.location.href =
+          "reveal.html?" + params.toString();
+
+      });
+
+  </script>
+
+</body>
+</html>
