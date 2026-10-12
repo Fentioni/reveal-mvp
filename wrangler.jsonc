@@ -6,5 +6,20 @@
   "assets": {
     "directory": "./",
     "binding": "ASSETS"
-  }
+  },
+
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "reveal-db",
+      "database_id": "94356ca3-17f9-4b9a-9f5c-f103c13b9173"
+    }
+  ],
+
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "reveal-images"
+    }
+  ]
 }
