@@ -75,7 +75,6 @@
       max-width: 650px;
       line-height: 1.65;
       color: #675f55;
-      font-size: 1rem;
     }
 
     .builder-layout {
@@ -83,27 +82,21 @@
       grid-template-columns:
         minmax(0, 1fr)
         minmax(360px, 0.85fr);
-
       gap: 32px;
       align-items: start;
     }
 
     .form-card {
-      background: var(--card-bg);
+      background: white;
       border-radius: 20px;
       padding: 30px;
-
       box-shadow:
         0 12px 35px
         rgba(0,0,0,0.07);
     }
 
     .section-heading {
-      font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 1.55rem;
       font-weight: normal;
       margin: 0 0 26px;
@@ -121,7 +114,6 @@
 
     .field-help {
       margin: -2px 0 9px;
-
       font-size: 0.78rem;
       line-height: 1.5;
       color: #81786d;
@@ -130,29 +122,18 @@
     input,
     textarea {
       width: 100%;
-
-      border:
-        1px solid #d6d0c5;
-
+      border: 1px solid #d6d0c5;
       border-radius: 10px;
-
-      padding:
-        14px 15px;
-
+      padding: 14px 15px;
       font: inherit;
+      background: #fffdf9;
       color: var(--text);
-
-      background:
-        #fffdf9;
     }
 
     input:focus,
     textarea:focus {
-      outline:
-        2px solid #d8ac55;
-
-      border-color:
-        transparent;
+      outline: 2px solid #d8ac55;
+      border-color: transparent;
     }
 
     textarea {
@@ -173,43 +154,22 @@
 
     .warning-box {
       margin-top: 10px;
-
-      background:
-        #fff7e6;
-
-      border:
-        1px solid #ead4a4;
-
+      background: #fff7e6;
+      border: 1px solid #ead4a4;
       border-radius: 10px;
-
-      padding:
-        12px 14px;
-
-      font-size:
-        0.78rem;
-
-      line-height:
-        1.5;
-
-      color:
-        #6b5733;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #6b5733;
     }
 
     .image-preview-wrap {
       display: none;
-
       margin-top: 14px;
-
-      border:
-        1px solid #ded7ca;
-
-      border-radius:
-        13px;
-
+      border: 1px solid #ded7ca;
+      border-radius: 13px;
       overflow: hidden;
-
-      background:
-        #f4f0e8;
+      background: #f4f0e8;
     }
 
     .image-preview-wrap.visible {
@@ -218,145 +178,92 @@
 
     .image-preview {
       width: 100%;
-      max-height: 260px;
-      display: block;
+      max-height: 280px;
       object-fit: cover;
+      display: block;
     }
 
     .image-caption {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      gap: 10px;
-
-      padding:
-        9px 12px;
-
-      background:
-        #faf8f3;
-
-      color:
-        #776e63;
-
-      font-size:
-        0.75rem;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      background: #faf8f3;
+      color: #776e63;
+      font-size: 0.75rem;
     }
 
     .remove-image-button {
       border: 0;
-      padding: 5px 8px;
       border-radius: 7px;
-
-      background:
-        #eee8dd;
-
-      color:
-        #5c5349;
-
-      cursor:
-        pointer;
-
-      font-size:
-        0.72rem;
+      padding: 6px 9px;
+      cursor: pointer;
+      background: #eee7da;
+      color: #554b40;
     }
 
-    .error-message {
+    .message-box {
       display: none;
-
-      background:
-        #fff0ed;
-
-      border:
-        1px solid #edc3ba;
-
-      border-radius:
-        10px;
-
-      color:
-        #8b2f22;
-
-      padding:
-        13px 15px;
-
-      margin-bottom:
-        20px;
-
-      font-size:
-        0.85rem;
-
-      line-height:
-        1.5;
+      border-radius: 10px;
+      padding: 13px 15px;
+      margin-bottom: 20px;
+      line-height: 1.5;
+      font-size: 0.85rem;
     }
 
-    .error-message.visible {
+    .message-box.visible {
       display: block;
+    }
+
+    .message-box.error {
+      background: #fff0ed;
+      border: 1px solid #edc3ba;
+      color: #8b2f22;
+    }
+
+    .message-box.info {
+      background: #f1f6ff;
+      border: 1px solid #c9d9f0;
+      color: #3c5878;
     }
 
     .review-button {
       width: 100%;
-
       border: none;
       border-radius: 999px;
-
-      padding:
-        17px 24px;
-
-      margin-top:
-        10px;
-
+      padding: 17px 24px;
+      margin-top: 10px;
       cursor: pointer;
-
       background:
         linear-gradient(
           135deg,
           #f4d98b,
           #b47b27
         );
-
-      color:
-        #21180d;
-
-      font-size:
-        1rem;
-
-      font-weight:
-        700;
-
+      color: #21180d;
+      font-size: 1rem;
+      font-weight: 700;
       box-shadow:
         0 11px 27px
         rgba(116,79,23,0.2);
     }
 
-    .review-button:hover {
-      transform:
-        translateY(-1px);
-    }
-
     .review-button:disabled {
       opacity: 0.55;
       cursor: wait;
-      transform: none;
     }
 
     .form-note {
       text-align: center;
-
-      margin-top:
-        14px;
-
-      font-size:
-        0.75rem;
-
-      color:
-        #867d72;
-
-      line-height:
-        1.5;
+      margin-top: 14px;
+      font-size: 0.75rem;
+      color: #867d72;
+      line-height: 1.5;
     }
 
 
-
-    /* LIVE TEMPLATE PREVIEW */
+    /* LIVE PREVIEW */
 
     .preview-column {
       position: sticky;
@@ -365,21 +272,11 @@
 
     .preview-label {
       font-size: 0.72rem;
-
-      text-transform:
-        uppercase;
-
-      letter-spacing:
-        0.18em;
-
-      font-weight:
-        700;
-
-      color:
-        #8a7964;
-
-      margin:
-        0 0 10px 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+      color: #8a7964;
+      margin: 0 0 10px 4px;
     }
 
     .preview-shell {
@@ -391,64 +288,26 @@
           #100c08 100%
         );
 
-      border-radius:
-        24px;
-
-      padding:
-        28px 22px 26px;
-
+      border-radius: 24px;
+      padding: 28px 22px 26px;
       color: white;
 
       box-shadow:
         0 20px 55px
         rgba(0,0,0,0.18);
-
-      overflow: hidden;
-      position: relative;
-    }
-
-    .preview-shell::before {
-      content: "";
-
-      position: absolute;
-
-      width: 220px;
-      height: 220px;
-
-      border-radius:
-        50%;
-
-      top: -90px;
-      right: -90px;
-
-      background:
-        rgba(216,172,85,0.12);
     }
 
     .preview-top {
       text-align: center;
-      position: relative;
-      z-index: 2;
-
-      margin-bottom:
-        22px;
+      margin-bottom: 22px;
     }
 
     .preview-small-heading {
-      text-transform:
-        uppercase;
-
-      letter-spacing:
-        0.18em;
-
-      font-size:
-        0.62rem;
-
-      color:
-        #f3dc9a;
-
-      margin-bottom:
-        9px;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.62rem;
+      color: #f3dc9a;
+      margin-bottom: 9px;
     }
 
     .preview-surprise-text {
@@ -457,14 +316,8 @@
         "Times New Roman",
         serif;
 
-      font-size:
-        1.15rem;
-
-      color:
-        #f5e9d0;
-
-      margin-bottom:
-        3px;
+      font-size: 1.15rem;
+      color: #f5e9d0;
     }
 
     .preview-event-name {
@@ -474,35 +327,19 @@
         serif;
 
       font-size:
-        clamp(
-          2rem,
-          4vw,
-          3rem
-        );
+        clamp(2rem, 4vw, 3rem);
 
       line-height: 1;
       font-weight: normal;
-      margin: 0;
-
-      overflow-wrap:
-        anywhere;
+      margin: 4px 0 0;
+      overflow-wrap: anywhere;
     }
 
     .live-image-wrap {
       display: none;
-
-      margin-bottom:
-        20px;
-
-      border-radius:
-        15px;
-
-      overflow:
-        hidden;
-
-      box-shadow:
-        0 16px 35px
-        rgba(0,0,0,0.28);
+      margin-bottom: 20px;
+      border-radius: 15px;
+      overflow: hidden;
     }
 
     .live-image-wrap.visible {
@@ -517,46 +354,25 @@
     }
 
     .preview-ticket {
-      position: relative;
-      z-index: 2;
-
       background:
         linear-gradient(
           135deg,
-          #fffdf6 0%,
-          var(--cream) 55%,
-          #f3e1b8 100%
+          #fffdf6,
+          #fff8e9,
+          #f3e1b8
         );
 
-      color:
-        #2c241b;
-
-      border-radius:
-        17px;
-
-      padding:
-        27px 24px;
-
-      box-shadow:
-        0 20px 45px
-        rgba(0,0,0,0.32);
+      color: #2c241b;
+      border-radius: 17px;
+      padding: 27px 24px;
     }
 
     .preview-ticket-label {
-      font-size:
-        0.62rem;
-
-      font-weight:
-        700;
-
-      letter-spacing:
-        0.22em;
-
-      color:
-        #98702c;
-
-      margin-bottom:
-        11px;
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: #98702c;
+      margin-bottom: 11px;
     }
 
     .preview-ticket-title {
@@ -565,18 +381,11 @@
         "Times New Roman",
         serif;
 
+      font-size: 2rem;
       font-weight: normal;
-
-      font-size:
-        2rem;
-
       line-height: 1;
-
-      margin:
-        0 0 20px;
-
-      overflow-wrap:
-        anywhere;
+      margin: 0 0 20px;
+      overflow-wrap: anywhere;
     }
 
     .preview-divider {
@@ -595,61 +404,32 @@
 
     .preview-details {
       display: grid;
-
-      grid-template-columns:
-        1fr 1fr;
-
-      gap:
-        17px;
-
-      text-align:
-        left;
+      grid-template-columns: 1fr 1fr;
+      gap: 17px;
+      text-align: left;
     }
 
     .preview-detail-label {
       display: block;
-
-      text-transform:
-        uppercase;
-
-      font-size:
-        0.58rem;
-
-      letter-spacing:
-        0.1em;
-
-      color:
-        #756a59;
-
-      margin-bottom:
-        4px;
+      text-transform: uppercase;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: #756a59;
+      margin-bottom: 4px;
     }
 
     .preview-detail-value {
       display: block;
-
-      font-size:
-        0.82rem;
-
-      line-height:
-        1.4;
-
-      font-weight:
-        700;
-
-      overflow-wrap:
-        anywhere;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      font-weight: 700;
+      overflow-wrap: anywhere;
     }
 
     .live-message {
-      margin-top:
-        20px;
-
-      padding:
-        18px;
-
-      border-radius:
-        14px;
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 14px;
 
       background:
         rgba(255,255,255,0.06);
@@ -658,8 +438,7 @@
         1px solid
         rgba(243,220,154,0.18);
 
-      text-align:
-        center;
+      text-align: center;
     }
 
     .live-message-title {
@@ -668,56 +447,32 @@
         "Times New Roman",
         serif;
 
-      font-size:
-        1rem;
-
-      margin-bottom:
-        7px;
+      margin-bottom: 7px;
     }
 
     .live-message-text {
       margin: 0;
-
-      font-size:
-        0.78rem;
-
-      line-height:
-        1.55;
-
-      color:
-        #ddd3c2;
-
-      white-space:
-        pre-wrap;
-
-      overflow-wrap:
-        anywhere;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: #ddd3c2;
+      white-space: pre-wrap;
     }
 
     .preview-explanation {
-      margin:
-        14px 3px 0;
-
-      font-size:
-        0.75rem;
-
-      line-height:
-        1.5;
-
-      color:
-        #756d63;
+      margin: 14px 3px 0;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #756d63;
     }
 
     @media (max-width: 900px) {
 
       .builder-layout {
-        grid-template-columns:
-          1fr;
+        grid-template-columns: 1fr;
       }
 
       .preview-column {
-        position:
-          static;
+        position: static;
       }
 
     }
@@ -725,34 +480,20 @@
     @media (max-width: 600px) {
 
       .page {
-        padding:
-          30px 16px 60px;
+        padding: 30px 16px 60px;
       }
 
       .form-card {
-        padding:
-          22px;
+        padding: 22px;
       }
 
       .two-columns {
-        grid-template-columns:
-          1fr;
-
-        gap:
-          0;
+        grid-template-columns: 1fr;
+        gap: 0;
       }
 
-      .preview-shell {
-        border-radius:
-          20px;
-
-        padding:
-          23px 17px;
-      }
-
-      .preview-ticket {
-        padding:
-          23px 20px;
+      .preview-details {
+        grid-template-columns: 1fr 1fr;
       }
 
     }
@@ -762,7 +503,6 @@
 <body>
 
   <main class="page">
-
 
     <header class="page-header">
 
@@ -783,22 +523,22 @@
     </header>
 
 
-
     <div class="builder-layout">
 
 
-      <!-- FORM -->
-
       <section class="form-card">
 
-        <h2 class="section-heading">
+        <h2
+          id="formHeading"
+          class="section-heading"
+        >
           Tell us about the surprise
         </h2>
 
 
         <div
-          id="errorMessage"
-          class="error-message"
+          id="messageBox"
+          class="message-box"
         ></div>
 
 
@@ -813,9 +553,9 @@
 
             <input
               id="recipient"
-              name="recipient"
               type="text"
               placeholder="Chloe"
+              maxlength="80"
               required
             >
 
@@ -830,9 +570,9 @@
 
             <input
               id="sender"
-              name="sender"
               type="text"
               placeholder="Michael"
+              maxlength="80"
               required
             >
 
@@ -841,27 +581,24 @@
 
           <div class="field">
 
-            <label for="event">
+            <label for="eventName">
               What's the surprise?
             </label>
 
             <input
-              id="event"
-              name="event"
+              id="eventName"
               type="text"
               placeholder="A Night at the Theatre"
+              maxlength="160"
               required
             >
 
           </div>
 
 
-
-          <!-- IMAGE -->
-
           <div class="field">
 
-            <label for="eventImage">
+            <label for="image">
               Add an image
             </label>
 
@@ -871,16 +608,15 @@
             </p>
 
             <input
-              id="eventImage"
-              name="eventImage"
+              id="image"
               type="file"
               accept="image/jpeg,image/png,image/webp"
             >
 
             <div class="warning-box">
               Avoid uploading visible QR codes, barcodes
-              or other information that could allow
-              somebody else to use the real ticket.
+              or other information that could allow somebody
+              else to use the real ticket.
             </div>
 
 
@@ -892,13 +628,13 @@
               <img
                 id="imagePreview"
                 class="image-preview"
-                alt="Selected image"
+                alt="Selected event image"
               >
 
               <div class="image-caption">
 
                 <span id="imageCaption">
-                  Selected image
+                  Image selected
                 </span>
 
                 <button
@@ -916,19 +652,16 @@
           </div>
 
 
-
           <div class="two-columns">
-
 
             <div class="field">
 
-              <label for="date">
+              <label for="eventDate">
                 Date
               </label>
 
               <input
-                id="date"
-                name="date"
+                id="eventDate"
                 type="date"
                 required
               >
@@ -938,21 +671,18 @@
 
             <div class="field">
 
-              <label for="time">
+              <label for="eventTime">
                 Time
               </label>
 
               <input
-                id="time"
-                name="time"
+                id="eventTime"
                 type="time"
               >
 
             </div>
 
-
           </div>
-
 
 
           <div class="field">
@@ -963,13 +693,12 @@
 
             <input
               id="venue"
-              name="venue"
               type="text"
               placeholder="The Grand Theatre, London"
+              maxlength="200"
             >
 
           </div>
-
 
 
           <div class="field">
@@ -980,29 +709,27 @@
 
             <input
               id="admit"
-              name="admit"
               type="text"
               placeholder="Chloe + 1"
+              maxlength="120"
             >
 
           </div>
 
 
-
           <div class="field">
 
-            <label for="message">
+            <label for="personalMessage">
               Your message
             </label>
 
             <textarea
-              id="message"
-              name="message"
+              id="personalMessage"
+              maxlength="1200"
               placeholder="I thought we should have something to look forward to..."
             ></textarea>
 
           </div>
-
 
 
           <div class="field">
@@ -1012,19 +739,17 @@
             </label>
 
             <p class="field-help">
-              Optional. This will only become available
+              Optional. This will only be made available
               in the paid recipient reveal.
             </p>
 
             <input
               id="ticketUrl"
-              name="ticketUrl"
               type="url"
               placeholder="https://..."
             >
 
           </div>
-
 
 
           <button
@@ -1039,15 +764,13 @@
 
 
         <div class="form-note">
-          The full animated recipient reveal is only
-          unlocked after payment.
+          The full animated reveal is only unlocked
+          after successful payment.
         </div>
 
       </section>
 
 
-
-      <!-- LIVE TEMPLATE PREVIEW -->
 
       <aside class="preview-column">
 
@@ -1079,7 +802,6 @@
           </div>
 
 
-
           <div
             id="liveImageWrap"
             class="live-image-wrap"
@@ -1092,7 +814,6 @@
             >
 
           </div>
-
 
 
           <article class="preview-ticket">
@@ -1112,7 +833,6 @@
 
 
             <div class="preview-details">
-
 
               <div>
 
@@ -1209,11 +929,9 @@
 
               </div>
 
-
             </div>
 
           </article>
-
 
 
           <div class="live-message">
@@ -1231,7 +949,6 @@
 
           </div>
 
-
         </div>
 
 
@@ -1243,263 +960,160 @@
 
       </aside>
 
-
     </div>
 
   </main>
 
 
-
   <script>
 
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const editingRevealId =
+      params.get("edit");
+
+
+    let existingImagePresent =
+      false;
+
+
+    let removeExistingImage =
+      false;
+
+
+    let selectedImageFile =
+      null;
+
+
+    let activeImageObjectUrl =
+      null;
+
+
+
     const form =
-      document.getElementById("revealForm");
+      document.getElementById(
+        "revealForm"
+      );
 
 
     const recipientInput =
-      document.getElementById("recipient");
+      document.getElementById(
+        "recipient"
+      );
 
     const senderInput =
-      document.getElementById("sender");
+      document.getElementById(
+        "sender"
+      );
 
-    const eventInput =
-      document.getElementById("event");
+    const eventNameInput =
+      document.getElementById(
+        "eventName"
+      );
 
-    const dateInput =
-      document.getElementById("date");
+    const eventDateInput =
+      document.getElementById(
+        "eventDate"
+      );
 
-    const timeInput =
-      document.getElementById("time");
+    const eventTimeInput =
+      document.getElementById(
+        "eventTime"
+      );
 
     const venueInput =
-      document.getElementById("venue");
+      document.getElementById(
+        "venue"
+      );
 
     const admitInput =
-      document.getElementById("admit");
+      document.getElementById(
+        "admit"
+      );
 
-    const messageInput =
-      document.getElementById("message");
+    const personalMessageInput =
+      document.getElementById(
+        "personalMessage"
+      );
 
     const ticketUrlInput =
-      document.getElementById("ticketUrl");
+      document.getElementById(
+        "ticketUrl"
+      );
 
     const imageInput =
-      document.getElementById("eventImage");
+      document.getElementById(
+        "image"
+      );
 
 
     const reviewButton =
-      document.getElementById("reviewButton");
+      document.getElementById(
+        "reviewButton"
+      );
 
-    const errorMessage =
-      document.getElementById("errorMessage");
 
-
-    const liveEventHeading =
-      document.getElementById("liveEventHeading");
-
-    const liveTicketTitle =
-      document.getElementById("liveTicketTitle");
-
-    const liveDate =
-      document.getElementById("liveDate");
-
-    const liveTime =
-      document.getElementById("liveTime");
-
-    const liveVenue =
-      document.getElementById("liveVenue");
-
-    const liveAdmit =
-      document.getElementById("liveAdmit");
-
-    const liveRecipient =
-      document.getElementById("liveRecipient");
-
-    const liveSender =
-      document.getElementById("liveSender");
-
-    const liveMessage =
-      document.getElementById("liveMessage");
-
-    const liveImageWrap =
-      document.getElementById("liveImageWrap");
-
-    const liveImage =
-      document.getElementById("liveImage");
+    const messageBox =
+      document.getElementById(
+        "messageBox"
+      );
 
 
     const imagePreviewWrap =
-      document.getElementById("imagePreviewWrap");
+      document.getElementById(
+        "imagePreviewWrap"
+      );
 
     const imagePreview =
-      document.getElementById("imagePreview");
+      document.getElementById(
+        "imagePreview"
+      );
 
     const imageCaption =
-      document.getElementById("imageCaption");
+      document.getElementById(
+        "imageCaption"
+      );
 
     const removeImageButton =
-      document.getElementById("removeImageButton");
+      document.getElementById(
+        "removeImageButton"
+      );
+
+
+    const liveImageWrap =
+      document.getElementById(
+        "liveImageWrap"
+      );
+
+    const liveImage =
+      document.getElementById(
+        "liveImage"
+      );
 
 
 
-    function getDraft() {
+    function getEditToken(id) {
 
-      try {
-
-        const stored =
-          sessionStorage.getItem(
-            "revealDraft"
-          );
-
-
-        if (!stored) {
-          return null;
-        }
-
-
-        return JSON.parse(stored);
-
-      } catch {
-
-        return null;
-      }
-
-    }
-
-
-
-    function saveDraft() {
-
-      const draft = {
-
-        recipient:
-          recipientInput.value,
-
-        sender:
-          senderInput.value,
-
-        event:
-          eventInput.value,
-
-        date:
-          dateInput.value,
-
-        time:
-          timeInput.value,
-
-        venue:
-          venueInput.value,
-
-        admit:
-          admitInput.value,
-
-        message:
-          messageInput.value,
-
-        ticketUrl:
-          ticketUrlInput.value
-
-      };
-
-
-      sessionStorage.setItem(
-        "revealDraft",
-        JSON.stringify(draft)
+      return localStorage.getItem(
+        "reveal_edit_" + id
       );
 
     }
 
 
 
-    function restoreDraft() {
+    function saveEditToken(
+      id,
+      token
+    ) {
 
-      const draft =
-        getDraft();
-
-
-      if (!draft) {
-
-        restoreStoredImage();
-
-        return;
-      }
-
-
-      recipientInput.value =
-        draft.recipient || "";
-
-      senderInput.value =
-        draft.sender || "";
-
-      eventInput.value =
-        draft.event || "";
-
-      dateInput.value =
-        draft.date || "";
-
-      timeInput.value =
-        draft.time || "";
-
-      venueInput.value =
-        draft.venue || "";
-
-      admitInput.value =
-        draft.admit || "";
-
-      messageInput.value =
-        draft.message || "";
-
-      ticketUrlInput.value =
-        draft.ticketUrl || "";
-
-
-      restoreStoredImage();
-
-      updateLivePreview();
-
-    }
-
-
-
-    function restoreStoredImage() {
-
-      const storedImage =
-        sessionStorage.getItem(
-          "revealImage"
-        );
-
-
-      if (!storedImage) {
-
-        imagePreviewWrap.classList.remove(
-          "visible"
-        );
-
-        liveImageWrap.classList.remove(
-          "visible"
-        );
-
-        return;
-      }
-
-
-      imagePreview.src =
-        storedImage;
-
-      liveImage.src =
-        storedImage;
-
-
-      imageCaption.textContent =
-        "Saved image";
-
-
-      imagePreviewWrap.classList.add(
-        "visible"
-      );
-
-      liveImageWrap.classList.add(
-        "visible"
+      localStorage.setItem(
+        "reveal_edit_" + id,
+        token
       );
 
     }
@@ -1536,18 +1150,9 @@
 
       const date =
         new Date(
-          value + "T12:00:00"
+          value +
+          "T12:00:00"
         );
-
-
-      if (
-        isNaN(
-          date.getTime()
-        )
-      ) {
-
-        return value;
-      }
 
 
       return new Intl.DateTimeFormat(
@@ -1618,7 +1223,7 @@
 
       const eventName =
         valueOrFallback(
-          eventInput.value,
+          eventNameInput.value,
           "A Night at the Theatre"
         );
 
@@ -1639,40 +1244,66 @@
 
       const message =
         valueOrFallback(
-          messageInput.value,
+          personalMessageInput.value,
           "Your personal message will appear here."
         );
 
 
-      liveEventHeading.textContent =
+      document.getElementById(
+        "liveEventHeading"
+      ).textContent =
         eventName;
 
-      liveTicketTitle.textContent =
+
+      document.getElementById(
+        "liveTicketTitle"
+      ).textContent =
         eventName;
 
-      liveDate.textContent =
+
+      document.getElementById(
+        "liveDate"
+      ).textContent =
         formatDate(
-          dateInput.value
+          eventDateInput.value
         );
 
-      liveTime.textContent =
+
+      document.getElementById(
+        "liveTime"
+      ).textContent =
         formatTime(
-          timeInput.value
+          eventTimeInput.value
         );
 
-      liveVenue.textContent =
+
+      document.getElementById(
+        "liveVenue"
+      ).textContent =
         venue;
 
-      liveAdmit.textContent =
+
+      document.getElementById(
+        "liveAdmit"
+      ).textContent =
         admit;
 
-      liveRecipient.textContent =
+
+      document.getElementById(
+        "liveRecipient"
+      ).textContent =
         recipient;
 
-      liveSender.textContent =
+
+      document.getElementById(
+        "liveSender"
+      ).textContent =
         sender;
 
-      liveMessage.textContent =
+
+      document.getElementById(
+        "liveMessage"
+      ).textContent =
         message;
 
     }
@@ -1683,16 +1314,14 @@
 
       recipientInput,
       senderInput,
-      eventInput,
-      dateInput,
-      timeInput,
+      eventNameInput,
+      eventDateInput,
+      eventTimeInput,
       venueInput,
       admitInput,
-      messageInput,
-      ticketUrlInput
+      personalMessageInput
 
     ];
-
 
 
     liveInputs.forEach(
@@ -1700,23 +1329,13 @@
 
         input.addEventListener(
           "input",
-          function() {
-
-            updateLivePreview();
-            saveDraft();
-
-          }
+          updateLivePreview
         );
 
 
         input.addEventListener(
           "change",
-          function() {
-
-            updateLivePreview();
-            saveDraft();
-
-          }
+          updateLivePreview
         );
 
       }
@@ -1726,9 +1345,9 @@
 
     imageInput.addEventListener(
       "change",
-      async function() {
+      function() {
 
-        hideError();
+        hideMessage();
 
 
         const file =
@@ -1740,91 +1359,61 @@
         }
 
 
-        const permittedTypes = [
-
-          "image/jpeg",
-          "image/png",
-          "image/webp"
-
-        ];
-
-
         if (
-          !permittedTypes.includes(
+          ![
+            "image/jpeg",
+            "image/png",
+            "image/webp"
+          ].includes(
             file.type
           )
         ) {
 
           imageInput.value = "";
 
-          showError(
-            "Please choose a JPEG, PNG or WebP image."
+          showMessage(
+            "Please choose a JPEG, PNG or WebP image.",
+            "error"
           );
 
           return;
         }
-
-
-        const maximumSize =
-          10 * 1024 * 1024;
 
 
         if (
           file.size >
-          maximumSize
+          10 * 1024 * 1024
         ) {
 
           imageInput.value = "";
 
-          showError(
-            "That image is too large. Please choose an image smaller than 10 MB."
+          showMessage(
+            "Please choose an image smaller than 10 MB.",
+            "error"
           );
 
           return;
         }
 
 
-        try {
-
-          const compressed =
-            await compressImage(file);
+        selectedImageFile =
+          file;
 
 
-          sessionStorage.setItem(
-            "revealImage",
-            compressed
+        removeExistingImage =
+          false;
+
+
+        const objectUrl =
+          URL.createObjectURL(
+            file
           );
 
 
-          imagePreview.src =
-            compressed;
-
-          liveImage.src =
-            compressed;
-
-
-          imageCaption.textContent =
-            file.name;
-
-
-          imagePreviewWrap.classList.add(
-            "visible"
-          );
-
-          liveImageWrap.classList.add(
-            "visible"
-          );
-
-
-          saveDraft();
-
-        } catch {
-
-          showError(
-            "That image could not be processed. Please try another."
-          );
-
-        }
+        setPreviewImage(
+          objectUrl,
+          file.name
+        );
 
       }
     );
@@ -1835,46 +1424,115 @@
       "click",
       function() {
 
-        sessionStorage.removeItem(
-          "revealImage"
-        );
+        selectedImageFile =
+          null;
 
 
-        imageInput.value = "";
+        imageInput.value =
+          "";
 
 
-        imagePreview.removeAttribute(
-          "src"
-        );
+        if (
+          existingImagePresent
+        ) {
 
-        liveImage.removeAttribute(
-          "src"
-        );
+          removeExistingImage =
+            true;
+        }
 
 
-        imagePreviewWrap.classList.remove(
-          "visible"
-        );
-
-        liveImageWrap.classList.remove(
-          "visible"
-        );
+        clearPreviewImage();
 
       }
     );
 
 
 
+    function setPreviewImage(
+      url,
+      caption
+    ) {
+
+      if (
+        activeImageObjectUrl &&
+        activeImageObjectUrl.startsWith(
+          "blob:"
+        )
+      ) {
+
+        URL.revokeObjectURL(
+          activeImageObjectUrl
+        );
+
+      }
+
+
+      activeImageObjectUrl =
+        url;
+
+
+      imagePreview.src =
+        url;
+
+      liveImage.src =
+        url;
+
+
+      imageCaption.textContent =
+        caption;
+
+
+      imagePreviewWrap.classList.add(
+        "visible"
+      );
+
+
+      liveImageWrap.classList.add(
+        "visible"
+      );
+
+    }
+
+
+
+    function clearPreviewImage() {
+
+      imagePreviewWrap.classList.remove(
+        "visible"
+      );
+
+
+      liveImageWrap.classList.remove(
+        "visible"
+      );
+
+
+      imagePreview.removeAttribute(
+        "src"
+      );
+
+
+      liveImage.removeAttribute(
+        "src"
+      );
+
+    }
+
+
+
     form.addEventListener(
       "submit",
-      function(event) {
+      async function(event) {
 
         event.preventDefault();
 
-        hideError();
+
+        hideMessage();
 
 
-        if (!form.checkValidity()) {
+        if (
+          !form.checkValidity()
+        ) {
 
           form.reportValidity();
 
@@ -1882,188 +1540,471 @@
         }
 
 
-        saveDraft();
+        reviewButton.disabled =
+          true;
 
 
-        sessionStorage.setItem(
-          "revealStatus",
-          "draft"
-        );
+        reviewButton.textContent =
+          "Saving your reveal...";
 
 
-        window.location.href =
-          "reveal.html";
+        try {
+
+          const body =
+            new FormData();
+
+
+          body.append(
+            "recipient",
+            recipientInput.value
+          );
+
+
+          body.append(
+            "sender",
+            senderInput.value
+          );
+
+
+          body.append(
+            "eventName",
+            eventNameInput.value
+          );
+
+
+          body.append(
+            "eventDate",
+            eventDateInput.value
+          );
+
+
+          body.append(
+            "eventTime",
+            eventTimeInput.value
+          );
+
+
+          body.append(
+            "venue",
+            venueInput.value
+          );
+
+
+          body.append(
+            "admit",
+            admitInput.value
+          );
+
+
+          body.append(
+            "personalMessage",
+            personalMessageInput.value
+          );
+
+
+          body.append(
+            "ticketUrl",
+            ticketUrlInput.value
+          );
+
+
+          if (
+            selectedImageFile
+          ) {
+
+            body.append(
+              "image",
+              selectedImageFile
+            );
+
+          }
+
+
+          if (
+            removeExistingImage
+          ) {
+
+            body.append(
+              "removeImage",
+              "1"
+            );
+
+          }
+
+
+          let endpoint =
+            "/api/reveals";
+
+
+          let method =
+            "POST";
+
+
+          const headers =
+            {};
+
+
+          if (
+            editingRevealId
+          ) {
+
+            const editToken =
+              getEditToken(
+                editingRevealId
+              );
+
+
+            if (!editToken) {
+
+              throw new Error(
+                "The editing key for this reveal is not available in this browser."
+              );
+
+            }
+
+
+            endpoint =
+              "/api/reveals/" +
+              encodeURIComponent(
+                editingRevealId
+              );
+
+
+            method =
+              "PUT";
+
+
+            headers[
+              "X-Edit-Token"
+            ] =
+              editToken;
+
+          }
+
+
+          const response =
+            await fetch(
+              endpoint,
+              {
+                method,
+                headers,
+                body
+              }
+            );
+
+
+          const result =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !result.success
+          ) {
+
+            throw new Error(
+              result.error ||
+              "The reveal could not be saved."
+            );
+
+          }
+
+
+          let revealId =
+            editingRevealId;
+
+
+          if (
+            method === "POST"
+          ) {
+
+            revealId =
+              result.id;
+
+
+            saveEditToken(
+              result.id,
+              result.editToken
+            );
+
+          }
+
+
+          window.location.href =
+            "reveal.html?id=" +
+            encodeURIComponent(
+              revealId
+            );
+
+        } catch (error) {
+
+          showMessage(
+            error.message ||
+            "Something went wrong while saving the reveal.",
+            "error"
+          );
+
+
+          reviewButton.disabled =
+            false;
+
+
+          reviewButton.textContent =
+            "Review my reveal";
+
+        }
 
       }
     );
 
 
 
-    function compressImage(file) {
+    async function loadExistingReveal() {
 
-      return new Promise(
-        function(resolve, reject) {
+      if (
+        !editingRevealId
+      ) {
 
-          const reader =
-            new FileReader();
+        updateLivePreview();
 
-
-          reader.onload =
-            function(event) {
-
-              const image =
-                new Image();
+        return;
+      }
 
 
-              image.onload =
-                function() {
-
-                  const maxWidth =
-                    1200;
-
-                  const maxHeight =
-                    1200;
+      const token =
+        getEditToken(
+          editingRevealId
+        );
 
 
-                  let width =
-                    image.width;
+      if (!token) {
 
-                  let height =
-                    image.height;
-
-
-                  if (
-                    width > maxWidth ||
-                    height > maxHeight
-                  ) {
-
-                    const scale =
-                      Math.min(
-                        maxWidth / width,
-                        maxHeight / height
-                      );
+        showMessage(
+          "This reveal cannot be amended in this browser because its private editing key is missing.",
+          "error"
+        );
 
 
-                    width =
-                      Math.round(
-                        width * scale
-                      );
+        reviewButton.disabled =
+          true;
+
+        return;
+      }
 
 
-                    height =
-                      Math.round(
-                        height * scale
-                      );
-
-                  }
+      showMessage(
+        "Loading your saved reveal...",
+        "info"
+      );
 
 
-                  const canvas =
-                    document.createElement(
-                      "canvas"
-                    );
+      try {
+
+        const response =
+          await fetch(
+            "/api/reveals/" +
+            encodeURIComponent(
+              editingRevealId
+            ),
+            {
+              headers: {
+                "X-Edit-Token":
+                  token
+              }
+            }
+          );
 
 
-                  canvas.width =
-                    width;
-
-                  canvas.height =
-                    height;
+        const result =
+          await response.json();
 
 
-                  const context =
-                    canvas.getContext(
-                      "2d"
-                    );
+        if (
+          !response.ok ||
+          !result.success
+        ) {
 
-
-                  context.fillStyle =
-                    "#ffffff";
-
-
-                  context.fillRect(
-                    0,
-                    0,
-                    width,
-                    height
-                  );
-
-
-                  context.drawImage(
-                    image,
-                    0,
-                    0,
-                    width,
-                    height
-                  );
-
-
-                  resolve(
-                    canvas.toDataURL(
-                      "image/jpeg",
-                      0.78
-                    )
-                  );
-
-                };
-
-
-              image.onerror =
-                reject;
-
-
-              image.src =
-                event.target.result;
-
-            };
-
-
-          reader.onerror =
-            reject;
-
-
-          reader.readAsDataURL(
-            file
+          throw new Error(
+            result.error ||
+            "The reveal could not be loaded."
           );
 
         }
+
+
+        const reveal =
+          result.reveal;
+
+
+        if (
+          reveal.status !== "draft"
+        ) {
+
+          throw new Error(
+            "This reveal has already been confirmed and can no longer be amended."
+          );
+
+        }
+
+
+        recipientInput.value =
+          reveal.recipient || "";
+
+
+        senderInput.value =
+          reveal.sender || "";
+
+
+        eventNameInput.value =
+          reveal.eventName || "";
+
+
+        eventDateInput.value =
+          reveal.eventDate || "";
+
+
+        eventTimeInput.value =
+          reveal.eventTime || "";
+
+
+        venueInput.value =
+          reveal.venue || "";
+
+
+        admitInput.value =
+          reveal.admit || "";
+
+
+        personalMessageInput.value =
+          reveal.personalMessage || "";
+
+
+        ticketUrlInput.value =
+          reveal.ticketUrl || "";
+
+
+        document.getElementById(
+          "formHeading"
+        ).textContent =
+          "Amend your surprise";
+
+
+        reviewButton.textContent =
+          "Save changes and review";
+
+
+        if (
+          reveal.hasImage
+        ) {
+
+          await loadExistingImage(
+            editingRevealId,
+            token
+          );
+
+        }
+
+
+        hideMessage();
+
+
+        updateLivePreview();
+
+      } catch (error) {
+
+        showMessage(
+          error.message,
+          "error"
+        );
+
+
+        reviewButton.disabled =
+          true;
+
+      }
+
+    }
+
+
+
+    async function loadExistingImage(
+      id,
+      token
+    ) {
+
+      const response =
+        await fetch(
+          "/api/reveals/" +
+          encodeURIComponent(id) +
+          "/image",
+          {
+            headers: {
+              "X-Edit-Token":
+                token
+            }
+          }
+        );
+
+
+      if (!response.ok) {
+        return;
+      }
+
+
+      const blob =
+        await response.blob();
+
+
+      const objectUrl =
+        URL.createObjectURL(
+          blob
+        );
+
+
+      existingImagePresent =
+        true;
+
+
+      setPreviewImage(
+        objectUrl,
+        "Current saved image"
       );
 
     }
 
 
 
-    function showError(message) {
+    function showMessage(
+      text,
+      type
+    ) {
 
-      errorMessage.textContent =
-        message;
+      messageBox.textContent =
+        text;
 
 
-      errorMessage.classList.add(
-        "visible"
-      );
+      messageBox.className =
+        "message-box visible " +
+        type;
 
     }
 
 
 
-    function hideError() {
+    function hideMessage() {
 
-      errorMessage.textContent =
+      messageBox.textContent =
         "";
 
 
-      errorMessage.classList.remove(
-        "visible"
-      );
+      messageBox.className =
+        "message-box";
 
     }
 
 
 
-    restoreDraft();
-
-    updateLivePreview();
+    loadExistingReveal();
 
   </script>
 
