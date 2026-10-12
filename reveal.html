@@ -23,12 +23,8 @@
   <style>
     :root {
       --background: #f7f3eb;
-      --card: #ffffff;
       --text: #28231d;
-      --muted: #746b60;
       --gold: #bc8430;
-      --gold-light: #f3d98d;
-      --dark: #17120c;
       --cream: #fff8e9;
     }
 
@@ -53,10 +49,7 @@
 
     .page {
       width:
-        min(
-          860px,
-          100%
-        );
+        min(860px, 100%);
 
       margin:
         0 auto;
@@ -122,7 +115,7 @@
         0 0 30px;
     }
 
-    .preview-warning {
+    .notice {
       background:
         #fff7e5;
 
@@ -342,10 +335,7 @@
         grid;
 
       grid-template-columns:
-        repeat(
-          2,
-          1fr
-        );
+        repeat(2, 1fr);
 
       gap:
         22px;
@@ -439,6 +429,9 @@
     }
 
     .booking-card {
+      display:
+        none;
+
       margin-top:
         22px;
 
@@ -453,6 +446,11 @@
 
       color:
         #2d2822;
+    }
+
+    .booking-card.visible {
+      display:
+        block;
     }
 
     .booking-label {
@@ -544,6 +542,14 @@
         rgba(116,79,23,0.18);
     }
 
+    .confirm-button:disabled {
+      opacity:
+        0.6;
+
+      cursor:
+        wait;
+    }
+
     .payment-stage {
       display:
         none;
@@ -552,7 +558,7 @@
         28px;
 
       padding:
-        26px;
+        28px;
 
       background:
         white;
@@ -591,7 +597,7 @@
 
     .payment-stage p {
       margin:
-        0 auto 15px;
+        0 auto 16px;
 
       max-width:
         580px;
@@ -603,15 +609,12 @@
         1.6;
     }
 
-    .payment-status {
+    .status-badge {
       display:
         inline-block;
 
-      margin-top:
-        6px;
-
       padding:
-        8px 12px;
+        8px 13px;
 
       border-radius:
         999px;
@@ -629,25 +632,28 @@
         700;
     }
 
-    .error-card {
-      display:
-        none;
-
+    .error-card,
+    .loading-card {
       background:
         white;
 
       border-radius:
-        16px;
+        18px;
 
       padding:
-        28px;
+        30px;
 
       box-shadow:
-        0 12px 30px
+        0 12px 32px
         rgba(0,0,0,0.07);
 
       text-align:
         center;
+    }
+
+    .error-card {
+      display:
+        none;
     }
 
     .error-card.visible {
@@ -655,15 +661,7 @@
         block;
     }
 
-    .error-card a {
-      color:
-        #8b6227;
-    }
-
-    @media (
-      max-width:
-      600px
-    ) {
+    @media (max-width: 600px) {
 
       .page {
         padding:
@@ -699,7 +697,38 @@
   <main class="page">
 
 
-    <div id="reviewContent">
+    <section
+      id="loadingCard"
+      class="loading-card"
+    >
+
+      Loading your reveal...
+
+    </section>
+
+
+
+    <section
+      id="errorCard"
+      class="error-card"
+    >
+
+      <h2>
+        We couldn't load this reveal
+      </h2>
+
+      <p id="errorText">
+        Please return to the creation page.
+      </p>
+
+    </section>
+
+
+
+    <div
+      id="reviewContent"
+      style="display:none;"
+    >
 
 
       <div class="eyebrow">
@@ -713,16 +742,15 @@
 
 
       <p class="intro">
-        Check that everything is correct before you
-        continue. You can go back and make changes
-        without losing your information.
+        Check everything carefully. You can amend the
+        details before confirming.
       </p>
 
 
-      <div class="preview-warning">
-        This page is a static review only. The recipient's
-        full animated reveal, opening sequence, sharing link
-        and downloadable keepsake are unlocked after payment.
+      <div class="notice">
+        This is a static review only. The opening animation,
+        full recipient experience, permanent sharing link and
+        downloadable keepsake are only unlocked after payment.
       </div>
 
 
@@ -739,9 +767,7 @@
           <h2
             id="reviewEventHeading"
             class="review-event"
-          >
-            A Night at the Theatre
-          </h2>
+          ></h2>
 
         </div>
 
@@ -773,9 +799,7 @@
           <h3
             id="ticketTitle"
             class="ticket-title"
-          >
-            A Night at the Theatre
-          </h3>
+          ></h3>
 
 
           <div class="divider"></div>
@@ -946,12 +970,12 @@
         </h2>
 
         <p>
-          The details are now ready for the payment stage.
-          The full reveal has not been unlocked and no
-          recipient link has been created yet.
+          Your reveal is safely stored. The next step is
+          payment. The full animated reveal and recipient
+          sharing link have not been unlocked.
         </p>
 
-        <span class="payment-status">
+        <span class="status-badge">
           Awaiting payment
         </span>
 
@@ -960,37 +984,24 @@
 
     </div>
 
-
-
-    <section
-      id="errorCard"
-      class="error-card"
-    >
-
-      <h2>
-        No reveal found
-      </h2>
-
-      <p>
-        There isn't a draft available to review.
-      </p>
-
-      <a href="index.html">
-        Create a reveal
-      </a>
-
-    </section>
-
-
   </main>
-
 
 
   <script>
 
-    const reviewContent =
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
+
+
+    const revealId =
+      params.get("id");
+
+
+    const loadingCard =
       document.getElementById(
-        "reviewContent"
+        "loadingCard"
       );
 
 
@@ -1000,93 +1011,167 @@
       );
 
 
-    let draft = null;
+    const errorText =
+      document.getElementById(
+        "errorText"
+      );
 
 
-    try {
+    const reviewContent =
+      document.getElementById(
+        "reviewContent"
+      );
 
-      const storedDraft =
-        sessionStorage.getItem(
-          "revealDraft"
+
+    let reveal =
+      null;
+
+
+
+    function getEditToken() {
+
+      if (!revealId) {
+
+        return null;
+      }
+
+
+      return localStorage.getItem(
+        "reveal_edit_" +
+        revealId
+      );
+
+    }
+
+
+
+    async function loadReveal() {
+
+      if (!revealId) {
+
+        showError(
+          "No reveal ID was provided."
         );
 
+        return;
+      }
 
-      if (storedDraft) {
 
-        draft =
-          JSON.parse(
-            storedDraft
+      const editToken =
+        getEditToken();
+
+
+      if (!editToken) {
+
+        showError(
+          "The private editing key for this reveal is not available in this browser."
+        );
+
+        return;
+      }
+
+
+      try {
+
+        const response =
+          await fetch(
+            "/api/reveals/" +
+            encodeURIComponent(
+              revealId
+            ),
+            {
+              headers: {
+                "X-Edit-Token":
+                  editToken
+              }
+            }
           );
+
+
+        const result =
+          await response.json();
+
+
+        if (
+          !response.ok ||
+          !result.success
+        ) {
+
+          throw new Error(
+            result.error ||
+            "The reveal could not be loaded."
+          );
+
+        }
+
+
+        reveal =
+          result.reveal;
+
+
+        populateReveal();
+
+
+        if (
+          reveal.hasImage
+        ) {
+
+          await loadImage(
+            editToken
+          );
+
+        }
+
+
+        loadingCard.style.display =
+          "none";
+
+
+        reviewContent.style.display =
+          "block";
+
+
+        if (
+          reveal.status ===
+          "confirmed"
+        ) {
+
+          showConfirmedState();
+
+        }
+
+      } catch (error) {
+
+        showError(
+          error.message
+        );
 
       }
 
-    } catch {
-
-      draft = null;
-
     }
 
 
 
-    if (!draft) {
-
-      reviewContent.style.display =
-        "none";
-
-
-      errorCard.classList.add(
-        "visible"
-      );
-
-    } else {
-
-      populateReview();
-
-    }
-
-
-
-    function populateReview() {
+    function populateReveal() {
 
       const recipient =
         valueOrFallback(
-          draft.recipient,
+          reveal.recipient,
           "Chloe"
         );
 
 
       const sender =
         valueOrFallback(
-          draft.sender,
+          reveal.sender,
           "Michael"
         );
 
 
       const eventName =
         valueOrFallback(
-          draft.event,
+          reveal.eventName,
           "A Night at the Theatre"
-        );
-
-
-      const venue =
-        valueOrFallback(
-          draft.venue,
-          "Venue or destination"
-        );
-
-
-      const admit =
-        valueOrFallback(
-          draft.admit,
-          recipient + " + 1"
-        );
-
-
-      const message =
-        valueOrFallback(
-          draft.message,
-          "No personal message added."
         );
 
 
@@ -1106,7 +1191,7 @@
         "reviewDate"
       ).textContent =
         formatDate(
-          draft.date
+          reveal.eventDate
         );
 
 
@@ -1114,20 +1199,26 @@
         "reviewTime"
       ).textContent =
         formatTime(
-          draft.time
+          reveal.eventTime
         );
 
 
       document.getElementById(
         "reviewVenue"
       ).textContent =
-        venue;
+        valueOrFallback(
+          reveal.venue,
+          "Venue or destination"
+        );
 
 
       document.getElementById(
         "reviewAdmit"
       ).textContent =
-        admit;
+        valueOrFallback(
+          reveal.admit,
+          recipient + " + 1"
+        );
 
 
       document.getElementById(
@@ -1145,60 +1236,216 @@
       document.getElementById(
         "reviewMessage"
       ).textContent =
-        message;
-
-
-
-      const image =
-        sessionStorage.getItem(
-          "revealImage"
+        valueOrFallback(
+          reveal.personalMessage,
+          "No personal message added."
         );
 
 
-      if (image) {
+      if (
+        reveal.ticketUrl
+      ) {
 
         document.getElementById(
-          "reviewImage"
-        ).src =
-          image;
+          "bookingValue"
+        ).textContent =
+          reveal.ticketUrl;
 
 
         document.getElementById(
-          "imageWrap"
+          "bookingCard"
         ).classList.add(
           "visible"
         );
 
       }
 
+    }
 
 
-      const bookingCard =
-        document.getElementById(
-          "bookingCard"
+
+    async function loadImage(
+      token
+    ) {
+
+      const response =
+        await fetch(
+          "/api/reveals/" +
+          encodeURIComponent(
+            revealId
+          ) +
+          "/image",
+          {
+            headers: {
+              "X-Edit-Token":
+                token
+            }
+          }
         );
 
 
-      const ticketUrl =
-        valueOrFallback(
-          draft.ticketUrl,
-          ""
+      if (!response.ok) {
+
+        return;
+      }
+
+
+      const blob =
+        await response.blob();
+
+
+      const objectUrl =
+        URL.createObjectURL(
+          blob
         );
 
 
-      if (ticketUrl) {
+      document.getElementById(
+        "reviewImage"
+      ).src =
+        objectUrl;
 
-        document.getElementById(
-          "bookingValue"
-        ).textContent =
-          ticketUrl;
 
-      } else {
+      document.getElementById(
+        "imageWrap"
+      ).classList.add(
+        "visible"
+      );
 
-        bookingCard.style.display =
-          "none";
+    }
+
+
+
+    document.getElementById(
+      "editButton"
+    ).addEventListener(
+      "click",
+      function() {
+
+        window.location.href =
+          "index.html?edit=" +
+          encodeURIComponent(
+            revealId
+          );
 
       }
+    );
+
+
+
+    document.getElementById(
+      "confirmButton"
+    ).addEventListener(
+      "click",
+      async function() {
+
+        const button =
+          document.getElementById(
+            "confirmButton"
+          );
+
+
+        const editToken =
+          getEditToken();
+
+
+        button.disabled =
+          true;
+
+
+        button.textContent =
+          "Confirming...";
+
+
+        try {
+
+          const response =
+            await fetch(
+              "/api/reveals/" +
+              encodeURIComponent(
+                revealId
+              ) +
+              "/confirm",
+              {
+                method:
+                  "POST",
+
+                headers: {
+                  "X-Edit-Token":
+                    editToken
+                }
+              }
+            );
+
+
+          const result =
+            await response.json();
+
+
+          if (
+            !response.ok ||
+            !result.success
+          ) {
+
+            throw new Error(
+              result.error ||
+              "The reveal could not be confirmed."
+            );
+
+          }
+
+
+          reveal.status =
+            result.status;
+
+
+          showConfirmedState();
+
+        } catch (error) {
+
+          button.disabled =
+            false;
+
+
+          button.textContent =
+            "Confirm and continue";
+
+
+          alert(
+            error.message
+          );
+
+        }
+
+      }
+    );
+
+
+
+    function showConfirmedState() {
+
+      document.getElementById(
+        "reviewActions"
+      ).style.display =
+        "none";
+
+
+      document.getElementById(
+        "paymentStage"
+      ).classList.add(
+        "visible"
+      );
+
+
+      document.getElementById(
+        "paymentStage"
+      ).scrollIntoView({
+        behavior:
+          "smooth",
+
+        block:
+          "center"
+      });
 
     }
 
@@ -1239,23 +1486,20 @@
         );
 
 
-      if (
-        isNaN(
-          date.getTime()
-        )
-      ) {
-
-        return value;
-      }
-
-
       return new Intl.DateTimeFormat(
         "en-GB",
         {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
+          weekday:
+            "long",
+
+          day:
+            "numeric",
+
+          month:
+            "long",
+
+          year:
+            "numeric"
         }
       ).format(date);
 
@@ -1290,8 +1534,11 @@
       return new Intl.DateTimeFormat(
         "en-GB",
         {
-          hour: "numeric",
-          minute: "2-digit"
+          hour:
+            "numeric",
+
+          minute:
+            "2-digit"
         }
       ).format(date);
 
@@ -1299,69 +1546,29 @@
 
 
 
-    document.getElementById(
-      "editButton"
-    ).addEventListener(
-      "click",
-      function() {
+    function showError(message) {
 
-        sessionStorage.setItem(
-          "revealStatus",
-          "draft"
-        );
+      loadingCard.style.display =
+        "none";
 
 
-        window.location.href =
-          "index.html";
-
-      }
-    );
+      reviewContent.style.display =
+        "none";
 
 
-
-    document.getElementById(
-      "confirmButton"
-    ).addEventListener(
-      "click",
-      function() {
-
-        sessionStorage.setItem(
-          "revealStatus",
-          "confirmed"
-        );
+      errorText.textContent =
+        message;
 
 
-        sessionStorage.setItem(
-          "revealConfirmedAt",
-          new Date().toISOString()
-        );
+      errorCard.classList.add(
+        "visible"
+      );
+
+    }
 
 
-        document.getElementById(
-          "reviewActions"
-        ).style.display =
-          "none";
 
-
-        document.getElementById(
-          "paymentStage"
-        ).classList.add(
-          "visible"
-        );
-
-
-        document.getElementById(
-          "paymentStage"
-        ).scrollIntoView({
-          behavior:
-            "smooth",
-
-          block:
-            "center"
-        });
-
-      }
-    );
+    loadReveal();
 
   </script>
 
