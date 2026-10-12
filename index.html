@@ -2,103 +2,129 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#f7f3eb">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  >
+
+  <meta
+    name="theme-color"
+    content="#f7f3eb"
+  >
 
   <title>Create your reveal</title>
 
   <style>
+    :root {
+      --page-bg: #f7f3eb;
+      --card-bg: #ffffff;
+      --text: #28231d;
+      --muted: #746b60;
+      --gold: #c18a34;
+      --gold-light: #f1d68b;
+      --dark: #17120c;
+      --cream: #fff8e9;
+    }
+
     * {
       box-sizing: border-box;
     }
 
     html {
-      scroll-behavior: smooth;
+      scroll-behaviour: smooth;
     }
 
     body {
       margin: 0;
       font-family: Arial, Helvetica, sans-serif;
-      background: #f7f3eb;
-      color: #28231d;
+      background: var(--page-bg);
+      color: var(--text);
     }
 
     .page {
-      max-width: 720px;
+      width: min(1220px, 100%);
       margin: 0 auto;
-      padding: 45px 22px 70px;
+      padding: 42px 22px 80px;
+    }
+
+    .page-header {
+      max-width: 720px;
+      margin-bottom: 38px;
     }
 
     .eyebrow {
       text-transform: uppercase;
       letter-spacing: 0.18em;
       font-size: 0.72rem;
-      font-weight: bold;
-      color: #a7792e;
-      margin-bottom: 16px;
+      font-weight: 700;
+      color: #9d7029;
+      margin-bottom: 15px;
     }
 
     h1 {
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2.5rem, 8vw, 4.5rem);
+      font-size: clamp(2.7rem, 7vw, 4.8rem);
+      line-height: 0.98;
       font-weight: normal;
-      line-height: 1;
-      margin: 0 0 15px;
+      margin: 0 0 18px;
     }
 
     .intro {
+      margin: 0;
+      max-width: 650px;
+      line-height: 1.65;
       color: #675f55;
-      line-height: 1.6;
-      margin: 0 0 40px;
-      max-width: 620px;
+      font-size: 1rem;
     }
 
-    .card {
-      background: white;
+    .builder-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
+      gap: 32px;
+      align-items: start;
+    }
+
+    .form-card {
+      background: var(--card-bg);
+      border-radius: 20px;
       padding: 30px;
-      border-radius: 18px;
-      box-shadow: 0 12px 35px rgba(0,0,0,0.08);
+      box-shadow: 0 12px 35px rgba(0,0,0,0.07);
     }
 
     .section-heading {
       font-family: Georgia, "Times New Roman", serif;
-      font-size: 1.45rem;
+      font-size: 1.55rem;
       font-weight: normal;
-      margin: 0 0 24px;
+      margin: 0 0 26px;
     }
 
     .field {
-      margin-bottom: 22px;
+      margin-bottom: 23px;
     }
 
     label {
       display: block;
-      font-weight: bold;
+      font-weight: 700;
       margin-bottom: 8px;
     }
 
     .field-help {
       margin: -2px 0 9px;
-      color: #81786d;
       font-size: 0.78rem;
       line-height: 1.5;
+      color: #81786d;
     }
 
     input,
     textarea {
       width: 100%;
+      border: 1px solid #d6d0c5;
+      border-radius: 10px;
       padding: 14px 15px;
-      border: 1px solid #d5cfc5;
-      border-radius: 9px;
       font: inherit;
+      color: var(--text);
       background: #fffdf9;
-      color: #28231d;
-    }
-
-    input[type="file"] {
-      padding: 11px;
-      background: #faf7f0;
-      cursor: pointer;
     }
 
     input:focus,
@@ -112,19 +138,35 @@
       resize: vertical;
     }
 
+    input[type="file"] {
+      padding: 11px;
+      background: #faf7f0;
+    }
+
     .two-columns {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 18px;
     }
 
+    .warning-box {
+      margin-top: 10px;
+      background: #fff7e6;
+      border: 1px solid #ead4a4;
+      border-radius: 10px;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      line-height: 1.5;
+      color: #6b5733;
+    }
+
     .image-preview-wrap {
       display: none;
       margin-top: 14px;
-      border-radius: 14px;
-      overflow: hidden;
-      background: #f1ede5;
       border: 1px solid #ded7ca;
+      border-radius: 13px;
+      overflow: hidden;
+      background: #f4f0e8;
     }
 
     .image-preview-wrap.visible {
@@ -132,94 +174,293 @@
     }
 
     .image-preview {
-      display: block;
       width: 100%;
-      max-height: 320px;
+      max-height: 260px;
+      display: block;
       object-fit: cover;
     }
 
-    .image-preview-caption {
-      padding: 10px 12px;
-      font-size: 0.76rem;
-      color: #71685d;
+    .image-caption {
+      padding: 9px 12px;
       background: #faf8f3;
-    }
-
-    .warning-box {
-      margin: 10px 0 0;
-      padding: 12px 14px;
-      background: #fff7e6;
-      border: 1px solid #ebd5a4;
-      border-radius: 9px;
-      font-size: 0.78rem;
-      line-height: 1.5;
-      color: #6b5733;
-    }
-
-    .submit-button {
-      width: 100%;
-      border: 0;
-      border-radius: 999px;
-      padding: 17px;
-      cursor: pointer;
-      background: linear-gradient(135deg, #f4d98b, #b47b27);
-      color: #21180d;
-      font-weight: bold;
-      font-size: 1rem;
-      margin-top: 12px;
-      box-shadow: 0 10px 25px rgba(116,79,23,0.18);
-      transition:
-        transform 0.2s ease,
-        box-shadow 0.2s ease;
-    }
-
-    .submit-button:hover {
-      transform: translateY(-1px);
-      box-shadow: 0 13px 30px rgba(116,79,23,0.23);
-    }
-
-    .submit-button:disabled {
-      opacity: 0.55;
-      cursor: wait;
-      transform: none;
-    }
-
-    .note {
-      font-size: 0.78rem;
-      color: #81786d;
-      margin-top: 16px;
-      text-align: center;
-      line-height: 1.5;
+      color: #776e63;
+      font-size: 0.75rem;
     }
 
     .error-message {
       display: none;
-      padding: 13px 15px;
-      margin: 0 0 20px;
       background: #fff0ed;
-      color: #8b2f22;
       border: 1px solid #edc3ba;
-      border-radius: 9px;
-      line-height: 1.5;
+      border-radius: 10px;
+      color: #8b2f22;
+      padding: 13px 15px;
+      margin-bottom: 20px;
       font-size: 0.85rem;
+      line-height: 1.5;
     }
 
     .error-message.visible {
       display: block;
     }
 
+    .preview-button {
+      width: 100%;
+      border: none;
+      border-radius: 999px;
+      padding: 17px 24px;
+      margin-top: 10px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
+      color: #21180d;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 11px 27px rgba(116,79,23,0.2);
+    }
+
+    .preview-button:hover {
+      transform: translateY(-1px);
+    }
+
+    .preview-button:disabled {
+      opacity: 0.55;
+      cursor: wait;
+      transform: none;
+    }
+
+    .form-note {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 0.75rem;
+      color: #867d72;
+      line-height: 1.5;
+    }
+
+    /* LIVE PREVIEW */
+
+    .preview-column {
+      position: sticky;
+      top: 24px;
+    }
+
+    .preview-label {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-weight: 700;
+      color: #8a7964;
+      margin: 0 0 10px 4px;
+    }
+
+    .preview-shell {
+      background:
+        radial-gradient(
+          circle at top,
+          #49351e 0%,
+          #21180f 48%,
+          #100c08 100%
+        );
+
+      border-radius: 24px;
+      padding: 28px 22px 26px;
+      color: white;
+      box-shadow: 0 20px 55px rgba(0,0,0,0.18);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .preview-shell::before {
+      content: "";
+      position: absolute;
+      width: 220px;
+      height: 220px;
+      border-radius: 50%;
+      top: -90px;
+      right: -90px;
+      background: rgba(216,172,85,0.12);
+    }
+
+    .preview-top {
+      text-align: center;
+      position: relative;
+      z-index: 2;
+      margin-bottom: 22px;
+    }
+
+    .preview-small-heading {
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      font-size: 0.62rem;
+      color: #f3dc9a;
+      margin-bottom: 9px;
+    }
+
+    .preview-surprise-text {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.15rem;
+      color: #f5e9d0;
+      margin-bottom: 3px;
+    }
+
+    .preview-event-name {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1;
+      font-weight: normal;
+      margin: 0;
+      overflow-wrap: anywhere;
+    }
+
+    .live-image-wrap {
+      display: none;
+      margin-bottom: 20px;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 16px 35px rgba(0,0,0,0.28);
+    }
+
+    .live-image-wrap.visible {
+      display: block;
+    }
+
+    .live-image {
+      width: 100%;
+      max-height: 280px;
+      object-fit: cover;
+      display: block;
+    }
+
+    .preview-ticket {
+      position: relative;
+      z-index: 2;
+      background:
+        linear-gradient(
+          135deg,
+          #fffdf6 0%,
+          var(--cream) 55%,
+          #f3e1b8 100%
+        );
+      color: #2c241b;
+      border-radius: 17px;
+      padding: 27px 24px;
+      box-shadow: 0 20px 45px rgba(0,0,0,0.32);
+    }
+
+    .preview-ticket-label {
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0.22em;
+      color: #98702c;
+      margin-bottom: 11px;
+    }
+
+    .preview-ticket-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-weight: normal;
+      font-size: 2rem;
+      line-height: 1;
+      margin: 0 0 20px;
+      overflow-wrap: anywhere;
+    }
+
+    .preview-divider {
+      height: 1px;
+      margin: 18px 0;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(44,36,27,0.35) 0,
+          rgba(44,36,27,0.35) 5px,
+          transparent 5px,
+          transparent 10px
+        );
+    }
+
+    .preview-details {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 17px;
+      text-align: left;
+    }
+
+    .preview-detail-label {
+      display: block;
+      text-transform: uppercase;
+      font-size: 0.58rem;
+      letter-spacing: 0.1em;
+      color: #756a59;
+      margin-bottom: 4px;
+    }
+
+    .preview-detail-value {
+      display: block;
+      font-size: 0.82rem;
+      line-height: 1.4;
+      font-weight: 700;
+      overflow-wrap: anywhere;
+    }
+
+    .live-message {
+      margin-top: 20px;
+      padding: 18px;
+      border-radius: 14px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(243,220,154,0.18);
+      text-align: center;
+    }
+
+    .live-message-title {
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1rem;
+      margin-bottom: 7px;
+    }
+
+    .live-message-text {
+      margin: 0;
+      font-size: 0.78rem;
+      line-height: 1.55;
+      color: #ddd3c2;
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    .preview-explanation {
+      margin: 14px 3px 0;
+      font-size: 0.75rem;
+      line-height: 1.5;
+      color: #756d63;
+    }
+
+    @media (max-width: 900px) {
+      .builder-layout {
+        grid-template-columns: 1fr;
+      }
+
+      .preview-column {
+        position: static;
+      }
+    }
+
     @media (max-width: 600px) {
+      .page {
+        padding: 30px 16px 60px;
+      }
+
+      .form-card {
+        padding: 22px;
+      }
+
       .two-columns {
         grid-template-columns: 1fr;
         gap: 0;
       }
 
-      .card {
-        padding: 23px;
+      .preview-shell {
+        border-radius: 20px;
+        padding: 23px 17px;
       }
 
-      .page {
-        padding-top: 32px;
+      .preview-ticket {
+        padding: 23px 20px;
       }
     }
   </style>
@@ -229,140 +470,55 @@
 
   <main class="page">
 
-    <div class="eyebrow">
-      Digital gift reveal
-    </div>
+    <header class="page-header">
 
-    <h1>
-      Create your surprise
-    </h1>
+      <div class="eyebrow">
+        Digital gift reveal
+      </div>
 
-    <p class="intro">
-      Turn an e-ticket, trip or experience into something special to open.
-      Add the details below and preview your personalised reveal.
-    </p>
+      <h1>
+        Create your surprise
+      </h1>
 
-    <div class="card">
+      <p class="intro">
+        Turn an e-ticket, trip or experience into something special to open.
+        Your preview updates as you create it.
+      </p>
 
-      <h2 class="section-heading">
-        Tell us about the surprise
-      </h2>
-
-      <div
-        id="errorMessage"
-        class="error-message"
-      ></div>
-
-      <form id="revealForm">
-
-        <div class="field">
-
-          <label for="recipient">
-            Who is it for?
-          </label>
-
-          <input
-            id="recipient"
-            name="recipient"
-            type="text"
-            placeholder="Chloe"
-            required
-          >
-
-        </div>
+    </header>
 
 
-        <div class="field">
-
-          <label for="sender">
-            Who is it from?
-          </label>
-
-          <input
-            id="sender"
-            name="sender"
-            type="text"
-            placeholder="Michael"
-            required
-          >
-
-        </div>
+    <div class="builder-layout">
 
 
-        <div class="field">
+      <!-- CREATION FORM -->
 
-          <label for="event">
-            What's the surprise?
-          </label>
+      <section class="form-card">
 
-          <input
-            id="event"
-            name="event"
-            type="text"
-            placeholder="A Night at the Theatre"
-            required
-          >
+        <h2 class="section-heading">
+          Tell us about the surprise
+        </h2>
 
-        </div>
+        <div
+          id="errorMessage"
+          class="error-message"
+        ></div>
 
+        <form id="revealForm">
 
-        <div class="field">
-
-          <label for="eventImage">
-            Add an image
-          </label>
-
-          <p class="field-help">
-            Optional. Add an event image, poster, booking confirmation
-            or cropped screenshot.
-          </p>
-
-          <input
-            id="eventImage"
-            name="eventImage"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-          >
-
-          <div class="warning-box">
-            If you upload a screenshot of real tickets, avoid including
-            visible QR codes, barcodes or other information that could
-            allow somebody else to use the ticket.
-          </div>
-
-          <div
-            id="imagePreviewWrap"
-            class="image-preview-wrap"
-          >
-
-            <img
-              id="imagePreview"
-              class="image-preview"
-              alt="Selected event preview"
-            >
-
-            <div
-              id="imagePreviewCaption"
-              class="image-preview-caption"
-            ></div>
-
-          </div>
-
-        </div>
-
-
-        <div class="two-columns">
 
           <div class="field">
 
-            <label for="date">
-              Date
+            <label for="recipient">
+              Who is it for?
             </label>
 
             <input
-              id="date"
-              name="date"
-              type="date"
+              id="recipient"
+              name="recipient"
+              type="text"
+              placeholder="Chloe"
+              autocomplete="off"
               required
             >
 
@@ -371,103 +527,398 @@
 
           <div class="field">
 
-            <label for="time">
-              Time
+            <label for="sender">
+              Who is it from?
             </label>
 
             <input
-              id="time"
-              name="time"
-              type="time"
+              id="sender"
+              name="sender"
+              type="text"
+              placeholder="Michael"
+              autocomplete="off"
+              required
             >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="event">
+              What's the surprise?
+            </label>
+
+            <input
+              id="event"
+              name="event"
+              type="text"
+              placeholder="A Night at the Theatre"
+              autocomplete="off"
+              required
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="eventImage">
+              Add an image
+            </label>
+
+            <p class="field-help">
+              Optional. Add an event image, poster, booking confirmation
+              or cropped screenshot.
+            </p>
+
+            <input
+              id="eventImage"
+              name="eventImage"
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+            >
+
+            <div class="warning-box">
+              Avoid uploading QR codes, barcodes or other information
+              that could allow somebody else to use the real ticket.
+            </div>
+
+            <div
+              id="imagePreviewWrap"
+              class="image-preview-wrap"
+            >
+
+              <img
+                id="imagePreview"
+                class="image-preview"
+                alt="Selected image preview"
+              >
+
+              <div
+                id="imageCaption"
+                class="image-caption"
+              ></div>
+
+            </div>
+
+          </div>
+
+
+          <div class="two-columns">
+
+            <div class="field">
+
+              <label for="date">
+                Date
+              </label>
+
+              <input
+                id="date"
+                name="date"
+                type="date"
+                required
+              >
+
+            </div>
+
+
+            <div class="field">
+
+              <label for="time">
+                Time
+              </label>
+
+              <input
+                id="time"
+                name="time"
+                type="time"
+              >
+
+            </div>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="venue">
+              Venue or destination
+            </label>
+
+            <input
+              id="venue"
+              name="venue"
+              type="text"
+              placeholder="The Grand Theatre, London"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="admit">
+              Who is going?
+            </label>
+
+            <input
+              id="admit"
+              name="admit"
+              type="text"
+              placeholder="Chloe + 1"
+              autocomplete="off"
+            >
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="message">
+              Your message
+            </label>
+
+            <textarea
+              id="message"
+              name="message"
+              placeholder="I thought we should have something to look forward to..."
+            ></textarea>
+
+          </div>
+
+
+          <div class="field">
+
+            <label for="ticketUrl">
+              Official ticket or booking link
+            </label>
+
+            <p class="field-help">
+              Optional. This will only be shown to the recipient after
+              the reveal.
+            </p>
+
+            <input
+              id="ticketUrl"
+              name="ticketUrl"
+              type="url"
+              placeholder="https://..."
+            >
+
+          </div>
+
+
+          <button
+            id="submitButton"
+            class="preview-button"
+            type="submit"
+          >
+            See the actual reveal
+          </button>
+
+        </form>
+
+
+        <div class="form-note">
+          This is still prototype mode. Nothing has been purchased or
+          made public.
+        </div>
+
+      </section>
+
+
+
+      <!-- LIVE TEMPLATE PREVIEW -->
+
+      <aside class="preview-column">
+
+        <div class="preview-label">
+          Live template preview
+        </div>
+
+        <div class="preview-shell">
+
+
+          <div class="preview-top">
+
+            <div class="preview-small-heading">
+              Your surprise
+            </div>
+
+            <div class="preview-surprise-text">
+              You're going to...
+            </div>
+
+            <h2
+              id="liveEventHeading"
+              class="preview-event-name"
+            >
+              A Night at the Theatre
+            </h2>
+
+          </div>
+
+
+          <div
+            id="liveImageWrap"
+            class="live-image-wrap"
+          >
+
+            <img
+              id="liveImage"
+              class="live-image"
+              alt="Event preview"
+            >
+
+          </div>
+
+
+          <article class="preview-ticket">
+
+            <div class="preview-ticket-label">
+              YOUR GIFT
+            </div>
+
+            <h3
+              id="liveTicketTitle"
+              class="preview-ticket-title"
+            >
+              A Night at the Theatre
+            </h3>
+
+
+            <div class="preview-divider"></div>
+
+
+            <div class="preview-details">
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  Date
+                </span>
+
+                <span
+                  id="liveDate"
+                  class="preview-detail-value"
+                >
+                  Date to be confirmed
+                </span>
+
+              </div>
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  Time
+                </span>
+
+                <span
+                  id="liveTime"
+                  class="preview-detail-value"
+                >
+                  Time to be confirmed
+                </span>
+
+              </div>
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  Venue
+                </span>
+
+                <span
+                  id="liveVenue"
+                  class="preview-detail-value"
+                >
+                  Venue or destination
+                </span>
+
+              </div>
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  Admit
+                </span>
+
+                <span
+                  id="liveAdmit"
+                  class="preview-detail-value"
+                >
+                  Chloe + 1
+                </span>
+
+              </div>
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  For
+                </span>
+
+                <span
+                  id="liveRecipient"
+                  class="preview-detail-value"
+                >
+                  Chloe
+                </span>
+
+              </div>
+
+
+              <div>
+
+                <span class="preview-detail-label">
+                  From
+                </span>
+
+                <span
+                  id="liveSender"
+                  class="preview-detail-value"
+                >
+                  Michael
+                </span>
+
+              </div>
+
+            </div>
+
+          </article>
+
+
+          <div class="live-message">
+
+            <div class="live-message-title">
+              A little message
+            </div>
+
+            <p
+              id="liveMessage"
+              class="live-message-text"
+            >
+              Your personal message will appear here.
+            </p>
 
           </div>
 
         </div>
 
 
-        <div class="field">
+        <p class="preview-explanation">
+          This is the design preview. The next screen lets you experience
+          the reveal exactly as the recipient will see it.
+        </p>
 
-          <label for="venue">
-            Venue or destination
-          </label>
-
-          <input
-            id="venue"
-            name="venue"
-            type="text"
-            placeholder="The Grand Theatre, London"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="admit">
-            Who is going?
-          </label>
-
-          <input
-            id="admit"
-            name="admit"
-            type="text"
-            placeholder="Chloe + 1"
-          >
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="message">
-            Your message
-          </label>
-
-          <textarea
-            id="message"
-            name="message"
-            placeholder="I thought we should have something to look forward to..."
-          ></textarea>
-
-        </div>
-
-
-        <div class="field">
-
-          <label for="ticketUrl">
-            Official ticket or booking link
-          </label>
-
-          <p class="field-help">
-            Optional. This will become the button shown after the reveal.
-          </p>
-
-          <input
-            id="ticketUrl"
-            name="ticketUrl"
-            type="url"
-            placeholder="https://..."
-          >
-
-        </div>
-
-
-        <button
-          id="submitButton"
-          class="submit-button"
-          type="submit"
-        >
-          Preview my reveal
-        </button>
-
-      </form>
-
-
-      <div class="note">
-        Prototype mode - the image is currently stored only in your browser
-        for the preview. Nothing is uploaded to a server yet.
-      </div>
+      </aside>
 
     </div>
 
@@ -476,11 +927,79 @@
 
   <script>
 
-    const revealForm =
+    const form =
       document.getElementById("revealForm");
 
-    const eventImageInput =
+    const recipientInput =
+      document.getElementById("recipient");
+
+    const senderInput =
+      document.getElementById("sender");
+
+    const eventInput =
+      document.getElementById("event");
+
+    const dateInput =
+      document.getElementById("date");
+
+    const timeInput =
+      document.getElementById("time");
+
+    const venueInput =
+      document.getElementById("venue");
+
+    const admitInput =
+      document.getElementById("admit");
+
+    const messageInput =
+      document.getElementById("message");
+
+    const ticketUrlInput =
+      document.getElementById("ticketUrl");
+
+    const imageInput =
       document.getElementById("eventImage");
+
+    const submitButton =
+      document.getElementById("submitButton");
+
+    const errorMessage =
+      document.getElementById("errorMessage");
+
+
+    const liveEventHeading =
+      document.getElementById("liveEventHeading");
+
+    const liveTicketTitle =
+      document.getElementById("liveTicketTitle");
+
+    const liveDate =
+      document.getElementById("liveDate");
+
+    const liveTime =
+      document.getElementById("liveTime");
+
+    const liveVenue =
+      document.getElementById("liveVenue");
+
+    const liveAdmit =
+      document.getElementById("liveAdmit");
+
+    const liveRecipient =
+      document.getElementById("liveRecipient");
+
+    const liveSender =
+      document.getElementById("liveSender");
+
+    const liveMessage =
+      document.getElementById("liveMessage");
+
+    const liveImageWrap =
+      document.getElementById("liveImageWrap");
+
+    const liveImage =
+      document.getElementById("liveImage");
+
 
     const imagePreviewWrap =
       document.getElementById("imagePreviewWrap");
@@ -488,24 +1007,236 @@
     const imagePreview =
       document.getElementById("imagePreview");
 
-    const imagePreviewCaption =
-      document.getElementById("imagePreviewCaption");
-
-    const errorMessage =
-      document.getElementById("errorMessage");
-
-    const submitButton =
-      document.getElementById("submitButton");
+    const imageCaption =
+      document.getElementById("imageCaption");
 
 
-    eventImageInput.addEventListener(
+
+    function valueOrFallback(
+      value,
+      fallback
+    ) {
+
+      if (
+        !value ||
+        value.trim() === ""
+      ) {
+
+        return fallback;
+      }
+
+      return value.trim();
+
+    }
+
+
+
+    function formatDate(
+      value
+    ) {
+
+      if (!value) {
+
+        return "Date to be confirmed";
+      }
+
+
+      const date =
+        new Date(
+          value +
+          "T12:00:00"
+        );
+
+
+      if (
+        isNaN(
+          date.getTime()
+        )
+      ) {
+
+        return value;
+      }
+
+
+      return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+          weekday: "long",
+          day: "numeric",
+          month: "long",
+          year: "numeric"
+        }
+      ).format(date);
+
+    }
+
+
+
+    function formatTime(
+      value
+    ) {
+
+      if (!value) {
+
+        return "Time to be confirmed";
+      }
+
+
+      const parts =
+        value.split(":");
+
+
+      const date =
+        new Date();
+
+
+      date.setHours(
+        Number(parts[0]),
+        Number(parts[1]),
+        0,
+        0
+      );
+
+
+      return new Intl.DateTimeFormat(
+        "en-GB",
+        {
+          hour: "numeric",
+          minute: "2-digit"
+        }
+      ).format(date);
+
+    }
+
+
+
+    function updateLivePreview() {
+
+      const recipient =
+        valueOrFallback(
+          recipientInput.value,
+          "Chloe"
+        );
+
+
+      const sender =
+        valueOrFallback(
+          senderInput.value,
+          "Michael"
+        );
+
+
+      const eventName =
+        valueOrFallback(
+          eventInput.value,
+          "A Night at the Theatre"
+        );
+
+
+      const venue =
+        valueOrFallback(
+          venueInput.value,
+          "Venue or destination"
+        );
+
+
+      const admit =
+        valueOrFallback(
+          admitInput.value,
+          recipient + " + 1"
+        );
+
+
+      const message =
+        valueOrFallback(
+          messageInput.value,
+          "Your personal message will appear here."
+        );
+
+
+      liveEventHeading.textContent =
+        eventName;
+
+
+      liveTicketTitle.textContent =
+        eventName;
+
+
+      liveDate.textContent =
+        formatDate(
+          dateInput.value
+        );
+
+
+      liveTime.textContent =
+        formatTime(
+          timeInput.value
+        );
+
+
+      liveVenue.textContent =
+        venue;
+
+
+      liveAdmit.textContent =
+        admit;
+
+
+      liveRecipient.textContent =
+        recipient;
+
+
+      liveSender.textContent =
+        sender;
+
+
+      liveMessage.textContent =
+        message;
+
+    }
+
+
+
+    const liveInputs = [
+      recipientInput,
+      senderInput,
+      eventInput,
+      dateInput,
+      timeInput,
+      venueInput,
+      admitInput,
+      messageInput
+    ];
+
+
+    liveInputs.forEach(
+      function(input) {
+
+        input.addEventListener(
+          "input",
+          updateLivePreview
+        );
+
+        input.addEventListener(
+          "change",
+          updateLivePreview
+        );
+
+      }
+    );
+
+
+
+    imageInput.addEventListener(
       "change",
       function() {
 
         hideError();
 
+
         const file =
-          eventImageInput.files[0];
+          imageInput.files[0];
+
 
         if (!file) {
 
@@ -513,7 +1244,17 @@
             "visible"
           );
 
-          imagePreview.removeAttribute("src");
+          liveImageWrap.classList.remove(
+            "visible"
+          );
+
+          imagePreview.removeAttribute(
+            "src"
+          );
+
+          liveImage.removeAttribute(
+            "src"
+          );
 
           return;
         }
@@ -526,13 +1267,13 @@
         ];
 
 
-        if (!permittedTypes.includes(file.type)) {
+        if (
+          !permittedTypes.includes(
+            file.type
+          )
+        ) {
 
-          eventImageInput.value = "";
-
-          imagePreviewWrap.classList.remove(
-            "visible"
-          );
+          imageInput.value = "";
 
           showError(
             "Please choose a JPEG, PNG or WebP image."
@@ -542,17 +1283,16 @@
         }
 
 
-        const maximumFileSize =
+        const maximumSize =
           10 * 1024 * 1024;
 
 
-        if (file.size > maximumFileSize) {
+        if (
+          file.size >
+          maximumSize
+        ) {
 
-          eventImageInput.value = "";
-
-          imagePreviewWrap.classList.remove(
-            "visible"
-          );
+          imageInput.value = "";
 
           showError(
             "That image is too large. Please choose an image smaller than 10 MB."
@@ -572,23 +1312,33 @@
             imagePreview.src =
               event.target.result;
 
-            imagePreviewCaption.textContent =
+            liveImage.src =
+              event.target.result;
+
+            imageCaption.textContent =
               file.name;
 
             imagePreviewWrap.classList.add(
               "visible"
             );
+
+            liveImageWrap.classList.add(
+              "visible"
+            );
+
           };
 
 
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(
+          file
+        );
 
       }
     );
 
 
 
-    revealForm.addEventListener(
+    form.addEventListener(
       "submit",
       async function(event) {
 
@@ -596,15 +1346,58 @@
 
         hideError();
 
-        submitButton.disabled = true;
+
+        submitButton.disabled =
+          true;
+
         submitButton.textContent =
-          "Creating preview...";
+          "Preparing your reveal...";
 
 
         try {
 
+          const draft = {
+
+            recipient:
+              recipientInput.value,
+
+            sender:
+              senderInput.value,
+
+            event:
+              eventInput.value,
+
+            date:
+              dateInput.value,
+
+            time:
+              timeInput.value,
+
+            venue:
+              venueInput.value,
+
+            admit:
+              admitInput.value,
+
+            message:
+              messageInput.value,
+
+            ticketUrl:
+              ticketUrlInput.value
+
+          };
+
+
+          sessionStorage.setItem(
+            "revealDraft",
+            JSON.stringify(
+              draft
+            )
+          );
+
+
           const imageFile =
-            eventImageInput.files[0];
+            imageInput.files[0];
 
 
           if (imageFile) {
@@ -615,25 +1408,11 @@
               );
 
 
-            try {
-
-              sessionStorage.setItem(
-                "revealImage",
-                compressedImage
-              );
-
-            } catch {
-
-              throw new Error(
-                "The selected image is still too large for this prototype. Please choose a smaller image."
-              );
-            }
-
-          } else {
-
-            sessionStorage.removeItem(
-              "revealImage"
+            sessionStorage.setItem(
+              "revealImage",
+              compressedImage
             );
+
           }
 
 
@@ -643,73 +1422,55 @@
 
           params.set(
             "recipient",
-            document.getElementById(
-              "recipient"
-            ).value
+            recipientInput.value
           );
 
 
           params.set(
             "sender",
-            document.getElementById(
-              "sender"
-            ).value
+            senderInput.value
           );
 
 
           params.set(
             "event",
-            document.getElementById(
-              "event"
-            ).value
+            eventInput.value
           );
 
 
           params.set(
             "date",
-            document.getElementById(
-              "date"
-            ).value
+            dateInput.value
           );
 
 
           params.set(
             "time",
-            document.getElementById(
-              "time"
-            ).value
+            timeInput.value
           );
 
 
           params.set(
             "venue",
-            document.getElementById(
-              "venue"
-            ).value
+            venueInput.value
           );
 
 
           params.set(
             "admit",
-            document.getElementById(
-              "admit"
-            ).value
+            admitInput.value
           );
 
 
           params.set(
             "message",
-            document.getElementById(
-              "message"
-            ).value
+            messageInput.value
           );
 
 
           params.set(
             "ticketUrl",
-            document.getElementById(
-              "ticketUrl"
-            ).value
+            ticketUrlInput.value
           );
 
 
@@ -724,10 +1485,14 @@
             "Something went wrong while preparing the preview."
           );
 
-          submitButton.disabled = false;
+
+          submitButton.disabled =
+            false;
+
 
           submitButton.textContent =
-            "Preview my reveal";
+            "See the actual reveal";
+
         }
 
       }
@@ -735,7 +1500,9 @@
 
 
 
-    function compressImage(file) {
+    function compressImage(
+      file
+    ) {
 
       return new Promise(
         function(resolve, reject) {
@@ -754,10 +1521,10 @@
               image.onload =
                 function() {
 
-                  const maximumWidth =
+                  const maxWidth =
                     1200;
 
-                  const maximumHeight =
+                  const maxHeight =
                     1200;
 
 
@@ -769,25 +1536,28 @@
 
 
                   if (
-                    width > maximumWidth ||
-                    height > maximumHeight
+                    width > maxWidth ||
+                    height > maxHeight
                   ) {
 
                     const scale =
                       Math.min(
-                        maximumWidth / width,
-                        maximumHeight / height
+                        maxWidth / width,
+                        maxHeight / height
                       );
+
 
                     width =
                       Math.round(
                         width * scale
                       );
 
+
                     height =
                       Math.round(
                         height * scale
                       );
+
                   }
 
 
@@ -799,6 +1569,7 @@
 
                   canvas.width =
                     width;
+
 
                   canvas.height =
                     height;
@@ -812,6 +1583,7 @@
 
                   context.fillStyle =
                     "#ffffff";
+
 
                   context.fillRect(
                     0,
@@ -830,16 +1602,13 @@
                   );
 
 
-                  const compressedImage =
+                  resolve(
                     canvas.toDataURL(
                       "image/jpeg",
                       0.78
-                    );
-
-
-                  resolve(
-                    compressedImage
+                    )
                   );
+
                 };
 
 
@@ -848,9 +1617,10 @@
 
                   reject(
                     new Error(
-                      "That image could not be processed. Please try another image."
+                      "The selected image could not be processed."
                     )
                   );
+
                 };
 
 
@@ -865,9 +1635,10 @@
 
               reject(
                 new Error(
-                  "That image could not be read."
+                  "The selected image could not be read."
                 )
               );
+
             };
 
 
@@ -877,35 +1648,48 @@
 
         }
       );
+
     }
 
 
 
-    function showError(message) {
+    function showError(
+      message
+    ) {
 
       errorMessage.textContent =
         message;
+
 
       errorMessage.classList.add(
         "visible"
       );
 
+
       errorMessage.scrollIntoView({
-        behavior: "smooth",
+        behaviour: "smooth",
         block: "center"
       });
+
     }
 
 
 
     function hideError() {
 
-      errorMessage.textContent = "";
+      errorMessage.textContent =
+        "";
+
 
       errorMessage.classList.remove(
         "visible"
       );
+
     }
+
+
+
+    updateLivePreview();
 
   </script>
 
