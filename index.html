@@ -1,4 +1,744 @@
-Opening screen
-Sophie, you’ve got a surprise…
-Someone has planned something special for you.
-Tap to reveal
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17120c" />
+
+  <title>You have a surprise</title>
+
+  <style>
+    :root {
+      --bg-dark: #17120c;
+      --bg-mid: #2a2117;
+      --gold: #d8ac55;
+      --gold-light: #f3dc9a;
+      --cream: #fff8e9;
+      --ink: #2c241b;
+      --muted: #746957;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      margin: 0;
+      min-height: 100%;
+      font-family: Georgia, "Times New Roman", serif;
+      background:
+        radial-gradient(circle at top, #49351e 0%, var(--bg-dark) 48%, #0e0b08 100%);
+      color: white;
+    }
+
+    body {
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    button,
+    a {
+      font: inherit;
+    }
+
+    .screen {
+      min-height: 100vh;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      position: relative;
+    }
+
+    .opening-screen {
+      text-align: center;
+      overflow: hidden;
+    }
+
+    .opening-content {
+      max-width: 620px;
+      position: relative;
+      z-index: 5;
+      animation: fadeIn 1s ease both;
+    }
+
+    .eyebrow {
+      text-transform: uppercase;
+      letter-spacing: 0.28em;
+      font-size: 0.74rem;
+      color: var(--gold-light);
+      margin-bottom: 24px;
+    }
+
+    h1 {
+      font-size: clamp(2.4rem, 8vw, 5.2rem);
+      line-height: 0.98;
+      margin: 0 0 24px;
+      font-weight: normal;
+    }
+
+    .opening-text {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 1.08rem;
+      line-height: 1.6;
+      color: #ede4d3;
+      margin: 0 auto 36px;
+      max-width: 480px;
+    }
+
+    .reveal-button {
+      border: 1px solid rgba(255,255,255,0.25);
+      background:
+        linear-gradient(135deg, #f4d98b, #b47b27);
+      color: #20170d;
+      border-radius: 999px;
+      padding: 17px 34px;
+      min-width: 210px;
+      cursor: pointer;
+      font-family: Arial, Helvetica, sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      box-shadow:
+        0 15px 40px rgba(0,0,0,0.32),
+        inset 0 1px 0 rgba(255,255,255,0.65);
+      transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+    }
+
+    .reveal-button:hover {
+      transform: translateY(-2px);
+      box-shadow:
+        0 19px 50px rgba(0,0,0,0.38),
+        inset 0 1px 0 rgba(255,255,255,0.65);
+    }
+
+    .reveal-button:active {
+      transform: translateY(1px);
+    }
+
+    .sparkle {
+      position: absolute;
+      border-radius: 50%;
+      background: var(--gold-light);
+      box-shadow: 0 0 14px rgba(243,220,154,0.8);
+      opacity: 0.7;
+      animation: drift 4s ease-in-out infinite alternate;
+    }
+
+    .sparkle.one {
+      width: 5px;
+      height: 5px;
+      top: 18%;
+      left: 15%;
+    }
+
+    .sparkle.two {
+      width: 8px;
+      height: 8px;
+      top: 28%;
+      right: 16%;
+      animation-delay: 0.7s;
+    }
+
+    .sparkle.three {
+      width: 4px;
+      height: 4px;
+      bottom: 20%;
+      left: 25%;
+      animation-delay: 1.3s;
+    }
+
+    .sparkle.four {
+      width: 6px;
+      height: 6px;
+      bottom: 25%;
+      right: 23%;
+      animation-delay: 2s;
+    }
+
+    .reveal-screen {
+      display: none;
+      background:
+        radial-gradient(circle at top, rgba(216,172,85,0.18), transparent 32%),
+        linear-gradient(180deg, #19130d, #0e0b08);
+      padding-top: 48px;
+      padding-bottom: 70px;
+    }
+
+    .reveal-screen.visible {
+      display: block;
+      animation: fadeIn 0.8s ease both;
+    }
+
+    .reveal-wrap {
+      width: min(760px, 100%);
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    .mini-heading {
+      font-family: Arial, Helvetica, sans-serif;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-size: 0.72rem;
+      color: var(--gold-light);
+      margin-top: 10px;
+      margin-bottom: 12px;
+    }
+
+    .youre-going {
+      font-size: clamp(1.5rem, 5vw, 2.3rem);
+      margin: 0 0 8px;
+      font-weight: normal;
+      color: #f5e9d0;
+    }
+
+    .event-name {
+      font-size: clamp(2.5rem, 8vw, 5rem);
+      line-height: 1;
+      margin: 0 0 32px;
+      font-weight: normal;
+      color: white;
+    }
+
+    .ticket {
+      position: relative;
+      margin: 0 auto;
+      width: min(620px, 100%);
+      background:
+        linear-gradient(135deg, #fffdf6 0%, var(--cream) 55%, #f3e1b8 100%);
+      color: var(--ink);
+      border-radius: 18px;
+      padding: 40px 34px 32px;
+      box-shadow:
+        0 26px 70px rgba(0,0,0,0.38),
+        0 0 0 1px rgba(216,172,85,0.35);
+      overflow: hidden;
+      transform-origin: center;
+      animation: ticketReveal 0.9s cubic-bezier(.18,.89,.32,1.28) both;
+    }
+
+    .ticket::before,
+    .ticket::after {
+      content: "";
+      position: absolute;
+      top: 52%;
+      transform: translateY(-50%);
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #17120c;
+    }
+
+    .ticket::before {
+      left: -14px;
+    }
+
+    .ticket::after {
+      right: -14px;
+    }
+
+    .ticket-shine {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          120deg,
+          transparent 0%,
+          transparent 35%,
+          rgba(255,255,255,0.7) 47%,
+          transparent 58%,
+          transparent 100%
+        );
+      transform: translateX(-120%);
+      animation: shine 1.4s 0.6s ease forwards;
+    }
+
+    .ticket-label {
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.74rem;
+      letter-spacing: 0.25em;
+      font-weight: 700;
+      color: #98702c;
+      margin-bottom: 17px;
+    }
+
+    .ticket-title {
+      font-size: clamp(2rem, 6vw, 3.4rem);
+      line-height: 1;
+      font-weight: normal;
+      margin: 0 0 28px;
+    }
+
+    .ticket-divider {
+      height: 1px;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(44,36,27,0.35) 0,
+          rgba(44,36,27,0.35) 6px,
+          transparent 6px,
+          transparent 12px
+        );
+      margin: 25px 0;
+    }
+
+    .details-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      text-align: left;
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    .detail {
+      min-width: 0;
+    }
+
+    .detail-label {
+      display: block;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    .detail-value {
+      font-size: 1rem;
+      line-height: 1.4;
+      font-weight: 700;
+    }
+
+    .message-card {
+      margin: 28px auto 0;
+      width: min(620px, 100%);
+      padding: 27px 24px;
+      border: 1px solid rgba(243,220,154,0.22);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.055);
+      color: #f3ebde;
+    }
+
+    .message-card h3 {
+      margin: 0 0 12px;
+      font-size: 1.3rem;
+      font-weight: normal;
+    }
+
+    .message-card p {
+      font-family: Arial, Helvetica, sans-serif;
+      line-height: 1.65;
+      margin: 0;
+      color: #ddd3c2;
+    }
+
+    .cta-section {
+      margin: 42px auto 0;
+      max-width: 580px;
+    }
+
+    .cta-section h2 {
+      font-size: clamp(1.7rem, 5vw, 2.5rem);
+      font-weight: normal;
+      margin: 0 0 10px;
+    }
+
+    .cta-section p {
+      font-family: Arial, Helvetica, sans-serif;
+      color: #d9cfbf;
+      line-height: 1.55;
+      margin: 0 auto 24px;
+    }
+
+    .ticket-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      border-radius: 999px;
+      min-width: 210px;
+      padding: 16px 28px;
+      background:
+        linear-gradient(135deg, #f4d98b, #b47b27);
+      color: #20170d;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      transition: transform 0.2s ease;
+    }
+
+    .ticket-link:hover {
+      transform: translateY(-2px);
+    }
+
+    .disclaimer {
+      display: block;
+      margin: 20px auto 0;
+      max-width: 520px;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.72rem;
+      line-height: 1.5;
+      color: #93897b;
+    }
+
+    .confetti-piece {
+      position: fixed;
+      top: -20px;
+      z-index: 100;
+      pointer-events: none;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes drift {
+      from {
+        transform: translateY(-5px) scale(0.8);
+        opacity: 0.35;
+      }
+      to {
+        transform: translateY(7px) scale(1.3);
+        opacity: 1;
+      }
+    }
+
+    @keyframes ticketReveal {
+      from {
+        opacity: 0;
+        transform: scale(0.78) rotateX(12deg);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1) rotateX(0);
+      }
+    }
+
+    @keyframes shine {
+      from {
+        transform: translateX(-120%);
+      }
+      to {
+        transform: translateX(120%);
+      }
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform:
+          translate3d(0, -20px, 0)
+          rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform:
+          translate3d(var(--drift), 110vh, 0)
+          rotate(var(--spin));
+        opacity: 0;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .screen {
+        padding: 20px;
+      }
+
+      .ticket {
+        padding: 33px 25px 28px;
+      }
+
+      .details-grid {
+        grid-template-columns: 1fr;
+        gap: 18px;
+      }
+
+      .ticket::before,
+      .ticket::after {
+        width: 22px;
+        height: 22px;
+      }
+
+      .ticket::before {
+        left: -11px;
+      }
+
+      .ticket::after {
+        right: -11px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- OPENING SCREEN -->
+  <main id="openingScreen" class="screen opening-screen">
+
+    <div class="sparkle one"></div>
+    <div class="sparkle two"></div>
+    <div class="sparkle three"></div>
+    <div class="sparkle four"></div>
+
+    <div class="opening-content">
+
+      <div class="eyebrow">Something special is waiting</div>
+
+      <h1>
+        Sophie, you've got<br>
+        a surprise...
+      </h1>
+
+      <p class="opening-text">
+        Someone has planned something special for you.
+      </p>
+
+      <button
+        id="revealButton"
+        class="reveal-button"
+        type="button"
+        aria-controls="revealScreen"
+      >
+        Tap to reveal
+      </button>
+
+    </div>
+
+  </main>
+
+
+  <!-- REVEAL SCREEN -->
+  <section
+    id="revealScreen"
+    class="screen reveal-screen"
+    aria-hidden="true"
+  >
+
+    <div class="reveal-wrap">
+
+      <div class="mini-heading">Your surprise</div>
+
+      <h2 class="youre-going">
+        You're going to...
+      </h2>
+
+      <h1 class="event-name">
+        A Night at the Theatre
+      </h1>
+
+
+      <!-- DIGITAL TICKET -->
+      <article class="ticket">
+
+        <div class="ticket-shine"></div>
+
+        <div class="ticket-label">
+          YOUR GIFT
+        </div>
+
+        <h2 class="ticket-title">
+          A Night at the Theatre
+        </h2>
+
+        <div class="ticket-divider"></div>
+
+        <div class="details-grid">
+
+          <div class="detail">
+            <span class="detail-label">Date</span>
+            <span class="detail-value">
+              Saturday 21 November 2026
+            </span>
+          </div>
+
+          <div class="detail">
+            <span class="detail-label">Time</span>
+            <span class="detail-value">
+              7:30 pm
+            </span>
+          </div>
+
+          <div class="detail">
+            <span class="detail-label">Venue</span>
+            <span class="detail-value">
+              The Grand Theatre<br>
+              London
+            </span>
+          </div>
+
+          <div class="detail">
+            <span class="detail-label">Admit</span>
+            <span class="detail-value">
+              Sophie + 1
+            </span>
+          </div>
+
+          <div class="detail">
+            <span class="detail-label">For</span>
+            <span class="detail-value">
+              Sophie
+            </span>
+          </div>
+
+          <div class="detail">
+            <span class="detail-label">From</span>
+            <span class="detail-value">
+              Michael
+            </span>
+          </div>
+
+        </div>
+
+      </article>
+
+
+      <!-- PERSONAL MESSAGE -->
+      <div class="message-card">
+
+        <h3>A little message</h3>
+
+        <p>
+          I thought we should have something to look forward to.
+          Get dressed up, clear the evening and enjoy it.
+          The rest is a surprise.
+        </p>
+
+      </div>
+
+
+      <!-- FINAL CTA -->
+      <div class="cta-section">
+
+        <h2>
+          Ready for the real thing?
+        </h2>
+
+        <p>
+          Your official tickets and booking details are waiting for you.
+        </p>
+
+        <!--
+          Later, replace the link below with the buyer's
+          actual ticket or booking URL.
+        -->
+
+        <a
+          class="ticket-link"
+          href="https://example.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          View your tickets
+        </a>
+
+        <small class="disclaimer">
+          This reveal is a digital gift presentation and is not an admission ticket.
+        </small>
+
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <script>
+    const revealButton = document.getElementById("revealButton");
+    const openingScreen = document.getElementById("openingScreen");
+    const revealScreen = document.getElementById("revealScreen");
+
+    revealButton.addEventListener("click", () => {
+
+      openingScreen.style.display = "none";
+
+      revealScreen.classList.add("visible");
+      revealScreen.setAttribute("aria-hidden", "false");
+
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth"
+      });
+
+      launchConfetti();
+    });
+
+
+    function launchConfetti() {
+
+      const colours = [
+        "#f5d77b",
+        "#ffffff",
+        "#d6a542",
+        "#f7e8b0",
+        "#b8802a"
+      ];
+
+      const totalPieces = 90;
+
+      for (let i = 0; i < totalPieces; i++) {
+
+        const piece = document.createElement("div");
+
+        piece.className = "confetti-piece";
+
+        const size = Math.random() * 7 + 5;
+
+        piece.style.width = `${size}px`;
+        piece.style.height = `${size * 0.55}px`;
+
+        piece.style.left = `${Math.random() * 100}vw`;
+
+        piece.style.background =
+          colours[Math.floor(Math.random() * colours.length)];
+
+        piece.style.animationDuration =
+          `${Math.random() * 2.3 + 2.4}s`;
+
+        piece.style.animationDelay =
+          `${Math.random() * 0.5}s`;
+
+        piece.style.setProperty(
+          "--drift",
+          `${Math.random() * 240 - 120}px`
+        );
+
+        piece.style.setProperty(
+          "--spin",
+          `${Math.random() * 900 - 450}deg`
+        );
+
+        document.body.appendChild(piece);
+
+        setTimeout(() => {
+          piece.remove();
+        }, 6000);
+      }
+    }
+  </script>
+
+</body>
+</html>
