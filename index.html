@@ -2,38 +2,21 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <meta
-    name="theme-color"
-    content="#f7f3eb"
-  >
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f7f3eb">
+  <meta name="referrer" content="no-referrer">
 
   <title>Create your reveal</title>
 
   <style>
     :root {
       --page-bg: #f7f3eb;
-      --card-bg: #ffffff;
       --text: #28231d;
       --muted: #746b60;
-      --gold: #c18a34;
-      --gold-light: #f1d68b;
-      --dark: #17120c;
       --cream: #fff8e9;
     }
 
-    * {
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -41,6 +24,8 @@
       background: var(--page-bg);
       color: var(--text);
     }
+
+    [hidden] { display: none !important; }
 
     .page {
       width: min(1220px, 100%);
@@ -79,20 +64,17 @@
 
     .builder-layout {
       display: grid;
-      grid-template-columns:
-        minmax(0, 1fr)
-        minmax(360px, 0.85fr);
+      grid-template-columns: minmax(0, 1fr) minmax(360px, 0.85fr);
       gap: 32px;
       align-items: start;
     }
 
     .form-card {
+      min-width: 0;
       background: white;
       border-radius: 20px;
       padding: 30px;
-      box-shadow:
-        0 12px 35px
-        rgba(0,0,0,0.07);
+      box-shadow: 0 12px 35px rgba(0, 0, 0, 0.07);
     }
 
     .section-heading {
@@ -102,9 +84,7 @@
       margin: 0 0 26px;
     }
 
-    .field {
-      margin-bottom: 23px;
-    }
+    .field { margin-bottom: 23px; }
 
     label {
       display: block;
@@ -114,26 +94,29 @@
 
     .field-help {
       margin: -2px 0 9px;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       line-height: 1.5;
-      color: #81786d;
+      color: #746b60;
     }
 
     input,
     textarea {
       width: 100%;
+      min-width: 0;
       border: 1px solid #d6d0c5;
       border-radius: 10px;
       padding: 14px 15px;
       font: inherit;
+      font-size: 16px;
       background: #fffdf9;
       color: var(--text);
     }
 
     input:focus,
-    textarea:focus {
-      outline: 2px solid #d8ac55;
-      border-color: transparent;
+    textarea:focus,
+    button:focus-visible {
+      outline: 2px solid #b47b27;
+      outline-offset: 3px;
     }
 
     textarea {
@@ -148,7 +131,7 @@
 
     .two-columns {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 18px;
     }
 
@@ -158,7 +141,7 @@
       border: 1px solid #ead4a4;
       border-radius: 10px;
       padding: 12px 14px;
-      font-size: 0.78rem;
+      font-size: 0.8rem;
       line-height: 1.5;
       color: #6b5733;
     }
@@ -172,14 +155,12 @@
       background: #f4f0e8;
     }
 
-    .image-preview-wrap.visible {
-      display: block;
-    }
+    .image-preview-wrap.visible { display: block; }
 
     .image-preview {
       width: 100%;
       max-height: 280px;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
 
@@ -191,16 +172,23 @@
       padding: 10px 12px;
       background: #faf8f3;
       color: #776e63;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
+    }
+
+    #imageCaption {
+      min-width: 0;
+      overflow-wrap: anywhere;
     }
 
     .remove-image-button {
+      min-height: 44px;
       border: 0;
       border-radius: 7px;
-      padding: 6px 9px;
+      padding: 8px 12px;
       cursor: pointer;
       background: #eee7da;
       color: #554b40;
+      flex-shrink: 0;
     }
 
     .message-box {
@@ -210,11 +198,10 @@
       margin-bottom: 20px;
       line-height: 1.5;
       font-size: 0.85rem;
+      overflow-wrap: anywhere;
     }
 
-    .message-box.visible {
-      display: block;
-    }
+    .message-box.visible { display: block; }
 
     .message-box.error {
       background: #fff0ed;
@@ -230,42 +217,34 @@
 
     .review-button {
       width: 100%;
+      min-height: 54px;
       border: none;
       border-radius: 999px;
       padding: 17px 24px;
       margin-top: 10px;
       cursor: pointer;
-      background:
-        linear-gradient(
-          135deg,
-          #f4d98b,
-          #b47b27
-        );
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
       color: #21180d;
       font-size: 1rem;
       font-weight: 700;
-      box-shadow:
-        0 11px 27px
-        rgba(116,79,23,0.2);
+      box-shadow: 0 11px 27px rgba(116, 79, 23, 0.2);
     }
 
-    .review-button:disabled {
+    button:disabled {
       opacity: 0.55;
-      cursor: wait;
+      cursor: not-allowed;
     }
 
     .form-note {
       text-align: center;
       margin-top: 14px;
-      font-size: 0.75rem;
-      color: #867d72;
+      font-size: 0.8rem;
+      color: #746b60;
       line-height: 1.5;
     }
 
-
-    /* LIVE PREVIEW */
-
     .preview-column {
+      min-width: 0;
       position: sticky;
       top: 24px;
     }
@@ -280,21 +259,16 @@
     }
 
     .preview-shell {
-      background:
-        radial-gradient(
-          circle at top,
-          #49351e 0%,
-          #21180f 48%,
-          #100c08 100%
-        );
-
+      background: radial-gradient(
+        circle at top,
+        #49351e 0%,
+        #21180f 48%,
+        #100c08 100%
+      );
       border-radius: 24px;
       padding: 28px 22px 26px;
       color: white;
-
-      box-shadow:
-        0 20px 55px
-        rgba(0,0,0,0.18);
+      box-shadow: 0 20px 55px rgba(0, 0, 0, 0.18);
     }
 
     .preview-top {
@@ -305,33 +279,23 @@
     .preview-small-heading {
       text-transform: uppercase;
       letter-spacing: 0.18em;
-      font-size: 0.62rem;
+      font-size: 0.65rem;
       color: #f3dc9a;
       margin-bottom: 9px;
     }
 
     .preview-surprise-text {
-      font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 1.15rem;
       color: #f5e9d0;
     }
 
     .preview-event-name {
-      font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
-      font-size:
-        clamp(2rem, 4vw, 3rem);
-
-      line-height: 1;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.1;
       font-weight: normal;
-      margin: 4px 0 0;
+      margin: 8px 0 0;
       overflow-wrap: anywhere;
     }
 
@@ -342,33 +306,24 @@
       overflow: hidden;
     }
 
-    .live-image-wrap.visible {
-      display: block;
-    }
+    .live-image-wrap.visible { display: block; }
 
     .live-image {
       width: 100%;
       max-height: 280px;
-      object-fit: cover;
+      object-fit: contain;
       display: block;
     }
 
     .preview-ticket {
-      background:
-        linear-gradient(
-          135deg,
-          #fffdf6,
-          #fff8e9,
-          #f3e1b8
-        );
-
+      background: linear-gradient(135deg, #fffdf6, #fff8e9, #f3e1b8);
       color: #2c241b;
       border-radius: 17px;
       padding: 27px 24px;
     }
 
     .preview-ticket-label {
-      font-size: 0.62rem;
+      font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.22em;
       color: #98702c;
@@ -376,14 +331,10 @@
     }
 
     .preview-ticket-title {
-      font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
+      font-family: Georgia, "Times New Roman", serif;
       font-size: 2rem;
       font-weight: normal;
-      line-height: 1;
+      line-height: 1.1;
       margin: 0 0 20px;
       overflow-wrap: anywhere;
     }
@@ -391,20 +342,18 @@
     .preview-divider {
       height: 1px;
       margin: 18px 0;
-
-      background:
-        repeating-linear-gradient(
-          to right,
-          rgba(44,36,27,0.35) 0,
-          rgba(44,36,27,0.35) 5px,
-          transparent 5px,
-          transparent 10px
-        );
+      background: repeating-linear-gradient(
+        to right,
+        rgba(44, 36, 27, 0.35) 0,
+        rgba(44, 36, 27, 0.35) 5px,
+        transparent 5px,
+        transparent 10px
+      );
     }
 
     .preview-details {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
       gap: 17px;
       text-align: left;
     }
@@ -412,7 +361,7 @@
     .preview-detail-label {
       display: block;
       text-transform: uppercase;
-      font-size: 0.58rem;
+      font-size: 0.65rem;
       letter-spacing: 0.1em;
       color: #756a59;
       margin-bottom: 4px;
@@ -420,7 +369,7 @@
 
     .preview-detail-value {
       display: block;
-      font-size: 0.82rem;
+      font-size: 0.85rem;
       line-height: 1.4;
       font-weight: 700;
       overflow-wrap: anywhere;
@@ -430,127 +379,78 @@
       margin-top: 20px;
       padding: 18px;
       border-radius: 14px;
-
-      background:
-        rgba(255,255,255,0.06);
-
-      border:
-        1px solid
-        rgba(243,220,154,0.18);
-
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(243, 220, 154, 0.18);
       text-align: center;
     }
 
     .live-message-title {
-      font-family:
-        Georgia,
-        "Times New Roman",
-        serif;
-
+      font-family: Georgia, "Times New Roman", serif;
       margin-bottom: 7px;
     }
 
     .live-message-text {
       margin: 0;
-      font-size: 0.78rem;
+      font-size: 0.85rem;
       line-height: 1.55;
       color: #ddd3c2;
       white-space: pre-wrap;
+      overflow-wrap: anywhere;
     }
 
     .preview-explanation {
       margin: 14px 3px 0;
-      font-size: 0.75rem;
+      font-size: 0.8rem;
       line-height: 1.5;
       color: #756d63;
     }
 
     @media (max-width: 900px) {
-
-      .builder-layout {
-        grid-template-columns: 1fr;
-      }
-
-      .preview-column {
-        position: static;
-      }
-
+      .builder-layout { grid-template-columns: 1fr; }
+      .preview-column { position: static; }
     }
 
     @media (max-width: 600px) {
-
-      .page {
-        padding: 30px 16px 60px;
-      }
-
-      .form-card {
-        padding: 22px;
-      }
-
-      .two-columns {
-        grid-template-columns: 1fr;
-        gap: 0;
-      }
-
-      .preview-details {
-        grid-template-columns: 1fr 1fr;
-      }
-
+      .page { padding: 30px 16px 60px; }
+      .form-card { padding: 22px; }
+      .two-columns { grid-template-columns: 1fr; gap: 0; }
+      .preview-shell { padding: 24px 16px; }
+      .preview-ticket { padding: 24px 18px; }
     }
   </style>
 </head>
 
 <body>
-
   <main class="page">
-
     <header class="page-header">
-
-      <div class="eyebrow">
-        Digital gift reveal
-      </div>
-
-      <h1>
-        Create your surprise
-      </h1>
-
+      <div class="eyebrow">Digital gift reveal</div>
+      <h1>Create your surprise</h1>
       <p class="intro">
-        Turn an e-ticket, trip or experience into something
-        special to open. Your template preview updates as
-        you create it.
+        Turn a gift, trip or experience into something special to open.
+        Your template preview updates as you create it.
       </p>
-
     </header>
 
-
     <div class="builder-layout">
-
-
       <section class="form-card">
-
-        <h2
-          id="formHeading"
-          class="section-heading"
-        >
+        <h2 id="formHeading" class="section-heading">
           Tell us about the surprise
         </h2>
-
 
         <div
           id="messageBox"
           class="message-box"
+          role="status"
+          aria-live="polite"
         ></div>
 
+        <noscript>
+          <p>Please enable JavaScript to create and review your reveal.</p>
+        </noscript>
 
         <form id="revealForm">
-
-
           <div class="field">
-
-            <label for="recipient">
-              Who is it for?
-            </label>
-
+            <label for="recipient">Who is it for?</label>
             <input
               id="recipient"
               type="text"
@@ -558,16 +458,10 @@
               maxlength="80"
               required
             >
-
           </div>
 
-
           <div class="field">
-
-            <label for="sender">
-              Who is it from?
-            </label>
-
+            <label for="sender">Who is it from?</label>
             <input
               id="sender"
               type="text"
@@ -575,16 +469,10 @@
               maxlength="80"
               required
             >
-
           </div>
 
-
           <div class="field">
-
-            <label for="eventName">
-              What's the surprise?
-            </label>
-
+            <label for="eventName">What's the surprise?</label>
             <input
               id="eventName"
               type="text"
@@ -592,19 +480,13 @@
               maxlength="160"
               required
             >
-
           </div>
 
-
           <div class="field">
-
-            <label for="image">
-              Add an image
-            </label>
-
+            <label for="image">Add an image</label>
             <p class="field-help">
-              Optional. Add an event image, poster,
-              booking confirmation or cropped screenshot.
+              Optional. Add a photo, event image or poster with no ticket
+              codes or private booking details.
             </p>
 
             <input
@@ -614,29 +496,19 @@
             >
 
             <div class="warning-box">
-              Avoid uploading visible QR codes, barcodes
-              or other information that could allow somebody
-              else to use the real ticket.
+              Avoid uploading visible QR codes, barcodes or other
+              information that could allow somebody else to use the real ticket.
             </div>
 
-
-            <div
-              id="imagePreviewWrap"
-              class="image-preview-wrap"
-            >
-
+            <div id="imagePreviewWrap" class="image-preview-wrap">
               <img
                 id="imagePreview"
                 class="image-preview"
-                alt="Selected event image"
+                alt="Selected gift image"
               >
 
               <div class="image-caption">
-
-                <span id="imageCaption">
-                  Image selected
-                </span>
-
+                <span id="imageCaption">Image selected</span>
                 <button
                   id="removeImageButton"
                   class="remove-image-button"
@@ -644,1369 +516,574 @@
                 >
                   Remove
                 </button>
-
               </div>
-
             </div>
-
           </div>
-
 
           <div class="two-columns">
-
             <div class="field">
-
-              <label for="eventDate">
-                Date
-              </label>
-
-              <input
-                id="eventDate"
-                type="date"
-                required
-              >
-
+              <label for="eventDate">Date (optional)</label>
+              <input id="eventDate" type="date">
             </div>
 
-
             <div class="field">
-
-              <label for="eventTime">
-                Time
-              </label>
-
-              <input
-                id="eventTime"
-                type="time"
-              >
-
+              <label for="eventTime">Time (optional)</label>
+              <input id="eventTime" type="time">
             </div>
-
           </div>
 
-
           <div class="field">
-
-            <label for="venue">
-              Venue or destination
-            </label>
-
+            <label for="venue">Venue or destination</label>
             <input
               id="venue"
               type="text"
               placeholder="The Grand Theatre, London"
               maxlength="200"
             >
-
           </div>
 
-
           <div class="field">
-
-            <label for="admit">
-              Who is going?
-            </label>
-
+            <label for="admit">Who is it for or who is going?</label>
             <input
               id="admit"
               type="text"
               placeholder="Chloe + 1"
               maxlength="120"
             >
-
           </div>
 
-
           <div class="field">
-
-            <label for="personalMessage">
-              Your message
-            </label>
-
+            <label for="personalMessage">Your message</label>
             <textarea
               id="personalMessage"
               maxlength="1200"
               placeholder="I thought we should have something to look forward to..."
             ></textarea>
-
           </div>
 
-
           <div class="field">
-
-            <label for="ticketUrl">
-              Official ticket or booking link
-            </label>
-
+            <label for="ticketUrl">Official ticket or booking link</label>
             <p class="field-help">
-              Optional. This will only be made available
-              in the paid recipient reveal.
+              Optional. Saved privately with your draft. It is not
+              included in the current recipient page.
             </p>
-
             <input
               id="ticketUrl"
               type="url"
               placeholder="https://..."
+              maxlength="2048"
             >
-
           </div>
-
 
           <button
             id="reviewButton"
             class="review-button"
             type="submit"
+            disabled
           >
             Review my reveal
           </button>
-
         </form>
 
-
         <div class="form-note">
-          The full animated reveal is only unlocked
+          The recipient opening experience is only unlocked
           after successful payment.
         </div>
-
       </section>
 
-
-
-      <aside class="preview-column">
-
-        <div class="preview-label">
-          Live template preview
-        </div>
-
+      <aside class="preview-column" aria-label="Static template preview">
+        <div class="preview-label">Live template preview</div>
 
         <div class="preview-shell">
-
-
           <div class="preview-top">
-
-            <div class="preview-small-heading">
+            <div class="preview-small-heading">Your surprise</div>
+            <div class="preview-surprise-text">Something special for you</div>
+            <h2 id="liveEventHeading" class="preview-event-name">
               Your surprise
-            </div>
-
-            <div class="preview-surprise-text">
-              You're going to...
-            </div>
-
-            <h2
-              id="liveEventHeading"
-              class="preview-event-name"
-            >
-              A Night at the Theatre
             </h2>
-
           </div>
 
-
-          <div
-            id="liveImageWrap"
-            class="live-image-wrap"
-          >
-
-            <img
-              id="liveImage"
-              class="live-image"
-              alt="Event preview"
-            >
-
+          <div id="liveImageWrap" class="live-image-wrap">
+            <img id="liveImage" class="live-image" alt="Gift preview">
           </div>
-
 
           <article class="preview-ticket">
-
-            <div class="preview-ticket-label">
-              YOUR GIFT
-            </div>
-
-            <h3
-              id="liveTicketTitle"
-              class="preview-ticket-title"
-            >
-              A Night at the Theatre
+            <div class="preview-ticket-label">YOUR GIFT</div>
+            <h3 id="liveTicketTitle" class="preview-ticket-title">
+              Your surprise
             </h3>
 
             <div class="preview-divider"></div>
 
-
             <div class="preview-details">
-
               <div>
-
-                <span class="preview-detail-label">
-                  Date
-                </span>
-
-                <span
-                  id="liveDate"
-                  class="preview-detail-value"
-                >
+                <span class="preview-detail-label">Date</span>
+                <span id="liveDate" class="preview-detail-value">
                   Date to be confirmed
                 </span>
-
               </div>
-
-
               <div>
-
-                <span class="preview-detail-label">
-                  Time
-                </span>
-
-                <span
-                  id="liveTime"
-                  class="preview-detail-value"
-                >
+                <span class="preview-detail-label">Time</span>
+                <span id="liveTime" class="preview-detail-value">
                   Time to be confirmed
                 </span>
-
               </div>
-
-
               <div>
-
-                <span class="preview-detail-label">
-                  Venue
+                <span class="preview-detail-label">Venue</span>
+                <span id="liveVenue" class="preview-detail-value">
+                  To be confirmed
                 </span>
-
-                <span
-                  id="liveVenue"
-                  class="preview-detail-value"
-                >
-                  Venue or destination
-                </span>
-
               </div>
-
-
               <div>
-
-                <span class="preview-detail-label">
-                  Admit
+                <span class="preview-detail-label">Guests or recipients</span>
+                <span id="liveAdmit" class="preview-detail-value">
+                  To be confirmed
                 </span>
-
-                <span
-                  id="liveAdmit"
-                  class="preview-detail-value"
-                >
-                  Chloe + 1
-                </span>
-
               </div>
-
-
               <div>
-
-                <span class="preview-detail-label">
-                  For
+                <span class="preview-detail-label">For</span>
+                <span id="liveRecipient" class="preview-detail-value">
+                  Recipient
                 </span>
-
-                <span
-                  id="liveRecipient"
-                  class="preview-detail-value"
-                >
-                  Chloe
-                </span>
-
               </div>
-
-
               <div>
-
-                <span class="preview-detail-label">
-                  From
+                <span class="preview-detail-label">From</span>
+                <span id="liveSender" class="preview-detail-value">
+                  Sender
                 </span>
-
-                <span
-                  id="liveSender"
-                  class="preview-detail-value"
-                >
-                  Michael
-                </span>
-
               </div>
-
             </div>
-
           </article>
 
-
           <div class="live-message">
-
-            <div class="live-message-title">
-              A little message
-            </div>
-
-            <p
-              id="liveMessage"
-              class="live-message-text"
-            >
+            <div class="live-message-title">A little message</div>
+            <p id="liveMessage" class="live-message-text">
               Your personal message will appear here.
             </p>
-
           </div>
-
         </div>
 
-
         <p class="preview-explanation">
-          This is a design preview only. The full opening
-          animation and recipient experience are not shown
-          before purchase.
+          This is a design preview only. The opening animation and
+          recipient experience are not shown before purchase.
         </p>
-
       </aside>
-
     </div>
-
   </main>
 
-
   <script>
-
-    const params =
-      new URLSearchParams(
-        window.location.search
-      );
-
-
-    const editingRevealId =
-      params.get("edit");
-
-
-    let existingImagePresent =
-      false;
-
-
-    let removeExistingImage =
-      false;
-
-
-    let selectedImageFile =
-      null;
-
-
-    let activeImageObjectUrl =
-      null;
-
-
-
-    const form =
-      document.getElementById(
-        "revealForm"
-      );
-
-
-    const recipientInput =
-      document.getElementById(
-        "recipient"
-      );
-
-    const senderInput =
-      document.getElementById(
-        "sender"
-      );
-
-    const eventNameInput =
-      document.getElementById(
-        "eventName"
-      );
-
-    const eventDateInput =
-      document.getElementById(
-        "eventDate"
-      );
-
-    const eventTimeInput =
-      document.getElementById(
-        "eventTime"
-      );
-
-    const venueInput =
-      document.getElementById(
-        "venue"
-      );
-
-    const admitInput =
-      document.getElementById(
-        "admit"
-      );
-
-    const personalMessageInput =
-      document.getElementById(
-        "personalMessage"
-      );
-
-    const ticketUrlInput =
-      document.getElementById(
-        "ticketUrl"
-      );
-
-    const imageInput =
-      document.getElementById(
-        "image"
-      );
-
-
-    const reviewButton =
-      document.getElementById(
-        "reviewButton"
-      );
-
-
-    const messageBox =
-      document.getElementById(
-        "messageBox"
-      );
-
-
-    const imagePreviewWrap =
-      document.getElementById(
-        "imagePreviewWrap"
-      );
-
-    const imagePreview =
-      document.getElementById(
-        "imagePreview"
-      );
-
-    const imageCaption =
-      document.getElementById(
-        "imageCaption"
-      );
-
-    const removeImageButton =
-      document.getElementById(
-        "removeImageButton"
-      );
-
-
-    const liveImageWrap =
-      document.getElementById(
-        "liveImageWrap"
-      );
-
-    const liveImage =
-      document.getElementById(
-        "liveImage"
-      );
-
-
-
-    function getEditToken(id) {
-
-      return localStorage.getItem(
-        "reveal_edit_" + id
-      );
-
-    }
-
-
-
-    function saveEditToken(
-      id,
-      token
-    ) {
-
-      localStorage.setItem(
-        "reveal_edit_" + id,
-        token
-      );
-
-    }
-
-
-
-    function valueOrFallback(
-      value,
-      fallback
-    ) {
-
-      if (
-        !value ||
-        value.trim() === ""
-      ) {
-
-        return fallback;
-      }
-
-
-      return value.trim();
-
-    }
-
-
-
-    function formatDate(value) {
-
-      if (!value) {
-
-        return "Date to be confirmed";
-      }
-
-
-      const date =
-        new Date(
-          value +
-          "T12:00:00"
-        );
-
-
-      return new Intl.DateTimeFormat(
-        "en-GB",
-        {
-          weekday: "long",
-          day: "numeric",
-          month: "long",
-          year: "numeric"
-        }
-      ).format(date);
-
-    }
-
-
-
-    function formatTime(value) {
-
-      if (!value) {
-
-        return "Time to be confirmed";
-      }
-
-
-      const parts =
-        value.split(":");
-
-
-      const date =
-        new Date();
-
-
-      date.setHours(
-        Number(parts[0]),
-        Number(parts[1]),
-        0,
-        0
-      );
-
-
-      return new Intl.DateTimeFormat(
-        "en-GB",
-        {
-          hour: "numeric",
-          minute: "2-digit"
-        }
-      ).format(date);
-
-    }
-
-
-
-    function updateLivePreview() {
-
-      const recipient =
-        valueOrFallback(
-          recipientInput.value,
-          "Chloe"
-        );
-
-
-      const sender =
-        valueOrFallback(
-          senderInput.value,
-          "Michael"
-        );
-
-
-      const eventName =
-        valueOrFallback(
-          eventNameInput.value,
-          "A Night at the Theatre"
-        );
-
-
-      const venue =
-        valueOrFallback(
-          venueInput.value,
-          "Venue or destination"
-        );
-
-
-      const admit =
-        valueOrFallback(
-          admitInput.value,
-          recipient + " + 1"
-        );
-
-
-      const message =
-        valueOrFallback(
-          personalMessageInput.value,
-          "Your personal message will appear here."
-        );
-
-
-      document.getElementById(
-        "liveEventHeading"
-      ).textContent =
-        eventName;
-
-
-      document.getElementById(
-        "liveTicketTitle"
-      ).textContent =
-        eventName;
-
-
-      document.getElementById(
-        "liveDate"
-      ).textContent =
-        formatDate(
-          eventDateInput.value
-        );
-
-
-      document.getElementById(
-        "liveTime"
-      ).textContent =
-        formatTime(
-          eventTimeInput.value
-        );
-
-
-      document.getElementById(
-        "liveVenue"
-      ).textContent =
-        venue;
-
-
-      document.getElementById(
-        "liveAdmit"
-      ).textContent =
-        admit;
-
-
-      document.getElementById(
-        "liveRecipient"
-      ).textContent =
-        recipient;
-
-
-      document.getElementById(
-        "liveSender"
-      ).textContent =
-        sender;
-
-
-      document.getElementById(
-        "liveMessage"
-      ).textContent =
-        message;
-
-    }
-
-
-
-    const liveInputs = [
-
-      recipientInput,
-      senderInput,
-      eventNameInput,
-      eventDateInput,
-      eventTimeInput,
-      venueInput,
-      admitInput,
-      personalMessageInput
-
+    const $ = id => document.getElementById(id);
+
+    const fields = [
+      "recipient", "sender", "eventName", "eventDate", "eventTime",
+      "venue", "admit", "personalMessage", "ticketUrl"
     ];
 
+    const form = $("revealForm");
+    const button = $("reviewButton");
+    const message = $("messageBox");
 
-    liveInputs.forEach(
-      function(input) {
+    let id = new URLSearchParams(location.search).get("edit");
+    let token = null;
+    let revision = null;
+    let ready = false;
+    let busy = false;
+    let selectedImage = null;
+    let existingImage = false;
+    let removeImage = false;
+    let objectUrl = null;
+    let pendingReview = false;
 
-        input.addEventListener(
-          "input",
-          updateLivePreview
-        );
-
-
-        input.addEventListener(
-          "change",
-          updateLivePreview
-        );
-
-      }
-    );
-
-
-
-    imageInput.addEventListener(
-      "change",
-      function() {
-
-        hideMessage();
-
-
-        const file =
-          imageInput.files[0];
-
-
-        if (!file) {
-          return;
-        }
-
-
-        if (
-          ![
-            "image/jpeg",
-            "image/png",
-            "image/webp"
-          ].includes(
-            file.type
-          )
-        ) {
-
-          imageInput.value = "";
-
-          showMessage(
-            "Please choose a JPEG, PNG or WebP image.",
-            "error"
-          );
-
-          return;
-        }
-
-
-        if (
-          file.size >
-          10 * 1024 * 1024
-        ) {
-
-          imageInput.value = "";
-
-          showMessage(
-            "Please choose an image smaller than 10 MB.",
-            "error"
-          );
-
-          return;
-        }
-
-
-        selectedImageFile =
-          file;
-
-
-        removeExistingImage =
-          false;
-
-
-        const objectUrl =
-          URL.createObjectURL(
-            file
-          );
-
-
-        setPreviewImage(
-          objectUrl,
-          file.name
-        );
-
-      }
-    );
-
-
-
-    removeImageButton.addEventListener(
-      "click",
-      function() {
-
-        selectedImageFile =
-          null;
-
-
-        imageInput.value =
-          "";
-
-
-        if (
-          existingImagePresent
-        ) {
-
-          removeExistingImage =
-            true;
-        }
-
-
-        clearPreviewImage();
-
-      }
-    );
-
-
-
-    function setPreviewImage(
-      url,
-      caption
-    ) {
-
-      if (
-        activeImageObjectUrl &&
-        activeImageObjectUrl.startsWith(
-          "blob:"
-        )
-      ) {
-
-        URL.revokeObjectURL(
-          activeImageObjectUrl
-        );
-
-      }
-
-
-      activeImageObjectUrl =
-        url;
-
-
-      imagePreview.src =
-        url;
-
-      liveImage.src =
-        url;
-
-
-      imageCaption.textContent =
-        caption;
-
-
-      imagePreviewWrap.classList.add(
-        "visible"
-      );
-
-
-      liveImageWrap.classList.add(
-        "visible"
-      );
-
+    function show(text, type = "error") {
+      message.textContent = text;
+      message.className = "message-box visible " + type;
     }
 
-
-
-    function clearPreviewImage() {
-
-      imagePreviewWrap.classList.remove(
-        "visible"
-      );
-
-
-      liveImageWrap.classList.remove(
-        "visible"
-      );
-
-
-      imagePreview.removeAttribute(
-        "src"
-      );
-
-
-      liveImage.removeAttribute(
-        "src"
-      );
-
+    function hide() {
+      message.textContent = "";
+      message.className = "message-box";
     }
 
-
-
-    form.addEventListener(
-      "submit",
-      async function(event) {
-
-        event.preventDefault();
-
-
-        hideMessage();
-
-
-        if (
-          !form.checkValidity()
-        ) {
-
-          form.reportValidity();
-
-          return;
-        }
-
-
-        reviewButton.disabled =
-          true;
-
-
-        reviewButton.textContent =
-          "Saving your reveal...";
-
-
-        try {
-
-          const body =
-            new FormData();
-
-
-          body.append(
-            "recipient",
-            recipientInput.value
-          );
-
-
-          body.append(
-            "sender",
-            senderInput.value
-          );
-
-
-          body.append(
-            "eventName",
-            eventNameInput.value
-          );
-
-
-          body.append(
-            "eventDate",
-            eventDateInput.value
-          );
-
-
-          body.append(
-            "eventTime",
-            eventTimeInput.value
-          );
-
-
-          body.append(
-            "venue",
-            venueInput.value
-          );
-
-
-          body.append(
-            "admit",
-            admitInput.value
-          );
-
-
-          body.append(
-            "personalMessage",
-            personalMessageInput.value
-          );
-
-
-          body.append(
-            "ticketUrl",
-            ticketUrlInput.value
-          );
-
-
-          if (
-            selectedImageFile
-          ) {
-
-            body.append(
-              "image",
-              selectedImageFile
-            );
-
-          }
-
-
-          if (
-            removeExistingImage
-          ) {
-
-            body.append(
-              "removeImage",
-              "1"
-            );
-
-          }
-
-
-          let endpoint =
-            "/api/reveals";
-
-
-          let method =
-            "POST";
-
-
-          const headers =
-            {};
-
-
-          if (
-            editingRevealId
-          ) {
-
-            const editToken =
-              getEditToken(
-                editingRevealId
-              );
-
-
-            if (!editToken) {
-
-              throw new Error(
-                "The editing key for this reveal is not available in this browser."
-              );
-
-            }
-
-
-            endpoint =
-              "/api/reveals/" +
-              encodeURIComponent(
-                editingRevealId
-              );
-
-
-            method =
-              "PUT";
-
-
-            headers[
-              "X-Edit-Token"
-            ] =
-              editToken;
-
-          }
-
-
-          const response =
-            await fetch(
-              endpoint,
-              {
-                method,
-                headers,
-                body
-              }
-            );
-
-
-          const result =
-            await response.json();
-
-
-          if (
-            !response.ok ||
-            !result.success
-          ) {
-
-            throw new Error(
-              result.error ||
-              "The reveal could not be saved."
-            );
-
-          }
-
-
-          let revealId =
-            editingRevealId;
-
-
-          if (
-            method === "POST"
-          ) {
-
-            revealId =
-              result.id;
-
-
-            saveEditToken(
-              result.id,
-              result.editToken
-            );
-
-          }
-
-
-          window.location.href =
-            "reveal.html?id=" +
-            encodeURIComponent(
-              revealId
-            );
-
-        } catch (error) {
-
-          showMessage(
-            error.message ||
-            "Something went wrong while saving the reveal.",
-            "error"
-          );
-
-
-          reviewButton.disabled =
-            false;
-
-
-          reviewButton.textContent =
-            "Review my reveal";
-
-        }
-
-      }
-    );
-
-
-
-    async function loadExistingReveal() {
-
-      if (
-        !editingRevealId
-      ) {
-
-        updateLivePreview();
-
-        return;
+    function lock(locked) {
+      for (const control of form.querySelectorAll("input, textarea, button")) {
+        control.disabled = locked;
       }
 
+      form.setAttribute("aria-busy", String(busy));
+    }
 
-      const token =
-        getEditToken(
-          editingRevealId
-        );
-
-
-      if (!token) {
-
-        showMessage(
-          "This reveal cannot be amended in this browser because its private editing key is missing.",
-          "error"
-        );
-
-
-        reviewButton.disabled =
-          true;
-
-        return;
-      }
-
-
-      showMessage(
-        "Loading your saved reveal...",
-        "info"
-      );
-
+    function storageCheck() {
+      const key = "reveal_storage_check";
 
       try {
-
-        const response =
-          await fetch(
-            "/api/reveals/" +
-            encodeURIComponent(
-              editingRevealId
-            ),
-            {
-              headers: {
-                "X-Edit-Token":
-                  token
-              }
-            }
-          );
-
-
-        const result =
-          await response.json();
-
-
-        if (
-          !response.ok ||
-          !result.success
-        ) {
-
-          throw new Error(
-            result.error ||
-            "The reveal could not be loaded."
-          );
-
-        }
-
-
-        const reveal =
-          result.reveal;
-
-
-        if (
-          reveal.status !== "draft"
-        ) {
-
-          throw new Error(
-            "This reveal has already been confirmed and can no longer be amended."
-          );
-
-        }
-
-
-        recipientInput.value =
-          reveal.recipient || "";
-
-
-        senderInput.value =
-          reveal.sender || "";
-
-
-        eventNameInput.value =
-          reveal.eventName || "";
-
-
-        eventDateInput.value =
-          reveal.eventDate || "";
-
-
-        eventTimeInput.value =
-          reveal.eventTime || "";
-
-
-        venueInput.value =
-          reveal.venue || "";
-
-
-        admitInput.value =
-          reveal.admit || "";
-
-
-        personalMessageInput.value =
-          reveal.personalMessage || "";
-
-
-        ticketUrlInput.value =
-          reveal.ticketUrl || "";
-
-
-        document.getElementById(
-          "formHeading"
-        ).textContent =
-          "Amend your surprise";
-
-
-        reviewButton.textContent =
-          "Save changes and review";
-
-
-        if (
-          reveal.hasImage
-        ) {
-
-          await loadExistingImage(
-            editingRevealId,
-            token
-          );
-
-        }
-
-
-        hideMessage();
-
-
-        updateLivePreview();
-
-      } catch (error) {
-
-        showMessage(
-          error.message,
-          "error"
+        localStorage.setItem(key, "1");
+        localStorage.removeItem(key);
+      } catch {
+        throw new Error(
+          "Please allow site storage in this browser so your private editing key can be saved."
         );
-
-
-        reviewButton.disabled =
-          true;
-
       }
-
     }
 
+    function dateText(value) {
+      if (!value) return "Date to be confirmed";
 
+      const date = new Date(value + "T12:00:00");
 
-    async function loadExistingImage(
-      id,
-      token
-    ) {
+      return Number.isNaN(date.getTime())
+        ? value
+        : new Intl.DateTimeFormat("en-GB", {
+            weekday: "long",
+            day: "numeric",
+            month: "long",
+            year: "numeric"
+          }).format(date);
+    }
 
-      const response =
-        await fetch(
-          "/api/reveals/" +
-          encodeURIComponent(id) +
-          "/image",
-          {
-            headers: {
-              "X-Edit-Token":
-                token
-            }
-          }
+    function timeText(value) {
+      if (!value) return "Time to be confirmed";
+
+      const match = /^(\d{2}):(\d{2})/.exec(value);
+      if (!match) return value;
+
+      const date = new Date(
+        2000, 0, 1,
+        Number(match[1]),
+        Number(match[2])
+      );
+
+      return new Intl.DateTimeFormat("en-GB", {
+        hour: "numeric",
+        minute: "2-digit"
+      }).format(date);
+    }
+
+    function preview() {
+      const value = (key, fallback) =>
+        $(key).value.trim() || fallback;
+
+      const title = value("eventName", "Your surprise");
+
+      const output = {
+        liveEventHeading: title,
+        liveTicketTitle: title,
+        liveDate: dateText($("eventDate").value),
+        liveTime: timeText($("eventTime").value),
+        liveVenue: value("venue", "To be confirmed"),
+        liveAdmit: value("admit", "To be confirmed"),
+        liveRecipient: value("recipient", "Recipient"),
+        liveSender: value("sender", "Sender"),
+        liveMessage: value(
+          "personalMessage",
+          "Your personal message will appear here."
+        )
+      };
+
+      for (const [key, text] of Object.entries(output)) {
+        $(key).textContent = text;
+      }
+    }
+
+    function clearImage() {
+      $("imagePreview").removeAttribute("src");
+      $("liveImage").removeAttribute("src");
+      $("imagePreviewWrap").classList.remove("visible");
+      $("liveImageWrap").classList.remove("visible");
+
+      if (objectUrl) {
+        URL.revokeObjectURL(objectUrl);
+      }
+
+      objectUrl = null;
+    }
+
+    function showImage(blob, caption) {
+      clearImage();
+
+      objectUrl = URL.createObjectURL(blob);
+      $("imagePreview").src = objectUrl;
+      $("liveImage").src = objectUrl;
+      $("imageCaption").textContent = caption;
+
+      $("imagePreviewWrap").classList.add("visible");
+      $("liveImageWrap").classList.add("visible");
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(path, {
+        cache: "no-store",
+        ...options
+      });
+
+      let data;
+
+      try {
+        data = await response.json();
+      } catch {
+        throw new Error(
+          "The server returned an unexpected response. Please try again."
+        );
+      }
+
+      if (!response.ok || !data.success) {
+        const error = new Error(
+          data.error || "The request could not be completed."
         );
 
+        error.status = response.status;
+        throw error;
+      }
 
-      if (!response.ok) {
+      return data;
+    }
+
+    for (const key of fields) {
+      $(key).addEventListener("input", preview);
+      $(key).addEventListener("change", preview);
+    }
+
+    $("image").addEventListener("change", () => {
+      if (!ready || busy) return;
+
+      const file = $("image").files[0];
+      if (!file) return;
+
+      if (
+        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+        file.size > 10 * 1024 * 1024 ||
+        file.size === 0
+      ) {
+        $("image").value = "";
+
+        show(
+          "Choose a JPEG, PNG or WebP image up to 10 MB. Your previous image selection has been kept."
+        );
+
         return;
       }
 
+      selectedImage = file;
+      removeImage = false;
 
-      const blob =
-        await response.blob();
+      showImage(file, file.name);
+      hide();
+    });
 
+    $("removeImageButton").addEventListener("click", () => {
+      if (!ready || busy) return;
 
-      const objectUrl =
-        URL.createObjectURL(
-          blob
+      selectedImage = null;
+      $("image").value = "";
+      removeImage = existingImage;
+
+      clearImage();
+      hide();
+    });
+
+    form.addEventListener("submit", async event => {
+      event.preventDefault();
+
+      if (!ready || busy || !form.reportValidity()) return;
+
+      busy = true;
+      lock(true);
+      hide();
+
+      button.textContent = "Saving your reveal...";
+
+      try {
+        storageCheck();
+
+        if (!pendingReview) {
+          const body = new FormData();
+
+          for (const key of fields) {
+            body.append(key, $(key).value);
+          }
+
+          if (selectedImage) {
+            body.append("image", selectedImage);
+          }
+
+          if (removeImage) {
+            body.append("removeImage", "1");
+          }
+
+          if (id) {
+            body.append("revision", String(revision));
+          }
+
+          const result = await api(
+            id
+              ? "/api/reveals/" + encodeURIComponent(id)
+              : "/api/reveals",
+            {
+              method: id ? "PUT" : "POST",
+              headers: id ? {"X-Edit-Token": token} : {},
+              body
+            }
+          );
+
+          if (!id) {
+            id = result.id;
+            token = result.editToken;
+          }
+
+          revision = result.revision;
+          pendingReview = true;
+        }
+
+        localStorage.setItem("reveal_edit_" + id, token);
+
+        location.assign(
+          "reveal.html?id=" + encodeURIComponent(id)
         );
 
+      } catch (error) {
+        show(
+          pendingReview
+            ? "Your reveal was saved, but this browser could not keep its editing key. Keep this page open, allow site storage, then try again."
+            : error.message
+        );
 
-      existingImagePresent =
-        true;
+        if (error.status === 409 || error.status === 403) {
+          ready = false;
 
+          show(
+            error.message +
+            " Reload this page before making further changes."
+          );
+        }
 
-      setPreviewImage(
-        objectUrl,
-        "Current saved image"
-      );
+        busy = false;
+        lock(!ready);
 
+        if (pendingReview) {
+          for (
+            const control of form.querySelectorAll(
+              "input, textarea, button"
+            )
+          ) {
+            control.disabled = true;
+          }
+
+          button.disabled = false;
+          button.textContent = "Continue to saved review";
+
+        } else {
+          button.textContent = id
+            ? "Save changes and review"
+            : "Review my reveal";
+        }
+      }
+    });
+
+    async function initialise() {
+      lock(true);
+      preview();
+
+      try {
+        storageCheck();
+
+        if (!id) {
+          ready = true;
+          lock(false);
+          return;
+        }
+
+        token = localStorage.getItem("reveal_edit_" + id);
+
+        if (!token) {
+          throw new Error(
+            "The private editing key is missing. Open this reveal in the browser where you created it."
+          );
+        }
+
+        show("Loading your saved reveal...", "info");
+
+        const {reveal} = await api(
+          "/api/reveals/" + encodeURIComponent(id),
+          {
+            headers: {"X-Edit-Token": token}
+          }
+        );
+
+        if (reveal.status !== "draft") {
+          location.replace(
+            "reveal.html?id=" + encodeURIComponent(id)
+          );
+          return;
+        }
+
+        if (!Number.isInteger(reveal.revision)) {
+          throw new Error(
+            "This draft could not be loaded correctly. Please reload the page."
+          );
+        }
+
+        revision = reveal.revision;
+
+        for (const key of fields) {
+          $(key).value = reveal[key] || "";
+        }
+
+        existingImage = Boolean(reveal.hasImage);
+
+        $("formHeading").textContent = "Amend your surprise";
+        button.textContent = "Save changes and review";
+
+        preview();
+        hide();
+
+        if (existingImage) {
+          try {
+            const response = await fetch(
+              "/api/reveals/" +
+              encodeURIComponent(id) +
+              "/image",
+              {
+                cache: "no-store",
+                headers: {"X-Edit-Token": token}
+              }
+            );
+
+            if (!response.ok) throw new Error();
+
+            const blob = await response.blob();
+
+            if (!blob.type.startsWith("image/")) {
+              throw new Error();
+            }
+
+            showImage(blob, "Current saved image");
+
+          } catch {
+            $("imagePreviewWrap").classList.add("visible");
+
+            $("imageCaption").textContent =
+              "Saved image could not be displayed";
+
+            show(
+              "Your saved image could not be displayed. Reload to try again, choose a replacement, or use Remove to delete it from the draft."
+            );
+          }
+        }
+
+        ready = true;
+        lock(false);
+
+      } catch (error) {
+        show(
+          error.message ||
+          "This browser must allow site storage to create and edit reveals."
+        );
+
+        ready = false;
+        lock(true);
+      }
     }
 
-
-
-    function showMessage(
-      text,
-      type
-    ) {
-
-      messageBox.textContent =
-        text;
-
-
-      messageBox.className =
-        "message-box visible " +
-        type;
-
-    }
-
-
-
-    function hideMessage() {
-
-      messageBox.textContent =
-        "";
-
-
-      messageBox.className =
-        "message-box";
-
-    }
-
-
-
-    loadExistingReveal();
-
+    initialise();
   </script>
-
 </body>
 </html>
