@@ -1,310 +1,370 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en-GB">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#f7f3eb">
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="no-referrer">
-
   <title>Review your reveal</title>
 
   <style>
     :root {
       --background: #f7f3eb;
+      --surface: #ffffff;
       --text: #28231d;
+      --muted: #6d645a;
+      --gold: #b77b27;
       --cream: #fff8e9;
+      --line: #dfd6c9;
+      --success: #1f6b43;
+      --success-soft: #e7f4ec;
+      --warning-soft: #fff6df;
+      --error: #923f37;
+      --shadow: 0 18px 45px rgba(58, 44, 27, 0.12);
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
 
     body {
       margin: 0;
-      font-family: Arial, Helvetica, sans-serif;
-      background: var(--background);
+      min-height: 100vh;
+      background:
+        radial-gradient(
+          circle at top right,
+          rgba(225, 195, 135, 0.2),
+          transparent 35%
+        ),
+        var(--background);
       color: var(--text);
+      font-family: Arial, Helvetica, sans-serif;
     }
 
-    [hidden] { display: none !important; }
+    button,
+    input {
+      font: inherit;
+    }
+
+    button,
+    a {
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    input:focus-visible {
+      outline: 3px solid rgba(183, 123, 39, 0.45);
+      outline-offset: 3px;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
 
     .page {
-      width: min(860px, 100%);
+      width: min(880px, 100%);
       margin: 0 auto;
-      padding: 42px 22px 80px;
+      padding: 24px 16px 64px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      margin-bottom: 34px;
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.2rem;
+      text-decoration: none;
+    }
+
+    .brand-mark {
+      display: grid;
+      width: 34px;
+      height: 34px;
+      place-items: center;
+      border-radius: 50%;
+      background: #21180f;
+      color: #f3dc9a;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 0.74rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
     }
 
     .eyebrow {
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
+      margin-bottom: 12px;
+      color: #8a6427;
       font-size: 0.72rem;
       font-weight: 700;
-      color: #98702c;
-      margin-bottom: 15px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      overflow-wrap: anywhere;
     }
 
     h1 {
+      margin: 0 0 16px;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2.5rem, 7vw, 4.2rem);
-      line-height: 1;
+      font-size: clamp(2.45rem, 11vw, 4.25rem);
       font-weight: normal;
-      margin: 0 0 17px;
+      line-height: 0.98;
     }
 
     .intro {
-      color: #675f55;
-      line-height: 1.6;
       max-width: 670px;
-      margin: 0 0 30px;
+      margin: 0 0 26px;
+      color: var(--muted);
+      line-height: 1.65;
     }
 
-    .notice {
-      background: #fff7e5;
-      border: 1px solid #ead39c;
-      border-radius: 13px;
+    .notice,
+    .return-notice {
+      margin-bottom: 24px;
       padding: 15px 17px;
-      margin-bottom: 26px;
+      border: 1px solid #ead39c;
+      border-radius: 14px;
+      background: var(--warning-soft);
       color: #68532d;
-      font-size: 0.85rem;
+      font-size: 0.86rem;
       line-height: 1.55;
     }
 
+    .return-notice.success {
+      border-color: #b8dcc7;
+      background: var(--success-soft);
+      color: #225d3e;
+    }
+
     .review-shell {
-      background: linear-gradient(180deg, #21180f, #100c08);
-      padding: 30px;
+      padding: 18px 14px;
       border-radius: 23px;
+      background: linear-gradient(180deg, #21180f, #100c08);
       box-shadow: 0 22px 55px rgba(0, 0, 0, 0.16);
       color: white;
     }
 
     .review-heading {
+      padding: 10px 8px 22px;
       text-align: center;
-      margin-bottom: 25px;
     }
 
     .review-label {
-      text-transform: uppercase;
-      letter-spacing: 0.18em;
+      margin-bottom: 8px;
       color: #f3dc9a;
       font-size: 0.65rem;
-      margin-bottom: 8px;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
     }
 
     .review-event {
-      font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2rem, 7vw, 3.5rem);
-      font-weight: normal;
-      line-height: 1.1;
       margin: 0;
-      overflow-wrap: anywhere;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 9vw, 3.5rem);
+      font-weight: normal;
+      line-height: 1;
     }
 
     .image-wrap {
-      display: none;
-      margin-bottom: 25px;
-      border-radius: 17px;
+      margin-bottom: 20px;
       overflow: hidden;
+      border-radius: 17px;
       box-shadow: 0 16px 35px rgba(0, 0, 0, 0.35);
     }
 
-    .image-wrap.visible { display: block; }
-
     .review-image {
+      display: block;
       width: 100%;
       max-height: 430px;
-      display: block;
-      object-fit: contain;
+      object-fit: cover;
     }
 
     .ticket {
-      background: linear-gradient(
-        135deg,
-        #fffdf6 0%,
-        var(--cream) 55%,
-        #f3e1b8 100%
-      );
-      color: #2c241b;
+      padding: 26px 21px;
       border-radius: 18px;
-      padding: 32px 28px;
+      background:
+        linear-gradient(
+          135deg,
+          #fffdf6 0%,
+          var(--cream) 55%,
+          #f3e1b8 100%
+        );
+      color: #2c241b;
     }
 
     .ticket-label {
+      margin-bottom: 12px;
+      color: #98702c;
       font-size: 0.65rem;
       font-weight: 700;
       letter-spacing: 0.22em;
-      color: #98702c;
-      margin-bottom: 12px;
     }
 
     .ticket-title {
+      margin: 0 0 22px;
       font-family: Georgia, "Times New Roman", serif;
-      font-size: clamp(2rem, 6vw, 3rem);
+      font-size: clamp(1.9rem, 8vw, 3rem);
       font-weight: normal;
-      line-height: 1.1;
-      margin: 0 0 24px;
-      overflow-wrap: anywhere;
+      line-height: 1;
     }
 
     .divider {
       height: 1px;
-      margin: 22px 0;
-      background: repeating-linear-gradient(
-        to right,
-        rgba(44, 36, 27, 0.35) 0,
-        rgba(44, 36, 27, 0.35) 6px,
-        transparent 6px,
-        transparent 12px
-      );
+      margin: 20px 0;
+      background:
+        repeating-linear-gradient(
+          to right,
+          rgba(44, 36, 27, 0.35) 0,
+          rgba(44, 36, 27, 0.35) 6px,
+          transparent 6px,
+          transparent 12px
+        );
     }
 
     .details {
       display: grid;
-      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-      gap: 22px;
+      gap: 18px;
     }
 
     .detail-label {
       display: block;
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: #756a59;
-      font-size: 0.65rem;
       margin-bottom: 5px;
+      color: #756a59;
+      font-size: 0.62rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
     }
 
     .detail-value {
       display: block;
-      font-weight: 700;
       font-size: 0.92rem;
+      font-weight: 700;
       line-height: 1.45;
-      overflow-wrap: anywhere;
     }
 
     .message-card {
-      margin-top: 22px;
+      margin-top: 20px;
+      padding: 21px;
       border: 1px solid rgba(243, 220, 154, 0.2);
-      background: rgba(255, 255, 255, 0.06);
       border-radius: 15px;
-      padding: 22px;
+      background: rgba(255, 255, 255, 0.06);
       text-align: center;
     }
 
     .message-title {
+      margin-bottom: 9px;
       font-family: Georgia, "Times New Roman", serif;
       font-size: 1.15rem;
-      margin-bottom: 10px;
     }
 
     .message {
       margin: 0;
       color: #ded5c6;
-      line-height: 1.6;
+      line-height: 1.65;
       white-space: pre-wrap;
-      overflow-wrap: anywhere;
     }
 
     .booking-card {
-      display: none;
-      margin-top: 22px;
-      background: white;
-      border-radius: 14px;
+      margin-top: 20px;
       padding: 18px 20px;
+      border-radius: 14px;
+      background: white;
       color: #2d2822;
     }
 
-    .booking-card.visible { display: block; }
-
     .booking-label {
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      font-size: 0.65rem;
-      line-height: 1.5;
-      color: #746b60;
       margin-bottom: 6px;
+      color: #82786d;
+      font-size: 0.63rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
     }
 
     .booking-value {
       font-size: 0.85rem;
-      overflow-wrap: anywhere;
+      line-height: 1.5;
+      word-break: break-word;
     }
 
-    .actions {
-      margin-top: 24px;
+    .actions,
+    .payment-actions,
+    .share-actions {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 14px;
+      gap: 12px;
+      margin-top: 24px;
     }
 
     .button {
-      display: inline-block;
+      display: inline-flex;
       min-height: 54px;
+      align-items: center;
+      justify-content: center;
+      padding: 14px 21px;
+      border: 1px solid transparent;
       border-radius: 999px;
-      padding: 15px 22px;
-      font-family: inherit;
-      font-size: 0.96rem;
+      font-size: 0.95rem;
       font-weight: 700;
-      line-height: 1.4;
+      line-height: 1.2;
       text-align: center;
       text-decoration: none;
       cursor: pointer;
-      border: none;
     }
 
-    .button:focus-visible,
-    input:focus-visible {
-      outline: 2px solid #b47b27;
-      outline-offset: 3px;
+    .button:disabled {
+      cursor: wait;
+      opacity: 0.62;
     }
 
-    .edit-button {
+    .button-primary {
+      background: linear-gradient(135deg, #f4d98b, #b47b27);
+      box-shadow: 0 10px 24px rgba(116, 79, 23, 0.18);
+      color: #21180d;
+    }
+
+    .button-secondary {
+      border-color: #d4cdc2;
       background: white;
       color: #342c23;
-      border: 1px solid #d4cdc2;
     }
 
-    .confirm-button {
-      background: linear-gradient(135deg, #f4d98b, #b47b27);
-      color: #21180d;
-      box-shadow: 0 10px 24px rgba(116, 79, 23, 0.18);
+    .button-dark {
+      background: #21180f;
+      color: white;
     }
 
-    button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
-    }
-
-    .reload-button { margin-top: 16px; }
-
-    .feedback {
-      line-height: 1.6;
-      overflow-wrap: anywhere;
-      color: #8b2f22;
-    }
-
-    .feedback:empty { display: none; }
-
-    .payment-stage {
-      display: none;
-      margin-top: 28px;
-      padding: 28px;
-      background: white;
-      border-radius: 18px;
-      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.08);
+    .state-card {
+      margin-top: 26px;
+      padding: 25px 20px;
+      border: 1px solid rgba(189, 168, 137, 0.36);
+      border-radius: 19px;
+      background: var(--surface);
+      box-shadow: var(--shadow);
       text-align: center;
     }
 
-    .payment-stage.visible { display: block; }
-
-    .payment-stage h2 {
+    .state-card h2 {
+      margin: 11px 0 9px;
       font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(1.8rem, 8vw, 2.45rem);
       font-weight: normal;
-      font-size: 2rem;
-      margin: 0 0 10px;
+      line-height: 1.08;
     }
 
-    .payment-stage p {
-      margin: 0 auto 16px;
-      max-width: 580px;
-      color: #70675d;
+    .state-copy {
+      max-width: 600px;
+      margin: 0 auto;
+      color: var(--muted);
       line-height: 1.6;
     }
 
@@ -314,637 +374,1746 @@
       border-radius: 999px;
       background: #f3eee4;
       color: #776c5e;
-      font-size: 0.8rem;
+      font-size: 0.74rem;
       font-weight: 700;
     }
 
-    .share-link {
+    .status-badge.success {
+      background: var(--success-soft);
+      color: var(--success);
+    }
+
+    .price-panel {
+      display: flex;
+      max-width: 460px;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin: 22px auto 0;
+      padding: 17px 18px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fcfaf6;
+      text-align: left;
+    }
+
+    .price-label {
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.35;
+    }
+
+    .price {
+      color: var(--text);
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.75rem;
+      white-space: nowrap;
+    }
+
+    .included-list {
+      display: grid;
+      max-width: 460px;
+      gap: 10px;
+      margin: 18px auto 0;
+      padding: 0;
+      color: #554c42;
+      font-size: 0.88rem;
+      line-height: 1.45;
+      list-style: none;
+      text-align: left;
+    }
+
+    .included-list li {
+      position: relative;
+      padding-left: 24px;
+    }
+
+    .included-list li::before {
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      content: "✓";
+      font-weight: 700;
+    }
+
+    .payment-message {
+      max-width: 560px;
+      margin: 16px auto 0;
+      color: var(--error);
+      font-size: 0.85rem;
+      line-height: 1.5;
+    }
+
+    .secure-note {
+      margin: 16px 0 0;
+      color: #7d746b;
+      font-size: 0.76rem;
+      line-height: 1.5;
+    }
+
+    .share-box {
+      max-width: 600px;
+      margin: 22px auto 0;
+      padding: 17px;
+      border: 1px solid #b8dcc7;
+      border-radius: 14px;
+      background: #f6fcf8;
+      text-align: left;
+    }
+
+    .share-label {
       display: block;
-      margin: 18px 0;
+      margin-bottom: 8px;
+      color: #316449;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
 
     .share-input {
       width: 100%;
-      min-width: 0;
-      padding: 14px;
-      font-size: 16px;
-      margin: 8px 0 16px;
-      border: 1px solid #d4cdc2;
-      border-radius: 10px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border: 1px solid #bfd9c9;
+      border-radius: 9px;
+      background: white;
+      color: #24362c;
+      font-size: 0.86rem;
     }
 
-    .error-card,
-    .loading-card {
-      background: white;
+    .copy-status {
+      min-height: 1.3em;
+      margin: 10px 0 0;
+      color: var(--success);
+      font-size: 0.8rem;
+      text-align: center;
+    }
+
+    .loading-card,
+    .error-card {
+      padding: 30px 22px;
       border-radius: 18px;
-      padding: 30px;
+      background: white;
       box-shadow: 0 12px 32px rgba(0, 0, 0, 0.07);
       text-align: center;
-      line-height: 1.6;
     }
 
-    .error-card { display: none; }
-    .error-card.visible { display: block; }
+    .loading-spinner {
+      width: 34px;
+      height: 34px;
+      margin: 0 auto 15px;
+      border: 3px solid #ece2d4;
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
 
-    @media (max-width: 600px) {
-      .page { padding: 30px 16px 60px; }
-      .review-shell { padding: 20px 16px; }
-      .ticket { padding: 26px 21px; }
-      .details { grid-template-columns: 1fr; }
-      .actions { grid-template-columns: 1fr; }
-      .reload-button { width: 100%; }
-      .payment-stage { padding: 24px 18px; }
+    .error-card h2 {
+      margin: 0 0 10px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: 1.8rem;
+      font-weight: normal;
+    }
+
+    .error-card p {
+      margin: 0 0 20px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @media (min-width: 620px) {
+      .page {
+        padding: 40px 22px 80px;
+      }
+
+      .review-shell {
+        padding: 30px;
+      }
+
+      .ticket {
+        padding: 32px 28px;
+      }
+
+      .details {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 22px;
+      }
+
+      .actions,
+      .payment-actions,
+      .share-actions {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .state-card {
+        padding: 31px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html {
+        scroll-behavior: auto;
+      }
+
+      .loading-spinner {
+        animation: none;
+      }
     }
   </style>
 </head>
 
 <body>
   <main class="page">
-    <noscript>
-      <p>Please enable JavaScript to load your saved reveal.</p>
-    </noscript>
+    <a class="brand" href="/" aria-label="Reveal home">
+      <span class="brand-mark" aria-hidden="true">R</span>
+      <span>Reveal</span>
+    </a>
 
-    <section id="loadingCard" class="loading-card" role="status">
-      Loading your reveal...
+    <section id="loadingCard" class="loading-card" aria-live="polite">
+      <div class="loading-spinner" aria-hidden="true"></div>
+      <p id="loadingText">Loading your reveal...</p>
     </section>
 
-    <section id="errorCard" class="error-card" role="alert">
+    <section id="errorCard" class="error-card" hidden>
       <h2>We couldn't load this reveal</h2>
-      <p id="errorText">Please return to the creation page.</p>
 
-      <button
-        id="retryButton"
-        type="button"
-        class="button edit-button"
-      >
-        Try again
-      </button>
+      <p id="errorText">
+        Please return to the creation page.
+      </p>
 
-      <p><a href="index.html">Create a new reveal</a></p>
+      <a class="button button-secondary" href="/">
+        Return to Reveal
+      </a>
     </section>
 
-    <div id="reviewContent" style="display:none;">
-      <div class="eyebrow">Final check</div>
+    <div id="reviewContent" hidden>
+      <div class="eyebrow">
+        Final check
+      </div>
 
-      <h1>Review your reveal</h1>
+      <h1>
+        Review your reveal
+      </h1>
 
       <p class="intro">
-        Check everything carefully. You can amend the details
-        before payment begins.
+        Check everything carefully. You can amend the details before payment.
       </p>
 
       <div class="notice">
-        This is a static review. The recipient opening experience
-        and sharing link remain locked until payment.
+        This is a static review only. The full recipient reveal,
+        opening experience and permanent sharing link remain locked
+        until payment is confirmed.
       </div>
 
-      <section class="review-shell">
+      <div
+        id="returnNotice"
+        class="return-notice"
+        role="status"
+        hidden
+      ></div>
+
+      <section
+        class="review-shell"
+        aria-label="Static reveal review"
+      >
         <div class="review-heading">
-          <div class="review-label">Your gift</div>
-          <h2 id="reviewEventHeading" class="review-event"></h2>
+          <div class="review-label">
+            Your gift
+          </div>
+
+          <h2
+            id="reviewEventHeading"
+            class="review-event"
+          ></h2>
         </div>
 
-        <div id="imageWrap" class="image-wrap">
+        <div
+          id="imageWrap"
+          class="image-wrap"
+          hidden
+        >
           <img
             id="reviewImage"
             class="review-image"
-            alt="Your selected gift image"
+            alt="Image selected for this reveal"
           >
         </div>
 
         <article class="ticket">
-          <div class="ticket-label">YOUR GIFT</div>
-          <h3 id="ticketTitle" class="ticket-title"></h3>
+          <div class="ticket-label">
+            YOUR GIFT
+          </div>
+
+          <h3
+            id="ticketTitle"
+            class="ticket-title"
+          ></h3>
 
           <div class="divider"></div>
 
           <div class="details">
             <div>
-              <span class="detail-label">Date</span>
-              <span id="reviewDate" class="detail-value"></span>
+              <span class="detail-label">
+                Date
+              </span>
+
+              <span
+                id="reviewDate"
+                class="detail-value"
+              ></span>
             </div>
+
             <div>
-              <span class="detail-label">Time</span>
-              <span id="reviewTime" class="detail-value"></span>
+              <span class="detail-label">
+                Time
+              </span>
+
+              <span
+                id="reviewTime"
+                class="detail-value"
+              ></span>
             </div>
+
             <div>
-              <span class="detail-label">Venue</span>
-              <span id="reviewVenue" class="detail-value"></span>
+              <span class="detail-label">
+                Venue
+              </span>
+
+              <span
+                id="reviewVenue"
+                class="detail-value"
+              ></span>
             </div>
+
             <div>
-              <span class="detail-label">Guests or recipients</span>
-              <span id="reviewAdmit" class="detail-value"></span>
+              <span class="detail-label">
+                Admit
+              </span>
+
+              <span
+                id="reviewAdmit"
+                class="detail-value"
+              ></span>
             </div>
+
             <div>
-              <span class="detail-label">For</span>
-              <span id="reviewRecipient" class="detail-value"></span>
+              <span class="detail-label">
+                For
+              </span>
+
+              <span
+                id="reviewRecipient"
+                class="detail-value"
+              ></span>
             </div>
+
             <div>
-              <span class="detail-label">From</span>
-              <span id="reviewSender" class="detail-value"></span>
+              <span class="detail-label">
+                From
+              </span>
+
+              <span
+                id="reviewSender"
+                class="detail-value"
+              ></span>
             </div>
           </div>
         </article>
 
         <div class="message-card">
-          <div class="message-title">A little message</div>
-          <p id="reviewMessage" class="message"></p>
+          <div class="message-title">
+            A little message
+          </div>
+
+          <p
+            id="reviewMessage"
+            class="message"
+          ></p>
         </div>
 
-        <div id="bookingCard" class="booking-card">
+        <div
+          id="bookingCard"
+          class="booking-card"
+          hidden
+        >
           <div class="booking-label">
-            Private booking link: visible only in your editor and review
+            Official ticket or booking link
           </div>
-          <div id="bookingValue" class="booking-value"></div>
+
+          <div
+            id="bookingValue"
+            class="booking-value"
+          ></div>
         </div>
       </section>
 
-      <p
-        id="feedback"
-        class="feedback"
-        role="status"
-        aria-live="polite"
-      ></p>
-
-      <div id="reviewActions" class="actions">
+      <div
+        id="reviewActions"
+        class="actions"
+        hidden
+      >
         <button
           id="editButton"
-          class="button edit-button"
+          class="button button-secondary"
           type="button"
-          disabled
         >
           Amend details
         </button>
 
         <button
           id="confirmButton"
-          class="button confirm-button"
+          class="button button-primary"
           type="button"
-          disabled
         >
-          Confirm details
+          Confirm and continue
         </button>
       </div>
 
-      <button
-        id="reloadButton"
-        class="button edit-button reload-button"
-        type="button"
-        disabled
-      >
-        Reload saved review
-      </button>
-
       <section
         id="paymentStage"
-        class="payment-stage"
-        aria-live="polite"
-      ></section>
+        class="state-card"
+        aria-labelledby="paymentHeading"
+        hidden
+      >
+        <span
+          id="paymentBadge"
+          class="status-badge"
+        >
+          Awaiting payment
+        </span>
+
+        <h2 id="paymentHeading">
+          Unlock your reveal
+        </h2>
+
+        <p
+          id="paymentCopy"
+          class="state-copy"
+        >
+          Make one secure payment to unlock the recipient
+          experience and permanent sharing link.
+        </p>
+
+        <div class="price-panel">
+          <span class="price-label">
+            One-off payment<br>
+            No subscription
+          </span>
+
+          <strong class="price">
+            £1.99
+          </strong>
+        </div>
+
+        <ul class="included-list">
+          <li>Full recipient reveal experience</li>
+          <li>Permanent link that can be revisited</li>
+          <li>Your private booking details remain protected</li>
+        </ul>
+
+        <p
+          id="paymentMessage"
+          class="payment-message"
+          role="alert"
+          hidden
+        ></p>
+
+        <div class="payment-actions">
+          <button
+            id="paymentAmendButton"
+            class="button button-secondary"
+            type="button"
+          >
+            Amend details
+          </button>
+
+          <button
+            id="payButton"
+            class="button button-primary"
+            type="button"
+          >
+            Pay £1.99 securely
+          </button>
+        </div>
+
+        <button
+          id="refreshPaymentButton"
+          class="button button-secondary"
+          type="button"
+          hidden
+        >
+          Check payment status
+        </button>
+
+        <p class="secure-note">
+          Payment is completed securely on Stripe.
+          Reveal does not store your card details.
+        </p>
+      </section>
+
+      <section
+        id="paidStage"
+        class="state-card"
+        aria-labelledby="paidHeading"
+        hidden
+      >
+        <span class="status-badge success">
+          Payment confirmed
+        </span>
+
+        <h2 id="paidHeading">
+          Your reveal is ready to share
+        </h2>
+
+        <p class="state-copy">
+          Send this private recipient link to the person receiving
+          the surprise. The link can be opened again later.
+        </p>
+
+        <div class="share-box">
+          <label
+            class="share-label"
+            for="shareInput"
+          >
+            Recipient link
+          </label>
+
+          <input
+            id="shareInput"
+            class="share-input"
+            type="text"
+            readonly
+          >
+
+          <p
+            id="copyStatus"
+            class="copy-status"
+            aria-live="polite"
+          ></p>
+        </div>
+
+        <div class="share-actions">
+          <button
+            id="copyButton"
+            class="button button-secondary"
+            type="button"
+          >
+            Copy link
+          </button>
+
+          <a
+            id="openRevealButton"
+            class="button button-dark"
+            href="#"
+            target="_blank"
+            rel="noopener"
+          >
+            Open recipient reveal
+          </a>
+        </div>
+      </section>
     </div>
   </main>
 
   <script>
-    const $ = id => document.getElementById(id);
+    'use strict';
 
-    const id = new URLSearchParams(location.search).get("id");
-    const feedback = $("feedback");
-    const reloadButton = $("reloadButton");
+    const params =
+      new URLSearchParams(
+        window.location.search
+      );
 
-    let token = null;
-    let reveal = null;
-    let busy = true;
-    let imageOK = false;
-    let objectUrl = null;
+    const revealId =
+      params.get('id');
 
-    function dateText(value) {
-      if (!value) return "Date to be confirmed";
+    const paymentReturn =
+      params.get('payment');
 
-      const date = new Date(value + "T12:00:00");
+    const elements = {
+      loadingCard:
+        document.getElementById(
+          'loadingCard'
+        ),
 
-      return Number.isNaN(date.getTime())
-        ? value
-        : new Intl.DateTimeFormat("en-GB", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-            year: "numeric"
-          }).format(date);
-    }
+      loadingText:
+        document.getElementById(
+          'loadingText'
+        ),
 
-    function timeText(value) {
-      if (!value) return "Time to be confirmed";
+      errorCard:
+        document.getElementById(
+          'errorCard'
+        ),
 
-      const match = /^(\d{2}):(\d{2})/.exec(value);
-      if (!match) return value;
+      errorText:
+        document.getElementById(
+          'errorText'
+        ),
 
-      return new Intl.DateTimeFormat("en-GB", {
-        hour: "numeric",
-        minute: "2-digit"
-      }).format(
-        new Date(
-          2000, 0, 1,
-          Number(match[1]),
-          Number(match[2])
+      reviewContent:
+        document.getElementById(
+          'reviewContent'
+        ),
+
+      returnNotice:
+        document.getElementById(
+          'returnNotice'
+        ),
+
+      reviewActions:
+        document.getElementById(
+          'reviewActions'
+        ),
+
+      paymentStage:
+        document.getElementById(
+          'paymentStage'
+        ),
+
+      paidStage:
+        document.getElementById(
+          'paidStage'
+        ),
+
+      confirmButton:
+        document.getElementById(
+          'confirmButton'
+        ),
+
+      editButton:
+        document.getElementById(
+          'editButton'
+        ),
+
+      paymentAmendButton:
+        document.getElementById(
+          'paymentAmendButton'
+        ),
+
+      payButton:
+        document.getElementById(
+          'payButton'
+        ),
+
+      paymentBadge:
+        document.getElementById(
+          'paymentBadge'
+        ),
+
+      paymentHeading:
+        document.getElementById(
+          'paymentHeading'
+        ),
+
+      paymentCopy:
+        document.getElementById(
+          'paymentCopy'
+        ),
+
+      paymentMessage:
+        document.getElementById(
+          'paymentMessage'
+        ),
+
+      refreshPaymentButton:
+        document.getElementById(
+          'refreshPaymentButton'
+        ),
+
+      shareInput:
+        document.getElementById(
+          'shareInput'
+        ),
+
+      copyButton:
+        document.getElementById(
+          'copyButton'
+        ),
+
+      copyStatus:
+        document.getElementById(
+          'copyStatus'
+        ),
+
+      openRevealButton:
+        document.getElementById(
+          'openRevealButton'
+        ),
+
+      imageWrap:
+        document.getElementById(
+          'imageWrap'
+        ),
+
+      reviewImage:
+        document.getElementById(
+          'reviewImage'
+        ),
+
+      bookingCard:
+        document.getElementById(
+          'bookingCard'
         )
+    };
+
+    let reveal = null;
+    let imageObjectUrl = null;
+    let paymentPolling = false;
+
+    function getEditToken() {
+      if (!revealId) {
+        return null;
+      }
+
+      return localStorage.getItem(
+        'reveal_edit_' + revealId
       );
     }
 
-    async function api(suffix = "", method = "GET") {
-      const response = await fetch(
-        "/api/reveals/" + encodeURIComponent(id) + suffix,
-        {
-          method,
-          cache: "no-store",
-          headers: {"X-Edit-Token": token}
-        }
-      );
+    function ownerHeaders() {
+      const token =
+        getEditToken();
 
-      let data;
+      if (!token) {
+        throw new Error(
+          'The private editing key for this reveal is not available in this browser.'
+        );
+      }
+
+      return {
+        'X-Edit-Token': token
+      };
+    }
+
+    async function readJson(response) {
+      let result;
 
       try {
-        data = await response.json();
+        result =
+          await response.json();
       } catch {
         throw new Error(
-          "The server returned an unexpected response. Reload to check the saved state."
+          'The server returned an unexpected response.'
         );
       }
 
-      if (!response.ok || !data.success) {
+      if (
+        !response.ok ||
+        !result.success
+      ) {
         throw new Error(
-          data.error || "The request could not be completed."
+          result.error ||
+          'The request could not be completed.'
         );
       }
 
-      return data;
+      return result;
     }
 
-    function state() {
-      const status = reveal?.status;
+    async function fetchReveal() {
+      const response =
+        await fetch(
+          '/api/reveals/' +
+          encodeURIComponent(
+            revealId
+          ),
+          {
+            headers:
+              ownerHeaders(),
 
-      $("reviewActions").style.display = "grid";
-
-      $("editButton").hidden =
-        !["draft", "confirmed"].includes(status);
-
-      $("confirmButton").hidden =
-        status !== "draft";
-
-      $("editButton").disabled = busy;
-      $("confirmButton").disabled = busy || !imageOK;
-      reloadButton.disabled = busy;
-
-      $("confirmButton").textContent = "Confirm details";
-
-      const stage = $("paymentStage");
-
-      stage.classList.toggle("visible", status !== "draft");
-      stage.replaceChildren();
-
-      if (status === "draft") return;
-
-      const heading = document.createElement("h2");
-      const description = document.createElement("p");
-      const badge = document.createElement("span");
-
-      badge.className = "status-badge";
-
-      const validShare =
-        status === "paid" &&
-        Boolean(reveal.paidAt) &&
-        typeof reveal.shareUrl === "string" &&
-        /^\/r\/[A-Za-z0-9_-]+$/.test(reveal.shareUrl);
-
-      if (status === "confirmed") {
-        heading.textContent = "Your reveal is confirmed";
-
-        description.textContent =
-          "Your details are saved. Payment is not available yet, so the recipient reveal remains locked. You can still amend your details.";
-
-        badge.textContent = "Awaiting payment";
-
-      } else if (status === "checkout") {
-        heading.textContent = "Payment in progress";
-
-        description.textContent =
-          "Editing is paused while payment is in progress. Reload this review to check its status.";
-
-        badge.textContent = "Awaiting payment confirmation";
-
-      } else if (validShare) {
-        heading.textContent = "Your reveal is ready";
-
-        description.textContent =
-          "Payment is confirmed. Use the recipient link below to open or share your reveal.";
-
-        badge.textContent = "Paid";
-
-      } else if (status === "paid" && reveal.paidAt) {
-        heading.textContent = "Payment confirmed";
-
-        description.textContent =
-          "Your recipient link could not be loaded. Reload this review to try again.";
-
-        badge.textContent = "Paid";
-
-      } else {
-        heading.textContent = "This reveal is currently unavailable";
-
-        description.textContent =
-          "Reload to check the latest saved status.";
-
-        badge.textContent = "Unavailable";
-      }
-
-      stage.append(heading, description, badge);
-
-      if (validShare) {
-        const url = new URL(
-          reveal.shareUrl,
-          location.origin
-        ).href;
-
-        const link = document.createElement("a");
-
-        link.href = url;
-        link.textContent = "Open recipient reveal";
-        link.className = "button edit-button share-link";
-
-        const label = document.createElement("label");
-
-        label.textContent = "Recipient sharing link";
-        label.htmlFor = "shareUrl";
-
-        const input = document.createElement("input");
-
-        input.id = "shareUrl";
-        input.className = "share-input";
-        input.readOnly = true;
-        input.value = url;
-
-        const copy = document.createElement("button");
-
-        copy.type = "button";
-        copy.className = "button confirm-button";
-        copy.textContent = "Copy recipient link";
-
-        copy.addEventListener("click", async () => {
-          try {
-            await navigator.clipboard.writeText(url);
-            feedback.textContent = "Recipient link copied.";
-
-          } catch {
-            input.focus();
-            input.select();
-
-            feedback.textContent =
-              "Copy the selected recipient link.";
+            cache:
+              'no-store'
           }
-        });
+        );
 
-        stage.append(link, label, input, copy);
+      const result =
+        await readJson(
+          response
+        );
+
+      reveal =
+        result.reveal;
+
+      return reveal;
+    }
+
+    async function loadReveal() {
+      if (!revealId) {
+        showError(
+          'No reveal ID was provided.'
+        );
+
+        return;
+      }
+
+      if (!getEditToken()) {
+        showError(
+          'The private editing key for this reveal is not available in this browser.'
+        );
+
+        return;
+      }
+
+      try {
+        await fetchReveal();
+
+        populateReveal();
+
+        if (reveal.hasImage) {
+          await loadImage();
+        }
+
+        elements.loadingCard.hidden =
+          true;
+
+        elements.reviewContent.hidden =
+          false;
+
+        renderState();
+
+        if (
+          paymentReturn === 'success' &&
+          ['confirmed', 'checkout'].includes(
+            reveal.status
+          )
+        ) {
+          await pollForPayment();
+        }
+      } catch (error) {
+        showError(
+          error.message
+        );
       }
     }
 
-    function populate() {
-      const values = {
-        reviewEventHeading: reveal.eventName,
-        ticketTitle: reveal.eventName,
-        reviewDate: dateText(reveal.eventDate),
-        reviewTime: timeText(reveal.eventTime),
-        reviewVenue: reveal.venue || "To be confirmed",
-        reviewAdmit: reveal.admit || "To be confirmed",
-        reviewRecipient: reveal.recipient,
-        reviewSender: reveal.sender,
-        reviewMessage:
-          reveal.personalMessage || "No personal message added.",
-        bookingValue: reveal.ticketUrl || ""
-      };
-
-      for (const [key, value] of Object.entries(values)) {
-        $(key).textContent = value || "";
-      }
-
-      $("bookingCard").classList.toggle(
-        "visible",
-        Boolean(reveal.ticketUrl)
+    function populateReveal() {
+      setText(
+        'reviewEventHeading',
+        valueOrFallback(
+          reveal.eventName,
+          'Your surprise'
+        )
       );
+
+      setText(
+        'ticketTitle',
+        valueOrFallback(
+          reveal.eventName,
+          'Your surprise'
+        )
+      );
+
+      setText(
+        'reviewDate',
+        formatDate(
+          reveal.eventDate
+        )
+      );
+
+      setText(
+        'reviewTime',
+        formatTime(
+          reveal.eventTime
+        )
+      );
+
+      setText(
+        'reviewVenue',
+        valueOrFallback(
+          reveal.venue,
+          'To be confirmed'
+        )
+      );
+
+      setText(
+        'reviewAdmit',
+        valueOrFallback(
+          reveal.admit,
+          'To be confirmed'
+        )
+      );
+
+      setText(
+        'reviewRecipient',
+        valueOrFallback(
+          reveal.recipient,
+          'Recipient'
+        )
+      );
+
+      setText(
+        'reviewSender',
+        valueOrFallback(
+          reveal.sender,
+          'Sender'
+        )
+      );
+
+      setText(
+        'reviewMessage',
+        valueOrFallback(
+          reveal.personalMessage,
+          'No personal message added.'
+        )
+      );
+
+      if (reveal.ticketUrl) {
+        setText(
+          'bookingValue',
+          reveal.ticketUrl
+        );
+
+        elements.bookingCard.hidden =
+          false;
+      } else {
+        elements.bookingCard.hidden =
+          true;
+      }
     }
 
     async function loadImage() {
-      const img = $("reviewImage");
-
-      $("imageWrap").classList.remove("visible");
-
-      img.onload = null;
-      img.onerror = null;
-      img.removeAttribute("src");
-
-      if (objectUrl) {
-        URL.revokeObjectURL(objectUrl);
-      }
-
-      objectUrl = null;
-
-      if (!reveal.hasImage) return true;
-
-      const response = await fetch(
-        "/api/reveals/" + encodeURIComponent(id) + "/image",
-        {
-          cache: "no-store",
-          headers: {"X-Edit-Token": token}
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(
-          "The saved image could not be loaded."
-        );
-      }
-
-      const blob = await response.blob();
-
-      if (!blob.type.startsWith("image/")) {
-        throw new Error(
-          "The saved image could not be displayed."
-        );
-      }
-
-      objectUrl = URL.createObjectURL(blob);
-
       try {
-        await new Promise((resolve, reject) => {
-          img.onload = resolve;
+        const response =
+          await fetch(
+            '/api/reveals/' +
+            encodeURIComponent(
+              revealId
+            ) +
+            '/image',
+            {
+              headers:
+                ownerHeaders(),
 
-          img.onerror = () => reject(
-            new Error(
-              "The saved image could not be displayed."
-            )
+              cache:
+                'no-store'
+            }
           );
 
-          img.src = objectUrl;
-        });
-      } finally {
-        img.onload = null;
-        img.onerror = null;
-      }
-
-      $("imageWrap").classList.add("visible");
-      return true;
-    }
-
-    async function load() {
-      if (!id) {
-        fatal("No reveal ID was provided.");
-        return;
-      }
-
-      busy = true;
-      $("retryButton").disabled = true;
-
-      if (reveal) state();
-
-      feedback.textContent = "";
-      $("reviewContent").style.display = "none";
-      $("errorCard").classList.remove("visible");
-      $("loadingCard").style.display = "block";
-
-      try {
-        try {
-          token = localStorage.getItem("reveal_edit_" + id);
-        } catch {
-          throw new Error(
-            "Please allow site storage in this browser to access your private editing key."
-          );
-        }
-
-        if (!token) {
-          throw new Error(
-            "The private editing key is missing. Use the browser where you created this reveal."
-          );
-        }
-
-        reveal = (await api()).reveal;
-        populate();
-
-        imageOK = !reveal.hasImage;
-
-        try {
-          imageOK = await loadImage();
-
-        } catch (error) {
-          feedback.textContent =
-            error.message +
-            " Reload to try again, or amend the reveal to replace or remove the image.";
-        }
-
-        $("loadingCard").style.display = "none";
-        $("reviewContent").style.display = "block";
-
-        busy = false;
-        state();
-
-      } catch (error) {
-        fatal(error.message);
-
-      } finally {
-        $("retryButton").disabled = false;
-      }
-    }
-
-    function fatal(text) {
-      busy = false;
-
-      $("loadingCard").style.display = "none";
-      $("reviewContent").style.display = "none";
-      $("errorText").textContent = text;
-      $("errorCard").classList.add("visible");
-    }
-
-    $("editButton").addEventListener("click", async () => {
-      if (
-        busy ||
-        !reveal ||
-        !["draft", "confirmed"].includes(reveal.status)
-      ) {
-        return;
-      }
-
-      busy = true;
-      state();
-
-      feedback.textContent = "Opening your draft...";
-
-      try {
-        await api("/amend", "POST");
-
-        location.assign(
-          "index.html?edit=" + encodeURIComponent(id)
-        );
-
-      } catch (error) {
-        feedback.textContent =
-          error.message +
-          " Reload the review to check its current status.";
-
-        busy = false;
-        state();
-      }
-    });
-
-    $("confirmButton").addEventListener("click", async () => {
-      if (
-        busy ||
-        reveal?.status !== "draft" ||
-        !imageOK
-      ) {
-        return;
-      }
-
-      busy = true;
-      state();
-
-      $("confirmButton").textContent = "Confirming...";
-      feedback.textContent = "";
-
-      try {
-        const fresh = (await api()).reveal;
-
-        if (
-          fresh.revision !== reveal.revision ||
-          fresh.status !== "draft"
-        ) {
-          await load();
-
-          feedback.textContent =
-            "This reveal changed. Check the refreshed details before continuing.";
-
+        if (!response.ok) {
           return;
         }
 
-        await api("/confirm", "POST");
-        await load();
+        const blob =
+          await response.blob();
 
-      } catch (error) {
-        feedback.textContent =
-          error.message +
-          " Reload before trying again.";
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(
+            imageObjectUrl
+          );
+        }
 
-        busy = false;
-        state();
+        imageObjectUrl =
+          URL.createObjectURL(
+            blob
+          );
 
-        $("confirmButton").disabled = true;
+        elements.reviewImage.src =
+          imageObjectUrl;
+
+        elements.imageWrap.hidden =
+          false;
+      } catch {
+        elements.imageWrap.hidden =
+          true;
       }
-    });
+    }
 
-    reloadButton.addEventListener("click", () => {
-      if (!busy) load();
-    });
+    function renderState() {
+      elements.reviewActions.hidden =
+        true;
 
-    $("retryButton").addEventListener("click", () => {
-      if (!busy) load();
-    });
+      elements.paymentStage.hidden =
+        true;
 
-    load();
+      elements.paidStage.hidden =
+        true;
+
+      elements.refreshPaymentButton.hidden =
+        true;
+
+      hidePaymentMessage();
+
+      if (
+        reveal.status === 'paid' &&
+        reveal.shareUrl
+      ) {
+        showPaidState();
+        return;
+      }
+
+      if (reveal.status === 'draft') {
+        elements.reviewActions.hidden =
+          false;
+
+        showReturnNotice();
+        return;
+      }
+
+      if (
+        reveal.status === 'confirmed' ||
+        reveal.status === 'checkout'
+      ) {
+        showPaymentState();
+        showReturnNotice();
+        return;
+      }
+
+      showPaymentError(
+        'This reveal is currently being processed. Check its status again shortly.'
+      );
+
+      elements.paymentStage.hidden =
+        false;
+
+      elements.refreshPaymentButton.hidden =
+        false;
+    }
+
+    function showReturnNotice() {
+      elements.returnNotice.classList.remove(
+        'success'
+      );
+
+      if (paymentReturn === 'cancelled') {
+        elements.returnNotice.textContent =
+          'Payment was not completed. Your reveal remains safely stored and locked. You can try again or amend the details.';
+
+        elements.returnNotice.hidden =
+          false;
+
+        return;
+      }
+
+      if (
+        paymentReturn === 'success' &&
+        ['confirmed', 'checkout'].includes(
+          reveal.status
+        )
+      ) {
+        elements.returnNotice.textContent =
+          'Stripe has returned you to Reveal. We are securely confirming the payment before unlocking the recipient link.';
+
+        elements.returnNotice.classList.add(
+          'success'
+        );
+
+        elements.returnNotice.hidden =
+          false;
+
+        return;
+      }
+
+      elements.returnNotice.hidden =
+        true;
+    }
+
+    function showPaymentState() {
+      elements.paymentStage.hidden =
+        false;
+
+      elements.payButton.disabled =
+        false;
+
+      elements.paymentAmendButton.disabled =
+        false;
+
+      if (reveal.status === 'checkout') {
+        elements.paymentBadge.textContent =
+          'Checkout ready';
+
+        elements.paymentHeading.textContent =
+          'Complete your payment';
+
+        elements.paymentCopy.textContent =
+          'Your reveal remains locked until Stripe confirms the £1.99 payment.';
+
+        elements.payButton.textContent =
+          'Continue to secure payment';
+      } else {
+        elements.paymentBadge.textContent =
+          'Awaiting payment';
+
+        elements.paymentHeading.textContent =
+          'Unlock your reveal';
+
+        elements.paymentCopy.textContent =
+          'Make one secure payment to unlock the recipient experience and permanent sharing link.';
+
+        elements.payButton.textContent =
+          'Pay £1.99 securely';
+      }
+    }
+
+    function showPaidState() {
+      const shareUrl =
+        normaliseShareUrl(
+          reveal.shareUrl
+        );
+
+      if (!shareUrl) {
+        showError(
+          'The paid reveal link could not be verified.'
+        );
+
+        return;
+      }
+
+      elements.returnNotice.hidden =
+        true;
+
+      elements.paidStage.hidden =
+        false;
+
+      elements.shareInput.value =
+        shareUrl;
+
+      elements.openRevealButton.href =
+        shareUrl;
+
+      const cleanUrl =
+        new URL(
+          window.location.href
+        );
+
+      cleanUrl.searchParams.delete(
+        'payment'
+      );
+
+      window.history.replaceState(
+        {},
+        '',
+        cleanUrl
+      );
+    }
+
+    async function confirmReveal() {
+      setButtonBusy(
+        elements.confirmButton,
+        true,
+        'Confirming...'
+      );
+
+      try {
+        const response =
+          await fetch(
+            '/api/reveals/' +
+            encodeURIComponent(
+              revealId
+            ) +
+            '/confirm',
+            {
+              method:
+                'POST',
+
+              headers:
+                ownerHeaders()
+            }
+          );
+
+        const result =
+          await readJson(
+            response
+          );
+
+        reveal.status =
+          result.status;
+
+        if (
+          Number.isInteger(
+            result.revision
+          )
+        ) {
+          reveal.revision =
+            result.revision;
+        }
+
+        renderState();
+
+        elements.paymentStage.scrollIntoView({
+          behavior: 'smooth',
+          block: 'center'
+        });
+      } catch (error) {
+        window.alert(
+          error.message
+        );
+      } finally {
+        setButtonBusy(
+          elements.confirmButton,
+          false,
+          'Confirm and continue'
+        );
+      }
+    }
+
+    async function startPayment() {
+      hidePaymentMessage();
+
+      setButtonBusy(
+        elements.payButton,
+        true,
+        'Opening secure checkout...'
+      );
+
+      elements.paymentAmendButton.disabled =
+        true;
+
+      try {
+        const response =
+          await fetch(
+            '/api/reveals/' +
+            encodeURIComponent(
+              revealId
+            ) +
+            '/checkout',
+            {
+              method:
+                'POST',
+
+              headers:
+                ownerHeaders()
+            }
+          );
+
+        const result =
+          await readJson(
+            response
+          );
+
+        if (
+          result.status === 'paid' &&
+          result.shareUrl
+        ) {
+          reveal.status =
+            'paid';
+
+          reveal.shareUrl =
+            result.shareUrl;
+
+          renderState();
+          return;
+        }
+
+        const checkoutUrl =
+          normaliseCheckoutUrl(
+            result.checkoutUrl
+          );
+
+        if (!checkoutUrl) {
+          throw new Error(
+            'Stripe returned an invalid checkout address.'
+          );
+        }
+
+        window.location.assign(
+          checkoutUrl
+        );
+      } catch (error) {
+        showPaymentError(
+          error.message
+        );
+
+        elements.payButton.disabled =
+          false;
+
+        elements.paymentAmendButton.disabled =
+          false;
+
+        elements.payButton.textContent =
+          reveal.status === 'checkout'
+            ? 'Continue to secure payment'
+            : 'Pay £1.99 securely';
+      }
+    }
+
+    async function amendReveal() {
+      if (reveal.status === 'draft') {
+        goToEditor();
+        return;
+      }
+
+      setButtonBusy(
+        elements.paymentAmendButton,
+        true,
+        'Preparing amendments...'
+      );
+
+      elements.payButton.disabled =
+        true;
+
+      hidePaymentMessage();
+
+      try {
+        const response =
+          await fetch(
+            '/api/reveals/' +
+            encodeURIComponent(
+              revealId
+            ) +
+            '/amend',
+            {
+              method:
+                'POST',
+
+              headers:
+                ownerHeaders()
+            }
+          );
+
+        const result =
+          await readJson(
+            response
+          );
+
+        if (result.status !== 'draft') {
+          throw new Error(
+            'The reveal is not ready to amend.'
+          );
+        }
+
+        goToEditor();
+      } catch (error) {
+        showPaymentError(
+          error.message
+        );
+
+        elements.paymentAmendButton.disabled =
+          false;
+
+        elements.paymentAmendButton.textContent =
+          'Amend details';
+
+        elements.payButton.disabled =
+          false;
+      }
+    }
+
+    async function pollForPayment() {
+      if (paymentPolling) {
+        return;
+      }
+
+      paymentPolling =
+        true;
+
+      elements.paymentStage.hidden =
+        false;
+
+      elements.paymentBadge.textContent =
+        'Confirming payment';
+
+      elements.paymentHeading.textContent =
+        'Securely confirming your payment';
+
+      elements.paymentCopy.textContent =
+        'Please keep this page open. The recipient link will appear after Stripe confirms payment.';
+
+      elements.payButton.disabled =
+        true;
+
+      elements.paymentAmendButton.disabled =
+        true;
+
+      elements.payButton.textContent =
+        'Confirming payment...';
+
+      for (
+        let attempt = 0;
+        attempt < 16;
+        attempt += 1
+      ) {
+        if (attempt > 0) {
+          await delay(
+            1500
+          );
+        }
+
+        try {
+          await fetchReveal();
+
+          if (
+            reveal.status === 'paid' &&
+            reveal.shareUrl
+          ) {
+            paymentPolling =
+              false;
+
+            renderState();
+
+            elements.paidStage.scrollIntoView({
+              behavior: 'smooth',
+              block: 'center'
+            });
+
+            return;
+          }
+        } catch {
+          /*
+            A temporary request failure does not
+            override Stripe's payment result.
+          */
+        }
+      }
+
+      paymentPolling =
+        false;
+
+      showPaymentState();
+
+      showPaymentError(
+        'Payment confirmation is taking longer than expected. Do not pay again. Use Check payment status in a moment.'
+      );
+
+      elements.payButton.disabled =
+        true;
+
+      elements.paymentAmendButton.disabled =
+        true;
+
+      elements.refreshPaymentButton.hidden =
+        false;
+    }
+
+    async function refreshPaymentStatus() {
+      setButtonBusy(
+        elements.refreshPaymentButton,
+        true,
+        'Checking...'
+      );
+
+      hidePaymentMessage();
+
+      try {
+        await fetchReveal();
+
+        renderState();
+
+        if (reveal.status !== 'paid') {
+          showPaymentError(
+            'Payment has not yet been confirmed. Wait a moment and check again.'
+          );
+
+          elements.refreshPaymentButton.hidden =
+            false;
+        }
+      } catch (error) {
+        showPaymentError(
+          error.message
+        );
+
+        elements.refreshPaymentButton.hidden =
+          false;
+      } finally {
+        elements.refreshPaymentButton.disabled =
+          false;
+
+        elements.refreshPaymentButton.textContent =
+          'Check payment status';
+      }
+    }
+
+    async function copyShareLink() {
+      const value =
+        elements.shareInput.value;
+
+      try {
+        await navigator.clipboard.writeText(
+          value
+        );
+      } catch {
+        elements.shareInput.focus();
+        elements.shareInput.select();
+
+        if (
+          !document.execCommand(
+            'copy'
+          )
+        ) {
+          elements.copyStatus.textContent =
+            'Select the link above and copy it manually.';
+
+          return;
+        }
+      }
+
+      elements.copyStatus.textContent =
+        'Recipient link copied.';
+
+      elements.copyButton.textContent =
+        'Copied';
+
+      window.setTimeout(
+        () => {
+          elements.copyButton.textContent =
+            'Copy link';
+        },
+        1800
+      );
+    }
+
+    function goToEditor() {
+      window.location.href =
+        '/index.html?edit=' +
+        encodeURIComponent(
+          revealId
+        );
+    }
+
+    function normaliseCheckoutUrl(value) {
+      if (typeof value !== 'string') {
+        return null;
+      }
+
+      try {
+        const url =
+          new URL(
+            value
+          );
+
+        return (
+          url.protocol === 'https:' &&
+          url.hostname === 'checkout.stripe.com'
+        )
+          ? url.toString()
+          : null;
+      } catch {
+        return null;
+      }
+    }
+
+    function normaliseShareUrl(value) {
+      if (typeof value !== 'string') {
+        return null;
+      }
+
+      try {
+        const url =
+          new URL(
+            value,
+            window.location.origin
+          );
+
+        if (
+          url.origin !== window.location.origin ||
+          !/^\/r\/[A-Za-z0-9_-]+\/?$/.test(
+            url.pathname
+          )
+        ) {
+          return null;
+        }
+
+        url.search = '';
+        url.hash = '';
+
+        return url.toString();
+      } catch {
+        return null;
+      }
+    }
+
+    function setButtonBusy(
+      button,
+      busy,
+      busyText
+    ) {
+      button.disabled =
+        busy;
+
+      if (busy) {
+        button.textContent =
+          busyText;
+      }
+    }
+
+    function showPaymentError(message) {
+      elements.paymentMessage.textContent =
+        message;
+
+      elements.paymentMessage.hidden =
+        false;
+    }
+
+    function hidePaymentMessage() {
+      elements.paymentMessage.textContent =
+        '';
+
+      elements.paymentMessage.hidden =
+        true;
+    }
+
+    function setText(
+      id,
+      value
+    ) {
+      document.getElementById(
+        id
+      ).textContent =
+        value;
+    }
+
+    function valueOrFallback(
+      value,
+      fallback
+    ) {
+      return (
+        value &&
+        String(value).trim()
+      )
+        ? String(value).trim()
+        : fallback;
+    }
+
+    function formatDate(value) {
+      if (!value) {
+        return 'Date to be confirmed';
+      }
+
+      const date =
+        new Date(
+          value +
+          'T12:00:00'
+        );
+
+      if (
+        Number.isNaN(
+          date.getTime()
+        )
+      ) {
+        return 'Date to be confirmed';
+      }
+
+      return new Intl.DateTimeFormat(
+        'en-GB',
+        {
+          weekday:
+            'long',
+
+          day:
+            'numeric',
+
+          month:
+            'long',
+
+          year:
+            'numeric'
+        }
+      ).format(
+        date
+      );
+    }
+
+    function formatTime(value) {
+      if (
+        !value ||
+        !/^([01]\d|2[0-3]):[0-5]\d$/.test(
+          value
+        )
+      ) {
+        return 'Time to be confirmed';
+      }
+
+      const [hours, minutes] =
+        value
+          .split(':')
+          .map(Number);
+
+      const date =
+        new Date();
+
+      date.setHours(
+        hours,
+        minutes,
+        0,
+        0
+      );
+
+      return new Intl.DateTimeFormat(
+        'en-GB',
+        {
+          hour:
+            'numeric',
+
+          minute:
+            '2-digit'
+        }
+      ).format(
+        date
+      );
+    }
+
+    function delay(milliseconds) {
+      return new Promise(
+        resolve =>
+          window.setTimeout(
+            resolve,
+            milliseconds
+          )
+      );
+    }
+
+    function showError(message) {
+      elements.loadingCard.hidden =
+        true;
+
+      elements.reviewContent.hidden =
+        true;
+
+      elements.errorText.textContent =
+        message;
+
+      elements.errorCard.hidden =
+        false;
+    }
+
+    elements.editButton.addEventListener(
+      'click',
+      goToEditor
+    );
+
+    elements.confirmButton.addEventListener(
+      'click',
+      confirmReveal
+    );
+
+    elements.payButton.addEventListener(
+      'click',
+      startPayment
+    );
+
+    elements.paymentAmendButton.addEventListener(
+      'click',
+      amendReveal
+    );
+
+    elements.refreshPaymentButton.addEventListener(
+      'click',
+      refreshPaymentStatus
+    );
+
+    elements.copyButton.addEventListener(
+      'click',
+      copyShareLink
+    );
+
+    window.addEventListener(
+      'pagehide',
+      () => {
+        if (imageObjectUrl) {
+          URL.revokeObjectURL(
+            imageObjectUrl
+          );
+        }
+      }
+    );
+
+    loadReveal();
   </script>
 </body>
 </html>
