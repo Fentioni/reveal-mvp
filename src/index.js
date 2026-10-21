@@ -96,14 +96,13 @@ export default {
         return await health(env);
       }
 
-      // Stripe authenticates this route with its signature. It must be handled
-      // before the browser-origin protection used for customer changes.
       if (path === '/api/webhooks/stripe' && request.method === 'POST') {
         return await stripeWebhook(request, env);
       }
 
       if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method)) {
         const origin = request.headers.get('Origin');
+
         if (origin && origin !== url.origin) {
           fail(403, 'Cross-origin changes are not allowed.');
         }
@@ -119,6 +118,7 @@ export default {
 
       if (owner) {
         const [, id, action = ''] = owner;
+
         const row = await env.DB
           .prepare('SELECT * FROM reveals WHERE id = ?')
           .bind(id)
@@ -131,7 +131,10 @@ export default {
         await authorise(request, row);
 
         if (action === '' && request.method === 'GET') {
-          return json({success: true, reveal: ownerData(row)});
+          return json({
+            success: true,
+            reveal: ownerData(row)
+          });
         }
 
         if (action === '' && request.method === 'PUT') {
@@ -171,8 +174,6 @@ export default {
           .bind(publicRoute[1])
           .first();
 
-        // Nonexistent and every unpaid state deliberately return the same
-        // response so public URLs disclose nothing before verified payment.
         if (!isPaid(row)) {
           fail(404, 'This reveal is not available.');
         }
@@ -199,8 +200,6 @@ export default {
 
       return await env.ASSETS.fetch(request);
     } catch (error) {
-      // Never log customer content, edit tokens, booking links, Stripe
-      // responses, secrets or SQL bindings.
       if (!(error instanceof HttpError)) {
         console.error('Reveal request failed.');
       }
@@ -240,7 +239,10 @@ function stripeSettingsPresent(env) {
 
 function requireStripeSettings(env) {
   if (!stripeSettingsPresent(env)) {
-    fail(503, 'Payments are temporarily unavailable. Please try again later.');
+    fail(
+      503,
+      'Payments are temporarily unavailable. Please try again later.'
+    );
   }
 
   const key = String(env.STRIPE_SECRET_KEY);
@@ -251,7 +253,10 @@ function requireStripeSettings(env) {
     (!live && key.includes('_live_')) ||
     !String(env.STRIPE_WEBHOOK_SECRET).startsWith('whsec_')
   ) {
-    fail(503, 'Payments are temporarily unavailable. Please try again later.');
+    fail(
+      503,
+      'Payments are temporarily unavailable. Please try again later.'
+    );
   }
 }
 
@@ -263,20 +268,25 @@ async function health(env) {
     try {
       await env.DB.prepare('SELECT 1 AS ok').first();
       database = true;
+
       await env.DB
         .prepare('SELECT public_slug, revision FROM reveals LIMIT 1')
         .first();
+
       await env.DB
         .prepare(
           'SELECT id, checkout_session_id, checkout_url, expires_at FROM payments LIMIT 1'
         )
         .first();
+
       await env.DB
         .prepare('SELECT id, r2_key FROM reveal_assets LIMIT 1')
         .first();
+
       await env.DB
         .prepare('SELECT id, event_type FROM stripe_events LIMIT 1')
         .first();
+
       schema = true;
     } catch {
       // Health intentionally returns no database error details.
@@ -284,6 +294,7 @@ async function health(env) {
   }
 
   const payments = stripeSettingsPresent(env);
+
   const success =
     database &&
     schema &&
@@ -297,7 +308,7 @@ async function health(env) {
       message: success
         ? 'Reveal Worker is running'
         : 'Reveal setup is incomplete',
-      version: 'stage-3.1',
+      version: 'stage-3.2',
       d1: database,
       schema,
       r2: Boolean(env.IMAGES),
@@ -312,7 +323,10 @@ async function authorise(request, row) {
   const token = request.headers.get('X-Edit-Token');
 
   if (!token || token.length > 256) {
-    fail(403, 'You do not have permission to edit or review this reveal.');
+    fail(
+      403,
+      'You do not have permission to edit or review this reveal.'
+    );
   }
 
   const hash = await hashToken(token);
@@ -320,11 +334,15 @@ async function authorise(request, row) {
 
   for (let index = 0; index < hash.length; index += 1) {
     difference |=
-      hash.charCodeAt(index) ^ (row.edit_token.charCodeAt(index) || 0);
+      hash.charCodeAt(index) ^
+      (row.edit_token.charCodeAt(index) || 0);
   }
 
   if (difference !== 0) {
-    fail(403, 'You do not have permission to edit or review this reveal.');
+    fail(
+      403,
+      'You do not have permission to edit or review this reveal.'
+    );
   }
 }
 
@@ -343,7 +361,11 @@ function ownerData(row) {
     confirmedAt: row.confirmed_at,
     paidAt: row.paid_at,
     revision: row.revision,
-    ...(isPaid(row) ? {shareUrl: '/r/' + row.public_slug} : {})
+    ...(isPaid(row)
+      ? {
+          shareUrl: '/r/' + row.public_slug
+        }
+      : {})
   };
 }
 
@@ -371,7 +393,11 @@ async function readForm(request) {
 
   while (true) {
     const {done, value} = await reader.read();
-    if (done) break;
+
+    if (done) {
+      break;
+    }
+
     size += value.byteLength;
 
     if (size > MAX_BODY) {
@@ -386,7 +412,9 @@ async function readForm(request) {
 
   try {
     form = await new Response(new Blob(chunks), {
-      headers: {'Content-Type': request.headers.get('Content-Type')}
+      headers: {
+        'Content-Type': request.headers.get('Content-Type')
+      }
     }).formData();
   } catch {
     fail(400, 'The form could not be read.');
@@ -426,12 +454,16 @@ async function readForm(request) {
     data.eventDate &&
     (!/^\d{4}-\d{2}-\d{2}$/.test(data.eventDate) ||
       !Number.isFinite(Date.parse(data.eventDate)) ||
-      new Date(data.eventDate).toISOString().slice(0, 10) !== data.eventDate)
+      new Date(data.eventDate).toISOString().slice(0, 10) !==
+        data.eventDate)
   ) {
     fail(400, 'Please enter a valid event date.');
   }
 
-  if (data.eventTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(data.eventTime)) {
+  if (
+    data.eventTime &&
+    !/^([01]\d|2[0-3]):[0-5]\d$/.test(data.eventTime)
+  ) {
     fail(400, 'Please enter a valid event time.');
   }
 
@@ -472,22 +504,35 @@ async function readForm(request) {
     }
 
     if (!IMAGE_TYPES.has(image.type)) {
-      fail(400, 'Only JPEG, PNG and WebP images are supported.');
+      fail(
+        400,
+        'Only JPEG, PNG and WebP images are supported.'
+      );
     }
 
-    const bytes = new Uint8Array(await image.slice(0, 12).arrayBuffer());
+    const bytes = new Uint8Array(
+      await image.slice(0, 12).arrayBuffer()
+    );
+
     const valid =
       image.type === 'image/jpeg'
-        ? bytes[0] === 255 && bytes[1] === 216 && bytes[2] === 255
+        ? bytes[0] === 255 &&
+          bytes[1] === 216 &&
+          bytes[2] === 255
         : image.type === 'image/png'
           ? [137, 80, 78, 71, 13, 10, 26, 10].every(
               (value, index) => bytes[index] === value
             )
-          : new TextDecoder().decode(bytes.slice(0, 4)) === 'RIFF' &&
-            new TextDecoder().decode(bytes.slice(8, 12)) === 'WEBP';
+          : new TextDecoder().decode(bytes.slice(0, 4)) ===
+              'RIFF' &&
+            new TextDecoder().decode(bytes.slice(8, 12)) ===
+              'WEBP';
 
     if (!valid) {
-      fail(400, 'The image contents do not match its file type.');
+      fail(
+        400,
+        'The image contents do not match its file type.'
+      );
     }
   }
 
@@ -495,7 +540,10 @@ async function readForm(request) {
 
   if (
     revisionText !== null &&
-    (typeof revisionText !== 'string' || !/^\d+$/.test(revisionText))
+    (
+      typeof revisionText !== 'string' ||
+      !/^\d+$/.test(revisionText)
+    )
   ) {
     fail(400, 'Invalid revision.');
   }
@@ -504,24 +552,42 @@ async function readForm(request) {
     values,
     image,
     removeImage: form.get('removeImage') === '1',
-    revision: revisionText === null ? null : Number(revisionText)
+    revision:
+      revisionText === null
+        ? null
+        : Number(revisionText)
   };
 }
 
 async function upload(env, id, image) {
   const key =
-    'reveals/' + id + '/' + crypto.randomUUID() + IMAGE_TYPES.get(image.type);
+    'reveals/' +
+    id +
+    '/' +
+    crypto.randomUUID() +
+    IMAGE_TYPES.get(image.type);
 
-  await env.IMAGES.put(key, await image.arrayBuffer(), {
-    httpMetadata: {contentType: image.type},
-    customMetadata: {revealId: id, uploadedAt: now()}
-  });
+  await env.IMAGES.put(
+    key,
+    await image.arrayBuffer(),
+    {
+      httpMetadata: {
+        contentType: image.type
+      },
+      customMetadata: {
+        revealId: id,
+        uploadedAt: now()
+      }
+    }
+  );
 
   return key;
 }
 
 async function cleanup(env, key) {
-  if (!key) return;
+  if (!key) {
+    return;
+  }
 
   try {
     await env.IMAGES.delete(key);
@@ -547,13 +613,31 @@ async function create(request, env) {
     await env.DB
       .prepare(
         `INSERT INTO reveals (
-          id, edit_token, ${FIELDS.map(([, database]) => database).join(',')},
-          image_key, status, created_at, updated_at
+          id,
+          edit_token,
+          ${FIELDS.map(([, database]) => database).join(',')},
+          image_key,
+          status,
+          created_at,
+          updated_at
         ) VALUES (
-          ?, ?, ${FIELDS.map(() => '?').join(',')}, ?, 'draft', ?, ?
+          ?,
+          ?,
+          ${FIELDS.map(() => '?').join(',')},
+          ?,
+          'draft',
+          ?,
+          ?
         )`
       )
-      .bind(id, tokenHash, ...values, imageKey, timestamp, timestamp)
+      .bind(
+        id,
+        tokenHash,
+        ...values,
+        imageKey,
+        timestamp,
+        timestamp
+      )
       .run();
   } catch (error) {
     await cleanup(env, imageKey);
@@ -561,20 +645,40 @@ async function create(request, env) {
   }
 
   return json(
-    {success: true, id, editToken, status: 'draft', revision: 0},
+    {
+      success: true,
+      id,
+      editToken,
+      status: 'draft',
+      revision: 0
+    },
     201
   );
 }
 
 async function update(request, env, row) {
   if (row.status !== 'draft') {
-    fail(409, 'Use Amend before editing a confirmed reveal.');
+    fail(
+      409,
+      'Use Amend before editing a confirmed reveal.'
+    );
   }
 
-  const {values, image, removeImage, revision} = await readForm(request);
+  const {
+    values,
+    image,
+    removeImage,
+    revision
+  } = await readForm(request);
 
-  if (revision !== null && revision !== row.revision) {
-    fail(409, 'This draft has changed. Reload before saving.');
+  if (
+    revision !== null &&
+    revision !== row.revision
+  ) {
+    fail(
+      409,
+      'This draft has changed. Reload before saving.'
+    );
   }
 
   let replacement = null;
@@ -585,19 +689,40 @@ async function update(request, env, row) {
       replacement = await upload(env, row.id, image);
     }
 
-    const key = replacement || (removeImage ? null : row.image_key);
+    const key =
+      replacement ||
+      (removeImage ? null : row.image_key);
+
     const result = await env.DB
       .prepare(
         `UPDATE reveals SET
-          ${FIELDS.map(([, database]) => database + ' = ?').join(',')},
-          image_key = ?, updated_at = ?, revision = revision + 1
-        WHERE id = ? AND status = 'draft' AND revision = ?`
+          ${FIELDS
+            .map(
+              ([, database]) =>
+                database + ' = ?'
+            )
+            .join(',')},
+          image_key = ?,
+          updated_at = ?,
+          revision = revision + 1
+        WHERE id = ?
+          AND status = 'draft'
+          AND revision = ?`
       )
-      .bind(...values, key, now(), row.id, row.revision)
+      .bind(
+        ...values,
+        key,
+        now(),
+        row.id,
+        row.revision
+      )
       .run();
 
     if (result.meta.changes !== 1) {
-      fail(409, 'This draft changed while saving. Reload and try again.');
+      fail(
+        409,
+        'This draft changed while saving. Reload and try again.'
+      );
     }
 
     committed = true;
@@ -622,27 +747,51 @@ async function update(request, env, row) {
 }
 
 async function confirm(env, row) {
-  if (row.status === 'confirmed' || isPaid(row)) {
-    return json({success: true, id: row.id, status: row.status});
+  if (
+    row.status === 'confirmed' ||
+    isPaid(row)
+  ) {
+    return json({
+      success: true,
+      id: row.id,
+      status: row.status
+    });
   }
 
   if (row.status !== 'draft') {
-    fail(409, 'This reveal cannot be confirmed in its current state.');
+    fail(
+      409,
+      'This reveal cannot be confirmed in its current state.'
+    );
   }
 
   const timestamp = now();
+
   const result = await env.DB
     .prepare(
       `UPDATE reveals
-      SET status = 'confirmed', confirmed_at = ?, updated_at = ?,
-          revision = revision + 1
-      WHERE id = ? AND status = 'draft' AND revision = ?`
+      SET
+        status = 'confirmed',
+        confirmed_at = ?,
+        updated_at = ?,
+        revision = revision + 1
+      WHERE id = ?
+        AND status = 'draft'
+        AND revision = ?`
     )
-    .bind(timestamp, timestamp, row.id, row.revision)
+    .bind(
+      timestamp,
+      timestamp,
+      row.id,
+      row.revision
+    )
     .run();
 
   if (result.meta.changes !== 1) {
-    fail(409, 'This draft changed. Reload and review it again.');
+    fail(
+      409,
+      'This draft changed. Reload and review it again.'
+    );
   }
 
   return json({
@@ -667,19 +816,34 @@ async function amend(env, row) {
     const result = await env.DB
       .prepare(
         `UPDATE reveals
-        SET status = 'draft', confirmed_at = NULL, updated_at = ?,
-            revision = revision + 1
-        WHERE id = ? AND status = 'confirmed' AND revision = ?
+        SET
+          status = 'draft',
+          confirmed_at = NULL,
+          updated_at = ?,
+          revision = revision + 1
+        WHERE id = ?
+          AND status = 'confirmed'
+          AND revision = ?
           AND NOT EXISTS (
-            SELECT 1 FROM payments
-            WHERE reveal_id = ? AND status IN ('pending', 'paid')
+            SELECT 1
+            FROM payments
+            WHERE reveal_id = ?
+              AND status IN ('pending', 'paid')
           )`
       )
-      .bind(now(), row.id, row.revision, row.id)
+      .bind(
+        now(),
+        row.id,
+        row.revision,
+        row.id
+      )
       .run();
 
     if (result.meta.changes !== 1) {
-      fail(409, 'Payment or another change is in progress. Reload this reveal.');
+      fail(
+        409,
+        'Payment or another change is in progress. Reload this reveal.'
+      );
     }
 
     return json({
@@ -691,15 +855,24 @@ async function amend(env, row) {
   }
 
   if (row.status !== 'checkout') {
-    fail(409, 'This reveal cannot be amended in its current state.');
+    fail(
+      409,
+      'This reveal cannot be amended in its current state.'
+    );
   }
 
   requireStripeSettings(env);
 
   const payment = await activePayment(env, row.id);
 
-  if (!payment || payment.status !== 'pending') {
-    fail(409, 'The payment state has changed. Reload this reveal.');
+  if (
+    !payment ||
+    payment.status !== 'pending'
+  ) {
+    fail(
+      409,
+      'The payment state has changed. Reload this reveal.'
+    );
   }
 
   if (!payment.checkout_session_id) {
@@ -715,7 +888,9 @@ async function amend(env, row) {
     session = await stripeRequest(
       env,
       '/checkout/sessions/' +
-        encodeURIComponent(payment.checkout_session_id) +
+        encodeURIComponent(
+          payment.checkout_session_id
+        ) +
         '/expire',
       'POST'
     );
@@ -728,15 +903,23 @@ async function amend(env, row) {
       session = await stripeRequest(
         env,
         '/checkout/sessions/' +
-          encodeURIComponent(payment.checkout_session_id),
+          encodeURIComponent(
+            payment.checkout_session_id
+          ),
         'GET'
       );
     } catch {
-      fail(502, 'Stripe could not cancel checkout. Please try again.');
+      fail(
+        502,
+        'Stripe could not cancel checkout. Please try again.'
+      );
     }
   }
 
-  if (session.payment_status === 'paid' || session.status === 'complete') {
+  if (
+    session.payment_status === 'paid' ||
+    session.status === 'complete'
+  ) {
     fail(
       409,
       'Payment is being confirmed. This reveal can no longer be amended.'
@@ -744,37 +927,65 @@ async function amend(env, row) {
   }
 
   if (session.status !== 'expired') {
-    fail(502, 'Stripe could not cancel checkout. Please try again.');
+    fail(
+      502,
+      'Stripe could not cancel checkout. Please try again.'
+    );
   }
 
   const timestamp = now();
+
   const results = await env.DB.batch([
     env.DB
       .prepare(
         `UPDATE payments
-        SET status = 'expired', updated_at = ?
-        WHERE id = ? AND reveal_id = ? AND status = 'pending'`
+        SET
+          status = 'expired',
+          updated_at = ?
+        WHERE id = ?
+          AND reveal_id = ?
+          AND status = 'pending'`
       )
-      .bind(timestamp, payment.id, row.id),
+      .bind(
+        timestamp,
+        payment.id,
+        row.id
+      ),
+
     env.DB
       .prepare(
         `UPDATE reveals
-        SET status = 'draft', confirmed_at = NULL, updated_at = ?,
-            revision = revision + 1
-        WHERE id = ? AND status = 'checkout' AND revision = ?
+        SET
+          status = 'draft',
+          confirmed_at = NULL,
+          updated_at = ?,
+          revision = revision + 1
+        WHERE id = ?
+          AND status = 'checkout'
+          AND revision = ?
           AND NOT EXISTS (
-            SELECT 1 FROM payments
-            WHERE reveal_id = ? AND status IN ('pending', 'paid')
+            SELECT 1
+            FROM payments
+            WHERE reveal_id = ?
+              AND status IN ('pending', 'paid')
           )`
       )
-      .bind(timestamp, row.id, row.revision, row.id)
+      .bind(
+        timestamp,
+        row.id,
+        row.revision,
+        row.id
+      )
   ]);
 
   if (
     results[0].meta.changes !== 1 ||
     results[1].meta.changes !== 1
   ) {
-    fail(409, 'The payment state changed. Reload this reveal.');
+    fail(
+      409,
+      'The payment state changed. Reload this reveal.'
+    );
   }
 
   return json({
@@ -788,15 +999,23 @@ async function amend(env, row) {
 async function activePayment(env, revealId) {
   return await env.DB
     .prepare(
-      `SELECT * FROM payments
-      WHERE reveal_id = ? AND status IN ('pending', 'paid')
-      ORDER BY created_at DESC LIMIT 1`
+      `SELECT *
+      FROM payments
+      WHERE reveal_id = ?
+        AND status IN ('pending', 'paid')
+      ORDER BY created_at DESC
+      LIMIT 1`
     )
     .bind(revealId)
     .first();
 }
 
-async function startCheckout(request, env, row, retry = false) {
+async function startCheckout(
+  request,
+  env,
+  row,
+  retry = false
+) {
   requireStripeSettings(env);
 
   if (isPaid(row)) {
@@ -807,51 +1026,101 @@ async function startCheckout(request, env, row, retry = false) {
     });
   }
 
-  if (!['confirmed', 'checkout'].includes(row.status)) {
-    fail(409, 'Confirm this reveal before starting payment.');
+  if (
+    !['confirmed', 'checkout'].includes(
+      row.status
+    )
+  ) {
+    fail(
+      409,
+      'Confirm this reveal before starting payment.'
+    );
   }
 
-  let payment = await activePayment(env, row.id);
+  let payment = await activePayment(
+    env,
+    row.id
+  );
 
   if (payment?.status === 'paid') {
-    fail(409, 'This reveal has already been paid for. Reload the page.');
+    fail(
+      409,
+      'This reveal has already been paid for. Reload the page.'
+    );
   }
 
-  if (!payment && row.status === 'checkout') {
+  if (
+    !payment &&
+    row.status === 'checkout'
+  ) {
     await env.DB
       .prepare(
-        `UPDATE reveals SET status = 'confirmed', updated_at = ?
-        WHERE id = ? AND status = 'checkout'
+        `UPDATE reveals
+        SET
+          status = 'confirmed',
+          updated_at = ?
+        WHERE id = ?
+          AND status = 'checkout'
           AND NOT EXISTS (
-            SELECT 1 FROM payments
-            WHERE reveal_id = ? AND status IN ('pending', 'paid')
+            SELECT 1
+            FROM payments
+            WHERE reveal_id = ?
+              AND status IN ('pending', 'paid')
           )`
       )
-      .bind(now(), row.id, row.id)
+      .bind(
+        now(),
+        row.id,
+        row.id
+      )
       .run();
 
     row = await env.DB
-      .prepare('SELECT * FROM reveals WHERE id = ?')
+      .prepare(
+        'SELECT * FROM reveals WHERE id = ?'
+      )
       .bind(row.id)
       .first();
   }
 
-  if (!payment && row.status === 'confirmed') {
+  if (
+    !payment &&
+    row.status === 'confirmed'
+  ) {
     const paymentId = crypto.randomUUID();
     const timestamp = now();
+
     const results = await env.DB.batch([
       env.DB
         .prepare(
           `INSERT INTO payments (
-            id, reveal_id, provider, amount_minor, currency, status,
-            created_at, updated_at
+            id,
+            reveal_id,
+            provider,
+            amount_minor,
+            currency,
+            status,
+            created_at,
+            updated_at
           )
-          SELECT ?, id, 'stripe', ?, ?, 'pending', ?, ?
+          SELECT
+            ?,
+            id,
+            'stripe',
+            ?,
+            ?,
+            'pending',
+            ?,
+            ?
           FROM reveals
-          WHERE id = ? AND status = 'confirmed' AND revision = ?
+          WHERE id = ?
+            AND status = 'confirmed'
+            AND revision = ?
             AND NOT EXISTS (
-              SELECT 1 FROM payments
-              WHERE reveal_id = ? AND status IN ('pending', 'paid')
+              SELECT 1
+              FROM payments
+              WHERE reveal_id = ?
+                AND status IN ('pending', 'paid')
             )`
         )
         .bind(
@@ -864,17 +1133,31 @@ async function startCheckout(request, env, row, retry = false) {
           row.revision,
           row.id
         ),
+
       env.DB
         .prepare(
           `UPDATE reveals
-          SET status = 'checkout', updated_at = ?
-          WHERE id = ? AND status = 'confirmed' AND revision = ?
+          SET
+            status = 'checkout',
+            updated_at = ?
+          WHERE id = ?
+            AND status = 'confirmed'
+            AND revision = ?
             AND EXISTS (
-              SELECT 1 FROM payments
-              WHERE id = ? AND reveal_id = ? AND status = 'pending'
+              SELECT 1
+              FROM payments
+              WHERE id = ?
+                AND reveal_id = ?
+                AND status = 'pending'
             )`
         )
-        .bind(timestamp, row.id, row.revision, paymentId, row.id)
+        .bind(
+          timestamp,
+          row.id,
+          row.revision,
+          paymentId,
+          row.id
+        )
     ]);
 
     if (
@@ -882,24 +1165,42 @@ async function startCheckout(request, env, row, retry = false) {
       results[1].meta.changes === 1
     ) {
       payment = await env.DB
-        .prepare('SELECT * FROM payments WHERE id = ?')
+        .prepare(
+          'SELECT * FROM payments WHERE id = ?'
+        )
         .bind(paymentId)
         .first();
     } else if (!retry) {
       const current = await env.DB
-        .prepare('SELECT * FROM reveals WHERE id = ?')
+        .prepare(
+          'SELECT * FROM reveals WHERE id = ?'
+        )
         .bind(row.id)
         .first();
 
-      return await startCheckout(request, env, current, true);
+      return await startCheckout(
+        request,
+        env,
+        current,
+        true
+      );
     }
   }
 
-  if (!payment || payment.status !== 'pending') {
-    fail(409, 'Payment or another change is already in progress. Reload.');
+  if (
+    !payment ||
+    payment.status !== 'pending'
+  ) {
+    fail(
+      409,
+      'Payment or another change is already in progress. Reload.'
+    );
   }
 
-  if (payment.checkout_url && !paymentHasExpired(payment)) {
+  if (
+    payment.checkout_url &&
+    !paymentHasExpired(payment)
+  ) {
     return json({
       success: true,
       status: 'checkout',
@@ -907,120 +1208,296 @@ async function startCheckout(request, env, row, retry = false) {
     });
   }
 
-  if (payment.checkout_session_id && paymentHasExpired(payment)) {
-    const recovered = await recoverExpiredCheckout(env, row, payment);
+  if (
+    payment.checkout_session_id &&
+    paymentHasExpired(payment)
+  ) {
+    const recovered =
+      await recoverExpiredCheckout(
+        env,
+        row,
+        payment
+      );
 
     if (recovered === 'paid') {
-      fail(409, 'Payment is being confirmed. Reload this reveal shortly.');
+      fail(
+        409,
+        'Payment is being confirmed. Reload this reveal shortly.'
+      );
     }
 
-    if (recovered === 'expired' && !retry) {
+    if (
+      recovered === 'expired' &&
+      !retry
+    ) {
       const current = await env.DB
-        .prepare('SELECT * FROM reveals WHERE id = ?')
+        .prepare(
+          'SELECT * FROM reveals WHERE id = ?'
+        )
         .bind(row.id)
         .first();
 
-      return await startCheckout(request, env, current, true);
+      return await startCheckout(
+        request,
+        env,
+        current,
+        true
+      );
     }
   }
 
-  return await createStripeCheckout(request, env, row, payment);
+  return await createStripeCheckout(
+    request,
+    env,
+    row,
+    payment
+  );
 }
 
 function paymentHasExpired(payment) {
-  if (!payment.expires_at) return false;
-  const expires = Date.parse(payment.expires_at);
-  return Number.isFinite(expires) && expires <= Date.now();
+  if (!payment.expires_at) {
+    return false;
+  }
+
+  const expires = Date.parse(
+    payment.expires_at
+  );
+
+  return (
+    Number.isFinite(expires) &&
+    expires <= Date.now()
+  );
 }
 
-async function recoverExpiredCheckout(env, row, payment) {
+async function recoverExpiredCheckout(
+  env,
+  row,
+  payment
+) {
   let session;
 
   try {
     session = await stripeRequest(
       env,
-      '/checkout/sessions/' + encodeURIComponent(payment.checkout_session_id),
+      '/checkout/sessions/' +
+        encodeURIComponent(
+          payment.checkout_session_id
+        ),
       'GET'
     );
   } catch {
-    fail(502, 'Stripe could not check this payment. Please try again.');
+    fail(
+      502,
+      'Stripe could not check this payment. Please try again.'
+    );
   }
 
-  if (session.payment_status === 'paid' || session.status === 'complete') {
+  if (
+    session.payment_status === 'paid' ||
+    session.status === 'complete'
+  ) {
     return 'paid';
   }
 
   if (session.status !== 'expired') {
-    if (session.url && validCheckoutUrl(session.url)) {
+    if (
+      session.url &&
+      validCheckoutUrl(session.url)
+    ) {
       await env.DB
         .prepare(
-          `UPDATE payments SET checkout_url = ?, expires_at = ?, updated_at = ?
-          WHERE id = ? AND status = 'pending'`
+          `UPDATE payments
+          SET
+            checkout_url = ?,
+            expires_at = ?,
+            updated_at = ?
+          WHERE id = ?
+            AND status = 'pending'`
         )
         .bind(
           session.url,
-          stripeExpiry(session.expires_at),
+          stripeExpiry(
+            session.expires_at
+          ),
           now(),
           payment.id
         )
         .run();
+
       return 'open';
     }
 
-    fail(409, 'Payment is still being checked. Reload this reveal shortly.');
+    fail(
+      409,
+      'Payment is still being checked. Reload this reveal shortly.'
+    );
   }
 
   const timestamp = now();
+
   await env.DB.batch([
     env.DB
       .prepare(
-        `UPDATE payments SET status = 'expired', updated_at = ?
-        WHERE id = ? AND reveal_id = ? AND status = 'pending'`
+        `UPDATE payments
+        SET
+          status = 'expired',
+          updated_at = ?
+        WHERE id = ?
+          AND reveal_id = ?
+          AND status = 'pending'`
       )
-      .bind(timestamp, payment.id, row.id),
+      .bind(
+        timestamp,
+        payment.id,
+        row.id
+      ),
+
     env.DB
       .prepare(
-        `UPDATE reveals SET status = 'confirmed', updated_at = ?
-        WHERE id = ? AND status = 'checkout'
+        `UPDATE reveals
+        SET
+          status = 'confirmed',
+          updated_at = ?
+        WHERE id = ?
+          AND status = 'checkout'
           AND NOT EXISTS (
-            SELECT 1 FROM payments
-            WHERE reveal_id = ? AND status IN ('pending', 'paid')
+            SELECT 1
+            FROM payments
+            WHERE reveal_id = ?
+              AND status IN ('pending', 'paid')
           )`
       )
-      .bind(timestamp, row.id, row.id)
+      .bind(
+        timestamp,
+        row.id,
+        row.id
+      )
   ]);
 
   return 'expired';
 }
 
-async function createStripeCheckout(request, env, row, payment) {
-  const pageUrl = new URL('/reveal.html', request.url);
-  pageUrl.searchParams.set('id', row.id);
-  pageUrl.searchParams.set('payment', 'success');
+async function createStripeCheckout(
+  request,
+  env,
+  row,
+  payment
+) {
+  const pageUrl = new URL(
+    '/reveal.html',
+    request.url
+  );
 
-  const cancelUrl = new URL('/reveal.html', request.url);
-  cancelUrl.searchParams.set('id', row.id);
-  cancelUrl.searchParams.set('payment', 'cancelled');
+  pageUrl.searchParams.set(
+    'id',
+    row.id
+  );
 
-  const expiresAt = Math.floor(Date.now() / 1000) + 60 * 60;
+  pageUrl.searchParams.set(
+    'payment',
+    'success'
+  );
+
+  const cancelUrl = new URL(
+    '/reveal.html',
+    request.url
+  );
+
+  cancelUrl.searchParams.set(
+    'id',
+    row.id
+  );
+
+  cancelUrl.searchParams.set(
+    'payment',
+    'cancelled'
+  );
+
+  const expiresAt =
+    Math.floor(Date.now() / 1000) +
+    60 * 60;
+
   const form = new URLSearchParams();
+
   form.set('mode', 'payment');
-  form.set('success_url', pageUrl.toString());
-  form.set('cancel_url', cancelUrl.toString());
-  form.set('client_reference_id', row.id);
-  form.set('line_items[0][price]', String(env.STRIPE_PRICE_ID));
-  form.set('line_items[0][quantity]', '1');
+
+  form.set(
+    'success_url',
+    pageUrl.toString()
+  );
+
+  form.set(
+    'cancel_url',
+    cancelUrl.toString()
+  );
+
+  form.set(
+    'client_reference_id',
+    row.id
+  );
+
+  form.set(
+    'line_items[0][price]',
+    String(env.STRIPE_PRICE_ID)
+  );
+
+  form.set(
+    'line_items[0][quantity]',
+    '1'
+  );
+
   form.set('locale', 'en-GB');
   form.set('submit_type', 'pay');
-  form.set('expires_at', String(expiresAt));
-  form.set('metadata[integration]', 'reveal-mvp');
-  form.set('metadata[reveal_id]', row.id);
-  form.set('metadata[payment_id]', payment.id);
-  form.set('metadata[price_id]', String(env.STRIPE_PRICE_ID));
-  form.set('metadata[revision]', String(row.revision));
-  form.set('payment_intent_data[metadata][integration]', 'reveal-mvp');
-  form.set('payment_intent_data[metadata][reveal_id]', row.id);
-  form.set('payment_intent_data[metadata][payment_id]', payment.id);
+
+  form.set(
+    'billing_address_collection',
+    'required'
+  );
+
+  form.set(
+    'expires_at',
+    String(expiresAt)
+  );
+
+  form.set(
+    'metadata[integration]',
+    'reveal-mvp'
+  );
+
+  form.set(
+    'metadata[reveal_id]',
+    row.id
+  );
+
+  form.set(
+    'metadata[payment_id]',
+    payment.id
+  );
+
+  form.set(
+    'metadata[price_id]',
+    String(env.STRIPE_PRICE_ID)
+  );
+
+  form.set(
+    'metadata[revision]',
+    String(row.revision)
+  );
+
+  form.set(
+    'payment_intent_data[metadata][integration]',
+    'reveal-mvp'
+  );
+
+  form.set(
+    'payment_intent_data[metadata][reveal_id]',
+    row.id
+  );
+
+  form.set(
+    'payment_intent_data[metadata][payment_id]',
+    payment.id
+  );
 
   let session;
 
@@ -1033,11 +1510,21 @@ async function createStripeCheckout(request, env, row, payment) {
       'reveal-checkout-' + payment.id
     );
   } catch (error) {
-    if (error instanceof StripeApiError && !error.retryable) {
-      await failPaymentAttempt(env, row.id, payment.id);
+    if (
+      error instanceof StripeApiError &&
+      !error.retryable
+    ) {
+      await failPaymentAttempt(
+        env,
+        row.id,
+        payment.id
+      );
     }
 
-    fail(502, 'Stripe could not start checkout. Please try again.');
+    fail(
+      502,
+      'Stripe could not start checkout. Please try again.'
+    );
   }
 
   const valid =
@@ -1049,14 +1536,22 @@ async function createStripeCheckout(request, env, row, payment) {
     session.payment_status === 'unpaid' &&
     validStripeAmounts(session) &&
     session.currency === STRIPE_CURRENCY &&
-    Boolean(session.livemode) === stripeLiveMode(env);
+    Boolean(session.livemode) ===
+      stripeLiveMode(env);
 
   if (!valid) {
-    if (typeof session.id === 'string' && session.id.startsWith('cs_')) {
+    if (
+      typeof session.id === 'string' &&
+      session.id.startsWith('cs_')
+    ) {
       try {
         await stripeRequest(
           env,
-          '/checkout/sessions/' + encodeURIComponent(session.id) + '/expire',
+          '/checkout/sessions/' +
+            encodeURIComponent(
+              session.id
+            ) +
+            '/expire',
           'POST'
         );
       } catch {
@@ -1064,22 +1559,37 @@ async function createStripeCheckout(request, env, row, payment) {
       }
     }
 
-    await failPaymentAttempt(env, row.id, payment.id);
-    fail(502, 'Stripe returned an unexpected checkout. Please try again.');
+    await failPaymentAttempt(
+      env,
+      row.id,
+      payment.id
+    );
+
+    fail(
+      502,
+      'Stripe returned an unexpected checkout. Please try again.'
+    );
   }
 
   const result = await env.DB
     .prepare(
       `UPDATE payments
-      SET checkout_session_id = ?, checkout_url = ?, expires_at = ?,
-          updated_at = ?
-      WHERE id = ? AND reveal_id = ? AND status = 'pending'
+      SET
+        checkout_session_id = ?,
+        checkout_url = ?,
+        expires_at = ?,
+        updated_at = ?
+      WHERE id = ?
+        AND reveal_id = ?
+        AND status = 'pending'
         AND checkout_session_id IS NULL`
     )
     .bind(
       session.id,
       session.url,
-      stripeExpiry(session.expires_at),
+      stripeExpiry(
+        session.expires_at
+      ),
       now(),
       payment.id,
       row.id
@@ -1088,23 +1598,32 @@ async function createStripeCheckout(request, env, row, payment) {
 
   if (result.meta.changes !== 1) {
     const current = await env.DB
-      .prepare('SELECT * FROM payments WHERE id = ?')
+      .prepare(
+        'SELECT * FROM payments WHERE id = ?'
+      )
       .bind(payment.id)
       .first();
 
     if (
       current?.status === 'pending' &&
-      current.checkout_session_id === session.id &&
-      validCheckoutUrl(current.checkout_url)
+      current.checkout_session_id ===
+        session.id &&
+      validCheckoutUrl(
+        current.checkout_url
+      )
     ) {
       return json({
         success: true,
         status: 'checkout',
-        checkoutUrl: current.checkout_url
+        checkoutUrl:
+          current.checkout_url
       });
     }
 
-    fail(409, 'The payment state changed. Reload this reveal.');
+    fail(
+      409,
+      'The payment state changed. Reload this reveal.'
+    );
   }
 
   return json({
@@ -1115,17 +1634,29 @@ async function createStripeCheckout(request, env, row, payment) {
 }
 
 function stripeExpiry(value) {
-  return Number.isInteger(value) && value > 0
-    ? new Date(value * 1000).toISOString()
+  return (
+    Number.isInteger(value) &&
+    value > 0
+  )
+    ? new Date(
+        value * 1000
+      ).toISOString()
     : null;
 }
 
 function validCheckoutUrl(value) {
-  if (typeof value !== 'string') return false;
+  if (typeof value !== 'string') {
+    return false;
+  }
 
   try {
     const url = new URL(value);
-    return url.protocol === 'https:' && url.hostname === 'checkout.stripe.com';
+
+    return (
+      url.protocol === 'https:' &&
+      url.hostname ===
+        'checkout.stripe.com'
+    );
   } catch {
     return false;
   }
@@ -1133,34 +1664,64 @@ function validCheckoutUrl(value) {
 
 function validStripeAmounts(session) {
   return (
-    Number.isInteger(session.amount_subtotal) &&
-    session.amount_subtotal === STRIPE_AMOUNT_MINOR &&
-    Number.isInteger(session.amount_total) &&
-    session.amount_total >= session.amount_subtotal
+    Number.isInteger(
+      session.amount_subtotal
+    ) &&
+    session.amount_subtotal ===
+      STRIPE_AMOUNT_MINOR &&
+    Number.isInteger(
+      session.amount_total
+    ) &&
+    session.amount_total >=
+      session.amount_subtotal
   );
 }
 
-async function failPaymentAttempt(env, revealId, paymentId) {
+async function failPaymentAttempt(
+  env,
+  revealId,
+  paymentId
+) {
   const timestamp = now();
 
   await env.DB.batch([
     env.DB
       .prepare(
-        `UPDATE payments SET status = 'failed', updated_at = ?
-        WHERE id = ? AND reveal_id = ? AND status = 'pending'
+        `UPDATE payments
+        SET
+          status = 'failed',
+          updated_at = ?
+        WHERE id = ?
+          AND reveal_id = ?
+          AND status = 'pending'
           AND checkout_session_id IS NULL`
       )
-      .bind(timestamp, paymentId, revealId),
+      .bind(
+        timestamp,
+        paymentId,
+        revealId
+      ),
+
     env.DB
       .prepare(
-        `UPDATE reveals SET status = 'confirmed', updated_at = ?
-        WHERE id = ? AND status = 'checkout'
+        `UPDATE reveals
+        SET
+          status = 'confirmed',
+          updated_at = ?
+        WHERE id = ?
+          AND status = 'checkout'
           AND NOT EXISTS (
-            SELECT 1 FROM payments
-            WHERE reveal_id = ? AND status IN ('pending', 'paid')
+            SELECT 1
+            FROM payments
+            WHERE reveal_id = ?
+              AND status IN ('pending', 'paid')
           )`
       )
-      .bind(timestamp, revealId, revealId)
+      .bind(
+        timestamp,
+        revealId,
+        revealId
+      )
   ]);
 }
 
@@ -1172,27 +1733,45 @@ async function stripeRequest(
   idempotencyKey = null
 ) {
   const headers = new Headers({
-    Authorization: 'Bearer ' + String(env.STRIPE_SECRET_KEY)
+    Authorization:
+      'Bearer ' +
+      String(env.STRIPE_SECRET_KEY)
   });
 
   if (form) {
-    headers.set('Content-Type', 'application/x-www-form-urlencoded');
+    headers.set(
+      'Content-Type',
+      'application/x-www-form-urlencoded'
+    );
   }
 
   if (idempotencyKey) {
-    headers.set('Idempotency-Key', idempotencyKey);
+    headers.set(
+      'Idempotency-Key',
+      idempotencyKey
+    );
   }
 
   let response;
 
   try {
-    response = await fetch(STRIPE_API + path, {
-      method,
-      headers,
-      ...(form ? {body: form.toString()} : {})
-    });
+    response = await fetch(
+      STRIPE_API + path,
+      {
+        method,
+        headers,
+        ...(form
+          ? {
+              body: form.toString()
+            }
+          : {})
+      }
+    );
   } catch {
-    throw new StripeApiError(0, true);
+    throw new StripeApiError(
+      0,
+      true
+    );
   }
 
   let data;
@@ -1200,49 +1779,88 @@ async function stripeRequest(
   try {
     data = await response.json();
   } catch {
-    throw new StripeApiError(response.status, response.status >= 500);
+    throw new StripeApiError(
+      response.status,
+      response.status >= 500
+    );
   }
 
   if (!response.ok) {
     throw new StripeApiError(
       response.status,
-      response.status === 429 || response.status >= 500
+      response.status === 429 ||
+        response.status >= 500
     );
   }
 
   return data;
 }
 
-async function stripeWebhook(request, env) {
+async function stripeWebhook(
+  request,
+  env
+) {
   requireStripeSettings(env);
 
-  if (Number(request.headers.get('Content-Length')) > MAX_WEBHOOK_BODY) {
-    fail(413, 'Webhook body is too large.');
+  if (
+    Number(
+      request.headers.get(
+        'Content-Length'
+      )
+    ) > MAX_WEBHOOK_BODY
+  ) {
+    fail(
+      413,
+      'Webhook body is too large.'
+    );
   }
 
-  const body = new Uint8Array(await request.arrayBuffer());
-
-  if (body.byteLength > MAX_WEBHOOK_BODY) {
-    fail(413, 'Webhook body is too large.');
-  }
-
-  const signature = request.headers.get('Stripe-Signature');
-  const validSignature = await verifyStripeSignature(
-    body,
-    signature,
-    String(env.STRIPE_WEBHOOK_SECRET)
+  const body = new Uint8Array(
+    await request.arrayBuffer()
   );
 
+  if (
+    body.byteLength >
+    MAX_WEBHOOK_BODY
+  ) {
+    fail(
+      413,
+      'Webhook body is too large.'
+    );
+  }
+
+  const signature =
+    request.headers.get(
+      'Stripe-Signature'
+    );
+
+  const validSignature =
+    await verifyStripeSignature(
+      body,
+      signature,
+      String(
+        env.STRIPE_WEBHOOK_SECRET
+      )
+    );
+
   if (!validSignature) {
-    fail(400, 'Invalid webhook signature.');
+    fail(
+      400,
+      'Invalid webhook signature.'
+    );
   }
 
   let event;
 
   try {
-    event = JSON.parse(new TextDecoder().decode(body));
+    event = JSON.parse(
+      new TextDecoder().decode(body)
+    );
   } catch {
-    fail(400, 'Invalid webhook body.');
+    fail(
+      400,
+      'Invalid webhook body.'
+    );
   }
 
   if (
@@ -1250,63 +1868,108 @@ async function stripeWebhook(request, env) {
     typeof event.id !== 'string' ||
     !event.id.startsWith('evt_') ||
     typeof event.type !== 'string' ||
-    Boolean(event.livemode) !== stripeLiveMode(env)
+    Boolean(event.livemode) !==
+      stripeLiveMode(env)
   ) {
-    fail(400, 'Invalid webhook event.');
+    fail(
+      400,
+      'Invalid webhook event.'
+    );
   }
 
-  if (!HANDLED_STRIPE_EVENTS.has(event.type)) {
-    return json({received: true});
+  if (
+    !HANDLED_STRIPE_EVENTS.has(
+      event.type
+    )
+  ) {
+    return json({
+      received: true
+    });
   }
 
-  const session = event.data?.object;
+  const session =
+    event.data?.object;
 
   if (
     !session ||
-    session.object !== 'checkout.session' ||
-    session.metadata?.integration !== 'reveal-mvp' ||
-    session.metadata?.price_id !== String(env.STRIPE_PRICE_ID)
+    session.object !==
+      'checkout.session' ||
+    session.metadata?.integration !==
+      'reveal-mvp' ||
+    session.metadata?.price_id !==
+      String(env.STRIPE_PRICE_ID)
   ) {
-    // The same Stripe account may legitimately use Checkout for another app.
-    return json({received: true});
+    return json({
+      received: true
+    });
   }
 
-  const revealId = session.metadata?.reveal_id;
-  const paymentId = session.metadata?.payment_id;
+  const revealId =
+    session.metadata?.reveal_id;
+
+  const paymentId =
+    session.metadata?.payment_id;
 
   if (
     typeof revealId !== 'string' ||
     typeof paymentId !== 'string' ||
-    session.client_reference_id !== revealId ||
+    session.client_reference_id !==
+      revealId ||
     typeof session.id !== 'string' ||
     !session.id.startsWith('cs_')
   ) {
-    fail(400, 'Invalid checkout metadata.');
+    fail(
+      400,
+      'Invalid checkout metadata.'
+    );
   }
 
   const payment = await env.DB
     .prepare(
-      `SELECT * FROM payments
-      WHERE id = ? AND reveal_id = ? AND provider = 'stripe'`
+      `SELECT *
+      FROM payments
+      WHERE id = ?
+        AND reveal_id = ?
+        AND provider = 'stripe'`
     )
-    .bind(paymentId, revealId)
+    .bind(
+      paymentId,
+      revealId
+    )
     .first();
 
   if (
     !payment ||
-    payment.checkout_session_id !== session.id ||
-    payment.amount_minor !== STRIPE_AMOUNT_MINOR ||
-    payment.currency !== STRIPE_CURRENCY
+    payment.checkout_session_id !==
+      session.id ||
+    payment.amount_minor !==
+      STRIPE_AMOUNT_MINOR ||
+    payment.currency !==
+      STRIPE_CURRENCY
   ) {
-    fail(503, 'Webhook could not be reconciled.');
+    fail(
+      503,
+      'Webhook could not be reconciled.'
+    );
   }
 
   const timestamp = now();
+
   const eventStatement = env.DB
     .prepare(
       `INSERT OR IGNORE INTO stripe_events (
-        id, event_type, livemode, received_at, processed_at
-      ) VALUES (?, ?, ?, ?, ?)`
+        id,
+        event_type,
+        livemode,
+        received_at,
+        processed_at
+      ) VALUES (
+        ?,
+        ?,
+        ?,
+        ?,
+        ?
+      )`
     )
     .bind(
       event.id,
@@ -1317,16 +1980,23 @@ async function stripeWebhook(request, env) {
     );
 
   const isSuccessful =
-    (event.type === 'checkout.session.completed' ||
-      event.type === 'checkout.session.async_payment_succeeded') &&
-    session.payment_status === 'paid' &&
+    (
+      event.type ===
+        'checkout.session.completed' ||
+      event.type ===
+        'checkout.session.async_payment_succeeded'
+    ) &&
+    session.payment_status ===
+      'paid' &&
     validStripeAmounts(session) &&
-    session.currency === STRIPE_CURRENCY &&
+    session.currency ===
+      STRIPE_CURRENCY &&
     session.mode === 'payment';
 
   if (isSuccessful) {
     const paymentIntent =
-      typeof session.payment_intent === 'string'
+      typeof session.payment_intent ===
+      'string'
         ? session.payment_intent
         : null;
 
@@ -1334,10 +2004,21 @@ async function stripeWebhook(request, env) {
       env.DB
         .prepare(
           `UPDATE payments
-          SET status = 'paid', payment_intent_id = ?, paid_at = COALESCE(paid_at, ?),
-              updated_at = ?
-          WHERE id = ? AND reveal_id = ? AND checkout_session_id = ?
-            AND status IN ('pending', 'paid')`
+          SET
+            status = 'paid',
+            payment_intent_id = ?,
+            paid_at = COALESCE(
+              paid_at,
+              ?
+            ),
+            updated_at = ?
+          WHERE id = ?
+            AND reveal_id = ?
+            AND checkout_session_id = ?
+            AND status IN (
+              'pending',
+              'paid'
+            )`
         )
         .bind(
           paymentIntent,
@@ -1347,15 +2028,31 @@ async function stripeWebhook(request, env) {
           revealId,
           session.id
         ),
+
       env.DB
         .prepare(
           `UPDATE reveals
-          SET status = 'paid', paid_at = COALESCE(paid_at, ?), updated_at = ?
-          WHERE id = ? AND status IN ('checkout', 'paid')
+          SET
+            status = 'paid',
+            paid_at = COALESCE(
+              paid_at,
+              ?
+            ),
+            updated_at = ?
+          WHERE id = ?
+            AND status IN (
+              'checkout',
+              'paid'
+            )
             AND EXISTS (
-              SELECT 1 FROM payments
-              WHERE id = ? AND reveal_id = ? AND checkout_session_id = ?
-                AND status = 'paid' AND amount_minor = ? AND currency = ?
+              SELECT 1
+              FROM payments
+              WHERE id = ?
+                AND reveal_id = ?
+                AND checkout_session_id = ?
+                AND status = 'paid'
+                AND amount_minor = ?
+                AND currency = ?
             )`
         )
         .bind(
@@ -1368,162 +2065,337 @@ async function stripeWebhook(request, env) {
           STRIPE_AMOUNT_MINOR,
           STRIPE_CURRENCY
         ),
+
       eventStatement
     ]);
 
-    return json({received: true});
+    return json({
+      received: true
+    });
   }
 
   if (
-    event.type === 'checkout.session.expired' ||
-    event.type === 'checkout.session.async_payment_failed'
+    event.type ===
+      'checkout.session.expired' ||
+    event.type ===
+      'checkout.session.async_payment_failed'
   ) {
     const nextStatus =
-      event.type === 'checkout.session.expired' ? 'expired' : 'failed';
+      event.type ===
+      'checkout.session.expired'
+        ? 'expired'
+        : 'failed';
 
     await env.DB.batch([
       env.DB
         .prepare(
-          `UPDATE payments SET status = ?, updated_at = ?
-          WHERE id = ? AND reveal_id = ? AND checkout_session_id = ?
+          `UPDATE payments
+          SET
+            status = ?,
+            updated_at = ?
+          WHERE id = ?
+            AND reveal_id = ?
+            AND checkout_session_id = ?
             AND status = 'pending'`
         )
-        .bind(nextStatus, timestamp, paymentId, revealId, session.id),
+        .bind(
+          nextStatus,
+          timestamp,
+          paymentId,
+          revealId,
+          session.id
+        ),
+
       env.DB
         .prepare(
-          `UPDATE reveals SET status = 'confirmed', updated_at = ?
-          WHERE id = ? AND status = 'checkout'
+          `UPDATE reveals
+          SET
+            status = 'confirmed',
+            updated_at = ?
+          WHERE id = ?
+            AND status = 'checkout'
             AND NOT EXISTS (
-              SELECT 1 FROM payments
-              WHERE reveal_id = ? AND status IN ('pending', 'paid')
+              SELECT 1
+              FROM payments
+              WHERE reveal_id = ?
+                AND status IN (
+                  'pending',
+                  'paid'
+                )
             )`
         )
-        .bind(timestamp, revealId, revealId),
+        .bind(
+          timestamp,
+          revealId,
+          revealId
+        ),
+
       eventStatement
     ]);
 
-    return json({received: true});
+    return json({
+      received: true
+    });
   }
 
-  // A completed session can be unpaid for delayed payment methods. It remains
-  // locked until Stripe later sends async_payment_succeeded.
   await eventStatement.run();
-  return json({received: true});
+
+  return json({
+    received: true
+  });
 }
 
-async function verifyStripeSignature(body, header, secret) {
-  if (!header || !secret) return false;
+async function verifyStripeSignature(
+  body,
+  header,
+  secret
+) {
+  if (!header || !secret) {
+    return false;
+  }
 
   const timestamps = [];
   const signatures = [];
 
-  for (const part of header.split(',')) {
-    const separator = part.indexOf('=');
-    if (separator < 1) continue;
-    const key = part.slice(0, separator).trim();
-    const value = part.slice(separator + 1).trim();
-    if (key === 't' && /^\d+$/.test(value)) timestamps.push(Number(value));
-    if (key === 'v1' && /^[a-f0-9]{64}$/i.test(value)) {
-      signatures.push(value.toLowerCase());
+  for (
+    const part of header.split(',')
+  ) {
+    const separator =
+      part.indexOf('=');
+
+    if (separator < 1) {
+      continue;
+    }
+
+    const key = part
+      .slice(0, separator)
+      .trim();
+
+    const value = part
+      .slice(separator + 1)
+      .trim();
+
+    if (
+      key === 't' &&
+      /^\d+$/.test(value)
+    ) {
+      timestamps.push(
+        Number(value)
+      );
+    }
+
+    if (
+      key === 'v1' &&
+      /^[a-f0-9]{64}$/i.test(value)
+    ) {
+      signatures.push(
+        value.toLowerCase()
+      );
     }
   }
 
-  if (timestamps.length === 0 || signatures.length === 0) return false;
-
-  const timestamp = timestamps[0];
-  const current = Math.floor(Date.now() / 1000);
-
-  if (Math.abs(current - timestamp) > WEBHOOK_TOLERANCE_SECONDS) {
+  if (
+    timestamps.length === 0 ||
+    signatures.length === 0
+  ) {
     return false;
   }
 
-  const prefix = new TextEncoder().encode(String(timestamp) + '.');
-  const signed = new Uint8Array(prefix.length + body.length);
+  const timestamp = timestamps[0];
+
+  const current =
+    Math.floor(
+      Date.now() / 1000
+    );
+
+  if (
+    Math.abs(
+      current - timestamp
+    ) >
+    WEBHOOK_TOLERANCE_SECONDS
+  ) {
+    return false;
+  }
+
+  const prefix =
+    new TextEncoder().encode(
+      String(timestamp) + '.'
+    );
+
+  const signed =
+    new Uint8Array(
+      prefix.length + body.length
+    );
+
   signed.set(prefix, 0);
-  signed.set(body, prefix.length);
-
-  const key = await crypto.subtle.importKey(
-    'raw',
-    new TextEncoder().encode(secret),
-    {name: 'HMAC', hash: 'SHA-256'},
-    false,
-    ['sign']
+  signed.set(
+    body,
+    prefix.length
   );
 
-  const digest = new Uint8Array(
-    await crypto.subtle.sign('HMAC', key, signed)
+  const key =
+    await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(
+        secret
+      ),
+      {
+        name: 'HMAC',
+        hash: 'SHA-256'
+      },
+      false,
+      ['sign']
+    );
+
+  const digest =
+    new Uint8Array(
+      await crypto.subtle.sign(
+        'HMAC',
+        key,
+        signed
+      )
+    );
+
+  const expected =
+    Array.from(
+      digest,
+      byte =>
+        byte
+          .toString(16)
+          .padStart(2, '0')
+    ).join('');
+
+  return signatures.some(
+    signature =>
+      constantTimeEqual(
+        expected,
+        signature
+      )
   );
-
-  const expected = Array.from(
-    digest,
-    byte => byte.toString(16).padStart(2, '0')
-  ).join('');
-
-  return signatures.some(signature => constantTimeEqual(expected, signature));
 }
 
-function constantTimeEqual(left, right) {
-  let difference = left.length ^ right.length;
-  const length = Math.max(left.length, right.length);
+function constantTimeEqual(
+  left,
+  right
+) {
+  let difference =
+    left.length ^ right.length;
 
-  for (let index = 0; index < length; index += 1) {
+  const length = Math.max(
+    left.length,
+    right.length
+  );
+
+  for (
+    let index = 0;
+    index < length;
+    index += 1
+  ) {
     difference |=
-      (left.charCodeAt(index) || 0) ^ (right.charCodeAt(index) || 0);
+      (left.charCodeAt(index) || 0) ^
+      (right.charCodeAt(index) || 0);
   }
 
   return difference === 0;
 }
 
-async function imageResponse(env, row) {
+async function imageResponse(
+  env,
+  row
+) {
   if (!row.image_key) {
-    fail(404, 'Image not found.');
+    fail(
+      404,
+      'Image not found.'
+    );
   }
 
-  const object = await env.IMAGES.get(row.image_key);
+  const object =
+    await env.IMAGES.get(
+      row.image_key
+    );
 
   if (!object) {
-    fail(404, 'Image not found.');
+    fail(
+      404,
+      'Image not found.'
+    );
   }
 
-  const headers = new Headers();
-  object.writeHttpMetadata(headers);
+  const headers =
+    new Headers();
+
+  object.writeHttpMetadata(
+    headers
+  );
+
   headers.set(
     'Content-Type',
-    IMAGE_TYPES.has(headers.get('Content-Type'))
+    IMAGE_TYPES.has(
+      headers.get('Content-Type')
+    )
       ? headers.get('Content-Type')
       : 'application/octet-stream'
   );
-  headers.set('Cache-Control', 'private, no-store');
-  headers.set('X-Content-Type-Options', 'nosniff');
-  headers.set('Referrer-Policy', 'no-referrer');
 
-  return new Response(object.body, {headers});
-}
+  headers.set(
+    'Cache-Control',
+    'private, no-store'
+  );
 
-function escapeHtml(value) {
-  return String(value ?? '').replace(
-    /[&<>"']/g,
-    character =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&#39;'
-      })[character]
+  headers.set(
+    'X-Content-Type-Options',
+    'nosniff'
+  );
+
+  headers.set(
+    'Referrer-Policy',
+    'no-referrer'
+  );
+
+  return new Response(
+    object.body,
+    {
+      headers
+    }
   );
 }
 
+function escapeHtml(value) {
+  return String(value ?? '')
+    .replace(
+      /[&<>"']/g,
+      character =>
+        ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          '"': '&quot;',
+          "'": '&#39;'
+        })[character]
+    );
+}
+
 function recipientPage(row) {
-  // Booking URLs and editor credentials are never included in this page.
   const escape = escapeHtml;
   const nonce = randomToken();
+
   const details = [
-    ['When', [row.event_date, row.event_time].filter(Boolean).join(' · ')],
+    [
+      'When',
+      [
+        row.event_date,
+        row.event_time
+      ]
+        .filter(Boolean)
+        .join(' · ')
+    ],
     ['Where', row.venue],
     ['For', row.admit]
   ]
-    .filter(([, value]) => value)
+    .filter(
+      ([, value]) => value
+    )
     .map(
       ([label, value]) =>
         `<dt>${label}</dt><dd>${escape(value)}</dd>`
@@ -1538,22 +2410,108 @@ function recipientPage(row) {
   <meta name="robots" content="noindex,nofollow">
   <title>A surprise for you · Reveal</title>
   <style nonce="${nonce}">
-    *{box-sizing:border-box}
-    body{margin:0;min-height:100svh;padding:24px;display:grid;place-items:center;background:#17152b;color:#f8f5ef;font:18px/1.6 system-ui,sans-serif}
-    main{width:100%;max-width:580px;text-align:center}
-    h1{font-size:clamp(30px,7vw,48px);line-height:1.15;overflow-wrap:anywhere}
-    p,dd{white-space:pre-wrap;overflow-wrap:anywhere}
-    button{min-height:52px;padding:14px 28px;border:0;border-radius:999px;background:#eed7a6;color:#17152b;font:inherit;cursor:pointer}
-    button:focus-visible{outline:3px solid white;outline-offset:5px}
-    .card{padding:28px;background:#26223b;border:1px solid #524666;border-radius:24px;animation:appear .7s ease-out}
-    img{max-width:100%;max-height:400px;object-fit:contain;border-radius:12px}
-    dl{text-align:left}
-    dt{color:#eed7a6;font-size:14px}
-    dd{margin:0 0 14px}
-    small{color:#c1b8d2}
-    [hidden]{display:none}
-    @keyframes appear{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
-    @media(prefers-reduced-motion:reduce){.card{animation:none}}
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100svh;
+      padding: 24px;
+      display: grid;
+      place-items: center;
+      background: #17152b;
+      color: #f8f5ef;
+      font: 18px/1.6 system-ui, sans-serif;
+    }
+
+    main {
+      width: 100%;
+      max-width: 580px;
+      text-align: center;
+    }
+
+    h1 {
+      font-size: clamp(30px, 7vw, 48px);
+      line-height: 1.15;
+      overflow-wrap: anywhere;
+    }
+
+    p,
+    dd {
+      white-space: pre-wrap;
+      overflow-wrap: anywhere;
+    }
+
+    button {
+      min-height: 52px;
+      padding: 14px 28px;
+      border: 0;
+      border-radius: 999px;
+      background: #eed7a6;
+      color: #17152b;
+      font: inherit;
+      cursor: pointer;
+    }
+
+    button:focus-visible {
+      outline: 3px solid white;
+      outline-offset: 5px;
+    }
+
+    .card {
+      padding: 28px;
+      background: #26223b;
+      border: 1px solid #524666;
+      border-radius: 24px;
+      animation: appear 0.7s ease-out;
+    }
+
+    img {
+      max-width: 100%;
+      max-height: 400px;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    dl {
+      text-align: left;
+    }
+
+    dt {
+      color: #eed7a6;
+      font-size: 14px;
+    }
+
+    dd {
+      margin: 0 0 14px;
+    }
+
+    small {
+      color: #c1b8d2;
+    }
+
+    [hidden] {
+      display: none;
+    }
+
+    @keyframes appear {
+      from {
+        opacity: 0;
+        transform: translateY(16px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .card {
+        animation: none;
+      }
+    }
   </style>
 </head>
 <body>
@@ -1564,41 +2522,61 @@ function recipientPage(row) {
       <p>With love from ${escape(row.sender)}</p>
       <button id="open" type="button">Open your surprise</button>
     </section>
+
     <section id="gift" class="card" hidden aria-labelledby="title">
       <small>JUST FOR YOU</small>
       <h1 id="title" tabindex="-1">${escape(row.event_name)}</h1>
+
       ${
         row.image_key
           ? `<img src="/r/${escape(row.public_slug)}/image" alt="Your surprise" loading="lazy">`
           : ''
       }
+
       <p>${escape(row.personal_message)}</p>
       <dl>${details}</dl>
       <p>From ${escape(row.sender)}</p>
       <small>You can return to this link whenever you like.</small>
     </section>
-    <noscript><p>Enable JavaScript to open your surprise.</p></noscript>
+
+    <noscript>
+      <p>Enable JavaScript to open your surprise.</p>
+    </noscript>
   </main>
+
   <script nonce="${nonce}">
-    document.getElementById('open').addEventListener('click',()=>{
-      document.getElementById('intro').hidden=true;
-      document.getElementById('gift').hidden=false;
+    document.getElementById('open').addEventListener('click', () => {
+      document.getElementById('intro').hidden = true;
+      document.getElementById('gift').hidden = false;
       document.getElementById('title').focus();
     });
   </script>
 </body>
 </html>`;
 
-  return new Response(html, {
-    headers: {
-      'Content-Type': 'text/html; charset=utf-8',
-      'Cache-Control': 'private, no-store',
-      'Referrer-Policy': 'no-referrer',
-      'X-Content-Type-Options': 'nosniff',
-      'X-Robots-Tag': 'noindex, nofollow',
-      'Content-Security-Policy':
-        `default-src 'none'; img-src 'self'; style-src 'nonce-${nonce}'; ` +
-        `script-src 'nonce-${nonce}'; base-uri 'none'; frame-ancestors 'none'; form-action 'none'`
+  return new Response(
+    html,
+    {
+      headers: {
+        'Content-Type':
+          'text/html; charset=utf-8',
+        'Cache-Control':
+          'private, no-store',
+        'Referrer-Policy':
+          'no-referrer',
+        'X-Content-Type-Options':
+          'nosniff',
+        'X-Robots-Tag':
+          'noindex, nofollow',
+        'Content-Security-Policy':
+          `default-src 'none'; ` +
+          `img-src 'self'; ` +
+          `style-src 'nonce-${nonce}'; ` +
+          `script-src 'nonce-${nonce}'; ` +
+          `base-uri 'none'; ` +
+          `frame-ancestors 'none'; ` +
+          `form-action 'none'`
+      }
     }
-  });
+  );
 }
