@@ -1,31 +1,27 @@
 {
-  "name": "reveal-mvp",
+  "name": "reveal-stage4b-test",
   "main": "./src/index.js",
   "compatibility_date": "2026-10-12",
-
   "assets": {
     "directory": "./public",
     "binding": "ASSETS",
     "run_worker_first": true
   },
-
   "vars": {
-    "STRIPE_PRICE_ID": "price_1USbNbKEVPKWz2E9zmH0mabR",
-    "STRIPE_LIVE_MODE": "false"
+    "STRIPE_LIVE_MODE": "false",
+    "STAGING_DISABLE_CHECKOUT": "true"
   },
-
   "d1_databases": [
     {
       "binding": "DB",
-      "database_name": "reveal-db",
-      "database_id": "94356ca3-17f9-4b9a-9f5c-f103c13b9173"
+      "database_name": "revealstage4b",
+      "database_id": "fbc9687a-642b-42e6-ba8d-56430867e857"
     }
   ],
-
   "r2_buckets": [
     {
       "binding": "IMAGES",
-      "bucket_name": "reveal-images"
+      "bucket_name": "reveal-images-stage4b"
     }
   ]
 }
