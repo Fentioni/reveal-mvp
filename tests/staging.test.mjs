@@ -38,3 +38,38 @@ test('staging blocks payment webhook handling', async () => {
   assert.equal(response.status, 503);
   assert.match(await response.text(), /disabled/);
 });
+
+test('product, category and interactive preview pages preserve their browser paths', async () => {
+  const internalPaths = [];
+  const env = {
+    STAGING_DISABLE_CHECKOUT: 'true',
+    ASSETS: {
+      async fetch(request) {
+        const internalUrl = new URL(request.url);
+        internalPaths.push(internalUrl.pathname);
+        if (internalUrl.pathname === '/storefront.html') {
+          return Response.redirect('https://reveal-stage4b-test.example/storefront', 307);
+        }
+        assert.equal(internalUrl.pathname, '/storefront');
+        return new Response('<!doctype html><title>Reveal</title>', {
+          status: 200,
+          headers: {'content-type': 'text/html; charset=utf-8'},
+        });
+      },
+    },
+  };
+
+  for (const route of [
+    '/products/ticket-reveal/',
+    '/products/reveal-quest/',
+    '/categories/gifts-surprises/',
+    '/three-question-quiz/',
+    '/reveal-quest/',
+  ]) {
+    const response = await worker.fetch(req(route), env);
+    assert.equal(response.status, 200, 'Route must not redirect: ' + route);
+    assert.equal(response.headers.get('location'), null);
+    assert.match(await response.text(), /<title>Reveal<\\/title>/);
+  }
+  assert.deepEqual(internalPaths, Array(5).fill('/storefront'));
+});
