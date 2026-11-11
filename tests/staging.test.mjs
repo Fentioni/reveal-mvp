@@ -69,7 +69,7 @@ test('product, category and interactive preview pages preserve their browser pat
     const response = await worker.fetch(req(route), env);
     assert.equal(response.status, 200, 'Route must not redirect: ' + route);
     assert.equal(response.headers.get('location'), null);
-    assert.match(await response.text(), /<title>Reveal<\\/title>/);
+    assert.ok((await response.text()).includes('<title>Reveal</title>'));
   }
   assert.deepEqual(internalPaths, Array(5).fill('/storefront'));
 });
