@@ -31,7 +31,10 @@ export default {
       if (request.method !== 'GET' && request.method !== 'HEAD') {
         return textError('Method not allowed.', 405);
       }
-      return env.ASSETS.fetch(new Request(new URL('/storefront.html', url), request));
+      // Fetch the canonical extensionless asset URL. Cloudflare's default HTML
+      // handling redirects /storefront.html to /storefront, which otherwise
+      // loses the original category or product pathname in the browser.
+      return env.ASSETS.fetch(new Request(new URL('/storefront', url), request));
     }
 
     // The previously established ticket creator is the only Stage 4B product
