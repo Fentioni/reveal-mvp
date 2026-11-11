@@ -27,7 +27,7 @@ for row in con.execute('SELECT id,slug,name,description,status FROM products'):
    'themes':[dict(r) for r in con.execute('SELECT t.slug,t.name,pt.is_default AS isDefault FROM product_themes pt JOIN themes t ON t.id=pt.theme_id WHERE pt.product_id=?',(slug,))],
    'price':next((dict(r) for r in con.execute('SELECT currency,amount_minor,tax_behavior FROM product_prices WHERE product_id=?',(slug,))),None),
    'categories':[dict(r) for r in con.execute('SELECT c.name,c.slug FROM category_products cp JOIN categories c ON c.id=cp.category_id WHERE cp.product_id=?',(slug,))],
-   'canCreate':slug=='ticket-concert-reveal',
+   'canCreate':slug=='ticket-reveal' and row['status']=='active',
    'checkoutNote':'The final payable amount, local currency and applicable taxes are confirmed at Stripe Checkout.'}
 html=(R/'assets/storefront.html').read_text()
 html=re.sub(r'<link[^>]*storefront\.css[^>]*>','',html)
@@ -51,8 +51,9 @@ with sync_playwright() as playwright:
     assert page.locator('h1').count()==1
     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
     page.screenshot(path=f'/mnt/data/reveal_stage4b_{label}.png',full_page=True)
-    page.evaluate("async () => await productPage('ticket-concert-reveal')")
-    assert page.get_by_text('Base price: £1.99',exact=False).count()==1
+    page.evaluate("async () => await productPage('ticket-reveal')")
+    assert page.get_by_text('This product is not available to purchase yet.').count()==1
+    assert page.locator('a[href="/create/ticket-reveal"]').count()==0
     assert page.get_by_text('£2.39').count()==0
     assert page.evaluate('document.documentElement.scrollWidth <= window.innerWidth')
     page.screenshot(path=f'/mnt/data/reveal_stage4b_product_{label}.png',full_page=True)
