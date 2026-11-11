@@ -80,7 +80,7 @@ export async function catalogueResponse(request, env) {
       const price = await prices(env.DB,product.id,currency);
       response = answer({product:{slug:product.slug,name:product.name,description:product.description,status:product.status},
         categories,...configured,price,
-        canCreate:product.status==='active' && product.slug==='ticket-concert-reveal',
+        canCreate:product.status==='active' && product.slug==='ticket-reveal',
         checkoutNote:'Prices shown are base prices. The final payable total, local currency and applicable taxes are confirmed securely at Stripe Checkout.'});
     } else {
       response = answer({error:'Catalogue route not found'},404);
