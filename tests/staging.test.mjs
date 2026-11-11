@@ -1,0 +1,40 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import path from 'node:path';
+import worker from '../src/index.js';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const config = JSON.parse(fs.readFileSync(path.join(root, 'wrangler.jsonc'), 'utf8'));
+
+const req = (route, method = 'GET') =>
+  new Request('https://reveal-stage4b-test.example' + route, {method});
+
+test('staging Wrangler configuration uses isolated Worker and resources', () => {
+  assert.equal(config.name, 'reveal-stage4b-test');
+  assert.equal(config.d1_databases[0].database_name, 'revealstage4b');
+  assert.equal(config.d1_databases[0].database_id, 'fbc9687a-642b-42e6-ba8d-56430867e857');
+  assert.equal(config.r2_buckets[0].bucket_name, 'reveal-images-stage4b');
+  assert.equal(config.vars.STRIPE_LIVE_MODE, 'false');
+  assert.equal(config.vars.STAGING_DISABLE_CHECKOUT, 'true');
+  assert.equal(config.vars.STRIPE_PRICE_ID, undefined);
+});
+
+test('staging blocks payment initiation at legacy checkout path', async () => {
+  const response = await worker.fetch(
+    req('/api/reveals/a-test-reveal/checkout', 'POST'),
+    {STAGING_DISABLE_CHECKOUT: 'true'},
+  );
+  assert.equal(response.status, 503);
+  assert.match(await response.text(), /disabled/);
+});
+
+test('staging blocks payment webhook handling', async () => {
+  const response = await worker.fetch(
+    req('/api/webhooks/stripe', 'POST'),
+    {STAGING_DISABLE_CHECKOUT: 'true'},
+  );
+  assert.equal(response.status, 503);
+  assert.match(await response.text(), /disabled/);
+});
