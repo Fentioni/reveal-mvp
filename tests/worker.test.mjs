@@ -1,9 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {catalogueResponse} from '../src/catalogue.js';
+import worker from '../src/index.js';
 const cats=[{slug:'gifts-surprises',name:'Gifts & Surprises',description:null}];
-const prod={id:'ticket-concert-reveal',slug:'ticket-concert-reveal',name:'Ticket & Concert Reveal',description:'A surprise',status:'active'};
-function fakeDB() {return {
+const prod={id:'ticket-reveal',slug:'ticket-reveal',name:'Ticket & Concert Reveal',description:'A surprise',status:'active'};
+function fakeDB(status='active') {return {
   prepare(sql) {return {
     bind(...args){this.args=args;return this},
     async all() {
@@ -16,8 +17,9 @@ function fakeDB() {return {
       return {results:[]};
     },
     async first() {
+      if(sql.includes('FROM products WHERE id = ? AND slug = ?')) return this.args[0]==='ticket-reveal' && this.args[1]==='ticket-reveal' ? {status} : null;
       if(sql.includes('FROM categories WHERE active=1 AND slug=')) return this.args[0]==='gifts-surprises'?cats[0]:null;
-      if(sql.includes('FROM products WHERE slug=')) return this.args[0]===prod.slug?prod:null;
+      if(sql.includes('FROM products WHERE slug=')) return this.args[0]===prod.slug?{...prod,status}:null;
       return null;
     }
   }}
@@ -26,11 +28,11 @@ const q=(route, method='GET')=>new Request('https://reveal.test'+route,{method})
 test('catalogue returns 11-compatible category and linked product arrays',async()=>{
   const r=await catalogueResponse(q('/api/catalogue'),{DB:fakeDB()});
   const x=await r.json();assert.equal(r.status,200);assert.equal(x.categories[0].slug,'gifts-surprises');
-  assert.equal(x.products[0].slug,'ticket-concert-reveal');
+  assert.equal(x.products[0].slug,'ticket-reveal');
   assert.match(x.checkoutNote,/Stripe Checkout/);
 });
 test('product page exposes only configured base price, not tax-inclusive guessed total',async()=>{
-  const r=await catalogueResponse(q('/api/catalogue/products/ticket-concert-reveal'),{DB:fakeDB()});
+  const r=await catalogueResponse(q('/api/catalogue/products/ticket-reveal'),{DB:fakeDB()});
   const x=await r.json();assert.equal(x.price.amount_minor,199);assert.equal(x.canCreate,true);
   assert.equal(x.mechanics[0].slug,'cinematic');assert.doesNotMatch(JSON.stringify(x),/£2\.39/);
 });
@@ -52,4 +54,28 @@ test('unavailable DB is a controlled 503',async()=>{
 test('HEAD API omits body',async()=>{
   const r=await catalogueResponse(q('/api/catalogue','HEAD'),{DB:fakeDB()});
   assert.equal(r.body,null);assert.equal(r.status,200)
+});
+
+test('draft ticket stays unavailable in catalogue',async()=>{
+  const r=await catalogueResponse(q('/api/catalogue/products/ticket-reveal'),{DB:fakeDB('draft')});
+  const x=await r.json();
+  assert.equal(x.product.status,'draft');
+  assert.equal(x.canCreate,false);
+});
+test('draft ticket cannot use the new creator route',async()=>{
+  const r=await worker.fetch(q('/create/ticket-reveal'),{DB:fakeDB('draft')});
+  assert.equal(r.status,404);
+});
+test('missing catalogue DB fails closed at creator',async()=>{
+  const r=await worker.fetch(q('/create/ticket-reveal'),{});
+  assert.equal(r.status,503);
+});
+test('active ticket can enter the preserved creator only after activation',async()=>{
+  const r=await worker.fetch(q('/create/ticket-reveal'),{DB:fakeDB('active')});
+  assert.equal(r.status,302);
+  assert.equal(r.headers.get('location'),'https://reveal.test/legacy-create.html');
+});
+test('unsupported products cannot enter legacy creator',async()=>{
+  const r=await worker.fetch(q('/create/reveal-quest'),{DB:fakeDB('active')});
+  assert.equal(r.status,404);
 });
