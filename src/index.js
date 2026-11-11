@@ -12,6 +12,15 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
+    // This branch is configured to be a non-paying staging environment.
+    // Prevent any checkout or webhook processing until test-mode Stripe
+    // is separately configured and this guard is explicitly removed.
+    if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
+        (path === '/api/webhooks/stripe' ||
+         /^\/api\/reveals\/[A-Za-z0-9_-]+\/checkout\/?$/.test(path))) {
+      return textError('Checkout is disabled in this staging environment.', 503);
+    }
+
     if (path === '/api/catalogue' || path.startsWith('/api/catalogue/')) {
       return catalogueResponse(request, env);
     }
