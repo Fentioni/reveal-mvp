@@ -17,11 +17,11 @@ const emoji = {
   'weddings-newlyweds':'💍','big-life-news':'✨',
   'invitations-asks':'💌','results-achievements':'🏆',
   'seasonal':'🎄','custom-reveal':'✦',
-  'ticket-concert-reveal':'🎟️','gift-reveal':'🎁',
+  'ticket-reveal':'🎟️','gift-reveal':'🎁',
   'surprise-trip':'🧳','pregnancy-announcement':'🍼',
   'gender-reveal':'🎀','birthday-reveal':'🎈',
-  'romantic-proposal-reveal':'💍','engagement-reveal':'💎',
-  'newlywed-gift-reveal':'💝','three-question-quiz':'🧩',
+  'romantic-proposal':'💍','engagement-reveal':'💎',
+  'newlywed-gift':'💝','three-question-quiz':'🧩',
   'reveal-quest':'🗝️'
 };
 const iconFor = (slug) => emoji[slug] || '✦';
@@ -78,7 +78,7 @@ function home(data) {
   const products = data.products ?? [];
   const num = Object.fromEntries(categories.map(c=>[c.slug,products.filter(p=>p.categorySlug===c.slug).length]));
   const features = [...new Map(products.map(p=>[p.slug,p])).values()]
-    .filter(p=>['ticket-concert-reveal','gift-reveal','surprise-trip','pregnancy-announcement','reveal-quest','birthday-reveal'].includes(p.slug))
+    .filter(p=>['ticket-reveal','gift-reveal','surprise-trip','pregnancy-announcement','reveal-quest','birthday-reveal'].includes(p.slug))
     .sort((a,b)=>(a.status==='active'?-1:1)-(b.status==='active'?-1:1));
   elMain.replaceChildren(
     $('section',{className:'hero'},[
@@ -151,7 +151,7 @@ async function productPage(slug) {
     $('span',{className:'tag'+(ready?' active':''),text:ready?'Available now':'Coming soon'}),
     $('h3',{text:ready?'Make it your own':'An exciting reveal is on its way'}),
     $('p',{text:ready?(price?`Base price: ${price} before any applicable tax.`:'The price is confirmed at checkout.'):'This product is not available to purchase yet.'}),
-    ready ? $('a',{className:'button',href:'/create/ticket-concert-reveal',text:'Create this reveal  ↗'}) : $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
+    ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) : $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
     $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':'There is no payment or pre-purchase access for this product.'})
   ]);
   elMain.replaceChildren($('div',{className:'page'},[
