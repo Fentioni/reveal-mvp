@@ -1,33 +1,55 @@
-/** Stage 4B: full replacement Worker entry point. Existing Worker lives in legacy.js. */
+/** Stage 4B storefront and catalogue router; legacy payment/reveal logic is unchanged. */
 import originalWorker from './legacy.js';
 import { catalogueResponse } from './catalogue.js';
+
+const textError = (message, status) => new Response(message, {
+  status,
+  headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
+});
 
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
+
     if (path === '/api/catalogue' || path.startsWith('/api/catalogue/')) {
       return catalogueResponse(request, env);
     }
-    // A new D1 product can be published without adding another static HTML page.
+
     if (/^\/(?:categories|products)\/[a-z0-9]+(?:-[a-z0-9]+)*\/?$/.test(path) ||
         path === '/reveal-quest' || path === '/reveal-quest/' ||
         path === '/three-question-quiz' || path === '/three-question-quiz/') {
-      if (request.method !== 'GET' && request.method !== 'HEAD')
-        return new Response('Method not allowed', {status:405});
-      return env.ASSETS.fetch(new Request(new URL('/storefront.html',url),request));
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return textError('Method not allowed.', 405);
+      }
+      return env.ASSETS.fetch(new Request(new URL('/storefront.html', url), request));
     }
-    // Only the established ticket product is connected to the legacy creator.
-    if (path === '/create/ticket-concert-reveal') {
-      if (request.method !== 'GET' && request.method !== 'HEAD')
-        return new Response('Method not allowed', {status:405});
-      return Response.redirect(url.origin + '/legacy-create.html',302);
+
+    // The previously established ticket creator is the only Stage 4B product
+    // eligible for the legacy workflow, and only after explicit activation.
+    if (path === '/create/ticket-reveal') {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return textError('Method not allowed.', 405);
+      }
+      if (!env.DB) return textError('Catalogue unavailable.', 503);
+      try {
+        const product = await env.DB
+          .prepare('SELECT status FROM products WHERE id = ? AND slug = ?')
+          .bind('ticket-reveal', 'ticket-reveal')
+          .first();
+        if (!product || product.status !== 'active') {
+          return textError('This product is coming soon.', 404);
+        }
+      } catch {
+        return textError('Catalogue unavailable.', 503);
+      }
+      return Response.redirect(url.origin + '/legacy-create.html', 302);
     }
-    // Explicitly prevent unfinished products from entering legacy checkout.
+
     if (path.startsWith('/create/')) {
-      return new Response('This product is coming soon.', {status:404,
-        headers:{'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}});
+      return textError('This product is coming soon.', 404);
     }
+
     return originalWorker.fetch(request, env, ctx);
   }
 };
