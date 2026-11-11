@@ -3,6 +3,7 @@ on:
   push:
     branches:
       - feature/stage4b-preserve-existing-catalogue
+      - feature/stage4b-cloudflare-staging
   workflow_dispatch:
 permissions:
   contents: read
