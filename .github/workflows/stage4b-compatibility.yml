@@ -1,0 +1,20 @@
+name: Stage 4B compatibility checks
+on:
+  push:
+    branches:
+      - feature/stage4b-preserve-existing-catalogue
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  catalogue-compatibility:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Run SQL, Worker and upgrade tests
+        run: npm test
