@@ -63,7 +63,7 @@
     .scratch-window::after{content:"";position:absolute;inset:8px;border:1px solid #f7dfae55;border-radius:19px;z-index:2;pointer-events:none}
 
     /* Decorative celebration is visible on every load, but never intercepts a scratch. */
-    .confetti-field{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+    .confetti-field{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;visibility:hidden}
     .confetti-piece{position:absolute;top:-26px;left:var(--left);width:var(--width,6px);height:var(--height,12px);
       border-radius:1px;background:var(--colour);opacity:.83;
       animation:confetti-fall var(--duration) linear var(--delay) infinite;will-change:transform}
@@ -121,7 +121,7 @@
   </style>
 </head>
 <body>
-  <div class="confetti-field" id="celebrationConfetti" aria-hidden="true">
+  <div class="confetti-field" id="celebrationConfetti" data-confetti-region="top" aria-hidden="true">
     <span class="confetti-piece" style="--left:11%;--delay:-0.4s;--duration:6.4s;--drift:-51px;--width:4px;--height:8px;--colour:#fae2a3"></span>
     <span class="confetti-piece" style="--left:48%;--delay:-0.77s;--duration:7.1s;--drift:-34px;--width:6px;--height:11px;--colour:#f39aac"></span>
     <span class="confetti-piece" style="--left:85%;--delay:-1.14s;--duration:7.8s;--drift:-17px;--width:8px;--height:14px;--colour:#eb4560"></span>
@@ -224,6 +224,63 @@
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
     import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
+
+
+    // Render falling confetti ONLY in four background-only screen regions.
+    // These panels leave a real rectangular cutout around the scratch card,
+    // so particles cannot pass over the card even on a narrow iPhone screen.
+    const confettiTop = document.getElementById('celebrationConfetti');
+    const backgroundConfetti = [confettiTop];
+    for (const name of ['bottom', 'left', 'right']) {
+      const layer = confettiTop.cloneNode(true);
+      layer.removeAttribute('id');
+      layer.dataset.confettiRegion = name;
+      confettiTop.parentNode.insertBefore(layer, confettiTop.nextSibling);
+      backgroundConfetti.push(layer);
+    }
+    const scratchWindow = document.getElementById('scratchWindow');
+    let confettiFrame = 0;
+    function updateBackgroundConfetti() {
+      confettiFrame = 0;
+      const bounds = scratchWindow.getBoundingClientRect();
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      const clampPx = (value, maximum) => Math.max(0, Math.min(maximum, value));
+      const padding = 10;
+      const left = clampPx(bounds.left - padding, width);
+      const right = clampPx(bounds.right + padding, width);
+      const top = clampPx(bounds.top - padding, height);
+      const bottom = clampPx(bounds.bottom + padding, height);
+      // Four non-overlapping CSS rectangular clips cover all background
+      // but never a single pixel in the card's screen-space rectangle.
+      const regions = [
+        [0, width, 0, top],
+        [0, width, bottom, height],
+        [0, left, top, bottom],
+        [right, width, top, bottom]
+      ];
+      regions.forEach(([x1,x2,y1,y2], index) => {
+        const layer = backgroundConfetti[index];
+        layer.style.clipPath = 'inset(' +
+          y1 + 'px ' + (width - x2) + 'px ' +
+          (height - y2) + 'px ' + x1 + 'px)';
+        layer.style.visibility = 'visible';
+      });
+    }
+    function queueConfettiLayout() {
+      if (confettiFrame) return;
+      confettiFrame = requestAnimationFrame(updateBackgroundConfetti);
+    }
+    updateBackgroundConfetti();
+    window.addEventListener('resize', queueConfettiLayout);
+    window.addEventListener('scroll', queueConfettiLayout, {passive:true});
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', queueConfettiLayout);
+      window.visualViewport.addEventListener('scroll', queueConfettiLayout);
+    }
+    if (typeof ResizeObserver !== 'undefined') {
+      new ResizeObserver(queueConfettiLayout).observe(scratchWindow);
+    }
 
     const byId = id => document.getElementById(id);
     const stage = byId('stage');
