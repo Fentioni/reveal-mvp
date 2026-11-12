@@ -138,7 +138,14 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   assert.ok(!demo.includes('accessibleReveal'));
   assert.ok(!demo.includes('threshold:'));
   assert.ok(!demo.includes('scratch.reveal()'));
-  assert.ok(demo.includes('Sound off'));
+  assert.ok(!demo.includes('soundButton'));
+  assert.ok(!demo.includes('scratch-audio.js'));
+  assert.ok(!demo.includes('ScratchCinematicAudio'));
+  assert.ok(!demo.includes('chime()'));
+  assert.ok(!demo.includes('initAudio()'));
+  assert.ok(demo.includes('replayButton'));
+  assert.ok(demo.includes('celebrationConfetti'));
+  assert.ok(!demo.includes('redGiftBadge'));
   assert.ok(!demo.includes('/api/reveals/'));
   assert.ok(storefront.includes("href:'/scratch-demo'"));
   const paths = [];
