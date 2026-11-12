@@ -69,6 +69,16 @@
 - The concert creator is linked from the staging ticket product details page. It is a variant, **not yet an independent catalogue SKU**, so a separate catalogue entry requires a later explicit catalogue/business step.
 - Payment and production remain unchanged. The staging checkout guard must not be bypassed to demonstrate this variant.
 
+## Stage 4F: Traditional landscape concert ticket implementation (12 November 2026)
+- The Scratch Concert Ticket variant is now visually a **landscape 2.15:1 admission ticket** in the actual purchaser creator and static scratch-cover review; all three original concert Canvas artwork designs are painted specifically for landscape dimensions rather than stretching portrait artwork.
+- Its cover includes an etched border, tear-off perforation and separate admission stub. The concert-specific covers are still Concert Lights, Festival Access, Backstage Pass and Your Own Image. The original default ticket variant remains portrait.
+- The same stage-only paid recipient HTML switches into a wide ticket with a left guest/message stub, dashed divider, and a right event-details panel when `scratchSurface.variant === 'concert'`. The portrait ticket reveal has no layout changes.
+- **All supplied ticket fields remain visible** on the revealed landscape ticket; its height can expand for lengthy messages, links and uploaded images instead of clipping submitted values. Empty optional rows still disappear.
+- All one-image upload, owner draft saving/amendment, static review, existing R2/D1 storage, checkout protections and payment-gated recipient endpoints remain unchanged. No new schema or checkout was added.
+- The saved concert variant is restored when editing a draft; its cover and underlay remain landscape through creator, review, and recipient stages.
+- Automated regression tests include a 720×330 Canvas render, creator and review layout checks, exact paid route reuse, and unpaid access denial. Visual browser confirmation on a live Cloudflare staging deployment is still required.
+- Staging entry: `/legacy-create?variant=concert`. Production remains untouched.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
