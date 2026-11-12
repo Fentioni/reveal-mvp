@@ -199,7 +199,14 @@ test('ticket creator shows all four visual artwork choices and four foil swatche
   for (const foil of ['gold','silver','midnight','rose']) {
     assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);
   }
-  assert.ok(creator.includes('id="scratchAudioEnabled" checked'));
+  assert.ok(creator.includes('id="scratchAudioEnabled" hidden'));
+  assert.ok(creator.includes('id="scratchMobileDock"'));
+  assert.ok(creator.includes('id="scratchDesktopDock"'));
+  assert.ok(creator.includes('positionScratchSurface()'));
+  assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
+  assert.ok(creator.includes('class="preview-details-toggle"'));
+  assert.ok(creator.indexOf('class="scratch-choice"') < creator.indexOf('id="recipient"'),
+    'artwork and foil choices must appear before ticket details');
   assert.ok(creator.includes('surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked))'));
   assert.ok(creator.includes('$("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false'));
 });
