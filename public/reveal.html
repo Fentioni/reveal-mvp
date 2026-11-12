@@ -661,6 +661,7 @@
       <section id="surfaceReview" class="scratch-surface-summary" hidden aria-label="Static scratch surface review">
         <h2>Scratch-card surface</h2>
         <p id="surfaceReviewDescription"></p>
+        <p id="surfaceAudioDescription"></p>
         <div class="scratch-surface-thumb"><canvas id="surfaceReviewCanvas" aria-hidden="true"></canvas></div>
         <p>This is a static representation of your chosen surface. Only the paid recipient can interact with the final scratch card.</p>
       </section>
@@ -784,7 +785,8 @@
       bookingCard: document.getElementById('bookingCard'),
       surfaceReview: document.getElementById('surfaceReview'),
       surfaceReviewCanvas: document.getElementById('surfaceReviewCanvas'),
-      surfaceReviewDescription: document.getElementById('surfaceReviewDescription')
+      surfaceReviewDescription: document.getElementById('surfaceReviewDescription'),
+      surfaceAudioDescription: document.getElementById('surfaceAudioDescription')
     };
 
     let reveal = null;
@@ -948,8 +950,12 @@
       );
       const result = await readJson(response);
       const {style,foil,hasImage} = result.surface;
+      const {audio} = result;
       const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',custom:'Your uploaded scratch image'};
       elements.surfaceReviewDescription.textContent = (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
+      elements.surfaceAudioDescription.textContent = audio?.enabled !== false
+        ? 'Sound: cinematic orchestral drum roll begins approximately 3 seconds after the first scratch.'
+        : 'Sound: disabled for the recipient.';
       elements.surfaceReview.hidden = false;
       if (staticScratchCard) staticScratchCard.destroy();
       staticScratchCard = new ScratchCard({canvas:elements.surfaceReviewCanvas,
