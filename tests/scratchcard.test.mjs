@@ -48,17 +48,21 @@ test('original scratch engine exposes reusable commercial-product configuration'
   const code = fs.readFileSync(path.join(root, 'public/scratchcard.js'), 'utf8');
   assert.ok(!code.includes('https://cdn.'));
   assert.ok(code.includes('destination-out'));
-  assert.ok(code.includes('prefers-reduced-motion'));
   assert.ok(code.includes('onComplete'));
   assert.ok(code.includes('setCoverImage'));
+  assert.ok(!code.includes('this.threshold'));
+  assert.ok(!code.includes('this.canvas.style.opacity'));
+  assert.ok(!code.includes('this.canvas.style.pointerEvents'));
+  assert.ok(!code.includes('  reveal() {'));
+
 });
 
-test('touch drag removes foil, tracks progress and completes once', () => {
+test('only user strokes remove foil, even after previous reveal thresholds', () => {
   const canvas = fakeCanvas();
   let completed = 0;
   const progress = [];
   const scratch = new ScratchCard({
-    canvas, brushSize:72, threshold:0.35,
+    canvas, brushSize:50,
     onProgress: value => progress.push(value),
     onComplete: () => completed++
   });
@@ -66,36 +70,52 @@ test('touch drag removes foil, tracks progress and completes once', () => {
   assert.equal(canvas.width, 600);
   assert.equal(canvas.height, 800);
 
-  for (const y of [55,145,235,325]) {
-    scratch.pointerDown(eventAt(10,y));
-    scratch.pointerMove(eventAt(290,y));
-    scratch.pointerEnd(eventAt(290,y));
-    if (scratch.completed) break;
+  // Manually scratch roughly half the surface; previously this
+  // would hide the entire canvas automatically at a fixed threshold.
+  for (let y = 0; y <= 200; y += 20) {
+    scratch.pointerDown(eventAt(0,y));
+    scratch.pointerMove(eventAt(300,y));
+    scratch.pointerEnd(eventAt(300,y));
   }
+  assert.ok(scratch.progress > 0.35 && scratch.progress < 0.8);
+  assert.equal(scratch.completed, false);
+  assert.equal(completed, 0);
+  assert.notEqual(canvas.style.opacity, '0');
+  assert.notEqual(canvas.style.pointerEvents, 'none');
 
-  assert.ok(progress.some(v => v > 0));
+  scratch.resize();
+  assert.notEqual(canvas.style.opacity, '0', 'Repainting must not fade remaining foil');
+
+  // Remaining foil is removable only with more genuine user strokes.
+  for (let y = 200; y <= 400; y += 20) {
+    scratch.pointerDown(eventAt(0,y));
+    scratch.pointerMove(eventAt(300,y));
+    scratch.pointerEnd(eventAt(300,y));
+  }
   assert.equal(scratch.completed, true);
   assert.equal(completed, 1);
-  assert.equal(canvas.style.pointerEvents, 'none');
-  scratch.reveal();
+  assert.equal(scratch.progress, 1);
+  assert.notEqual(canvas.style.opacity, '0', 'The canvas must stay visible at 100%');
+  assert.notEqual(canvas.style.pointerEvents, 'none', 'User must be able to scratch residual foil');
+  // Completion is a one-time notification, not a full-card reveal method.
+  scratch.pointerDown(eventAt(10,10));
+  scratch.pointerEnd(eventAt(10,10));
   assert.equal(completed, 1);
+
   scratch.reset();
   assert.equal(scratch.completed, false);
   assert.equal(scratch.progress, 0);
-  assert.equal(canvas.style.pointerEvents, 'auto');
   scratch.setFoil('silver');
   assert.equal(scratch.foil, 'silver');
   scratch.destroy();
   assert.equal(canvas.listeners.size, 0);
 });
 
-test('accessibility button can complete reveal without a scratch gesture', () => {
+test('there is no reveal-without-scratching shortcut in the scratch engine', () => {
   const canvas = fakeCanvas();
-  let calls = 0;
-  const scratch = new ScratchCard({canvas,onComplete: () => {calls++;}});
-  scratch.reveal();
-  assert.equal(scratch.completed, true);
-  assert.equal(calls, 1);
+  const scratch = new ScratchCard({canvas});
+  assert.equal(typeof scratch.reveal, 'undefined');
+  assert.equal(scratch.completed, false);
   scratch.destroy();
 });
 
@@ -106,7 +126,10 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   assert.ok(demo.includes('Fictional demo only'));
   assert.ok(demo.includes('Chloe'));
   assert.ok(demo.includes('The Midnight Show'));
-  assert.ok(demo.includes('Reveal without scratching'));
+  assert.ok(!demo.includes('Reveal without scratching'));
+  assert.ok(!demo.includes('accessibleReveal'));
+  assert.ok(!demo.includes('threshold:'));
+  assert.ok(!demo.includes('scratch.reveal()'));
   assert.ok(demo.includes('Sound off'));
   assert.ok(!demo.includes('/api/reveals/'));
   assert.ok(storefront.includes("href:'/scratch-demo'"));
