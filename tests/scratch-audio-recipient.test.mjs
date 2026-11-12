@@ -192,6 +192,39 @@ test('even a real image or booking link cannot be retrieved before paid_at is se
   assert.equal(counters.images,0);
 });
 
+test('paid concert variant reuses recipient route, ticket fields and payment gate',async()=>{
+  const concertSettings={
+    scratchSurface:{variant:'concert',style:'festival',foil:'midnight',coverAssetId:null},
+    audio:{enabled:false,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000}
+  };
+  const {env,counters}=recipientEnv(paid,concertSettings);
+  const data=await scratchRecipientResponse(publicReq('/scratch-data'),env,{});
+  assert.equal(data.status,200);
+  const {scratchSurface,reveal}=await data.json();
+  assert.deepEqual(scratchSurface,{
+    variant:'concert',style:'festival',foil:'midnight',hasImage:false
+  });
+  assert.equal(reveal.eventName,'Night at the Theatre');
+  assert.equal(reveal.recipient,'Chloe');
+  assert.equal(reveal.ticketUrl,'https://example.invalid/private-ticket');
+  assert.equal(reveal.hasEventImage,true);
+  const page=await scratchRecipientResponse(publicReq(),env,{});
+  assert.equal(page.status,200);
+  assert.equal(counters.assets,1);
+
+  const {env:unpaid,counters:denied}=recipientEnv({...paid,status:'confirmed',paid_at:null},concertSettings);
+  for(const route of ['', '/scratch-data','/scratch-cover','/scratch-image']) {
+    assert.equal((await scratchRecipientResponse(publicReq(route),unpaid,{})).status,404);
+  }
+  assert.equal(denied.assets,0);
+  assert.equal(denied.images,0);
+
+  const html=fs.readFileSync(path.join(root,'public/recipient-scratch.html'),'utf8');
+  assert.ok(html.includes("data.scratchSurface.variant === 'concert'"));
+  assert.ok(html.includes("'PERSONALISED CONCERT TICKET'"));
+  assert.ok(html.includes('recipientCardModel(data.reveal)'));
+});
+
 test('missing scratch configuration preserves the existing paid recipient page',async()=>{
   const {env}=recipientEnv(paid,null);
   assert.equal(await scratchRecipientResponse(publicReq(),env,{}),null);
