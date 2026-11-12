@@ -58,6 +58,17 @@
 - The purchaser's live static details preview and static review now also hide blank optional fields, showing a populated booking URL without fabricated "To be confirmed" values.
 - The actual recipient card is never available pre-payment. All changes staged only, no production update.
 
+## Stage 4E: Scratch Concert Ticket Reveal variant (12 November 2026)
+- User requires the **identical** purchaser and recipient production pipeline for Scratch Concert Ticket Reveal, changing only surface imagery, artwork choices and labels. Do not duplicate payment, validation, D1 schema, owner-token protection, preview, review, sharing or recipient rendering.
+- Staging creator uses `/legacy-create?variant=concert`. Standard Ticket & Concert Reveal remains available at `/legacy-create`. Both share the original `ticket-reveal` configuration and API paths; no new catalogue product ID, price, database schema or Stripe checkout has been created yet.
+- The creator automatically selects the existing Concert Lights cover, Midnight foil, and offers four relevant designs: Concert Lights; original new Festival Access; original new Backstage Pass; Your own image. Classic foil and Theatre Velvet remain ticket-only design choices.
+- Foil choices reuse the same four finish IDs and underlying renderer, with concert-specific names: VIP Gold, Chrome Silver, Midnight Stage and Neon Rose. Artwork is rendered with original Canvas shapes and gradients rather than external copyrighted imagery.
+- Same single upload supports the custom scratchable cover and protected event image. Same required and optional form fields, owner save/amend, one-off price model, tax handling, static review and payment-gated recipient scratch link.
+- `variant:'concert'` persists under `reveal_configurations.fields_json.scratchSurface`. Owner GET/PUT and paid scratch-data transmit the variant; the paid recipient page changes only concert heading and ticket label while rendering all populated fields with the same optional-field omission rules.
+- An existing stored concert variant is restored automatically when editing from the review page, even though its URL only includes `?edit=id`.
+- The concert creator is linked from the staging ticket product details page. It is a variant, **not yet an independent catalogue SKU**, so a separate catalogue entry requires a later explicit catalogue/business step.
+- Payment and production remain unchanged. The staging checkout guard must not be bypassed to demonstrate this variant.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
