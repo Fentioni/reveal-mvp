@@ -124,13 +124,29 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
   const storefront = fs.readFileSync(path.join(root, 'public/storefront.js'), 'utf8');
   assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js?v=surface-design-v2'"));
-  assert.ok(demo.includes('Fictional demo only'));
-  assert.ok(demo.includes('data-surface="theatre"'));
-  assert.ok(demo.includes('data-surface="concert"'));
-  assert.ok(demo.includes('data-surface="custom"'));
-  assert.ok(demo.includes('type="file" accept="image/jpeg,image/png,image/webp"'));
-  assert.ok(demo.includes('The image is cropped to fill the card'));
-  assert.ok(demo.includes('it is not uploaded or saved'));
+  assert.ok(demo.includes('Fictional recipient demonstration'));
+  assert.ok(demo.includes('fictional example'));
+  assert.ok(demo.includes('payment is confirmed'));
+  assert.ok(!demo.includes('data-surface='));
+  assert.ok(!demo.includes('data-foil='));
+  assert.ok(!demo.includes('type="file"'));
+  assert.ok(!demo.includes('id="scratchStyle"'));
+  assert.ok(!demo.includes('id="scratchFoil"'));
+  assert.ok(!demo.includes('setCoverImage('));
+  const creator = fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  for (const artwork of ['classic','theatre','concert','custom'])
+    assert.ok(creator.includes('data-scratch-style="' + artwork + '"'));
+  for (const foil of ['gold','silver','midnight','rose'])
+    assert.ok(creator.includes('data-scratch-foil="' + foil + '"'));
+  assert.ok(creator.includes('id="scratchCoverImage"'));
+  assert.ok(creator.includes('id="scratchSurfacePreview"'));
+  assert.ok(demo.includes('Fictional demo') || demo.includes('fictional example'));
+
+
+
+
+
+
   assert.ok(!demo.includes('fetch('));
   assert.ok(demo.includes('Chloe'));
   assert.ok(demo.includes('The Midnight Show'));
