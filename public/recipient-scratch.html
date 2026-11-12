@@ -40,7 +40,7 @@
   .ticket-item dd{margin:0;font-size:.78rem;font-weight:650;overflow-wrap:anywhere}
   .message{font:italic .88rem/1.45 Georgia,serif;color:#f1ddbc;overflow-wrap:anywhere;white-space:pre-wrap;margin:0}
   .field-grid[hidden],.ticket-item[hidden],.event-image-wrap[hidden],.booking-row[hidden],
-  .message-wrap[hidden],.sender-wrap[hidden],#bookingAction[hidden]{display:none!important}
+  .message-wrap[hidden],.sender-wrap[hidden],#closingDetails[hidden],#bookingAction[hidden]{display:none!important}
   .event-image-wrap{width:100%;margin:3px auto 0;min-height:0}
   .event-image-wrap img{display:block;width:100%;max-height:185px;object-fit:contain;border-radius:11px}
   .booking-row{margin-top:11px;border-top:2px dashed #c1a77d;padding-top:11px}
@@ -89,7 +89,7 @@
             target="_blank"></a></dd>
         </dl>
       </article>
-      <div>
+      <div id="closingDetails" hidden>
         <div class="message-wrap" id="messageWrap" hidden><p class="message" id="message"></p></div>
         <div class="sender-wrap" id="senderWrap" hidden><div class="label" id="sender"></div></div>
       </div>
@@ -128,6 +128,7 @@
     $('messageWrap').hidden = !model.message;
     text('message',model.message);
     $('senderWrap').hidden = !model.sender;
+    $('closingDetails').hidden = !model.sender && !model.message;
     text('sender',model.sender ? 'With love, from ' + model.sender : '');
     bookingLink = model.ticketUrl;
     $('bookingRow').hidden = !bookingLink;
