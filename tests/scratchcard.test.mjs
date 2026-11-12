@@ -122,7 +122,7 @@ test('there is no reveal-without-scratching shortcut in the scratch engine', () 
 test('public demo uses invented ticket details, keeps commercial drafts protected', async () => {
   const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
   const storefront = fs.readFileSync(path.join(root, 'public/storefront.js'), 'utf8');
-  assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js'"));
+  assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js?v=manual-scratch-v1'"));
   assert.ok(demo.includes('Fictional demo only'));
   assert.ok(demo.includes('Chloe'));
   assert.ok(demo.includes('The Midnight Show'));
