@@ -349,3 +349,18 @@ test('each quiz theme button shows its own full colour fill and accessible chose
   assert.ok(html.includes('button.setAttribute(\'aria-pressed\',String(button.dataset.theme===theme))'));
   assert.ok(html.includes("$('preview').dataset.theme=theme"));
 });
+
+
+test('quiz creator optional fields stay inside their container at narrow and iOS viewport sizes',()=>{
+  const html=fs.readFileSync(path.join(root,'public/quiz-create.html'),'utf8');
+  assert.ok(html.includes('.small-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))'));
+  assert.ok(html.includes('.field{margin:0 0 18px;min-width:0;max-width:100%}'));
+  assert.ok(html.includes('#quizForm input:not([type="radio"]),#quizForm textarea,#quizForm select'));
+  assert.ok(html.includes('display:block;width:100%;min-width:0;max-width:100%'));
+  assert.ok(html.includes('#quizForm input[type="date"],#quizForm input[type="time"]'));
+  assert.ok(html.includes('-webkit-min-logical-width:0;min-width:0;max-width:100%'));
+  assert.ok(html.includes('@media(max-width:650px){.small-grid{grid-template-columns:minmax(0,1fr)}}'));
+  for(const field of ['eventDate','eventTime','venue','admit','personalMessage','ticketUrl']){
+    assert.ok(html.includes('id="'+field+'"'),field+' remains available');
+  }
+});
