@@ -19,11 +19,11 @@
   h1{font:normal clamp(2rem,9vw,3.2rem)/1.09 Georgia,serif;letter-spacing:-.035em;margin:15px 0 10px}
   .intro{color:#ded1ba;font-size:.9rem;line-height:1.6;margin:0 auto 22px;max-width:350px}
   .error{background:#56303a;color:#fff;border:1px solid #af6872;padding:16px;border-radius:12px;margin:20px 0}
-  .card{position:relative;width:100%;aspect-ratio:3 / 4;border:4px solid #cda45b;border-radius:24px;
+  .card{position:relative;width:100%;min-height:min(128vw,620px);border:4px solid #cda45b;border-radius:24px;
     overflow:hidden;background:#181527;box-shadow:0 25px 60px #0009;isolation:isolate}
   .card[hidden]{display:none!important}
-  .ticket-underlay{visibility:hidden;width:100%;height:100%;display:flex;flex-direction:column;
-    justify-content:space-between;align-items:center;padding:clamp(16px,5vw,26px);
+  .ticket-underlay{visibility:hidden;width:100%;min-height:min(128vw,620px);display:flex;flex-direction:column;
+    justify-content:space-between;align-items:center;gap:15px;padding:clamp(16px,5vw,26px);
     background:radial-gradient(ellipse at 50% 14%,#58426e,transparent 55%),
     linear-gradient(135deg,#11182e,#2a1a3d 60%,#10182b)}
   .card.foil-ready .ticket-underlay{visibility:visible}
@@ -38,7 +38,18 @@
   .ticket-item{min-width:0}
   .ticket-item dt{font-size:.56rem;letter-spacing:.14em;color:#957242;font-weight:800;margin:0 0 3px}
   .ticket-item dd{margin:0;font-size:.78rem;font-weight:650;overflow-wrap:anywhere}
-  .message{font:italic .88rem/1.45 Georgia,serif;color:#f1ddbc;max-height:66px;overflow:auto;overflow-wrap:anywhere}
+  .message{font:italic .88rem/1.45 Georgia,serif;color:#f1ddbc;overflow-wrap:anywhere;white-space:pre-wrap;margin:0}
+  .field-grid[hidden],.ticket-item[hidden],.event-image-wrap[hidden],.booking-row[hidden],
+  .message-wrap[hidden],.sender-wrap[hidden],#bookingAction[hidden]{display:none!important}
+  .event-image-wrap{width:100%;margin:3px auto 0;min-height:0}
+  .event-image-wrap img{display:block;width:100%;max-height:185px;object-fit:contain;border-radius:11px}
+  .booking-row{margin-top:11px;border-top:2px dashed #c1a77d;padding-top:11px}
+  .booking-row dt{font-size:.58rem;letter-spacing:.14em;color:#957242;font-weight:800}
+  .booking-row dd{margin:4px 0 0;font-size:.76rem;overflow-wrap:anywhere;word-break:break-word}
+  .booking-row a{color:#4f3572;text-underline-offset:3px}
+  #bookingAction{display:inline-block;margin:12px auto 0;padding:11px 16px;min-height:44px;border:1px solid #d7b86f;
+    border-radius:99px;color:#fae8c3;text-decoration:none;font-weight:650;overflow-wrap:anywhere}
+  #bookingAction:focus-visible{outline:3px solid #fff;outline-offset:3px}
   #foilCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
   .status{min-height:29px;margin-top:14px;color:#e8d8b8;font-size:.84rem}
   progress{display:block;width:100%;height:8px;border-radius:99px;margin:9px 0 20px;accent-color:#d6b375}
@@ -59,23 +70,36 @@
   <div id="card" class="card" hidden>
     <div id="underlay" class="ticket-underlay">
       <div><div class="label">A SURPRISE FOR</div><h2 class="recipient" id="name"></h2><div class="label">YOU ARE INVITED TO…</div></div>
-      <h3 class="headline">A night to remember</h3>
+      <h3 class="headline" id="headline">A special surprise</h3>
       <article class="ticket">
         <div class="kicker">PERSONALISED EVENT TICKET</div>
         <h2 id="eventName"></h2>
-        <dl class="ticket-grid">
-          <div class="ticket-item"><dt>DATE</dt><dd id="date"></dd></div>
-          <div class="ticket-item"><dt>TIME</dt><dd id="time"></dd></div>
-          <div class="ticket-item"><dt>VENUE</dt><dd id="venue"></dd></div>
-          <div class="ticket-item"><dt>ADMIT</dt><dd id="admit"></dd></div>
+        <div id="eventImageWrap" class="event-image-wrap" hidden>
+          <img id="eventImage" alt="Personal image included with this surprise">
+        </div>
+        <dl class="ticket-grid field-grid" id="ticketGrid" hidden>
+          <div class="ticket-item" id="dateRow" hidden><dt>DATE</dt><dd id="date"></dd></div>
+          <div class="ticket-item" id="timeRow" hidden><dt>TIME</dt><dd id="time"></dd></div>
+          <div class="ticket-item" id="venueRow" hidden><dt>VENUE</dt><dd id="venue"></dd></div>
+          <div class="ticket-item" id="admitRow" hidden><dt>ADMIT</dt><dd id="admit"></dd></div>
+        </dl>
+        <dl class="booking-row" id="bookingRow" hidden>
+          <dt>OFFICIAL TICKET OR BOOKING LINK</dt>
+          <dd><a id="bookingUrl" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer"
+            target="_blank"></a></dd>
         </dl>
       </article>
-      <div><p class="message" id="message"></p><div class="label" id="sender"></div></div>
+      <div>
+        <div class="message-wrap" id="messageWrap" hidden><p class="message" id="message"></p></div>
+        <div class="sender-wrap" id="senderWrap" hidden><div class="label" id="sender"></div></div>
+      </div>
     </div>
     <canvas id="foilCanvas" aria-label="Scratch to uncover your surprise"></canvas>
   </div>
   <p class="status" id="status" aria-live="polite"></p>
   <progress id="progress" value="0" max="100" aria-label="Scratch progress" hidden></progress>
+  <a id="bookingAction" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer"
+    target="_blank" hidden>Open your booking link</a>
   <div id="controls" class="buttons" hidden>
     <button id="soundButton" type="button" aria-pressed="true">♫ Sound on</button>
     <button id="replayButton" type="button">↻ Scratch again</button>
@@ -85,13 +109,37 @@
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
+  import { recipientCardModel } from '/scratch-recipient-fields.js?v=complete-card-1';
   const $ = id => document.getElementById(id);
   const slug = location.pathname.split('/').filter(Boolean)[1];
   const status = $('status');
   let scratch = null;
   let cinematic = null;
   let soundEnabled = true;
-  const text = (id,value,fallback='—') => { $(id).textContent = value || fallback; };
+  const text = (id,value) => { $(id).textContent = value ?? ''; };
+  let bookingLink = '';
+  function applyDetails(model) {
+    for (const id of ['date','time','venue','admit']) {
+      const item = model.details.find(detail => detail.id === id);
+      $(id + 'Row').hidden = !item;
+      text(id,item?.value || '');
+    }
+    $('ticketGrid').hidden = model.details.length === 0;
+    $('messageWrap').hidden = !model.message;
+    text('message',model.message);
+    $('senderWrap').hidden = !model.sender;
+    text('sender',model.sender ? 'With love, from ' + model.sender : '');
+    bookingLink = model.ticketUrl;
+    $('bookingRow').hidden = !bookingLink;
+    if (bookingLink) {
+      $('bookingUrl').textContent = bookingLink;
+      $('bookingUrl').href = bookingLink;
+      $('bookingAction').href = bookingLink;
+    } else {
+      $('bookingUrl').removeAttribute('href');
+      $('bookingAction').removeAttribute('href');
+    }
+  }
 
   async function load() {
     if (!slug || !/^[A-Za-z0-9_-]+$/.test(slug)) throw new Error('Invalid reveal link.');
@@ -99,17 +147,25 @@
     if (!response.ok) throw new Error('This surprise is not yet available.');
     const data = await response.json();
     if (!data.success) throw new Error('This surprise is not available.');
-    const reveal = data.reveal;
+    const model = recipientCardModel(data.reveal);
     soundEnabled = data.audio?.enabled !== false;
-    text('title','A surprise for ' + reveal.recipient);
-    text('name',reveal.recipient);
-    text('eventName',reveal.eventName);
-    text('date',reveal.eventDate,'To be confirmed');
-    text('time',reveal.eventTime,'To be confirmed');
-    text('venue',reveal.venue,'To be confirmed');
-    text('admit',reveal.admit,reveal.recipient);
-    text('sender',reveal.sender ? 'With love, from ' + reveal.sender : '');
-    text('message',reveal.personalMessage,'A moment just for you.');
+    text('title','A surprise for ' + model.recipient);
+    text('name',model.recipient);
+    text('eventName',model.eventName);
+    text('headline','Your special surprise');
+    applyDetails(model);
+    if (model.hasEventImage) {
+      const image = $('eventImage');
+      const src = '/r/' + encodeURIComponent(slug) + '/scratch-image';
+      await new Promise((resolve,reject) => {
+        image.onload = resolve;
+        image.onerror = () => reject(new Error('Your surprise image could not be loaded.'));
+        image.src = src;
+      });
+      $('eventImageWrap').hidden = false;
+    } else {
+      $('eventImageWrap').hidden = true;
+    }
     $('intro').textContent = 'Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.';
     $('card').hidden = false;
 
@@ -124,7 +180,12 @@
       coverStyle:data.scratchSurface.style === 'custom' ? 'classic' : data.scratchSurface.style,
       brushSize:49,
       onScratch:() => cinematic.onFirstScratch(),
-      onProgress:p => { $('progress').value = Math.round(p*100); },
+      onProgress:p => {
+        $('progress').value = Math.round(p*100);
+        // The link is also available below the finished card once the user
+        // has substantially scratched it; Canvas overlays otherwise block taps.
+        if (bookingLink && p >= 0.7) $('bookingAction').hidden = false;
+      },
       onComplete:() => { status.textContent = 'You uncovered your surprise!'; }
     });
 
@@ -136,13 +197,14 @@
     $('progress').hidden = false;
     $('controls').hidden = false;
     $('soundButton').hidden = !soundEnabled;
-    status.textContent = 'Scratch to begin. Your cinematic drum roll starts after 3 seconds.';
+    status.textContent = 'Scratch the card to discover your surprise.';
   }
 
   $('replayButton').addEventListener('click',() => {
     if (!scratch) return;
     cinematic.reset();
     scratch.reset();
+    $('bookingAction').hidden = true;
     status.textContent = 'Scratch to begin again.';
   });
   $('soundButton').addEventListener('click',() => {
@@ -160,6 +222,7 @@
     $('card').hidden = true;
     $('controls').hidden = true;
     $('progress').hidden = true;
+    $('bookingAction').hidden = true;
     $('intro').textContent = 'We could not open this surprise.';
     $('error').hidden = false;
     $('error').textContent = error.message || 'Please try again later.';
