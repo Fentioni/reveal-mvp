@@ -68,7 +68,7 @@ const publicReq = suffix => new Request(recipientUrl+(suffix||''));
 const paid = {id:'abc-id',public_slug:'example-slug',status:'paid',paid_at:'2026-11-12',
   recipient:'Chloe',sender:'Alex',event_name:'Night at the Theatre',event_date:'2027-03-20',
   event_time:'19:30',venue:'Starlight Theatre',admit:'Chloe + 1',
-  personal_message:'A lovely surprise',ticket_url:'https://example.invalid/private-ticket'};
+  personal_message:'A lovely surprise',ticket_url:'https://example.invalid/private-ticket',image_key:'event-image-one'};
 const settings = {
   scratchSurface:{style:'custom',foil:'rose',coverAssetId:'cover-one'},
   audio:{enabled:true,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000}
@@ -115,7 +115,7 @@ function recipientEnv(row=paid,config=settings) {
 test('all recipient scratch routes reject unpaid or unconfirmed status before loading private assets', async()=>{
   for(const status of ['draft','confirmed','checkout','failed']) {
     const {env,counters}=recipientEnv({...paid,status,paid_at:null});
-    for(const route of ['', '/scratch-data', '/scratch-cover']) {
+    for(const route of ['', '/scratch-data', '/scratch-cover', '/scratch-image']) {
       const r=await scratchRecipientResponse(publicReq(route),env,{});
       assert.equal(r.status,404, status+route);
       assert.equal(r.headers.get('cache-control'),'no-store');
@@ -137,16 +137,59 @@ test('paid recipient can access only their own configured scratch artwork, audio
   assert.equal(body.scratchSurface.foil,'rose');
   assert.deepEqual(body.audio,settings.audio);
   assert.equal(body.reveal.recipient,'Chloe');
-  assert.equal('ticketUrl' in body.reveal,false,'do not leak booking secrets into recipient JSON');
-  assert.ok(!JSON.stringify(body).includes('private-ticket'));
+  assert.equal(body.reveal.ticketUrl,'https://example.invalid/private-ticket',
+    'the paid recipient must see the purchaser-supplied booking link');
+  assert.equal(body.reveal.hasEventImage,true);
+  assert.equal(body.reveal.sender,'Alex');
+  assert.equal(body.reveal.eventName,'Night at the Theatre');
+  assert.equal(body.reveal.eventDate,'2027-03-20');
+  assert.equal(body.reveal.eventTime,'19:30');
+  assert.equal(body.reveal.venue,'Starlight Theatre');
+  assert.equal(body.reveal.admit,'Chloe + 1');
+  assert.equal(body.reveal.personalMessage,'A lovely surprise');
+  assert.ok(!JSON.stringify(body).includes('private-r2-key'));
   const image=await scratchRecipientResponse(publicReq('/scratch-cover'),env,{});
   assert.equal(image.status,200);
   assert.equal(image.headers.get('cache-control'),'private, no-store');
   assert.equal(counters.images,1);
+  const imageOfEvent=await scratchRecipientResponse(publicReq('/scratch-image'),env,{});
+  assert.equal(imageOfEvent.status,200);
+  assert.equal(imageOfEvent.headers.get('cache-control'),'private, no-store');
+  assert.equal(imageOfEvent.headers.get('content-type'),'image/png');
+  assert.equal(counters.images,2);
   const page=await scratchRecipientResponse(publicReq(),env,{});
   assert.equal(page.status,200);
   assert.ok((await page.text()).includes('STATIC SCRATCH RECIPIENT SHELL'));
   assert.equal(counters.assets,1);
+});
+
+test('missing optional data is passed as absent values; no fabricated recipient details',async()=>{
+  const row={...paid,event_date:null,event_time:'',venue:null,admit:'',personal_message:null,
+    ticket_url:null,image_key:null};
+  const {env,counters}=recipientEnv(row);
+  const response=await scratchRecipientResponse(publicReq('/scratch-data'),env,{});
+  assert.equal(response.status,200);
+  const {reveal}=await response.json();
+  assert.equal(reveal.eventDate,null);
+  assert.equal(reveal.eventTime,'');
+  assert.equal(reveal.venue,null);
+  assert.equal(reveal.admit,'');
+  assert.equal(reveal.personalMessage,null);
+  assert.equal(reveal.ticketUrl,null);
+  assert.equal(reveal.hasEventImage,false);
+  const image=await scratchRecipientResponse(publicReq('/scratch-image'),env,{});
+  assert.equal(image.status,404);
+  assert.equal(counters.images,0);
+});
+
+test('even a real image or booking link cannot be retrieved before paid_at is set',async()=>{
+  const {env,counters}=recipientEnv({...paid,status:'paid',paid_at:null});
+  for(const route of ['', '/scratch-image','/scratch-cover','/scratch-data']) {
+    const response=await scratchRecipientResponse(publicReq(route),env,{});
+    assert.equal(response.status,404);
+  }
+  assert.equal(counters.assets,0);
+  assert.equal(counters.images,0);
 });
 
 test('missing scratch configuration preserves the existing paid recipient page',async()=>{
@@ -163,6 +206,8 @@ test('staging-only paid scratch recipient route is wired, and public static shel
   assert.ok(html.includes("new ScratchCinematicAudio("));
   assert.ok(html.includes('onScratch:() => cinematic.onFirstScratch()'));
   assert.ok(html.includes("'/scratch-data'"));
+  assert.ok(html.includes("'/scratch-image'"));
+  assert.ok(html.includes('recipientCardModel(data.reveal)'));
   assert.ok(html.includes('class="card" hidden'));
   assert.ok(html.includes('.card.foil-ready .ticket-underlay{visibility:visible}'));
   assert.ok(!html.includes('Chloe'));
