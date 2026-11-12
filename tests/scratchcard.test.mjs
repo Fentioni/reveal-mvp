@@ -45,7 +45,7 @@ const eventAt = (x,y) => ({
 
 test('original scratch engine exposes reusable commercial-product configuration', () => {
   assert.deepEqual(Object.keys(FOILS), ['gold','silver','midnight','rose']);
-  assert.deepEqual(SURFACE_STYLES, ['classic','theatre','concert']);
+  assert.deepEqual(SURFACE_STYLES, ['classic','theatre','concert','festival','backstage']);
   const code = fs.readFileSync(path.join(root, 'public/scratchcard.js'), 'utf8');
   assert.ok(!code.includes('https://cdn.'));
   assert.ok(code.includes('destination-out'));
@@ -193,7 +193,7 @@ test('scratch demo hides its underlying ticket until the foil is painted', () =>
 test('the scratch card can switch between original theatre and concert artwork', () => {
   const canvas = fakeCanvas();
   const card = new ScratchCard({canvas});
-  for (const style of ['theatre','concert','classic']) {
+  for (const style of ['theatre','concert','festival','backstage','classic']) {
     card.setCoverStyle(style);
     assert.equal(card.coverStyle, style);
     assert.equal(card.progress, 0);
