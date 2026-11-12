@@ -529,6 +529,8 @@
     .scratch-one-upload .field{margin:0}
     .scratch-one-upload .field-help{color:#d7c9be}
     .scratch-one-upload .warning-box{margin-top:12px}
+    .preview-details > [hidden],.live-message[hidden]{display:none!important}
+    #liveBookingUrl{overflow-wrap:anywhere;word-break:break-word}
   </style>
 </head>
 
@@ -773,25 +775,25 @@
             <div class="preview-divider"></div>
 
             <div class="preview-details">
-              <div>
+              <div id="liveDateRow" hidden>
                 <span class="preview-detail-label">Date</span>
                 <span id="liveDate" class="preview-detail-value">
                   Date to be confirmed
                 </span>
               </div>
-              <div>
+              <div id="liveTimeRow" hidden>
                 <span class="preview-detail-label">Time</span>
                 <span id="liveTime" class="preview-detail-value">
                   Time to be confirmed
                 </span>
               </div>
-              <div>
+              <div id="liveVenueRow" hidden>
                 <span class="preview-detail-label">Venue</span>
                 <span id="liveVenue" class="preview-detail-value">
                   To be confirmed
                 </span>
               </div>
-              <div>
+              <div id="liveAdmitRow" hidden>
                 <span class="preview-detail-label">Guests or recipients</span>
                 <span id="liveAdmit" class="preview-detail-value">
                   To be confirmed
@@ -812,11 +814,15 @@
             </div>
           </article>
 
-          <div class="live-message">
+          <div class="live-message" id="liveMessageWrap" hidden>
             <div class="live-message-title">A little message</div>
             <p id="liveMessage" class="live-message-text">
               Your personal message will appear here.
             </p>
+          </div>
+          <div id="liveBookingWrap" class="live-message" hidden>
+            <div class="live-message-title">Official ticket or booking link</div>
+            <p id="liveBookingUrl" class="live-message-text"></p>
           </div>
         </div>
 
@@ -943,20 +949,28 @@
       const output = {
         liveEventHeading: title,
         liveTicketTitle: title,
-        liveDate: dateText($("eventDate").value),
-        liveTime: timeText($("eventTime").value),
-        liveVenue: value("venue", "To be confirmed"),
-        liveAdmit: value("admit", "To be confirmed"),
+        liveDate: $("eventDate").value ? dateText($("eventDate").value) : "",
+        liveTime: $("eventTime").value ? timeText($("eventTime").value) : "",
+        liveVenue: $("venue").value.trim(),
+        liveAdmit: $("admit").value.trim(),
         liveRecipient: value("recipient", "Recipient"),
         liveSender: value("sender", "Sender"),
-        liveMessage: value(
-          "personalMessage",
-          "Your personal message will appear here."
-        )
+        liveMessage: $("personalMessage").value.trim(),
+        liveBookingUrl: $("ticketUrl").value.trim()
       };
 
       for (const [key, text] of Object.entries(output)) {
         $(key).textContent = text;
+      }
+      for (const [key, value] of [
+        ["liveDateRow", output.liveDate],
+        ["liveTimeRow", output.liveTime],
+        ["liveVenueRow", output.liveVenue],
+        ["liveAdmitRow", output.liveAdmit],
+        ["liveMessageWrap", output.liveMessage],
+        ["liveBookingWrap", output.liveBookingUrl]
+      ]) {
+        $(key).hidden = !value;
       }
     }
 
