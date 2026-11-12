@@ -279,3 +279,53 @@ test('quiz creator and recipient pages are mobile-first, four-choice and do not 
     assert.doesNotThrow(()=>new Function(clean));
   }
 });
+
+
+test('staging-only quiz creator and fictional recipient demonstration have working asset routes',async()=>{
+  const mapped=[];
+  const env={STAGING_DISABLE_CHECKOUT:'true',ASSETS:{
+    async fetch(request){
+      const destination=new URL(request.url).pathname;
+      mapped.push(destination);
+      return new Response('<!doctype html>quiz asset',{headers:{'content-type':'text/html'}});
+    }
+  }};
+  const creator=await worker.fetch(answers('/quiz-create'),env,{});
+  const demo=await worker.fetch(answers('/quiz-demo'),env,{});
+  assert.equal(creator.status,200);
+  assert.equal(demo.status,200);
+  assert.deepEqual(mapped,['/quiz-create','/quiz-recipient']);
+  const blocked=await worker.fetch(answers('/quiz-demo','POST'),env,{});
+  assert.equal(blocked.status,405);
+});
+
+test('quiz authoring blocks foreign-origin changes and rejects malformed content and paid edits',async()=>{
+  const m=mock({...paid,status:'draft',paid_at:null},null);
+  const foreign=new Request(url+'/api/reveals/my-quiz-id/quiz',{
+    method:'PUT',headers:{'X-Edit-Token':'private-token',
+      'Content-Type':'application/json','Origin':'https://another.example'},
+    body:JSON.stringify(quiz)
+  });
+  assert.equal((await quizOwnerResponse(foreign,m.env,{},m.originalWorker)).status,403);
+  assert.equal(m.data.changes,0);
+  const malformed=new Request(url+'/api/reveals/my-quiz-id/quiz',{
+    method:'PUT',headers:{'X-Edit-Token':'private-token','Content-Type':'application/json'},
+    body:'{not JSON}'
+  });
+  assert.equal((await quizOwnerResponse(malformed,m.env,{},m.originalWorker)).status,400);
+  assert.equal(m.data.changes,0);
+});
+
+test('quiz answers require the current step and same-origin JSON requests',async()=>{
+  const m=mock();
+  const badOrigin=new Request(url+'/r/quiz-link/quiz-answer',{
+    method:'POST',headers:{'Content-Type':'application/json','Origin':'https://another.example'},
+    body:JSON.stringify({questionIndex:0,optionIndex:1})
+  });
+  assert.equal((await quizRecipientResponse(badOrigin,m.env,{})).status,403);
+  const invalidIndex=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+    questionIndex:0,optionIndex:4
+  }),m.env,{});
+  assert.equal(invalidIndex.status,400);
+  assert.equal(m.data.events.size,0);
+});
