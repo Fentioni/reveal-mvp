@@ -27,12 +27,27 @@
     h1{font:normal clamp(2.65rem,5.8vw,5.3rem)/.98 Georgia,"Times New Roman",serif;letter-spacing:-.045em;margin:15px 0 23px}
     h1 em{color:var(--gold);font-weight:normal}
     .description{max-width:410px;color:#d4d0d6;font-size:1.03rem;line-height:1.75}
-    .demo-disclaimer{max-width:400px;font-size:.78rem;color:#b6ad9f;line-height:1.6;padding-top:14px}
+    .demo-disclaimer{max-width:435px;font-size:.78rem;color:#b6ad9f;line-height:1.6;padding-top:14px}
     .controls{display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-top:26px}
     .btn{min-height:46px;border-radius:999px;padding:10px 17px;border:1px solid #6d5d43;color:#fbe8ba;background:transparent;font-weight:650}
     .btn.primary{background:var(--gold);color:#261a12;border-color:var(--gold)}
     .btn[aria-pressed="true"]{background:#54462c;border-color:#e2c486}
     .foil-controls{display:flex;flex-wrap:wrap;gap:9px;margin-top:12px}
+    .surface-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:14px;max-width:435px}
+    .surface-option{display:flex;align-items:center;gap:11px;text-align:left;min-height:76px;padding:9px 11px;border-radius:13px;border:1px solid #6c6062;color:#f5f0e5;background:#221e28;cursor:pointer}
+    .surface-option[aria-pressed="true"]{border-color:#efcf86;box-shadow:0 0 0 2px #efcf8633}
+    .surface-option .thumb{flex:0 0 53px;height:54px;border-radius:7px;border:1px solid #ffffff44;display:grid;place-items:center;font-size:1.4rem;color:#f5e0ad}
+    .surface-option .thumb.classic{background:linear-gradient(120deg,#8c6329,#f9e2a7,#a2702d)}
+    .surface-option .thumb.theatre{background:repeating-linear-gradient(90deg,#6b1632 0,#9f2a4b 8px,#571028 17px)}
+    .surface-option .thumb.concert{background:linear-gradient(140deg,#242153,#1e1145 35%,#c5339a 70%,#1e8dc6)}
+    .surface-option .thumb.custom{background:linear-gradient(140deg,#302b41,#615275)}
+    .surface-option small{display:block;color:#d1c4b5;margin-top:3px;font-size:.72rem}
+    .upload-control{max-width:435px;border:1px dashed #8b7755;border-radius:13px;padding:13px;margin-top:12px}
+    .upload-control[hidden]{display:none}
+    .upload-control label{display:block;font-size:.87rem;color:#f4e4ba;margin-bottom:9px}
+    .upload-control input{max-width:100%;font-size:.8rem}
+    .upload-control p{font-size:.74rem;color:#c2b6b0;line-height:1.5;margin:9px 0 0}
+    .upload-error{font-size:.8rem;color:#ffb7ae;min-height:1.4em;margin:7px 0 0}
     .swatch{width:42px;height:42px;border:3px solid #20202b;border-radius:50%;color:transparent;box-shadow:0 0 0 1px #665c52}
     .swatch[aria-pressed="true"]{box-shadow:0 0 0 2px #f4d89b}
     .swatch.gold{background:linear-gradient(135deg,#a4742b,#ffeaa2,#ac7424)}
@@ -80,7 +95,7 @@
     .reveal-complete .scratch-window{box-shadow:0 30px 85px #0009,0 0 45px #edc67a25}
     @media(max-width:770px){.layout{grid-template-columns:1fr;padding-top:4px;gap:28px}
       .copy{max-width:520px;margin:auto;text-align:center}.description,.demo-disclaimer{margin-left:auto;margin-right:auto}
-      .controls,.foil-controls{justify-content:center}.control-label{margin-top:18px}.stage{max-width:380px}
+      .controls,.foil-controls{justify-content:center}.control-label{margin-top:18px}.surface-grid,.upload-control{margin-left:auto;margin-right:auto}.stage{max-width:380px}
       h1{font-size:clamp(2.6rem,12vw,4.4rem)}.scratch-window{border-radius:24px}}
     @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
   </style>
@@ -101,6 +116,19 @@
         <button class="swatch silver" type="button" data-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
         <button class="swatch midnight" type="button" data-foil="midnight" aria-label="Midnight foil" aria-pressed="false"></button>
         <button class="swatch rose" type="button" data-foil="rose" aria-label="Rose foil" aria-pressed="false"></button>
+      </div>
+      <div class="control-label" id="surfaceLabel">Choose the surface artwork</div>
+      <div class="surface-grid" role="group" aria-labelledby="surfaceLabel">
+        <button class="surface-option" type="button" data-surface="classic" aria-pressed="true"><span class="thumb classic" aria-hidden="true">✦</span><span>Classic foil<small>Premium scratch ticket</small></span></button>
+        <button class="surface-option" type="button" data-surface="theatre" aria-pressed="false"><span class="thumb theatre" aria-hidden="true">✧</span><span>Theatre Velvet<small>Curtains and gold print</small></span></button>
+        <button class="surface-option" type="button" data-surface="concert" aria-pressed="false"><span class="thumb concert" aria-hidden="true">♫</span><span>Concert Lights<small>VIP-style neon artwork</small></span></button>
+        <button class="surface-option" type="button" data-surface="custom" aria-pressed="false"><span class="thumb custom" aria-hidden="true">▧</span><span>Your own image<small>Scratch off your photo</small></span></button>
+      </div>
+      <div class="upload-control" id="uploadControl" hidden>
+        <label for="surfaceImage">Choose an image to scratch away</label>
+        <input id="surfaceImage" type="file" accept="image/jpeg,image/png,image/webp">
+        <p>JPEG, PNG or WebP · maximum 10 MB · at least 640 × 640 pixels. The image is cropped to fill the card. This staging demo keeps the file in your browser only; it is not uploaded or saved.</p>
+        <p id="uploadError" class="upload-error" role="alert"></p>
       </div>
       <div class="controls">
         <button id="soundButton" class="btn" type="button" aria-pressed="false">♫ Sound off</button>
@@ -153,6 +181,12 @@
     let audioContext = null;
     let lastScratchSound = 0;
     let currentFoil = 'gold';
+    let currentSurface = 'classic';
+    let currentUploadUrl = null;
+    let imageSelection = 0;
+    const uploadControl = byId('uploadControl');
+    const surfaceInput = byId('surfaceImage');
+    const uploadError = byId('uploadError');
 
     function initAudio() {
       const AudioContextClass = window.AudioContext || window.webkitAudioContext;
@@ -215,6 +249,84 @@
       underlay.setAttribute('aria-hidden','true');
       status.textContent = 'Scratch the ' + currentFoil + ' foil. Only your strokes remove it.';
     }
+
+    function chooseVisualSurface(surface) {
+      for (const button of document.querySelectorAll('[data-surface]')) {
+        button.setAttribute('aria-pressed', String(button.dataset.surface === surface));
+      }
+      uploadControl.hidden = surface !== 'custom';
+      currentSurface = surface;
+    }
+
+    async function choosePreset(style) {
+      imageSelection++;
+      chooseVisualSurface(style);
+      uploadError.textContent = '';
+      surfaceInput.value = '';
+      await scratch.setCoverImage(null);
+      if (currentUploadUrl) { URL.revokeObjectURL(currentUploadUrl); currentUploadUrl = null; }
+      scratch.setCoverStyle(style);
+      stage.classList.remove('reveal-complete');
+      underlay.setAttribute('aria-hidden','true');
+      status.textContent = 'Scratch to uncover the fictional surprise. The foil only disappears where you touch.';
+    }
+
+    for (const button of document.querySelectorAll('[data-surface]')) {
+      button.addEventListener('click', () => {
+        const style = button.dataset.surface;
+        if (style === 'custom') {
+          chooseVisualSurface('custom');
+          status.textContent = 'Choose a photo, then scratch it to uncover the fictional surprise.';
+        } else {
+          choosePreset(style);
+        }
+      });
+    }
+
+    async function checkImageDimensions(url) {
+      const image = new Image();
+      return new Promise((resolve,reject) => {
+        image.onload = () => resolve({width:image.naturalWidth,height:image.naturalHeight});
+        image.onerror = () => reject(new Error('This file is not a readable image.'));
+        image.src = url;
+      });
+    }
+
+    surfaceInput.addEventListener('change', async () => {
+      const file = surfaceInput.files?.[0];
+      if (!file) return;
+      uploadError.textContent = '';
+      if (!['image/jpeg','image/png','image/webp'].includes(file.type) || file.size > 10 * 1024 * 1024 || !file.size) {
+        uploadError.textContent = 'Choose a JPEG, PNG or WebP image no larger than 10 MB.';
+        surfaceInput.value = '';
+        return;
+      }
+      const selected = ++imageSelection;
+      const url = URL.createObjectURL(file);
+      try {
+        const dimensions = await checkImageDimensions(url);
+        if (selected !== imageSelection) { URL.revokeObjectURL(url); return; }
+        if (dimensions.width < 640 || dimensions.height < 640) {
+          throw new Error('Choose an image at least 640 pixels wide and high.');
+        }
+        const ready = await scratch.setCoverImage(url);
+        if (!ready || selected !== imageSelection) { URL.revokeObjectURL(url); return; }
+        if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
+        currentUploadUrl = url;
+        chooseVisualSurface('custom');
+        stage.classList.remove('reveal-complete');
+        underlay.setAttribute('aria-hidden','true');
+        status.textContent = 'Your image is now the scratch surface. Scratch anywhere to uncover the surprise.';
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        uploadError.textContent = error.message || 'Unable to load this image.';
+        surfaceInput.value = '';
+      }
+    });
+
+    window.addEventListener('pagehide', () => {
+      if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
+    });
 
     for (const button of document.querySelectorAll('[data-foil]')) {
       button.addEventListener('click', () => {
