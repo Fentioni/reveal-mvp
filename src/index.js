@@ -33,7 +33,7 @@ export default {
       return scratchSurfaceResponse(request, env, ctx, originalWorker);
     }
 
-    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:scratch-data|scratch-cover))?\/?$/.test(path)) {
+    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:scratch-data|scratch-cover|scratch-image))?\/?$/.test(path)) {
       const paidScratch = await scratchRecipientResponse(request, env, ctx);
       if (paidScratch) return paidScratch;
     }
