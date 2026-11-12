@@ -176,7 +176,7 @@ test('creator, review and demo inline module scripts parse as valid JavaScript',
     const html=fs.readFileSync(path.join(root,'public',name),'utf8');
     const scripts=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
     assert.equal(scripts.length,1,name+' should have one module script');
-    const code=scripts[0][1].replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];\s*/gm,'');
+    const code=scripts[0][1].replace(/^[ \t]*import[ \t]+\{[^}]*\}[ \t]+from[ \t]+['"][^'"]+['"];[ \t]*$/gm,'');
     assert.doesNotThrow(() => new Function(code),name+' script contains invalid syntax');
   }
 });
