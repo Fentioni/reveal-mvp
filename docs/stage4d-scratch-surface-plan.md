@@ -48,6 +48,16 @@
 - No schema or API contract change was required. The existing `image` field and owner-authenticated `scratch-surface` API still receive the necessary data.
 - Music remains deferred, and customer scratch interaction remains payment protected.
 
+## Stage 4E: Full ticket detail display (12 November 2026)
+- User requirement: every populated input on the Ticket & Concert Reveal creation form must appear on the recipient's final revealed card; optional fields with no value must not appear at all (including label, placeholder, divider, or empty space).
+- Paid recipient scratch-data now includes recipient, sender, eventName, eventDate, eventTime, venue, admit, personalMessage, ticketUrl, and a hasEventImage flag. The sensitive ticket URL and original image are not in anonymous or public previews and are only served behind the existing status=paid AND paid_at verification.
+- Date, time, venue, admit, personal message, booking link, and uploaded event image are independently conditional. Sender, recipient and event name remain required by the draft form.
+- A separate paid-only /r/:slug/scratch-image endpoint serves the existing private event image with cache-control: private, no-store, image MIME validation, and no R2 object key in the page data.
+- The official ticket/booking URL is displayed inside the revealed card only when set, using a safe http(s) link. A tappable action also becomes available beneath the card after significant scratching because the scratch canvas overlay prevents clicks through to underneath it.
+- Recipient card height grows to accommodate lengthy submitted details rather than cutting off optional values; long messages and URLs wrap.
+- The purchaser's live static details preview and static review now also hide blank optional fields, showing a populated booking URL without fabricated "To be confirmed" values.
+- The actual recipient card is never available pre-payment. All changes staged only, no production update.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
