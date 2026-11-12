@@ -42,6 +42,15 @@
     cursor:pointer;overflow-wrap:anywhere;line-height:1.35}
   .choice:focus-visible,.hint-button:focus-visible,a:focus-visible{outline:3px solid #8f4b80;outline-offset:3px}
   .choice:not(:disabled):hover{border-color:#9873a3;background:#fff8ef}
+  /* Wrong answers remain visible, but are grey and cannot be reselected. */
+  .choice.ruled-out,.choice.ruled-out:disabled{
+    background:#d0cfd5;color:#706b77;border-color:#aba9b2;
+    text-decoration:line-through;text-decoration-thickness:1px;
+    opacity:.78;cursor:not-allowed
+  }
+  .choice.ruled-out .choice-key{color:#76717a}
+  .attempts{color:#78677e;font-size:.8rem;margin:14px 0 0;
+    min-height:22px;text-align:center}
   button{font:inherit}
   button:disabled{opacity:.6;cursor:default}
   .choice-key{display:block;color:#a18ca7;font-size:.67rem;letter-spacing:.1em;margin-bottom:4px}
@@ -88,8 +97,8 @@
       <h2 id="questionText" class="question-title"></h2>
       <img id="questionImage" class="question-image" alt="Image accompanying this question" hidden>
       <div id="choices" class="choices"></div>
-      <button id="hintButton" type="button" class="hint-button" hidden>Need a hint?</button>
-      <p id="hintText" class="hint-text" hidden></p>
+      <p id="attempts" class="attempts" aria-live="polite"></p>
+      <p id="hintText" class="hint-text" role="status" aria-live="polite" hidden></p>
       <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
     </section>
     <p id="status" class="status" aria-live="polite"></p>
@@ -121,6 +130,8 @@
       options:['Lisbon','Oslo','Athens','Venice'],correctIndex:3,hint:'It has famous canals.'}
   ];
   let demoStep=0,latestState=null,busy=false;
+  const demoWrong=Array.from({length:3},()=>new Set());
+  const fallbackHint='Look closely at the answers that are still available.';
   function showError(text){$('error').textContent=text;$('error').hidden=false;
     $('quizArea').hidden=true;$('result').hidden=true;}
   function demoState(){
@@ -131,9 +142,11 @@
         personalMessage:"Pack your bags. We're off on an adventure!",
         ticketUrl:'',hasEventImage:false}};
     const row=demoQuestions[demoStep];
+    const wrongOptions=Array.from(demoWrong[demoStep]).sort((a,b)=>a-b);
     return {success:true,recipient:'Chloe',theme:'travel-adventure',completed:demoStep,
       questionCount:3,unlocked:false,question:{number:demoStep+1,prompt:row.prompt,
-        options:row.options,hint:row.hint}};
+        options:row.options,wrongOptions,wrongAttempts:wrongOptions.length,
+        ...(wrongOptions.length>=2 ? {hint:row.hint||fallbackHint} : {})}};
   }
   async function getState(){
     if(demo)return demoState();
@@ -145,7 +158,8 @@
     return data;
   }
   async function submitAnswer(optionIndex){
-    if(busy||!latestState||latestState.unlocked)return;
+    if(busy||!latestState||latestState.unlocked ||
+       latestState.question.wrongOptions?.includes(optionIndex))return;
     busy=true;
     $('status').textContent='Checking your answer…';
     for(const button of $('choices').querySelectorAll('button'))button.disabled=true;
@@ -153,6 +167,7 @@
       const data=demo?(()=> {
         const good=demoQuestions[demoStep].correctIndex===optionIndex;
         if(good)demoStep++;
+        else demoWrong[demoStep].add(optionIndex);
         return {correct:good,...demoState()};
       })():await(async()=>{
         const resp=await fetch('/r/'+encodeURIComponent(slug)+'/quiz-answer',{
@@ -163,19 +178,19 @@
         if(!resp.ok||!payload.success)throw Error(payload.error||'Answer could not be checked.');
         return payload;
       })();
-      if(data.correct) {
-        $('status').textContent='';
-        render(data);
-      } else {
+      render(data);
+      if(!data.correct) {
         $('feedback').hidden=false;
         $('feedback').className='feedback wrong';
         $('feedback').textContent='Not quite! Try another answer.';
-        $('status').textContent='You can try again.';
-        for(const button of $('choices').querySelectorAll('button'))button.disabled=false;
+        // render() disables the ruled-out button, so do not reset all
+        // buttons to enabled after displaying the wrong-answer feedback.
       }
     }catch(error){
       $('status').textContent=error.message||'Please try again.';
-      for(const button of $('choices').querySelectorAll('button'))button.disabled=false;
+      for(const button of $('choices').querySelectorAll('button')){
+        button.disabled=button.classList.contains('ruled-out');
+      }
     }finally{busy=false;}
   }
   function showFinal(reveal){
@@ -236,9 +251,15 @@
       picture.src='/r/'+encodeURIComponent(slug)+'/quiz-question-image/'+activeQuestion;
     }
     $('choices').replaceChildren();
+    const wrongOptions=Array.isArray(state.question.wrongOptions)
+      ? state.question.wrongOptions : [];
     state.question.options.forEach((label,index)=>{
+      const ruledOut=wrongOptions.includes(index);
       const button=document.createElement('button');
-      button.type='button';button.className='choice';
+      button.type='button';button.className=ruledOut?'choice ruled-out':'choice';
+      button.disabled=ruledOut;
+      if(ruledOut)button.setAttribute('aria-label',
+        'Answer '+String.fromCharCode(65+index)+': '+label+' — ruled out');
       const letter=document.createElement('span');letter.className='choice-key';
       letter.textContent=String.fromCharCode(65+index);
       const text=document.createElement('span');text.textContent=label;
@@ -246,17 +267,18 @@
       button.addEventListener('click',()=>submitAnswer(index));
       $('choices').append(button);
     });
-    $('hintButton').hidden=!state.question.hint;
-    $('hintButton').textContent='Need a hint?';
-    $('hintText').hidden=true;
-    $('hintText').textContent=state.question.hint||'';
+    const attempts=wrongOptions.length;
+    $('attempts').textContent=attempts===0?'Choose one answer.':attempts===3
+      ?'Three wrong answers ruled out. Tap the remaining choice to continue.'
+      :attempts+' wrong '+(attempts===1?'answer':'answers')+
+        ' ruled out. '+(4-attempts)+' choices remain.';
+    const showHint=attempts>=2;
+    $('hintText').hidden=!showHint;
+    $('hintText').textContent=showHint
+      ?'Hint: '+(state.question.hint||fallbackHint):'';
     $('feedback').hidden=true;
     $('status').textContent='';
   }
-  $('hintButton').addEventListener('click',()=>{
-    $('hintText').hidden=!$('hintText').hidden;
-    $('hintButton').textContent=$('hintText').hidden?'Need a hint?':'Hide hint';
-  });
   if(demo){
     $('disclaimer').textContent='Fictional recipient demonstration. No personal data and no payment.';
   }
