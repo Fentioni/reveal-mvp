@@ -3,6 +3,7 @@ import originalWorker from './legacy.js';
 import { catalogueResponse } from './catalogue.js';
 import { scratchSurfaceResponse } from './scratch-surface.js';
 import { scratchRecipientResponse } from './scratch-recipient.js';
+import { quizOwnerResponse,quizRecipientResponse } from './quiz.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -31,6 +32,16 @@ export default {
     if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/scratch-surface(?:\/image)?\/?$/.test(path)) {
       if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.', 404);
       return scratchSurfaceResponse(request, env, ctx, originalWorker);
+    }
+
+    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/quiz\/?$/.test(path)) {
+      if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.',404);
+      return quizOwnerResponse(request,env,ctx,originalWorker);
+    }
+
+    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:quiz-state|quiz-answer|quiz-image|image))?\/?$/.test(path)) {
+      const paidQuiz=await quizRecipientResponse(request,env,ctx);
+      if (paidQuiz) return paidQuiz;
     }
 
     if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:scratch-data|scratch-cover|scratch-image))?\/?$/.test(path)) {
@@ -73,6 +84,17 @@ export default {
         return textError('Catalogue unavailable.', 503);
       }
       return Response.redirect(url.origin + '/legacy-create.html', 302);
+    }
+
+    if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
+        (path === '/quiz-create' || path === '/quiz-create/' ||
+         path === '/quiz-demo' || path === '/quiz-demo/')) {
+      if (request.method !== 'GET' && request.method !== 'HEAD') {
+        return textError('Method not allowed.',405);
+      }
+      if (!env.ASSETS) return textError('Quiz preview unavailable.',503);
+      const assetPath = path.startsWith('/quiz-demo') ? '/quiz-demo' : '/quiz-create';
+      return env.ASSETS.fetch(new Request(new URL(assetPath,url),request));
     }
 
     if (path.startsWith('/create/')) {
