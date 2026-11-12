@@ -224,7 +224,7 @@ test('out-of-date asynchronous image loads cannot replace the current scratch su
 
 test('decorative confetti and red gift icon appear on every public demo load without blocking scratching', () => {
   const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
-  assert.match(demo, /id="celebrationConfetti"\s+aria-hidden="true"/);
+  assert.match(demo, /id="celebrationConfetti"[^>]*aria-hidden="true"/);
   assert.match(demo, /id="redGiftBadge"\s+aria-hidden="true"/);
   assert.match(demo, /\.red-gift-badge\s*\{[^}]*pointer-events:none/);
   assert.match(demo, /\.confetti-field\s*\{[^}]*pointer-events:none/);
