@@ -329,3 +329,21 @@ test('quiz answers require the current step and same-origin JSON requests',async
   assert.equal(invalidIndex.status,400);
   assert.equal(m.data.events.size,0);
 });
+
+
+test('each quiz theme button shows its own full colour fill and accessible chosen state',()=>{
+  const html=fs.readFileSync(path.join(root,'public/quiz-create.html'),'utf8');
+  const themeNames=['classic-gold','travel-adventure','romantic','birthday-celebration'];
+  assert.equal((html.match(/class="theme-choice" data-theme=/g)||[]).length,4);
+  for(const theme of themeNames){
+    assert.ok(html.includes('.theme-choice[data-theme="'+theme+'"]{'),theme+' has themed filled background');
+    assert.ok(html.includes('data-theme="'+theme+'" aria-pressed='),theme+' remains selectable');
+    const section=html.match(new RegExp('\\\\.theme-choice\\\\[data-theme="'+theme+'"\\\\]\\\\{([^}]*)\\\\}'));
+    assert.ok(section?.[1].includes('background:'),theme+' has actual gradient fill');
+  }
+  assert.ok(html.includes('class="theme-visual-icon" aria-hidden="true"'));
+  assert.ok(html.includes('class="theme-description"'));
+  assert.ok(html.includes('.theme-choice[aria-pressed="true"]'));
+  assert.ok(html.includes('button.setAttribute(\'aria-pressed\',String(button.dataset.theme===theme))'));
+  assert.ok(html.includes("$('preview').dataset.theme=theme"));
+});
