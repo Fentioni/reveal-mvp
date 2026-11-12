@@ -81,3 +81,22 @@ test('recipient scratch document binds every optional element to the paid model'
   assert.ok(html.includes('rel="noopener noreferrer nofollow"'));
   assert.ok(html.includes('referrerpolicy="no-referrer"'));
 });
+
+
+test('live purchaser preview and static review omit empty optionals in the same way as paid card',()=>{
+  const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  const review=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
+  for (const id of ['Date','Time','Venue','Admit']) {
+    assert.ok(creator.includes('id="live'+id+'Row" hidden'), 'creator '+id);
+    assert.ok(review.includes('id="review'+id+'Row" hidden'), 'review '+id);
+  }
+  assert.ok(creator.includes('id="liveMessageWrap" hidden'));
+  assert.ok(creator.includes('id="liveBookingWrap"'));
+  assert.ok(creator.includes('liveBookingUrl: $("ticketUrl").value.trim()'));
+  assert.ok(creator.includes('$(key).hidden = !value'));
+  assert.ok(review.includes('id="reviewMessageCard" hidden'));
+  assert.ok(review.includes('document.getElementById(rowId).hidden = !value'));
+  assert.ok(review.includes('document.getElementById('+"'reviewMessageCard'"+').hidden = !personalMessage'));
+  assert.ok(!review.includes("'No personal message added.'"));
+  assert.ok(!creator.includes('"To be confirmed"),\n        liveAdmit'));
+});
