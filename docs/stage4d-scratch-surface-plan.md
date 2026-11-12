@@ -1,40 +1,39 @@
 # Stage 4D scratch-surface system (staging)
 
-## Status, 12 November 2026
-Implemented: original Canvas scratch engine with Classic, Theatre Velvet and Concert Lights surface artwork; Gold, Silver, Midnight and Rose foil finishes; a public fictional demonstration; local custom-photo cover preview with crop-to-cover; restarts and optional sound; file validation; manual-only foil removal; page-load spoiler prevention.
+## Implemented (12 November 2026)
+- Original dependency-free Canvas scratch engine.
+- Premium foil artwork: Classic, Theatre Velvet and Concert Lights.
+- Gold, Silver, Midnight and Rose finishes.
+- The public fictional demo offers presets plus a local user-supplied image, cropped to cover the scratch surface. Demo uploads stay in-browser only.
+- No percentage-triggered clearing; remaining foil is removed only by the user's gesture. No Reveal Without Scratching button.
+- Concealed contents cannot flash on the initial load before the foil paints.
+- Staging Ticket & Concert Reveal creator offers scratch style, foil and optional custom cover upload.
+- Creator shows only a non-interactive/static design preview and restores selected styling on Amend.
+- Staging owner-authorised scratch-surface GET/PUT endpoints, plus private owner image GET route.
+- Existing D1 reveal_configurations.fields_json records the style, foil and coverAssetId.
+- Existing reveal_assets stores one scratch-cover record per reveal; corresponding JPG/PNG/WebP is stored privately in reveal-images-stage4b R2.
+- Saved scratch surface is shown in static owner review without enabling scratch interactions.
+- Automated security, image validation, persistence and route tests.
 
-Not yet implemented: saving a purchaser's choices, private R2 storage of purchaser covers, D1 persistence, static owner review of the selected cover, paid recipient integration. These are required before the scratch-card product can be sold.
+## Restrictions still in place
+- All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
+- No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
+- Staging-only scratch-surface API is inaccessible unless STAGING_DISABLE_CHECKOUT=true; no production Worker or D1 changed.
 
-## Locked requirements
-1. All remaining foil persists until manually erased by the recipient. No auto-hide threshold.
-2. Customers can choose a premium standard cover, themed presets or their own image as the erasable top layer.
-3. Cover art and actual hidden event or ticket content are separate assets.
-4. The public demonstration uses fictional content, is replayable and does not save uploads.
-5. The owner's actual review stays static, without allowing the paid reveal to be played or captured.
-6. The recipient's interactive animation and private ticket details are delivered only after server-verified payment.
-7. Mobile first, optional audio, original artwork, no subscription and no hardcoded checkout tax.
+## Design and storage contract
+- Surface style values: classic, theatre, concert, custom.
+- Foil values: gold, silver, midnight, rose.
+- The custom cover image is the scratchable **top** layer, distinct from the event poster or ticket underlay.
+- The original image is privately stored in R2, not in public assets or a D1 JSON data URL.
+- The configuration is embedded as scratchSurface inside reveal_configurations.fields_json, preserving other product data.
+- For custom images, coverAssetId is an existing reveal_assets.id with kind scratch-cover.
+- Only the owner who knows X-Edit-Token can fetch or amend scratch preferences and cover images; edits require status=draft.
+- Public demo images never go to R2.
+- No purchaser preview or owner static review may scratch/replay an actual personalised recipient experience.
 
-## Configuration
-Surface style: classic, theatre, concert or custom.
-Foil: gold, silver, midnight or rose.
-For a custom image, use centre-crop-to-cover with adjustable offsets in a later phase.
-The static review must show the selected surface (without scratch interaction).
-The recipient scratch canvas must show the full selected surface until manually erased.
-
-## D1 and R2 mapping (existing Stage 4A schema)
-The staging database already includes reveal_configurations (reveal_id, product_id, fields_json, schema_version) and reveal_assets (reveal_id, r2_key, kind, created_at).
-Store scratchSurface inside reveal_configurations.fields_json, preserving other product fields. Suggested fields: style, foil, coverAssetId, crop.x, crop.y, crop.zoom.
-For customer-uploaded images, store the validated original image in private R2 bucket reveal-images-stage4b and use reveal_assets.kind = scratch-cover. Store only the asset record ID in the configuration, never a blob URL, public image URL or base64 file. The existing event-poster image is distinct and must not be overwritten.
-No additional table is needed for this planned model.
-
-## Backend and creator integration still required
-- Authorised, draft-only save/load endpoints under /api/reveals/:id/scratch-surface using the existing owner edit token.
-- Secure image signature and format checks, file size <= 10MB, dimension checks, replacement and cleanup.
-- Authenticated owner image access before payment; recipient image access only when the reveal is paid.
-- A non-scratchable live cover preview and upload selector in the ticket creator; save after drafting and before redirecting to review.
-- Restore the cover configuration and private image when editing an existing draft. Preserve it on refresh.
-- Separate static review that never ships playable personalised reveal assets.
-- Paid delivery, replay and keepsake download as separate later gates.
-
-## Tests
-Verify: stale async image loads cannot override a new choice; upload never leaves the public demo; unsupported or low-resolution files are rejected; switching styles resets scratch marks; all untouched foil persists; invalid owner tokens cannot access any saved cover; unpaid recipients receive no custom cover or personalised animation; no Stripe checkout or webhook is enabled in staging.
+## Later work
+- Fully paid recipient scratch experience, served only after verified payment, with locked private images and shareable revisitable link.
+- Responsive user-defined crop offsets and richer artwork files from the purchaser.
+- User-provided sound tracks and reveal timing.
+- Original PDF and image keepsakes.
+- Production migration and payment integration only after independent testing and user authorisation.
