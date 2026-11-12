@@ -93,7 +93,7 @@ export default {
         return textError('Method not allowed.',405);
       }
       if (!env.ASSETS) return textError('Quiz preview unavailable.',503);
-      const assetPath = path.startsWith('/quiz-demo') ? '/quiz-demo' : '/quiz-create';
+      const assetPath = path.startsWith('/quiz-demo') ? '/quiz-recipient' : '/quiz-create';
       return env.ASSETS.fetch(new Request(new URL(assetPath,url),request));
     }
 
