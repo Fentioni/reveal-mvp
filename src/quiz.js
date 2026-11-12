@@ -13,6 +13,11 @@ const hide = () => json({success:false,error:'This reveal is not available.'},40
 const fail = (error,status=400) => json({success:false,error},status);
 const clean = v => typeof v==='string' ? v.trim() : '';
 const qKey = (id,step) => 'quiz-' + id + '-step-' + step;
+// Unique, persistent record per ruled-out option. These identifiers are bound
+// to a single reveal/question and cannot be incremented by repeated guesses.
+const wrongKey = (id,question,option) =>
+  'quiz-' + id + '-q' + question + '-wrong-' + option;
+const DEFAULT_HINT = 'Look closely at the answers that are still available.';
 
 export function validateQuizConfig(input) {
   if (!input || typeof input!=='object' || Array.isArray(input)) return {error:'Invalid quiz details.'};
@@ -114,6 +119,15 @@ async function progress(env,id) {
   return step;
 }
 
+async function ruledOutOptions(env,id,question) {
+  const keys=[0,1,2,3].map(option=>wrongKey(id,question,option));
+  const result=await env.DB.prepare(
+    'SELECT id FROM reveal_events WHERE reveal_id=? AND id IN (?,?,?,?)'
+  ).bind(id,...keys).all();
+  const recorded=new Set((result.results||[]).map(x=>x.id));
+  return keys.flatMap((key,index)=>recorded.has(key)?[index]:[]);
+}
+
 function unlockedReveal(row) {
   return {
     recipient:row.recipient,
@@ -133,22 +147,28 @@ async function publicQuizState(env,row,quiz,step) {
   // Do not expose media keys or later questions. Only the active question
   // advertises an image, and only after the payment gate has passed.
   let hasQuestionImage=false;
+  let wrongOptions=[];
   if(step<3){
+    wrongOptions=await ruledOutOptions(env,row.id,step+1);
     const asset=await env.DB.prepare(
       'SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1'
     ).bind(row.id,'quiz-question-'+(step+1)).first();
     hasQuestionImage=Boolean(asset);
   }
-  return visibleState(row,quiz,step,hasQuestionImage);
+  return visibleState(row,quiz,step,hasQuestionImage,wrongOptions);
 }
 
-function visibleState(row,quiz,step,hasQuestionImage=false) {
+function visibleState(row,quiz,step,hasQuestionImage=false,wrongOptions=[]) {
   const unlocked=step===3;
   return {success:true,recipient:row.recipient,theme:quiz.theme,
     completed:step,questionCount:3,unlocked,
     ...(unlocked ? {reveal:unlockedReveal(row)} : {
       question:{number:step+1,prompt:quiz.questions[step].prompt,
-        options:quiz.questions[step].options,hint:quiz.questions[step].hint,
+        options:quiz.questions[step].options,
+        wrongOptions,wrongAttempts:wrongOptions.length,
+        ...(wrongOptions.length>=2 ? {
+          hint:quiz.questions[step].hint || DEFAULT_HINT
+        } : {}),
         ...(hasQuestionImage?{hasImage:true}:{})}
     })
   };
@@ -195,7 +215,20 @@ export async function quizRecipientResponse(request,env,ctx) {
       if (!Number.isInteger(answer?.questionIndex) || answer.questionIndex!==step ||
           !Number.isInteger(answer?.optionIndex) || answer.optionIndex<0 ||
           answer.optionIndex>3) return fail('Answer the current question using one of four options.');
+      // Previously selected wrong choices are permanently unavailable on this
+      // question, including after reloading or opening the link on another device.
+      const priorWrong=await ruledOutOptions(env,row.id,step+1);
+      if (priorWrong.includes(answer.optionIndex)) {
+        return fail('This answer has already been ruled out.',409);
+      }
       const correct=answer.optionIndex===quiz.questions[step].correctIndex;
+      if (!correct) {
+        await env.DB.prepare(
+          'INSERT OR IGNORE INTO reveal_events(id,reveal_id,event_type,metadata_json,created_at) '+
+          'VALUES(?,?,?,?,?)'
+        ).bind(wrongKey(row.id,step+1,answer.optionIndex),row.id,
+          'quiz-wrong-answer','{}',new Date().toISOString()).run();
+      }
       if (correct) {
         // Stable primary key: only one completion event can ever be inserted per
         // step. Returning visitors retrieve their completed progress.
