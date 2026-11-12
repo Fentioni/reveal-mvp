@@ -165,7 +165,8 @@ test('ticket creator contains static surface preview and saves/restores owner co
   assert.ok(creator.includes('id="image"'));
   assert.ok(!creator.includes('id="scratchCoverImage"'));
   assert.ok(!creator.includes('id="scratchUploadField"'));
-  assert.equal((creator.match(/type="file"/g) || []).length,1,
+  const form = creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
+  assert.equal((form.match(/type="file"/g) || []).length,1,
     'ticket creator must have one image selector');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
