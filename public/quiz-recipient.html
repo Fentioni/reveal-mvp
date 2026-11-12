@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow">
+<meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#141625">
+<title>Three-Question Quiz | Reveal</title>
+<style>
+  :root{color-scheme:dark;--accent:#e5bd78;--accent-light:#fff1d2}
+  *{box-sizing:border-box}
+  [hidden]{display:none!important}
+  body{min-height:100svh;margin:0;color:#fff4e9;font:15px/1.6 system-ui,-apple-system,sans-serif;
+    background:radial-gradient(ellipse at 50% 5%,#5f427b9c,transparent 58%),#131522}
+  body[data-theme="travel-adventure"]{--accent:#a9e6d7;--accent-light:#e2fcf5;
+    background:radial-gradient(ellipse at 50% 5%,#31768fbd,transparent 59%),#152436}
+  body[data-theme="romantic"]{--accent:#ffd1d9;--accent-light:#fff3ec;
+    background:radial-gradient(ellipse at 50% 5%,#994863b3,transparent 59%),#2b1b33}
+  body[data-theme="birthday-celebration"]{--accent:#ffdd91;--accent-light:#fff4d5;
+    background:radial-gradient(ellipse at 50% 5%,#9b566eb3,transparent 59%),#22213d}
+  main{max-width:660px;margin:0 auto;padding:clamp(20px,6vw,45px) 16px 80px;text-align:center}
+  .brand{color:var(--accent);letter-spacing:.17em;font:750 .8rem Georgia,serif}
+  .eyebrow{font-size:.7rem;text-transform:uppercase;letter-spacing:.17em;color:var(--accent);font-weight:800;margin-top:27px}
+  h1{font:normal clamp(2.3rem,8vw,3.7rem)/1.04 Georgia,serif;margin:13px 0 11px;overflow-wrap:anywhere}
+  .intro{color:#e2d3e1;max-width:480px;margin:0 auto 25px;font-size:.93rem}
+  .panel{background:#f9f0e1;color:#3e3041;border-radius:23px;border:3px solid #e2c997;
+    padding:clamp(19px,5vw,32px);box-shadow:0 25px 70px #0007}
+  .panel .kicker{text-transform:uppercase;letter-spacing:.16em;color:#987647;font-size:.7rem;font-weight:800}
+  .question-title{font:normal clamp(1.5rem,5vw,2.15rem)/1.2 Georgia,serif;margin:13px 0 24px;overflow-wrap:anywhere}
+  .progress{display:flex;gap:9px;justify-content:center;margin:21px 0 27px}
+  .progress span{width:38px;height:38px;border-radius:50%;border:1px solid #d6c4b9;
+    display:grid;place-items:center;color:#e7dce4;font-weight:800}
+  .progress .complete{background:var(--accent);color:#292039;border-color:var(--accent)}
+  .progress .active{border:2px solid var(--accent);color:var(--accent)}
+  .choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .choice{border:1px solid #c9b8c9;background:#fffdf9;color:#48334e;min-height:69px;
+    border-radius:12px;padding:12px;font-size:.92rem;font-weight:650;
+    cursor:pointer;overflow-wrap:anywhere;line-height:1.35}
+  .choice:focus-visible,.hint-button:focus-visible,a:focus-visible{outline:3px solid #8f4b80;outline-offset:3px}
+  .choice:not(:disabled):hover{border-color:#9873a3;background:#fff8ef}
+  button{font:inherit}
+  button:disabled{opacity:.6;cursor:default}
+  .choice-key{display:block;color:#a18ca7;font-size:.67rem;letter-spacing:.1em;margin-bottom:4px}
+  .hint-button{margin:19px auto 0;cursor:pointer;border:0;background:transparent;text-decoration:underline;
+    color:#76517b;min-height:44px;font-size:.87rem;font-weight:650}
+  .hint-text{margin:9px auto 0;color:#725c74;background:#f0e3ef;border-radius:9px;padding:11px}
+  .feedback{margin:19px auto 0;padding:13px;border-radius:12px;min-height:47px}
+  .feedback.wrong{background:#f9e2e0;color:#803d43}
+  .feedback.correct{background:#e5f0e2;color:#286248}
+  .status{font-size:.82rem;color:#d6c4d5;min-height:20px;margin-top:14px}
+  .error{padding:18px;color:#fff;background:#633340;border-radius:13px;border:1px solid #aa737f}
+  .unlocked{background:linear-gradient(135deg,#f5e5c2,#fff9e8,#e1c595);color:#392d3a;
+    border:3px solid #d0a867;border-radius:22px;padding:clamp(18px,5vw,35px);box-shadow:0 23px 65px #0008}
+  .unlocked h2{font:normal clamp(2rem,7vw,3.4rem)/1.08 Georgia,serif;margin:8px 0 15px;overflow-wrap:anywhere}
+  .unlocked .label{font-size:.68rem;letter-spacing:.16em;color:#85643a;font-weight:800;text-transform:uppercase}
+  .unlocked .message{font:italic 1rem/1.5 Georgia,serif;white-space:pre-wrap;overflow-wrap:anywhere}
+  .unlocked dl{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;text-align:left;
+    margin:22px 0;border-top:2px dashed #c5a67e;padding-top:18px}
+  .unlocked dt{font-size:.64rem;color:#937043;font-weight:800;letter-spacing:.12em}
+  .unlocked dd{margin:4px 0 0;font-size:.9rem;font-weight:650;overflow-wrap:anywhere}
+  .unlocked img{max-width:100%;max-height:260px;object-fit:contain;border-radius:10px;margin-top:13px}
+  .booking-link{display:block;overflow-wrap:anywhere;padding:12px;border-radius:11px;color:#4b2d69;
+    border:1px solid #b898bd;margin-top:15px;text-underline-offset:3px}
+  .unlocked footer{font-size:.78rem;color:#765c59;margin-top:25px}
+  .sender{color:#6f4a68;font-weight:700;margin:16px 0 0}
+  .labelled{margin:17px 0 0;text-align:left}
+  .footnote{font-size:.76rem;color:#c3b5c3;max-width:520px;margin:23px auto}
+  @media(max-width:400px){.choices{grid-template-columns:1fr}.choice{min-height:53px}
+    .unlocked dl{grid-template-columns:1fr 1fr}}
+  @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+  <div class="brand">✦ REVEAL.</div>
+  <div class="eyebrow">A little mystery, just for you</div>
+  <h1 id="heading">Your surprise awaits</h1>
+  <p id="intro" class="intro">Solve three questions to unlock your surprise.</p>
+  <div id="error" class="error" role="alert" hidden></div>
+  <div id="quizArea" hidden>
+    <div id="progress" class="progress" aria-label="Quiz progress"></div>
+    <section id="questionPanel" class="panel" aria-labelledby="questionText">
+      <div id="counter" class="kicker">Question 1 of 3</div>
+      <h2 id="questionText" class="question-title"></h2>
+      <div id="choices" class="choices"></div>
+      <button id="hintButton" type="button" class="hint-button" hidden>Need a hint?</button>
+      <p id="hintText" class="hint-text" hidden></p>
+      <div id="feedback" class="feedback" role="status" aria-live="polite" hidden></div>
+    </section>
+    <p id="status" class="status" aria-live="polite"></p>
+  </div>
+  <section id="result" class="unlocked" hidden aria-label="Your unlocked surprise">
+    <div class="label">Three questions solved · Unlocked</div>
+    <h2 id="eventName"></h2>
+    <img id="eventImage" alt="Your personal surprise image" hidden>
+    <dl id="details" hidden></dl>
+    <p id="message" class="message" hidden></p>
+    <p id="sender" class="sender" hidden></p>
+    <a id="booking" class="booking-link" rel="noopener noreferrer nofollow"
+      referrerpolicy="no-referrer" target="_blank" hidden>Open your official booking link</a>
+    <footer>You can revisit this link and view your surprise again.</footer>
+  </section>
+  <p class="footnote" id="disclaimer">The final surprise unlocks only when all three answers are correct.</p>
+</main>
+<script type="module">
+  import {recipientCardModel} from '/scratch-recipient-fields.js?v=complete-card-1';
+  const $=id=>document.getElementById(id);
+  const demo=location.pathname.replace(/\/$/,'')==='/quiz-demo';
+  const slug=location.pathname.split('/').filter(Boolean)[1];
+  const demoQuestions=[
+    {prompt:'Where did we go on our first holiday together?',
+      options:['Paris','Rome','Barcelona','Amsterdam'],correctIndex:1,hint:'Think of all that delicious pasta.'},
+    {prompt:'What do we always order on movie night?',
+      options:['Popcorn','Nachos','Pizza','Chips'],correctIndex:2,hint:'We eat it by the slice.'},
+    {prompt:'Which city have we always wanted to visit next?',
+      options:['Lisbon','Oslo','Athens','Venice'],correctIndex:3,hint:'It has famous canals.'}
+  ];
+  let demoStep=0,latestState=null,busy=false;
+  function showError(text){$('error').textContent=text;$('error').hidden=false;
+    $('quizArea').hidden=true;$('result').hidden=true;}
+  function demoState(){
+    if(demoStep===3)return {success:true,recipient:'Chloe',theme:'travel-adventure',completed:3,
+      questionCount:3,unlocked:true,reveal:{
+        recipient:'Chloe',sender:'Alex',eventName:"You're going to Rome!",
+        eventDate:'2027-05-21',eventTime:'',venue:'Rome, Italy',admit:'Chloe + 1',
+        personalMessage:"Pack your bags. We're off on an adventure!",
+        ticketUrl:'',hasEventImage:false}};
+    const row=demoQuestions[demoStep];
+    return {success:true,recipient:'Chloe',theme:'travel-adventure',completed:demoStep,
+      questionCount:3,unlocked:false,question:{number:demoStep+1,prompt:row.prompt,
+        options:row.options,hint:row.hint}};
+  }
+  async function getState(){
+    if(demo)return demoState();
+    if(!slug || !/^[A-Za-z0-9_-]+$/.test(slug))throw Error('Invalid recipient link.');
+    const resp=await fetch('/r/'+encodeURIComponent(slug)+'/quiz-state',{cache:'no-store'});
+    if(!resp.ok)throw Error('This quiz is not available.');
+    const data=await resp.json();
+    if(!data.success)throw Error('This quiz is not available.');
+    return data;
+  }
+  async function submitAnswer(optionIndex){
+    if(busy||!latestState||latestState.unlocked)return;
+    busy=true;
+    $('status').textContent='Checking your answer…';
+    for(const button of $('choices').querySelectorAll('button'))button.disabled=true;
+    try{
+      const data=demo?(()=> {
+        const good=demoQuestions[demoStep].correctIndex===optionIndex;
+        if(good)demoStep++;
+        return {correct:good,...demoState()};
+      })():await(async()=>{
+        const resp=await fetch('/r/'+encodeURIComponent(slug)+'/quiz-answer',{
+          method:'POST',headers:{'Content-Type':'application/json'},
+          body:JSON.stringify({questionIndex:latestState.completed,optionIndex})
+        });
+        const payload=await resp.json();
+        if(!resp.ok||!payload.success)throw Error(payload.error||'Answer could not be checked.');
+        return payload;
+      })();
+      if(data.correct) {
+        $('status').textContent='';
+        render(data);
+      } else {
+        $('feedback').hidden=false;
+        $('feedback').className='feedback wrong';
+        $('feedback').textContent='Not quite! Try another answer.';
+        $('status').textContent='You can try again.';
+        for(const button of $('choices').querySelectorAll('button'))button.disabled=false;
+      }
+    }catch(error){
+      $('status').textContent=error.message||'Please try again.';
+      for(const button of $('choices').querySelectorAll('button'))button.disabled=false;
+    }finally{busy=false;}
+  }
+  function showFinal(reveal){
+    const model=recipientCardModel(reveal);
+    $('quizArea').hidden=true;$('result').hidden=false;
+    $('heading').textContent='You did it, '+model.recipient+'!';
+    $('intro').textContent='All three questions answered. Your surprise is unlocked.';
+    $('eventName').textContent=model.eventName;
+    $('details').replaceChildren();
+    for(const item of model.details){
+      const wrapper=document.createElement('div');
+      const dt=document.createElement('dt');dt.textContent=item.label;
+      const dd=document.createElement('dd');dd.textContent=item.value;
+      wrapper.append(dt,dd);$('details').append(wrapper);
+    }
+    $('details').hidden=model.details.length===0;
+    $('message').hidden=!model.message;
+    $('message').textContent=model.message;
+    $('sender').hidden=!model.sender;
+    $('sender').textContent=model.sender?'With love, from '+model.sender:'';
+    $('booking').hidden=!model.ticketUrl;
+    if(model.ticketUrl)$('booking').href=model.ticketUrl;
+    else $('booking').removeAttribute('href');
+    $('eventImage').hidden=true;
+    if(model.hasEventImage&&!demo){
+      $('eventImage').src='/r/'+encodeURIComponent(slug)+'/quiz-image';
+      $('eventImage').hidden=false;
+    }
+    $('disclaimer').textContent='Your surprise is yours to revisit.';
+  }
+  function render(state){
+    latestState=state;
+    document.body.dataset.theme=state.theme;
+    if(state.unlocked){showFinal(state.reveal);return;}
+    $('quizArea').hidden=false;$('result').hidden=true;
+    $('heading').textContent=state.recipient+', you have a mystery to solve!';
+    $('intro').textContent='Three questions stand between you and your surprise.';
+    $('progress').replaceChildren();
+    for(let i=0;i<3;i++){
+      const s=document.createElement('span');
+      s.textContent=i<state.completed?'✓':String(i+1);
+      s.className=i<state.completed?'complete':i===state.completed?'active':'';
+      $('progress').append(s);
+    }
+    $('counter').textContent='Question '+state.question.number+' of 3';
+    $('questionText').textContent=state.question.prompt;
+    $('choices').replaceChildren();
+    state.question.options.forEach((label,index)=>{
+      const button=document.createElement('button');
+      button.type='button';button.className='choice';
+      const letter=document.createElement('span');letter.className='choice-key';
+      letter.textContent=String.fromCharCode(65+index);
+      const text=document.createElement('span');text.textContent=label;
+      button.append(letter,text);
+      button.addEventListener('click',()=>submitAnswer(index));
+      $('choices').append(button);
+    });
+    $('hintButton').hidden=!state.question.hint;
+    $('hintText').hidden=true;
+    $('hintText').textContent=state.question.hint||'';
+    $('feedback').hidden=true;
+    $('status').textContent='';
+  }
+  $('hintButton').addEventListener('click',()=>{
+    $('hintText').hidden=!$('hintText').hidden;
+    $('hintButton').textContent=$('hintText').hidden?'Need a hint?':'Hide hint';
+  });
+  if(demo){
+    $('disclaimer').textContent='Fictional recipient demonstration. No personal data and no payment.';
+  }
+  getState().then(render).catch(error=>showError(error.message));
+</script>
+</body>
+</html>
