@@ -449,18 +449,94 @@
       .preview-shell { padding: 24px 16px; }
       .preview-ticket { padding: 24px 18px; }
     }
+
+    /* Original scratch-demo visual design adapted to the purchaser form. */
+    :root{--page-bg:#11131b;--text:#f9f4eb;--muted:#beb4b4}
+    body{background:radial-gradient(ellipse at 11% 7%,rgba(169,117,45,.17),transparent 32%),
+      radial-gradient(ellipse at 90% 65%,rgba(80,64,130,.2),transparent 35%),#11131b;color:#f9f4eb}
+    .page{width:min(1160px,100%);padding:25px clamp(16px,4vw,36px) 80px}
+    .page-header{max-width:770px;margin:6px 0 36px}
+    .creator-brand{display:inline-block;margin-bottom:34px;color:#f9f1df;font:normal 1.17rem Georgia,serif;
+      letter-spacing:.06em;text-decoration:none}
+    .creator-brand span,.page-header h1 em{color:#efce81}
+    .eyebrow{color:#efce81}
+    .page-header h1{font-size:clamp(2.65rem,5.8vw,5.3rem)}
+    .page-header h1 em{font-weight:normal}
+    .intro{color:#d4cbd0}
+    .builder-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(30px,5vw,76px);align-items:start}
+    .form-card{background:none;box-shadow:none;padding:0;border-radius:0}
+    .section-heading{font:normal 1.65rem Georgia,serif;margin-bottom:12px}
+    .details-subhead{font:normal 1.4rem Georgia,serif;border-top:1px solid #62545c;padding-top:25px;margin:30px 0 22px}
+    .field label,.field>label{color:#f3ebdc}
+    .field-help,.form-note{color:#c3bab3}
+    input:not([type="checkbox"]):not([type="hidden"]),textarea,select{
+      background:#24202a;border:1px solid #766a70;color:#fff5e9;border-radius:12px}
+    input::placeholder,textarea::placeholder{color:#b9aeb1;opacity:1}
+    input[type="file"]{background:#27202e!important}
+    .warning-box{background:#342b28;color:#f0d6af;border-color:#7e6443}
+    .message-box.info{background:#222e41;color:#dbe7ff;border-color:#546582}
+    .message-box.error{background:#442c32;color:#ffe5e3;border-color:#a65e61}
+    .image-caption{background:#25232d;color:#efe1cd}
+    .remove-image-button{background:#433a3b;color:#fff4e1}
+    .scratch-choice{margin:0;padding:0;background:none;border:none}
+    .scratch-choice h3{font:normal 1.65rem Georgia,serif;margin:4px 0 10px;color:#f8efdb}
+    .scratch-choice>p{font-size:.88rem;line-height:1.6;color:#d2c5c3}
+    .scratch-choice>small{color:#c9bcb1;text-align:left;font-size:.77rem;line-height:1.5;margin-top:12px}
+    .scratch-option-label{font-size:.74rem;font-weight:750;letter-spacing:.1em;text-transform:uppercase;
+      margin:23px 0 10px;color:#d4c6ad}
+    .scratch-foil-grid{gap:10px;margin:5px 0 17px}
+    .scratch-foil-option{border:3px solid #20202b;box-shadow:0 0 0 1px #665c52;width:42px;height:42px}
+    .scratch-foil-option[aria-pressed="true"]{box-shadow:0 0 0 2px #f4d89b}
+    .scratch-art-grid{gap:10px;margin-top:10px}
+    .scratch-art-option{min-height:76px;border:1px solid #6c6062;color:#f5f0e5;background:#221e28;padding:9px 11px}
+    .scratch-art-option[aria-pressed="true"]{border-color:#efcf86;box-shadow:0 0 0 2px #efcf8633}
+    .scratch-art-icon{flex:0 0 53px;height:54px;border:1px solid #ffffff44;border-radius:7px}
+    .scratch-art-option strong{font-size:.83rem}
+    .scratch-art-option small{font-size:.72rem;color:#d1c4b5;margin:3px 0 0;text-align:left}
+    .scratch-choice #scratchUploadField{padding:13px;border:1px dashed #8b7755;border-radius:13px;margin-top:14px}
+    .scratch-choice #scratchUploadField p{color:#d1c5b7}
+    .scratch-static-frame{width:min(100%,440px);border:4px solid #b58d4d;border-radius:27px;
+      box-shadow:0 30px 75px #0008,inset 0 0 0 1px #fce5a2;margin:0 auto 8px;
+      background:#1c1730;aspect-ratio:3 / 4}
+    .scratch-static-frame canvas{pointer-events:none!important;touch-action:auto!important}
+    .scratch-mobile-dock{display:none}
+    .scratch-mobile-caption,.preview-static-note{color:#cfc3b9;font-size:.8rem;line-height:1.55;text-align:center}
+    .preview-column{position:sticky;top:24px;min-width:0}
+    .preview-label{color:#e7ca86;text-align:center;font-size:.73rem;margin:0 0 13px}
+    .preview-details-toggle{margin-top:20px;color:#f4e6d3}
+    .preview-details-toggle summary{cursor:pointer;display:block;list-style:none;border:1px solid #746850;
+      border-radius:12px;padding:14px 18px;color:#f6e4bd;text-align:center;font-weight:700;min-height:48px}
+    .preview-details-toggle summary::-webkit-details-marker{display:none}
+    .preview-details-toggle summary::after{content:"  ▾"}
+    .preview-details-toggle[open] summary::after{content:"  ▴"}
+    .preview-shell{margin-top:14px;background:radial-gradient(circle at top,#49351e,#21180f 48%,#100c08);
+      padding:24px 19px;border:1px solid #6c5337;box-shadow:none}
+    .preview-explanation{color:#c2b8ae}
+    .live-message{background:#272329}
+    .review-button{box-shadow:none}
+    @media(max-width:900px){
+      .builder-layout{grid-template-columns:1fr;gap:28px}
+      .form-card{max-width:650px;width:100%;margin:0 auto}
+      .preview-column{position:static;max-width:650px;width:100%;margin:0 auto}
+      .scratch-mobile-dock{display:block;margin:18px auto 16px}
+      .scratch-desktop-dock{display:none}
+      .scratch-mobile-dock .scratch-static-frame{width:min(100%,350px)}
+      .preview-column>.preview-label,.preview-static-note{display:none}
+    }
+    @media(max-width:600px){.page{padding:20px 16px 65px}.page-header{margin-bottom:28px}
+      .form-card{padding:0}.scratch-static-frame{border-radius:23px}
+      .preview-shell{padding:22px 15px}}
+    @media(max-width:370px){.scratch-art-grid{grid-template-columns:1fr}}
   </style>
 </head>
 
 <body>
   <main class="page">
     <header class="page-header">
+      <a class="creator-brand" href="/" aria-label="Reveal home">✦ REVEAL<span>.</span></a>
       <div class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
-      <h1>Create your ticket reveal</h1>
-      <p class="intro">
-        Personalise an event, concert or theatre surprise for someone special.
-        Your live template preview updates as you type. Checkout is disabled in this staging test.
-      </p>
+      <h1>Make the moment <em>unforgettable.</em></h1>
+      <p class="intro">Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.</p>
     </header>
 
     <div class="builder-layout">
@@ -481,6 +557,52 @@
         </noscript>
 
         <form id="revealForm">
+          <div class="scratch-choice">
+            <h3>Your scratch-card surface</h3>
+            <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
+            <div id="scratchFoilLabel" class="scratch-option-label">Foil finish</div>
+            <div class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel">
+              <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
+              <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
+              <button type="button" class="scratch-foil-option midnight" data-scratch-foil="midnight" aria-label="Midnight foil" aria-pressed="false"></button>
+              <button type="button" class="scratch-foil-option rose" data-scratch-foil="rose" aria-label="Rose foil" aria-pressed="false"></button>
+            </div>
+            <select id="scratchFoil" hidden aria-hidden="true" tabindex="-1">
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="midnight">Midnight</option>
+              <option value="rose">Rose</option>
+            </select>
+            <div id="scratchArtLabel" class="scratch-option-label">Surface artwork</div>
+            <div class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel">
+              <button type="button" class="scratch-art-option" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
+            </div>
+            <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
+              <option value="classic">Classic foil</option>
+              <option value="theatre">Theatre Velvet</option>
+              <option value="concert">Concert Lights</option>
+              <option value="custom">Your own image</option>
+            </select>
+            <div class="field" id="scratchUploadField" hidden>
+              <label for="scratchCoverImage">Your image for the scratch layer</label>
+              <input type="file" id="scratchCoverImage" accept="image/jpeg,image/png,image/webp">
+              <p>JPEG, PNG or WebP, up to 10 MB. Minimum 640 × 640 pixels. Image is cropped to fill the scratch card.</p>
+            </div>
+            <input type="checkbox" id="scratchAudioEnabled" hidden aria-hidden="true" tabindex="-1">
+            <p class="field-help">Music and sound design will be added at a later stage.</p>
+            <div id="scratchMobileDock" class="scratch-mobile-dock">
+              <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
+                <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
+              </div>
+              <p class="scratch-mobile-caption">Live surface preview — not scratchable</p>
+            </div>
+            <small>No scratching or personalised animation is available before payment.</small>
+          </div>
+
+          <h3 class="details-subhead">Personalise the surprise</h3>
           <div class="field">
             <label for="recipient">Who is it for?</label>
             <input
@@ -552,49 +674,6 @@
             </div>
           </div>
 
-          <div class="scratch-choice">
-            <h3>Your scratch-card surface</h3>
-            <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
-            <div id="scratchArtLabel" class="scratch-option-label">Surface artwork</div>
-            <div class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel">
-              <button type="button" class="scratch-art-option" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
-            </div>
-            <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
-              <option value="classic">Classic foil</option>
-              <option value="theatre">Theatre Velvet</option>
-              <option value="concert">Concert Lights</option>
-              <option value="custom">Your own image</option>
-            </select>
-            <div id="scratchFoilLabel" class="scratch-option-label">Foil finish</div>
-            <div class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel">
-              <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
-              <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
-              <button type="button" class="scratch-foil-option midnight" data-scratch-foil="midnight" aria-label="Midnight foil" aria-pressed="false"></button>
-              <button type="button" class="scratch-foil-option rose" data-scratch-foil="rose" aria-label="Rose foil" aria-pressed="false"></button>
-            </div>
-            <select id="scratchFoil" hidden aria-hidden="true" tabindex="-1">
-              <option value="gold">Gold</option>
-              <option value="silver">Silver</option>
-              <option value="midnight">Midnight</option>
-              <option value="rose">Rose</option>
-            </select>
-            <div class="field" id="scratchUploadField" hidden>
-              <label for="scratchCoverImage">Your image for the scratch layer</label>
-              <input type="file" id="scratchCoverImage" accept="image/jpeg,image/png,image/webp">
-              <p>JPEG, PNG or WebP, up to 10 MB. Minimum 640 × 640 pixels. Image is cropped to fill the scratch card.</p>
-            </div>
-            <label class="scratch-audio-choice" for="scratchAudioEnabled">
-              <input type="checkbox" id="scratchAudioEnabled" checked>
-              <span>Cinematic orchestral drum roll — starts 3 seconds after the recipient first scratches (optional sound)</span>
-            </label>
-            <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
-              <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
-            </div>
-            <small>No scratching or personalised animation is available before payment.</small>
-          </div>
 
           <div class="two-columns">
             <div class="field">
@@ -667,9 +746,12 @@
         </div>
       </section>
 
-      <aside class="preview-column" aria-label="Static template preview">
-        <div class="preview-label">Live template preview</div>
-
+      <aside class="preview-column" aria-label="Static scratch-card preview">
+        <div class="preview-label">Your live scratch-card cover</div>
+        <div id="scratchDesktopDock" class="scratch-desktop-dock"></div>
+        <p class="preview-static-note">The chosen surface updates instantly. This is a static design preview and cannot be scratched.</p>
+        <details class="preview-details-toggle">
+          <summary>View your personalised ticket details</summary>
         <div class="preview-shell">
           <div class="preview-top">
             <div class="preview-small-heading">Your surprise</div>
@@ -740,9 +822,9 @@
         </div>
 
         <p class="preview-explanation">
-          This is a design preview only. The opening animation and
-          recipient experience are not shown before purchase.
+          These ticket details are for your own static review. The recipient reveal remains locked until payment succeeds.
         </p>
+        </details>
       </aside>
     </div>
   </main>
@@ -777,6 +859,17 @@
     let scratchSelectionSequence = 0;
     const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
     scratchPreview.canvas.style.pointerEvents = "none";
+    function positionScratchSurface() {
+      const mobile = window.matchMedia("(max-width: 900px)").matches;
+      const dock = $(mobile ? "scratchMobileDock" : "scratchDesktopDock");
+      const frame = scratchPreview.canvas.closest(".scratch-static-frame");
+      if (frame && frame.parentElement !== dock) dock.appendChild(frame);
+      scratchPreview.canvas.style.pointerEvents = "none";
+      scratchPreview.resize();
+    }
+    positionScratchSurface();
+    window.addEventListener("resize", positionScratchSurface);
+
 
     function show(text, type = "error") {
       message.textContent = text;
