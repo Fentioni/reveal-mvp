@@ -1,6 +1,7 @@
 /** Stage 4B storefront and catalogue router; legacy payment/reveal logic is unchanged. */
 import originalWorker from './legacy.js';
 import { catalogueResponse } from './catalogue.js';
+import { scratchSurfaceResponse } from './scratch-surface.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -24,6 +25,11 @@ export default {
         (path === '/api/webhooks/stripe' ||
          /^\/api\/reveals\/[A-Za-z0-9_-]+\/checkout\/?$/.test(path))) {
       return jsonError('Checkout is disabled in this staging environment.', 503);
+    }
+
+    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/scratch-surface(?:\/image)?\/?$/.test(path)) {
+      if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.', 404);
+      return scratchSurfaceResponse(request, env, ctx, originalWorker);
     }
 
     if (path === '/api/catalogue' || path.startsWith('/api/catalogue/')) {
