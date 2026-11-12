@@ -257,7 +257,7 @@ test('quiz creator and recipient pages are mobile-first, four-choice and do not 
   assert.ok(creator.includes('for(let q=0;q<3;q++)'));
   assert.ok(creator.includes('for(let a=0;a<4;a++)'));
   assert.ok(creator.includes("correctIndex:"));
-  assert.ok(creator.includes('surface')); // intentional? replace below if absent
+  assert.ok(creator.includes('id="preview"'));
   assert.equal((creator.match(/id="image" type="file"/g)||[]).length,1);
   assert.ok(creator.includes('"/reveal?id="') || creator.includes("'/reveal?id='"));
   assert.ok(creator.includes('method:id?'));
