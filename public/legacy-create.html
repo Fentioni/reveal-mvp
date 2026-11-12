@@ -1188,7 +1188,7 @@
       removeImage = existingImage;
 
       if ($("scratchStyle").value === "custom") {
-        $("scratchStyle").value = "classic";
+        $("scratchStyle").value = currentVariant === "concert" ? "concert" : "classic";
       }
       clearImage();
       setScratchPreview().catch(error => show(error.message));
