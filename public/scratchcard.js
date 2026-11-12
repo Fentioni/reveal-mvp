@@ -272,6 +272,19 @@ export class ScratchCard {
       ctx.font = '500 ' + clamp(w*.033,11,15) + 'px system-ui, sans-serif';
       ctx.fillText('ONE MOMENT • ONE MEMORY',w/2,h*.82,w*.82);
     }
+    // Keep the purchaser's selected foil finish visible on every concert
+    // artwork preset: the metallic trim changes without altering the image.
+    if (['concert','festival','backstage'].includes(stage)) {
+      ctx.strokeStyle = FOILS[this.foil][3];
+      ctx.lineWidth = Math.max(3,w*.013);
+      ctx.globalAlpha = .87;
+      ctx.strokeRect(w*.027,h*.025,w*.946,h*.95);
+      ctx.fillStyle = FOILS[this.foil][2];
+      ctx.globalAlpha = .65;
+      ctx.fillRect(w*.06,h*.03,w*.88,Math.max(3,h*.009));
+      ctx.fillRect(w*.06,h*.96,w*.88,Math.max(3,h*.009));
+      ctx.globalAlpha = 1;
+    }
     // Perforated ticket edging, engraved as a repeatable motif.
     ctx.fillStyle = ['concert','festival','backstage'].includes(stage) ? '#DDCAFF' : '#FBE3A5';
     ctx.globalAlpha = .68;
