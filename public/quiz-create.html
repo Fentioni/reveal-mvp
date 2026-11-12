@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="robots" content="noindex,nofollow">
+  <meta name="referrer" content="no-referrer">
+  <meta name="theme-color" content="#12121e">
+  <title>Create Three-Question Quiz | Reveal</title>
+  <style>
+    :root{color-scheme:dark;--gold:#ecc88a;--ink:#11121c;--line:#69596b;--paper:#f8eee2}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font:15px/1.55 system-ui,-apple-system,sans-serif;color:#f9f4e9;
+      background:radial-gradient(ellipse at 4% 5%,#614c6b4a,transparent 43%),
+        radial-gradient(ellipse at 94% 72%,#ab6e5937,transparent 45%),var(--ink)}
+    a{color:inherit}
+    main{width:min(1180px,100%);margin:auto;padding:25px clamp(16px,4vw,40px) 85px}
+    .brand{text-decoration:none;letter-spacing:.2em;font:600 1.05rem Georgia,serif}
+    .brand span{color:#e5bc72}
+    .eyebrow{letter-spacing:.18em;color:var(--gold);text-transform:uppercase;font-size:.71rem;font-weight:750;margin:38px 0 12px}
+    h1{font:normal clamp(2.65rem,5.5vw,5.2rem)/1.01 Georgia,serif;letter-spacing:-.03em;margin:0 0 15px}
+    h1 em{color:var(--gold);font-weight:normal}
+    .intro{max-width:690px;color:#d6cbd5;font-size:1.02rem;line-height:1.67;margin:0 0 40px}
+    .layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(25px,4vw,65px);align-items:start}
+    section{min-width:0}
+    .section-heading{font:normal 1.62rem Georgia,serif;margin:0 0 13px}
+    .section-copy{color:#cbbcc9;font-size:.9rem;margin:0 0 23px}
+    label{display:block;font-weight:650;margin-bottom:7px}
+    input[type=text],input[type=date],input[type=time],input[type=url],input[type=file],textarea,select{
+      width:100%;border:1px solid #746976;border-radius:11px;color:#fff8ee;background:#252332;
+      font:inherit;min-height:47px;padding:10px 12px}
+    textarea{min-height:75px;resize:vertical}
+    input::placeholder,textarea::placeholder{color:#c0b3bd;opacity:.88}
+    input[type=file]{padding:11px 12px}
+    input:focus-visible,textarea:focus-visible,select:focus-visible,button:focus-visible,a:focus-visible{
+      outline:3px solid #e9bf81;outline-offset:2px}
+    input[type=radio]{accent-color:#b68bdb}
+    .field{margin:0 0 18px}
+    .field-help{color:#c6bac7;font-size:.77rem;margin:6px 0}
+    .small-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+    .questions{display:grid;gap:18px;margin-bottom:33px}
+    .question-card{border:1px solid #696173;background:#20202d;border-radius:20px;padding:20px}
+    .q-head{display:flex;align-items:center;gap:11px;margin-bottom:20px}
+    .q-number{width:34px;height:34px;border-radius:50%;background:#dcc391;color:#221729;display:grid;
+      place-items:center;font-weight:800}
+    .q-head strong{font:normal 1.25rem Georgia,serif}
+    .answers{display:grid;grid-template-columns:1fr 1fr;gap:11px}
+    .answer-field{margin:0;display:flex;gap:7px;align-items:center;border:1px solid #605e72;
+      border-radius:10px;background:#282737;padding:8px}
+    .answer-field input[type=text]{min-width:0;flex:1;padding:8px 9px;font-size:.87rem}
+    .answer-field label{font-size:.72rem;color:#e4cfae;margin:0;white-space:nowrap}
+    .answer-field input[type=radio]{min-width:18px;min-height:18px;margin:0 3px 0 5px}
+    .correct-explanation{color:#c6b8cd;font-size:.74rem;margin:8px 0 15px}
+    .theme-panel{margin-bottom:25px;border:1px solid #6b6076;border-radius:16px;padding:17px}
+    .quiz-theme-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+    .theme-choice{border:1px solid #6b6076;border-radius:12px;background:#282435;color:#f8efe7;
+      min-height:48px;padding:9px 13px;font:600 .8rem system-ui;cursor:pointer}
+    .theme-choice[aria-pressed=true]{border-color:#e8cb96;box-shadow:0 0 0 2px #eed7ad44}
+    .theme-choice:before{content:"✦ ";color:#d9af7c}
+    .details-heading{margin-top:35px;border-top:1px solid #645568;padding-top:27px}
+    .image-preview{display:none;width:100%;max-height:230px;object-fit:contain;background:#2d2633;
+      border:1px solid #685d70;border-radius:12px;margin-top:12px}
+    .image-preview.visible{display:block}
+    .remove{display:none;margin-top:8px;background:#342935;border:1px solid #987b8f;color:#fff;
+      padding:9px 17px;border-radius:99px;cursor:pointer;min-height:42px}
+    .remove.visible{display:inline-block}
+    .save-button{background:linear-gradient(120deg,#f5d398,#dcae70);color:#25182c;border:0;
+      border-radius:99px;padding:15px 23px;min-height:51px;font-weight:800;font-size:1rem;
+      width:100%;cursor:pointer;margin-top:15px}
+    button:disabled{opacity:.6;cursor:default}
+    .alert{display:none;border:1px solid #b0778a;background:#4d2b3c;color:#ffe7e9;
+      padding:13px;border-radius:12px;margin:10px 0 20px}
+    .alert.visible{display:block}
+    aside{position:sticky;top:22px;min-width:0}
+    .preview-label{color:#ebce96;letter-spacing:.16em;text-transform:uppercase;text-align:center;font-size:.71rem;margin-bottom:14px}
+    .preview{border:2px solid #d3b782;border-radius:24px;min-height:580px;padding:27px 23px;
+      text-align:center;background:radial-gradient(ellipse at 50% 6%,#695183,transparent 57%),#1d1c33;
+      box-shadow:0 25px 70px #0008}
+    .preview[data-theme="travel-adventure"]{background:radial-gradient(ellipse at 50% 6%,#48879a,transparent 58%),#162c3d}
+    .preview[data-theme="romantic"]{background:radial-gradient(ellipse at 50% 6%,#b06f87,transparent 58%),#45293a}
+    .preview[data-theme="birthday-celebration"]{background:radial-gradient(ellipse at 50% 6%,#b57066,transparent 58%),#3c2648}
+    .seal{font-size:2.4rem;color:var(--gold);margin:7px 0 16px}
+    .preview h2{font:normal clamp(1.8rem,4vw,2.75rem)/1.12 Georgia,serif;margin:0 0 11px;overflow-wrap:anywhere}
+    .preview p{color:#e8d7e3;font-size:.9rem}
+    .step{display:flex;justify-content:center;gap:10px;margin:24px 0}
+    .step span{height:31px;width:31px;border-radius:50%;border:1px solid #b99dcb;
+      display:grid;place-items:center;font-weight:750;font-size:.77rem}
+    .step span:first-child{background:#dec08a;color:#291d30;border-color:#dec08a}
+    .static-q{background:#f7eedb;color:#39283b;border-radius:16px;padding:20px 14px;text-align:left;margin:24px 0}
+    .static-q .tag{font-size:.69rem;letter-spacing:.16em;text-transform:uppercase;color:#86623d;font-weight:800}
+    .static-q h3{font:normal clamp(1.05rem,2vw,1.3rem)/1.28 Georgia,serif;margin:9px 0 16px;overflow-wrap:anywhere}
+    .static-answers{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+    .static-option{background:#fff;color:#463650;border:1px solid #cfbfd4;border-radius:9px;
+      padding:10px;font-weight:650;font-size:.76rem;overflow-wrap:anywhere;min-height:48px}
+    .static-explanation{font-size:.72rem!important;color:#d1c1d0!important}
+    .staging{color:#d5bfba;font-size:.75rem;text-align:center;margin-top:15px;line-height:1.55}
+    [hidden]{display:none!important}
+    @media(max-width:920px){.layout{grid-template-columns:1fr}.form-panel{max-width:690px;margin:auto;width:100%}
+      aside{position:static;max-width:690px;margin:auto;width:100%}
+      .preview{min-height:auto}
+    }
+    @media(max-width:450px){.small-grid,.answers{grid-template-columns:1fr}
+      .question-card{padding:17px}.preview{padding:23px 17px}
+      main{padding:22px 15px 70px}}
+  </style>
+</head>
+<body>
+<main>
+  <a href="/" class="brand">✦ REVEAL<span>.</span></a>
+  <p class="eyebrow">Three-Question Quiz · Staging</p>
+  <h1>Three questions.<br><em>One big surprise.</em></h1>
+  <p class="intro">Write three personal questions, give four possible answers to each,
+    and choose one correct answer. The recipient unlocks the surprise by answering all three correctly.</p>
+
+  <div class="layout">
+    <section class="form-panel">
+      <form id="quizForm">
+        <div id="notice" class="alert" role="alert"></div>
+        <h2 class="section-heading">Choose the atmosphere</h2>
+        <p class="section-copy">The theme changes the colours and mood, not the rules.</p>
+        <div class="theme-panel">
+          <div class="quiz-theme-choices" id="themeChoices" role="group" aria-label="Quiz theme">
+            <button type="button" class="theme-choice" data-theme="classic-gold" aria-pressed="true">Classic Mystery</button>
+            <button type="button" class="theme-choice" data-theme="travel-adventure" aria-pressed="false">Travel Adventure</button>
+            <button type="button" class="theme-choice" data-theme="romantic" aria-pressed="false">Romantic Reveal</button>
+            <button type="button" class="theme-choice" data-theme="birthday-celebration" aria-pressed="false">Birthday Challenge</button>
+          </div>
+        </div>
+
+        <h2 class="section-heading">Write your three questions</h2>
+        <p class="section-copy">Each question has exactly four options. Mark the one correct answer.
+          Hints are optional. Do not put the final surprise in a question.</p>
+        <div class="questions" id="questionCards"></div>
+
+        <h2 class="section-heading details-heading">Personalise the final reveal</h2>
+        <p class="section-copy">These details stay locked until payment and until all three answers are correct.
+          Empty optional fields do not appear on the revealed card.</p>
+        <div class="small-grid">
+          <div class="field"><label for="recipient">Who is it for?</label>
+            <input id="recipient" type="text" maxlength="80" required placeholder="Chloe" autocomplete="off"></div>
+          <div class="field"><label for="sender">Who is it from?</label>
+            <input id="sender" type="text" maxlength="80" required placeholder="Michael"></div>
+        </div>
+        <div class="field"><label for="eventName">What's the surprise?</label>
+          <input id="eventName" type="text" maxlength="160" required placeholder="You're going to Rome!"></div>
+        <div class="small-grid">
+          <div class="field"><label for="eventDate">Date (optional)</label><input id="eventDate" type="date"></div>
+          <div class="field"><label for="eventTime">Time (optional)</label><input id="eventTime" type="time"></div>
+        </div>
+        <div class="field"><label for="venue">Venue or destination (optional)</label>
+          <input id="venue" type="text" maxlength="200" placeholder="Destination or venue"></div>
+        <div class="field"><label for="admit">Who's going? (optional)</label>
+          <input id="admit" type="text" maxlength="120" placeholder="Chloe + 1"></div>
+        <div class="field"><label for="personalMessage">Your message (optional)</label>
+          <textarea id="personalMessage" maxlength="1200" placeholder="Your own message for the big reveal"></textarea></div>
+        <div class="field"><label for="ticketUrl">Official ticket or booking link (optional)</label>
+          <input id="ticketUrl" type="url" maxlength="2048" placeholder="https://"></div>
+        <div class="field"><label for="image">Add one image (optional)</label>
+          <p class="field-help">JPEG, PNG or WebP, up to 10 MB. Avoid uploading usable QR codes or booking codes.</p>
+          <input id="image" type="file" accept="image/jpeg,image/png,image/webp">
+          <img id="imagePreview" class="image-preview" alt="Selected reveal image">
+          <button id="removeImage" class="remove" type="button">Remove image</button>
+        </div>
+        <button class="save-button" id="saveButton" type="submit">Save quiz and review</button>
+        <p class="field-help">Review is static and can be amended. The playable quiz and share link
+          remain locked until payment is verified. No checkout is enabled on this staging website.</p>
+      </form>
+    </section>
+
+    <aside>
+      <div class="preview-label">Live static preview · not playable</div>
+      <div class="preview" id="preview" data-theme="classic-gold">
+        <div class="seal">✦</div>
+        <h2 id="previewTitle">A mystery awaits!</h2>
+        <p>Three questions stand between you and your surprise.</p>
+        <div class="step" aria-hidden="true"><span>1</span><span>2</span><span>3</span></div>
+        <div class="static-q">
+          <div class="tag">Question 1 of 3</div>
+          <h3 id="previewPrompt">Your first question will appear here.</h3>
+          <div class="static-answers" id="previewOptions">
+            <div class="static-option">Choice A</div><div class="static-option">Choice B</div>
+            <div class="static-option">Choice C</div><div class="static-option">Choice D</div>
+          </div>
+        </div>
+        <p class="static-explanation">This is a design review only. Correct answers and the final animated experience are never playable before purchase.</p>
+      </div>
+      <p class="staging">Purchaser-only preview. The recipient receives a single-use quiz after payment, then can revisit the unlocked final reveal.</p>
+    </aside>
+  </div>
+</main>
+<script type="module">
+  const $=id=>document.getElementById(id);
+  const baseFields=['recipient','sender','eventName','eventDate','eventTime','venue','admit','personalMessage','ticketUrl'];
+  const query=new URLSearchParams(location.search);
+  let id=query.get('edit'), token=null, revision=null, theme='classic-gold';
+  let ready=!id, busy=false, selectedImage=null, existingImage=false, removeImage=false, objectUrl=null;
+
+  function message(text) {
+    $('notice').textContent=text;
+    $('notice').classList.toggle('visible',Boolean(text));
+    if (text) $('notice').scrollIntoView({block:'nearest',behavior:'smooth'});
+  }
+  function make(tag,attrs={},children=[]) {
+    const node=document.createElement(tag);
+    for (const [key,value] of Object.entries(attrs)) {
+      if (key==='text') node.textContent=value;
+      else if (key==='class') node.className=value;
+      else if (key==='htmlFor') node.htmlFor=value;
+      else if (key==='required') node.required=value;
+      else node.setAttribute(key,value);
+    }
+    for (const child of children) node.append(child);
+    return node;
+  }
+  function buildQuestions() {
+    for(let q=0;q<3;q++) {
+      const card=make('section',{class:'question-card','data-q':String(q)});
+      const head=make('div',{class:'q-head'},[
+        make('div',{class:'q-number',text:String(q+1)}),
+        make('strong',{text:'Question '+(q+1)})
+      ]);
+      card.append(head);
+      const field=make('div',{class:'field'});
+      field.append(make('label',{htmlFor:'prompt'+q,text:'Your question'}));
+      field.append(make('input',{type:'text',id:'prompt'+q,maxlength:'180',
+        placeholder:'Write question '+(q+1),required:true}));
+      card.append(field);
+      card.append(make('label',{text:'Four possible answers'}));
+      const answers=make('div',{class:'answers'});
+      for(let a=0;a<4;a++) {
+        const box=make('div',{class:'answer-field'});
+        const letter=String.fromCharCode(65+a);
+        box.append(make('label',{htmlFor:'answer'+q+'-'+a,text:letter}));
+        box.append(make('input',{id:'answer'+q+'-'+a,type:'text',maxlength:'100',
+          required:true,placeholder:'Answer '+letter}));
+        const radio=make('input',{type:'radio',name:'correct'+q,
+          id:'correct'+q+'-'+a,value:String(a),'aria-label':'Mark answer '+letter+' as correct'});
+        box.append(radio);
+        answers.append(box);
+      }
+      card.append(answers);
+      card.append(make('p',{class:'correct-explanation',text:'Select the circle beside the correct answer.'}));
+      const hint=make('div',{class:'field'});
+      hint.append(make('label',{htmlFor:'hint'+q,text:'Hint (optional)'}));
+      hint.append(make('input',{id:'hint'+q,type:'text',maxlength:'240',
+        placeholder:'A helpful clue if they get stuck'}));
+      card.append(hint);
+      $('questionCards').append(card);
+    }
+  }
+
+  function getQuestions() {
+    return Array.from({length:3},(_,q)=>({
+      prompt:$('prompt'+q).value.trim(),
+      options:Array.from({length:4},(_,a)=>$('answer'+q+'-'+a).value.trim()),
+      correctIndex:(()=>{const radio=document.querySelector('input[name="correct'+q+'"]:checked');return radio?Number(radio.value):-1;})(),
+      hint:$('hint'+q).value.trim()
+    }));
+  }
+  function setQuestions(questions) {
+    questions.forEach((row,q)=>{
+      $('prompt'+q).value=row.prompt||'';
+      row.options.forEach((text,a)=>{$('answer'+q+'-'+a).value=text;});
+      const chosen=$('correct'+q+'-'+row.correctIndex);
+      if(chosen) chosen.checked=true;
+      $('hint'+q).value=row.hint||'';
+    });
+  }
+  function updatePreview(){
+    $('preview').dataset.theme=theme;
+    $('previewTitle').textContent=$('recipient').value.trim()
+      ? $('recipient').value.trim()+', a mystery awaits!' : 'A mystery awaits!';
+    $('previewPrompt').textContent=$('prompt0').value.trim()||'Your first question will appear here.';
+    const nodes=$('previewOptions').children;
+    for(let i=0;i<4;i++) nodes[i].textContent=$('answer0-'+i).value.trim()||'Choice '+String.fromCharCode(65+i);
+    for(const button of document.querySelectorAll('[data-theme]')){
+      button.setAttribute('aria-pressed',String(button.dataset.theme===theme));
+    }
+  }
+  function imagePreview(blob){
+    if(objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl=URL.createObjectURL(blob);
+    $('imagePreview').src=objectUrl;
+    $('imagePreview').classList.add('visible');
+    $('removeImage').classList.add('visible');
+  }
+  function clearImage(){
+    if(objectUrl) URL.revokeObjectURL(objectUrl);
+    objectUrl=null;
+    $('imagePreview').removeAttribute('src');
+    $('imagePreview').classList.remove('visible');
+    $('removeImage').classList.remove('visible');
+  }
+  async function api(path,opts={}){
+    const resp=await fetch(path,{cache:'no-store',...opts});
+    let data;
+    try{data=await resp.json();}catch{throw new Error('The server returned an unexpected response.');}
+    if(!resp.ok||!data.success) throw new Error(data.error||'Request could not be completed.');
+    return data;
+  }
+  function setBusy(v){
+    busy=v;
+    $('saveButton').disabled=v;
+    $('saveButton').textContent=v?'Saving quiz...':'Save quiz and review';
+  }
+  function validate(){
+    if(!$('quizForm').reportValidity()) return false;
+    const questions=getQuestions();
+    for(let i=0;i<3;i++){
+      if(questions[i].correctIndex<0){message('Select the correct answer for question '+(i+1)+'.');return false;}
+      if(new Set(questions[i].options.map(x=>x.toLowerCase())).size!==4){
+        message('All four answers for question '+(i+1)+' must be different.');return false;
+      }
+    }
+    return true;
+  }
+  function storageCheck(){
+    const key='reveal_quiz_storage_check';
+    localStorage.setItem(key,'1');localStorage.removeItem(key);
+  }
+  async function save(event){
+    event.preventDefault();
+    if(!ready||busy||!validate())return;
+    message('');
+    setBusy(true);
+    try{
+      storageCheck();
+      const body=new FormData();
+      for(const name of baseFields)body.append(name,$(name).value);
+      if(selectedImage)body.append('image',selectedImage);
+      if(removeImage)body.append('removeImage','1');
+      if(id)body.append('revision',String(revision));
+      const saved=await api(id?'/api/reveals/'+encodeURIComponent(id):'/api/reveals',
+        {method:id?'PUT':'POST',headers:id?{'X-Edit-Token':token}:{},body});
+      if(!id){id=saved.id;token=saved.editToken;}
+      revision=saved.revision;
+      localStorage.setItem('reveal_edit_'+id,token);
+      // Retain the id on a save-partial-error, allowing a retry to update the
+      // same draft instead of creating duplicate reveals.
+      window.history.replaceState(null,'','/quiz-create?edit='+encodeURIComponent(id));
+      await api('/api/reveals/'+encodeURIComponent(id)+'/quiz',{
+        method:'PUT',headers:{'X-Edit-Token':token,'Content-Type':'application/json'},
+        body:JSON.stringify({theme,questions:getQuestions()})
+      });
+      location.href='/reveal?id='+encodeURIComponent(id);
+    }catch(error){message(error.message||'The quiz could not be saved.');setBusy(false);}
+  }
+  async function restore(){
+    try{
+      token=localStorage.getItem('reveal_edit_'+id);
+      if(!token)throw new Error('The private edit key is unavailable in this browser.');
+      const response=await api('/api/reveals/'+encodeURIComponent(id),
+        {headers:{'X-Edit-Token':token}});
+      const reveal=response.reveal;
+      if(reveal.status!=='draft'){
+        location.replace('/reveal?id='+encodeURIComponent(id));
+        return;
+      }
+      revision=reveal.revision;
+      for(const field of baseFields)$(field).value=reveal[field]||'';
+      existingImage=Boolean(reveal.hasImage);
+      if(existingImage){
+        const image=await fetch('/api/reveals/'+encodeURIComponent(id)+'/image',
+          {headers:{'X-Edit-Token':token},cache:'no-store'});
+        if(image.ok)imagePreview(await image.blob());
+      }
+      const configuration=await api('/api/reveals/'+encodeURIComponent(id)+'/quiz',
+        {headers:{'X-Edit-Token':token}});
+      theme=configuration.quiz.theme;
+      setQuestions(configuration.quiz.questions);
+      updatePreview();
+      ready=true;
+    }catch(error){message(error.message||'The saved quiz could not be loaded.');}
+  }
+  buildQuestions();
+  $('quizForm').addEventListener('submit',save);
+  $('quizForm').addEventListener('input',updatePreview);
+  $('quizForm').addEventListener('change',updatePreview);
+  $('themeChoices').addEventListener('click',event=>{
+    const b=event.target.closest('[data-theme]');
+    if(!b||busy)return;
+    theme=b.dataset.theme;updatePreview();
+  });
+  $('image').addEventListener('change',()=>{
+    const file=$('image').files?.[0];
+    if(!file)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024){
+      $('image').value='';message('Choose a JPEG, PNG or WebP image under 10 MB.');return;
+    }
+    selectedImage=file;removeImage=false;imagePreview(file);message('');
+  });
+  $('removeImage').addEventListener('click',()=>{
+    selectedImage=null;removeImage=existingImage;$('image').value='';
+    clearImage();
+  });
+  window.addEventListener('pagehide',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl);});
+  updatePreview();
+  if(id)restore();
+</script>
+</body>
+</html>
