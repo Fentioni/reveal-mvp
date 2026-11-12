@@ -60,6 +60,25 @@
     .scratch-window{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:27px;border:4px solid #b58d4d;
       box-shadow:0 30px 75px #0008,inset 0 0 0 1px #fce5a2;background:#1c1730;isolation:isolate}
     .scratch-window::after{content:"";position:absolute;inset:8px;border:1px solid #f7dfae55;border-radius:19px;z-index:2;pointer-events:none}
+
+    /* Decorative celebration is visible on every load, but never intercepts a scratch. */
+    .confetti-field{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+    .confetti-piece{position:absolute;top:-26px;left:var(--left);width:var(--width,6px);height:var(--height,12px);
+      border-radius:1px;background:var(--colour);opacity:.83;
+      animation:confetti-fall var(--duration) linear var(--delay) infinite;will-change:transform}
+    .confetti-piece:nth-child(3n){border-radius:50%}
+    .confetti-piece:nth-child(4n){width:3px}
+    @keyframes confetti-fall{
+      0%{transform:translate3d(0,-26px,0) rotate(0deg);opacity:0}
+      7%{opacity:.82}
+      90%{opacity:.76}
+      100%{transform:translate3d(var(--drift),670px,0) rotate(680deg);opacity:0}
+    }
+    .red-gift-badge{position:absolute;right:13px;top:13px;z-index:4;pointer-events:none;
+      display:grid;place-items:center;width:46px;height:46px;border-radius:50%;background:#c92140;
+      border:2px solid #ffcf9b;box-shadow:0 3px 16px #350a2c88, inset 0 1px 4px #ffffff50}
+    .red-gift-badge svg{width:25px;height:25px;stroke:#fff4df;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+
     #underlay{visibility:hidden}
     .scratch-window.foil-ready #underlay{visibility:visible}
     .reveal{width:100%;height:100%;padding:clamp(20px,5vw,32px) clamp(17px,5vw,28px);
@@ -97,7 +116,7 @@
       .copy{max-width:520px;margin:auto;text-align:center}.description,.demo-disclaimer{margin-left:auto;margin-right:auto}
       .controls,.foil-controls{justify-content:center}.control-label{margin-top:18px}.surface-grid,.upload-control{margin-left:auto;margin-right:auto}.stage{max-width:380px}
       h1{font-size:clamp(2.6rem,12vw,4.4rem)}.scratch-window{border-radius:24px}}
-    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+    @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important;scroll-behavior:auto!important}.confetti-field{display:none}}
   </style>
 </head>
 <body>
@@ -163,6 +182,39 @@
           <p class="from">With love, from Alex ♡</p>
         </div>
         <canvas id="foilCanvas" aria-hidden="true"></canvas>
+        <div class="confetti-field" id="celebrationConfetti" aria-hidden="true">
+          <span class="confetti-piece" style="--left:11%;--delay:-0.4s;--duration:6.4s;--drift:-51px;--width:4px;--height:8px;--colour:#fae2a3"></span>
+          <span class="confetti-piece" style="--left:48%;--delay:-0.77s;--duration:7.1s;--drift:-34px;--width:6px;--height:11px;--colour:#f39aac"></span>
+          <span class="confetti-piece" style="--left:85%;--delay:-1.14s;--duration:7.8s;--drift:-17px;--width:8px;--height:14px;--colour:#eb4560"></span>
+          <span class="confetti-piece" style="--left:25%;--delay:-1.51s;--duration:8.5s;--drift:0px;--width:10px;--height:8px;--colour:#f6bf58"></span>
+          <span class="confetti-piece" style="--left:62%;--delay:-1.88s;--duration:9.2s;--drift:17px;--width:4px;--height:11px;--colour:#f0f0ff"></span>
+          <span class="confetti-piece" style="--left:2%;--delay:-2.25s;--duration:9.9s;--drift:34px;--width:6px;--height:14px;--colour:#c2a9ec"></span>
+          <span class="confetti-piece" style="--left:39%;--delay:-2.62s;--duration:6.4s;--drift:51px;--width:8px;--height:8px;--colour:#a7c6ef"></span>
+          <span class="confetti-piece" style="--left:76%;--delay:-2.99s;--duration:7.1s;--drift:-51px;--width:10px;--height:11px;--colour:#e8a4c9"></span>
+          <span class="confetti-piece" style="--left:16%;--delay:-3.36s;--duration:7.8s;--drift:-34px;--width:4px;--height:14px;--colour:#fae2a3"></span>
+          <span class="confetti-piece" style="--left:53%;--delay:-3.73s;--duration:8.5s;--drift:-17px;--width:6px;--height:8px;--colour:#f39aac"></span>
+          <span class="confetti-piece" style="--left:90%;--delay:-4.1s;--duration:9.2s;--drift:0px;--width:8px;--height:11px;--colour:#eb4560"></span>
+          <span class="confetti-piece" style="--left:30%;--delay:-4.47s;--duration:9.9s;--drift:17px;--width:10px;--height:14px;--colour:#f6bf58"></span>
+          <span class="confetti-piece" style="--left:67%;--delay:-4.84s;--duration:6.4s;--drift:34px;--width:4px;--height:8px;--colour:#f0f0ff"></span>
+          <span class="confetti-piece" style="--left:7%;--delay:-5.21s;--duration:7.1s;--drift:51px;--width:6px;--height:11px;--colour:#c2a9ec"></span>
+          <span class="confetti-piece" style="--left:44%;--delay:-5.58s;--duration:7.8s;--drift:-51px;--width:8px;--height:14px;--colour:#a7c6ef"></span>
+          <span class="confetti-piece" style="--left:81%;--delay:-5.95s;--duration:8.5s;--drift:-34px;--width:10px;--height:8px;--colour:#e8a4c9"></span>
+          <span class="confetti-piece" style="--left:21%;--delay:-6.32s;--duration:9.2s;--drift:-17px;--width:4px;--height:11px;--colour:#fae2a3"></span>
+          <span class="confetti-piece" style="--left:58%;--delay:-6.69s;--duration:9.9s;--drift:0px;--width:6px;--height:14px;--colour:#f39aac"></span>
+          <span class="confetti-piece" style="--left:95%;--delay:-7.06s;--duration:6.4s;--drift:17px;--width:8px;--height:8px;--colour:#eb4560"></span>
+          <span class="confetti-piece" style="--left:35%;--delay:-7.43s;--duration:7.1s;--drift:34px;--width:10px;--height:11px;--colour:#f6bf58"></span>
+          <span class="confetti-piece" style="--left:72%;--delay:-7.8s;--duration:7.8s;--drift:51px;--width:4px;--height:14px;--colour:#f0f0ff"></span>
+          <span class="confetti-piece" style="--left:12%;--delay:-8.17s;--duration:8.5s;--drift:-51px;--width:6px;--height:8px;--colour:#c2a9ec"></span>
+          <span class="confetti-piece" style="--left:49%;--delay:-8.54s;--duration:9.2s;--drift:-34px;--width:8px;--height:11px;--colour:#a7c6ef"></span>
+          <span class="confetti-piece" style="--left:86%;--delay:-8.91s;--duration:9.9s;--drift:-17px;--width:10px;--height:14px;--colour:#e8a4c9"></span>
+          <span class="confetti-piece" style="--left:26%;--delay:-9.28s;--duration:6.4s;--drift:0px;--width:4px;--height:8px;--colour:#fae2a3"></span>
+          <span class="confetti-piece" style="--left:63%;--delay:-9.65s;--duration:7.1s;--drift:17px;--width:6px;--height:11px;--colour:#f39aac"></span>
+          <span class="confetti-piece" style="--left:3%;--delay:-10.02s;--duration:7.8s;--drift:34px;--width:8px;--height:14px;--colour:#eb4560"></span>
+          <span class="confetti-piece" style="--left:40%;--delay:-10.39s;--duration:8.5s;--drift:51px;--width:10px;--height:8px;--colour:#f6bf58"></span>
+        </div>
+        <div class="red-gift-badge" id="redGiftBadge" aria-hidden="true">
+          <svg viewBox="0 0 24 24" focusable="false"><rect x="3.2" y="10" width="17.6" height="11" rx="1.2"/><path d="M2.5 6.9h19v3.2h-19zM12 7v14M11.7 7c-4.5-5.4-7.5-3.8-6.1-1.2 1 1.8 4.6 1.2 6.1 1.2ZM12.3 7c4.5-5.4 7.5-3.8 6.1-1.2-1 1.8-4.6 1.2-6.1 1.2Z"/></svg>
+        </div>
       </div>
       <div class="status" id="status" aria-live="polite">Every part of the foil stays until you scratch it off.</div>
       <progress class="progress" id="scratchProgress" max="100" value="0" aria-label="Scratch-card reveal progress"></progress>
