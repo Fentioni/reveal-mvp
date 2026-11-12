@@ -887,6 +887,75 @@
       return data;
     }
 
+    async function setScratchPreview() {
+      const sequence = ++scratchSelectionSequence;
+      const style = $("scratchStyle").value;
+      const foil = $("scratchFoil").value;
+      const useImage = style === "custom";
+      $("scratchUploadField").hidden = !useImage;
+      scratchPreview.setFoil(foil);
+      if (useImage && (selectedScratchUrl || savedScratchUrl)) {
+        await scratchPreview.setCoverImage(selectedScratchUrl || savedScratchUrl);
+      } else {
+        await scratchPreview.setCoverImage(null);
+        scratchPreview.setCoverStyle(useImage ? "classic" : style);
+      }
+      if (sequence !== scratchSelectionSequence) return;
+      scratchPreview.canvas.style.pointerEvents = "none";
+    }
+
+    async function examineScratchFile(file) {
+      if (!["image/jpeg","image/png","image/webp"].includes(file.type) ||
+          !file.size || file.size > 10 * 1024 * 1024) {
+        throw new Error("Choose a JPEG, PNG or WebP image no larger than 10 MB.");
+      }
+      const url = URL.createObjectURL(file);
+      try {
+        const image = new Image();
+        await new Promise((resolve,reject) => {
+          image.onload = resolve;
+          image.onerror = () => reject(new Error("This image cannot be opened."));
+          image.src = url;
+        });
+        if (image.naturalWidth < 640 || image.naturalHeight < 640) {
+          throw new Error("Choose a scratch image at least 640 × 640 pixels.");
+        }
+        return url;
+      } catch(error) {
+        URL.revokeObjectURL(url);
+        throw error;
+      }
+    }
+
+    $("scratchStyle").addEventListener("change", () => {
+      setScratchPreview().catch(error => show(error.message));
+    });
+    $("scratchFoil").addEventListener("change", () => {
+      setScratchPreview().catch(error => show(error.message));
+    });
+    $("scratchCoverImage").addEventListener("change", async () => {
+      if (!ready || busy) return;
+      const file = $("scratchCoverImage").files?.[0];
+      if (!file) return;
+      try {
+        const next = await examineScratchFile(file);
+        if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
+        selectedScratchUrl = next;
+        selectedScratchImage = file;
+        $("scratchStyle").value = "custom";
+        await setScratchPreview();
+        hide();
+      } catch(error) {
+        $("scratchCoverImage").value = "";
+        show(error.message || "The scratch image could not be loaded.");
+      }
+    });
+    window.addEventListener("pagehide", () => {
+      if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
+      if (savedScratchUrl) URL.revokeObjectURL(savedScratchUrl);
+      scratchPreview.destroy();
+    });
+
     for (const key of fields) {
       $(key).addEventListener("input", preview);
       $(key).addEventListener("change", preview);
@@ -934,6 +1003,10 @@
       event.preventDefault();
 
       if (!ready || busy || !form.reportValidity()) return;
+      if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage) {
+        show("Please choose an image for your custom scratch-card surface.");
+        return;
+      }
 
       busy = true;
       lock(true);
@@ -985,6 +1058,18 @@
 
         localStorage.setItem("reveal_edit_" + id, token);
 
+        const surfaceBody = new FormData();
+        surfaceBody.append("style", $("scratchStyle").value);
+        surfaceBody.append("foil", $("scratchFoil").value);
+        if ($("scratchStyle").value === "custom" && selectedScratchImage) {
+          surfaceBody.append("coverImage", selectedScratchImage);
+        }
+        await api("/api/reveals/" + encodeURIComponent(id) + "/scratch-surface", {
+          method: "PUT",
+          headers: {"X-Edit-Token": token},
+          body: surfaceBody
+        });
+
         location.assign(
           "/reveal?id=" + encodeURIComponent(id)
         );
@@ -992,7 +1077,7 @@
       } catch (error) {
         show(
           pendingReview
-            ? "Your reveal was saved, but this browser could not keep its editing key. Keep this page open, allow site storage, then try again."
+            ? "Your draft was saved. " + (error.message || "The scratch surface could not be saved.") + " Please retry to continue to review."
             : error.message
         );
 
@@ -1031,6 +1116,7 @@
     async function initialise() {
       lock(true);
       preview();
+      await setScratchPreview();
 
       try {
         storageCheck();
@@ -1072,6 +1158,27 @@
         }
 
         revision = reveal.revision;
+
+        const savedSurface = await api(
+          "/api/reveals/" + encodeURIComponent(id) + "/scratch-surface",
+          {headers: {"X-Edit-Token": token}}
+        );
+        $("scratchStyle").value = savedSurface.surface.style;
+        $("scratchFoil").value = savedSurface.surface.foil;
+        existingScratchImage = Boolean(savedSurface.surface.hasImage);
+        if (existingScratchImage) {
+          const coverResponse = await fetch(
+            "/api/reveals/" + encodeURIComponent(id) + "/scratch-surface/image",
+            {cache:"no-store", headers:{"X-Edit-Token":token}}
+          );
+          if (!coverResponse.ok) throw new Error("Saved scratch-surface image could not be retrieved. Please try again.");
+          const blob = await coverResponse.blob();
+          if (!["image/jpeg","image/png","image/webp"].includes(blob.type)) {
+            throw new Error("Saved scratch-surface image has an unexpected format.");
+          }
+          savedScratchUrl = URL.createObjectURL(blob);
+        }
+        await setScratchPreview();
 
         for (const key of fields) {
           $(key).value = reveal[key] || "";
