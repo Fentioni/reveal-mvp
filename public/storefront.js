@@ -142,6 +142,8 @@ async function productPage(slug) {
   const p=data.product;
   title(p.name);
   const ready = data.canCreate === true;
+  const isStaging = location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev';
+  const canTestTicketCreator = isStaging && p.slug === 'ticket-reveal' && !ready;
   const mechanics = data.mechanics||[],themes=data.themes||[];
   const price = priceText(data.price);
   const parent = data.categories?.[0];
@@ -151,8 +153,12 @@ async function productPage(slug) {
     $('span',{className:'tag'+(ready?' active':''),text:ready?'Available now':'Coming soon'}),
     $('h3',{text:ready?'Make it your own':'An exciting reveal is on its way'}),
     $('p',{text:ready?(price?`Base price: ${price} before any applicable tax.`:'The price is confirmed at checkout.'):'This product is not available to purchase yet.'}),
-    ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) : $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
-    $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':'There is no payment or pre-purchase access for this product.'})
+    ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) :
+      canTestTicketCreator ? $('a',{className:'button',href:'/legacy-create',text:'Test creator in staging  ↗'}) :
+      $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
+    $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':
+      canTestTicketCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
+      'There is no payment or pre-purchase access for this product.'})
   ]);
   elMain.replaceChildren($('div',{className:'page'},[
     breadcrumb([...(parent?[{text:parent.name,href:categoryLink(parent.slug)}]:[]),{text:p.name}]),
