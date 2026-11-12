@@ -11,6 +11,7 @@ const FOILS = Object.freeze({
   rose: ['#835465', '#FAD5D4', '#BE8398', '#FFE8DD', '#9C5A70']
 });
 
+const SURFACE_STYLES = Object.freeze(['classic','theatre','concert']);
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
   const dx = x2 - x1, dy = y2 - y1;
@@ -21,7 +22,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 };
 
 export class ScratchCard {
-  constructor({ canvas, foil = 'gold', brushSize = 48,
+  constructor({ canvas, foil = 'gold', coverStyle = 'classic', brushSize = 48,
     coverImage = null, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -33,6 +34,8 @@ export class ScratchCard {
     this.canvas = canvas;
     this.ctx = context;
     this.foil = FOILS[foil] ? foil : 'gold';
+    this.coverStyle = SURFACE_STYLES.includes(coverStyle) ? coverStyle : 'classic';
+    this.imageRequest = 0;
     this.brushSize = clamp(Number(brushSize) || 48, 12, 120);
     this.onScratch = onScratch;
     this.onProgress = onProgress;
@@ -64,7 +67,7 @@ export class ScratchCard {
     if (!this.observer) window.addEventListener('resize', this.windowResize);
     this.resize();
 
-    if (coverImage) this.setCoverImage(coverImage);
+    if (coverImage) this.setCoverImage(coverImage).catch(() => {});
   }
 
   get progress() {
@@ -130,22 +133,106 @@ export class ScratchCard {
     }
     ctx.restore();
 
+    if (!this.coverImage) this.drawArtwork();
+
     if (this.coverImage?.complete && this.coverImage.naturalWidth) {
       const image = this.coverImage, scale = Math.max(w / image.naturalWidth, h / image.naturalHeight);
       const iw = image.naturalWidth * scale, ih = image.naturalHeight * scale;
       ctx.drawImage(image, (w - iw) / 2, (h - ih) / 2, iw, ih);
+      ctx.fillStyle = 'rgba(12, 11, 25, 0.19)';
+      ctx.fillRect(0, 0, w, h);
     }
 
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillStyle = this.foil === 'midnight' ? '#F3ECFF' : '#3D2B20';
-    ctx.shadowColor = 'rgba(255,255,255,0.35)';
-    ctx.shadowBlur = 8;
-    ctx.font = '700 ' + clamp(w * 0.05, 12, 19) + 'px system-ui, sans-serif';
-    ctx.fillText('✦  SCRATCH TO REVEAL  ✦', w / 2, h / 2, w - 20);
-    ctx.font = '500 ' + clamp(w * 0.034, 10, 13) + 'px system-ui, sans-serif';
-    ctx.fillText('Use your finger or mouse', w / 2, h / 2 + 30, w - 20);
+    const dark = this.foil === 'midnight' || this.coverStyle === 'concert' || Boolean(this.coverImage);
+    const labelY = h / 2;
+    const labelWidth = Math.min(w - 36, 350);
+    ctx.fillStyle = dark ? 'rgba(7,9,23,.76)' : 'rgba(255,251,236,.67)';
+    ctx.fillRect((w - labelWidth) / 2, labelY - 32, labelWidth, 74);
+    ctx.strokeStyle = dark ? 'rgba(255,221,154,.86)' : 'rgba(104,66,22,.72)';
+    ctx.lineWidth = 1.5;
+    ctx.strokeRect((w - labelWidth) / 2 + 5, labelY - 27, labelWidth - 10, 64);
+    ctx.fillStyle = dark ? '#FFF0C8' : '#362314';
+    ctx.shadowColor = dark ? '#08061A' : '#FFFFFF';
+    ctx.shadowBlur = 7;
+    ctx.font = '800 ' + clamp(w * 0.054, 12, 22) + 'px system-ui, sans-serif';
+    ctx.fillText('✦  SCRATCH TO REVEAL  ✦', w / 2, labelY - 5, labelWidth - 20);
+    ctx.font = '500 ' + clamp(w * 0.033, 10, 14) + 'px system-ui, sans-serif';
+    ctx.fillText('THE SURPRISE IS UNDER HERE', w / 2, labelY + 22, labelWidth - 28);
+    ctx.restore();
+  }
+
+  drawArtwork() {
+    const ctx = this.ctx, w = this.cssWidth, h = this.cssHeight;
+    const stage = this.coverStyle;
+    ctx.save();
+    // Original scalable ornament artwork: no external images or libraries.
+    if (stage === 'theatre') {
+      const curtain = ctx.createLinearGradient(0, 0, w * 0.25, 0);
+      curtain.addColorStop(0, '#420B24'); curtain.addColorStop(.45, '#A62C4A');
+      curtain.addColorStop(1, '#470D24');
+      ctx.fillStyle = curtain;
+      ctx.fillRect(0, 0, w * 0.19, h);
+      ctx.fillRect(w * .81, 0, w * .19, h);
+      ctx.fillStyle = '#F4C478';
+      for (const x of [.08, .12, .86, .90]) ctx.fillRect(w * x, 0, Math.max(2,w * .008), h);
+      ctx.fillStyle = '#5D1834';
+      ctx.fillRect(0, 0, w, h * .17);
+      ctx.fillStyle = '#EAC384';
+      ctx.fillRect(0, h * .17, w, Math.max(4,h * .012));
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFE6A5';
+      ctx.font = '600 ' + clamp(w * .05,14,23) + 'px Georgia, serif';
+      ctx.fillText('✦  THE GRAND UNVEILING  ✦', w/2, h*.1,w*.77);
+      ctx.font = 'italic ' + clamp(w*.038,12,17) + 'px Georgia, serif';
+      ctx.fillText('Something magical awaits',w/2,h*.86,w*.7);
+    } else if (stage === 'concert') {
+      ctx.fillStyle = '#141028';
+      ctx.fillRect(0,0,w,h);
+      const sky = ctx.createLinearGradient(0,0,w,h);
+      sky.addColorStop(0,'#352A80');sky.addColorStop(.45,'#14112E');sky.addColorStop(1,'#531C60');
+      ctx.fillStyle = sky;ctx.fillRect(0,0,w,h);
+      const rays = [
+        [w*.08,0,w*.51,h],[w*.92,0,w*.49,h],
+        [w*.32,0,w*.8,h],[w*.68,0,w*.2,h]
+      ];
+      for(let i=0;i<rays.length;i++){
+        const [sx,sy,ex,ey] = rays[i];
+        ctx.strokeStyle = i%2 ? 'rgba(255,65,185,.27)' : 'rgba(70,201,255,.30)';
+        ctx.lineWidth = w*.07;
+        ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);ctx.stroke();
+      }
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#FFE7B0';
+      ctx.font = '800 ' + clamp(w*.066,18,29) + 'px system-ui, sans-serif';
+      ctx.fillText('VIP ACCESS',w/2,h*.19,w*.78);
+      ctx.font = '600 ' + clamp(w*.038,12,17) + 'px system-ui, sans-serif';
+      ctx.fillText('YOUR NEXT BIG NIGHT OUT',w/2,h*.84,w*.78);
+    } else {
+      // A ticket-inspired, finely etched foil design in each classic finish.
+      const light = this.foil === 'midnight';
+      ctx.strokeStyle = light ? '#F1DDA5AA' : '#6D4A286E';
+      ctx.lineWidth = Math.max(1.5,w*.005);
+      ctx.strokeRect(w*.045,h*.035,w*.91,h*.93);
+      ctx.lineWidth = 1;
+      ctx.strokeRect(w*.068,h*.05,w*.864,h*.90);
+      ctx.textAlign = 'center';
+      ctx.fillStyle = light ? '#F9E9C6' : '#64401D';
+      ctx.font = '700 ' + clamp(w*.052,14,22) + 'px Georgia, serif';
+      ctx.fillText('✦  A SPECIAL SURPRISE  ✦',w/2,h*.18,w*.84);
+      ctx.font = '500 ' + clamp(w*.033,11,15) + 'px system-ui, sans-serif';
+      ctx.fillText('ONE MOMENT • ONE MEMORY',w/2,h*.82,w*.82);
+    }
+    // Perforated ticket edging, engraved as a repeatable motif.
+    ctx.fillStyle = stage === 'concert' ? '#DDCAFF' : '#FBE3A5';
+    ctx.globalAlpha = .68;
+    for(let y = h*.22;y < h*.79;y += Math.max(12,h*.034)){
+      for(const x of [w*.04,w*.96]){
+        ctx.beginPath();ctx.arc(x,y,Math.max(1.4,w*.004),0,Math.PI*2);ctx.fill();
+      }
+    }
     ctx.restore();
   }
 
@@ -248,13 +335,29 @@ export class ScratchCard {
     this.reset();
   }
 
+  setCoverStyle(style) {
+    if (!SURFACE_STYLES.includes(style)) throw new RangeError('Unknown scratch surface style: ' + style);
+    this.coverStyle = style;
+    this.reset();
+  }
+
   setCoverImage(url) {
-    if (!url) { this.coverImage = null; this.reset(); return; }
-    const image = new Image();
-    image.crossOrigin = 'anonymous';
-    image.onload = () => { this.coverImage = image; this.reset(); };
-    image.onerror = () => console.warn('ScratchCard cover image could not be loaded. Using foil texture.');
-    image.src = url;
+    const request = ++this.imageRequest;
+    if (!url) { this.coverImage = null; this.reset(); return Promise.resolve(true); }
+    return new Promise((resolve,reject) => {
+      const image = new Image();
+      image.onload = () => {
+        if (request !== this.imageRequest) { resolve(false); return; }
+        this.coverImage = image;
+        this.reset();
+        resolve(true);
+      };
+      image.onerror = () => {
+        if (request !== this.imageRequest) { resolve(false); return; }
+        reject(new Error('The chosen scratch image could not be decoded.'));
+      };
+      image.src = url;
+    });
   }
 
   destroy() {
@@ -266,4 +369,4 @@ export class ScratchCard {
   }
 }
 
-export { FOILS };
+export { FOILS, SURFACE_STYLES };
