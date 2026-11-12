@@ -95,17 +95,17 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   const {env,legacy,state} = makeMocks();
   const before = await scratchSurfaceResponse(request(),env,{},legacy);
   assert.equal(before.status,200);
-  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',hasImage:false});
+  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',hasImage:false,variant:'ticket'});
   const body = new FormData();
   body.append('style','theatre');body.append('foil','rose');
   const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(saved.status,200);
-  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',hasImage:false});
+  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',hasImage:false,variant:'ticket'});
   const fields = JSON.parse(state.config.fields_json);
   assert.equal(fields.scratchSurface.style,'theatre');
   assert.equal(fields.scratchSurface.coverAssetId,null);
   const fetched = await scratchSurfaceResponse(request(),env,{},legacy);
-  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',hasImage:false});
+  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',hasImage:false,variant:'ticket'});
 });
 
 test('owner can store a custom scratch image privately and retrieve it with a token', async () => {
@@ -114,7 +114,7 @@ test('owner can store a custom scratch image privately and retrieve it with a to
   body.append('coverImage',pngFile(), 'cover.png');
   const response = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(response.status,200);
-  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',hasImage:true});
+  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',hasImage:true,variant:'ticket'});
   assert.equal(state.stored.size,1);
   assert.equal(state.asset.r2_key.startsWith('scratch-covers/test-reveal/'),true);
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.coverAssetId,state.asset.id);
@@ -271,4 +271,57 @@ test('the single image picker supports custom scratch cover without a second fil
   assert.ok(creator.includes('Choose an image using Add an image to create your custom scratch-card cover.'));
   assert.ok(creator.includes('selectedScratchImage = null;'));
   assert.ok(creator.includes('await setScratchPreview();'));
+});
+
+
+test('concert scratch variant reuses ticket surface persistence without adding a new product or changing payment', async () => {
+  const {env,legacy,state}=makeMocks();
+  const body=new FormData();
+  body.append('variant','concert');
+  body.append('style','festival');
+  body.append('foil','midnight');
+  body.append('audioEnabled','false');
+  const saved=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+  assert.equal(saved.status,200);
+  const result=await saved.json();
+  assert.deepEqual(result.surface,{style:'festival',foil:'midnight',hasImage:false,variant:'concert'});
+  const fields=JSON.parse(state.config.fields_json);
+  assert.deepEqual(fields.scratchSurface,{
+    style:'festival',foil:'midnight',variant:'concert',coverAssetId:null
+  });
+  const restored=await scratchSurfaceResponse(request(),env,{},legacy);
+  assert.deepEqual((await restored.json()).surface,result.surface);
+
+  const switchArtwork=new FormData();
+  switchArtwork.append('variant','concert');
+  switchArtwork.append('style','backstage');
+  switchArtwork.append('foil','silver');
+  const second=await scratchSurfaceResponse(request('PUT',switchArtwork),env,{},legacy);
+  assert.equal(second.status,200);
+  assert.equal((await second.json()).surface.style,'backstage');
+  assert.equal(JSON.parse(state.config.fields_json).scratchSurface.variant,'concert');
+  assert.equal(state.stored.size,0,'concert presets must not create image uploads');
+
+  const invalid=new FormData();
+  invalid.append('variant','concert');invalid.append('style','theatre');invalid.append('foil','gold');
+  const rejected=await scratchSurfaceResponse(request('PUT',invalid),env,{},legacy);
+  assert.equal(rejected.status,400,'concert options must not include theatre styling');
+});
+
+test('concert creator has concert-only art options while reusing original ticket form and payment flow',()=>{
+  const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  const review=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
+  const storefront=fs.readFileSync(path.join(root,'public/storefront.js'),'utf8');
+  assert.ok(creator.includes('urlParams.get("variant") === "concert"'));
+  assert.ok(creator.includes('setCreatorVariant(savedSurface.surface.variant || "ticket")'));
+  assert.ok(creator.includes('surfaceBody.append("variant", currentVariant)'));
+  assert.ok(creator.includes('data-show-for="concert" data-scratch-style="festival"'));
+  assert.ok(creator.includes('data-show-for="concert" data-scratch-style="backstage"'));
+  assert.ok(creator.includes('data-show-for="ticket" data-scratch-style="theatre"'));
+  assert.ok(creator.includes('currentVariant === "concert" ? "concert" : "classic"'));
+  assert.ok(creator.includes('id="image"'));
+  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);
+  assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
+  assert.ok(review.includes("festival:'Festival Access',backstage:'Backstage Pass'"));
+  assert.ok(storefront.includes("href:'/legacy-create?variant=concert'"));
 });
