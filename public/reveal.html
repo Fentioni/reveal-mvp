@@ -1609,6 +1609,7 @@
       if (imageObjectUrl) {
         URL.revokeObjectURL(imageObjectUrl);
       }
+      for (const url of quizReviewImageUrls) URL.revokeObjectURL(url);
     });
 
     loadReveal();
