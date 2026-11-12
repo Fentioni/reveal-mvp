@@ -147,7 +147,7 @@ export class ScratchCard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const dark = this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
-    const landscape = w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle);
+    const landscape = w > h * 1.4;
     const labelY = landscape ? h * .58 : h / 2;
     const labelX = landscape ? w * .41 : w / 2;
     const labelWidth = landscape ? Math.min(w * .54, 345) : Math.min(w - 36, 350);
