@@ -59,7 +59,7 @@ function mock(row=paid,initial=quiz){
         if(sql.includes('INSERT OR IGNORE INTO reveal_events')){
           const [id,revealId,eventType]=this.args;
           assert.equal(revealId,'my-quiz-id');
-          assert.match(eventType,/quiz-step-[123]/);
+          assert.match(eventType,/^(quiz-step-[123]|quiz-wrong-answer)$/);
           const changes=data.events.has(id)?0:1;
           data.events.add(id);return {meta:{changes}};
         }
@@ -151,7 +151,8 @@ test('no answer keys or final reveal details appear to unsolved paid recipients'
   assert.equal(state.headers.get('cache-control'),'private, no-store');
   const body=await state.json();
   assert.deepEqual(body.question,{number:1,prompt:quiz.questions[0].prompt,
-    options:quiz.questions[0].options,hint:quiz.questions[0].hint});
+    options:quiz.questions[0].options,wrongOptions:[],wrongAttempts:0});
+  assert.equal(body.question.hint,undefined,'the hint is hidden until the second incorrect answer');
   assert.equal(body.completed,0);
   assert.equal(body.unlocked,false);
   assert.equal(body.reveal,undefined);
@@ -173,7 +174,10 @@ test('wrong options cannot progress; only the active correct answer advances',as
   const miss=await wrong.json();
   assert.equal(miss.correct,false);
   assert.equal(miss.completed,0);
-  assert.equal(m.data.events.size,0);
+  assert.equal(m.data.events.size,1,'the first wrong choice must remain recorded');
+  assert.deepEqual(miss.question.wrongOptions,[0]);
+  assert.equal(miss.question.wrongAttempts,1);
+  assert.equal(miss.question.hint,undefined);
   const jump=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
     questionIndex:2,optionIndex:3
   }),m.env,{});
@@ -212,6 +216,84 @@ test('wrong options cannot progress; only the active correct answer advances',as
   assert.equal(picture.headers.get('content-type'),'image/png');
   assert.equal(picture.headers.get('cache-control'),'private, no-store');
   assert.equal(m.data.imageHits,1);
+});
+
+
+test('three distinct wrong answers grey out permanently and leave one correct choice to select',async()=>{
+  const m=mock();
+  const picks=[0,2,3]; // Correct answer for question 1 is index 1.
+  for(let attempt=1;attempt<=3;attempt++){
+    const reply=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+      questionIndex:0,optionIndex:picks[attempt-1]
+    }),m.env,{});
+    assert.equal(reply.status,200);
+    const body=await reply.json();
+    assert.equal(body.correct,false);
+    assert.equal(body.completed,0,'wrong guesses cannot advance');
+    assert.equal(body.unlocked,false);
+    assert.equal(body.question.wrongAttempts,attempt);
+    assert.deepEqual(body.question.wrongOptions,picks.slice(0,attempt).sort((a,b)=>a-b));
+    if(attempt<2)assert.equal(body.question.hint,undefined);
+    else assert.equal(body.question.hint,'Think pasta.');
+    // A reload must preserve eliminated answers and the newly unlocked hint.
+    const refreshed=await quizRecipientResponse(publicRequest('/quiz-state'),m.env,{});
+    assert.deepEqual((await refreshed.json()).question,body.question);
+  }
+  assert.equal(m.data.events.size,3);
+  const stale=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+    questionIndex:0,optionIndex:0
+  }),m.env,{});
+  assert.equal(stale.status,409,'a greyed-out choice cannot be submitted again');
+  assert.equal(m.data.events.size,3,'replaying invalid answers cannot add attempts');
+  const last=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+    questionIndex:0,optionIndex:1
+  }),m.env,{});
+  assert.equal(last.status,200);
+  const next=await last.json();
+  assert.equal(next.correct,true);
+  assert.equal(next.completed,1);
+  assert.equal(next.question.number,2);
+  assert.deepEqual(next.question.wrongOptions,[]);
+  assert.equal(next.question.hint,undefined,'hint counter resets for each question');
+  assert.equal(m.data.events.size,4,'three failures and one correct completion');
+  const again=await quizRecipientResponse(publicRequest('/quiz-state'),m.env,{});
+  assert.equal((await again.json()).question.number,2);
+});
+
+test('an unanswered optional hint uses a neutral fallback after the second wrong answer',async()=>{
+  const m=mock();
+  for(const optionIndex of [0,1]){
+    const reply=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+      questionIndex:1,optionIndex
+    }),m.env,{});
+    assert.equal(reply.status,400,'cannot skip to question two');
+  }
+  const passFirst=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+    questionIndex:0,optionIndex:quiz.questions[0].correctIndex
+  }),m.env,{});
+  assert.equal(passFirst.status,200);
+  for(const optionIndex of [0,1]){
+    const answer=await quizRecipientResponse(publicRequest('/quiz-answer','POST',{
+      questionIndex:1,optionIndex
+    }),m.env,{});
+    const state=await answer.json();
+    assert.equal(state.correct,false);
+    if(optionIndex===0)assert.equal(state.question.hint,undefined);
+    else assert.equal(state.question.hint,'Look closely at the answers that are still available.');
+  }
+});
+
+test('recipient choices are visually greyed and cannot be selected after wrong attempts',()=>{
+  const html=fs.readFileSync(path.join(root,'public/quiz-recipient.html'),'utf8');
+  assert.ok(html.includes('.choice.ruled-out,.choice.ruled-out:disabled'));
+  assert.ok(html.includes('button.disabled=ruledOut'));
+  assert.ok(html.includes('wrongOptions.includes(index)'));
+  assert.ok(html.includes("const showHint=attempts>=2"));
+  assert.ok(html.includes("$('hintText').hidden=!showHint"));
+  assert.ok(html.includes("Three wrong answers ruled out. Tap the remaining choice to continue."));
+  assert.ok(html.includes('const demoWrong=Array.from({length:3},()=>new Set())'));
+  assert.ok(html.includes('demoWrong[demoStep].add(optionIndex)'));
+  assert.ok(!html.includes('id="hintButton"'));
 });
 
 test('recipient quiz remains unavailable until both status paid and paid_at are verified',async()=>{
