@@ -73,3 +73,25 @@ test('product, category and interactive preview pages preserve their browser pat
   }
   assert.deepEqual(internalPaths, Array(5).fill('/storefront'));
 });
+
+test('staging Ticket test entry is kept separate from catalogue activation', () => {
+  const storefront = fs.readFileSync(path.join(root, 'public/storefront.js'), 'utf8');
+  assert.ok(storefront.includes("location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev'"));
+  assert.ok(storefront.includes("p.slug === 'ticket-reveal' && !ready"));
+  assert.ok(storefront.includes("href:'/legacy-create'"));
+  assert.ok(storefront.includes('checkout is disabled'));
+});
+
+test('Ticket creator saves to the canonical review route', () => {
+  const creator = fs.readFileSync(path.join(root, 'public/legacy-create.html'), 'utf8');
+  assert.ok(creator.includes('Create your ticket reveal'));
+  assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
+  assert.ok(!creator.includes('"reveal.html?id="'));
+});
+
+test('review Amend action returns to the staging creator, not storefront', () => {
+  const review = fs.readFileSync(path.join(root, 'public/reveal.html'), 'utf8');
+  assert.ok(review.includes("window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId)"));
+  assert.ok(!review.includes("'/index.html?edit='"));
+  assert.ok(!review.includes('At checkout payment'));
+});
