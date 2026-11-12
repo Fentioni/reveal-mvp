@@ -27,6 +27,17 @@
 - Paid scratch page uses the same Canvas engine and cue rules, with the saved enabled toggle, and no automatic foil clearing.
 - Staging checkout and Stripe webhooks remain disabled. Paid recipient route has automated tests but cannot yet be exercised through the complete real Stripe checkout journey.
 
+## Stage 4E: Purchaser layout restored from preferred original scratch demo (12 November 2026)
+- The user selected the original two-column `/scratch-demo?v=background-only-4` layout as the preferred purchaser creator design.
+- Staging `/legacy-create` now adopts the original charcoal/gold visual styling: finish and artwork controls in the left column, a large gold-framed scratch-cover preview on the right.
+- The creator retains all four artwork choices, all four foil finishes, custom top-layer upload, ticket data entry, image attachment, owner-token saving, static review and Amend navigation.
+- The cover is strictly a static Canvas drawing in the creator, with pointer interactions disabled. No recipient scratching is unlocked by selecting a design.
+- A single cover Canvas relocates under the artwork controls at <=900px so mobile users can inspect changes without scrolling past the rest of the lengthy form.
+- Ticket content updates live as before, in a separate expandable static detail panel.
+- Music/audio is deferred and its unfinished purchaser UI is not displayed. Newly created drafts select no audio.
+- `/scratch-demo` stays recipient-only with a fixed fictional reveal and no design controls. Payment-gated live recipient route is unchanged.
+- All changes remain confined to the stage4b branch, no production checkout changes.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
