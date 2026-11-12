@@ -131,10 +131,10 @@
         <p id="uploadError" class="upload-error" role="alert"></p>
       </div>
       <div class="controls">
-        <button id="soundButton" class="btn" type="button" aria-pressed="false">♫ Sound off</button>
+        <button id="soundButton" class="btn" type="button" aria-pressed="true">♫ Sound on</button>
         <button id="replayButton" class="btn primary" type="button">↻ Restart scratch</button>
       </div>
-      <p class="demo-disclaimer">Fictional demo only. No account, payment or real ticket is involved. Your own personalised animation will not be available before payment.</p>
+      <p class="demo-disclaimer">Sound starts approximately three seconds after the first scratch gesture when enabled. The cue is an original synthesised cinematic-percussion prototype, ready to be replaced with your authored orchestral audio. Fictional demo only. No account, payment or real ticket is involved. Your own personalised animation will not be available before payment.</p>
     </section>
     <section class="stage" id="stage" aria-label="Fictional interactive scratch-card demonstration">
       <div class="halo" aria-hidden="true"></div>
@@ -170,6 +170,7 @@
   </main>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
+    import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
 
     const byId = id => document.getElementById(id);
     const stage = byId('stage');
@@ -177,7 +178,7 @@
     const progress = byId('scratchProgress');
     const soundButton = byId('soundButton');
     const underlay = byId('underlay');
-    let audioOn = false;
+    let audioOn = true;
     let audioContext = null;
     let lastScratchSound = 0;
     let currentFoil = 'gold';
@@ -225,11 +226,18 @@
       }
     }
 
+    const cinematic = new ScratchCinematicAudio({
+      enabled: true,
+      delayMs: 3000,
+      createContext: () => initAudio(),
+      onCue: () => { status.textContent = 'The cinematic drum roll has begun — continue scratching to reveal the surprise.'; }
+    });
+
     const scratch = new ScratchCard({
       canvas: byId('foilCanvas'),
       foil: currentFoil,
       brushSize: 49,
-      onScratch: scratchSound,
+      onScratch: () => { cinematic.onFirstScratch(); scratchSound(); },
       onProgress(value) { progress.value = Math.round(value * 100); },
       onComplete() {
         underlay.setAttribute('aria-hidden','false');
@@ -244,6 +252,7 @@
     byId('scratchWindow').classList.add('foil-ready');
 
     function restart() {
+      cinematic.reset();
       scratch.reset();
       stage.classList.remove('reveal-complete');
       underlay.setAttribute('aria-hidden','true');
@@ -259,6 +268,7 @@
     }
 
     async function choosePreset(style) {
+      cinematic.reset();
       imageSelection++;
       chooseVisualSurface(style);
       uploadError.textContent = '';
@@ -313,6 +323,7 @@
         if (!ready || selected !== imageSelection) { URL.revokeObjectURL(url); return; }
         if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
         currentUploadUrl = url;
+        cinematic.reset();
         chooseVisualSurface('custom');
         stage.classList.remove('reveal-complete');
         underlay.setAttribute('aria-hidden','true');
@@ -325,6 +336,7 @@
     });
 
     window.addEventListener('pagehide', () => {
+      cinematic.destroy();
       if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
     });
 
@@ -334,6 +346,7 @@
         for (const swatch of document.querySelectorAll('[data-foil]')) {
           swatch.setAttribute('aria-pressed', String(swatch === button));
         }
+        cinematic.reset();
         scratch.setFoil(currentFoil);
         stage.classList.remove('reveal-complete');
         underlay.setAttribute('aria-hidden','true');
@@ -349,6 +362,7 @@
         }
       }
       audioOn = !audioOn;
+      cinematic.setEnabled(audioOn);
       soundButton.setAttribute('aria-pressed', String(audioOn));
       soundButton.textContent = audioOn ? '♫ Sound on' : '♫ Sound off';
     });
