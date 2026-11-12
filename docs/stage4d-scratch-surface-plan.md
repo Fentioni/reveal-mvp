@@ -15,6 +15,18 @@
 - Saved scratch surface is shown in static owner review without enabling scratch interactions.
 - Automated security, image validation, persistence and route tests.
 
+## Stage 4D cinematic audio and ticket UI (12 November 2026)
+- Ticket creator now displays four visual, independently selectable artwork cards: Classic foil (Premium scratch ticket), Theatre Velvet (Curtains and gold print), Concert Lights (VIP-style neon artwork), Your own image (Scratch off your photo).
+- A separate row of Gold, Silver, Midnight, Rose foil swatches remains available independently of artwork selection.
+- A checked-by-default optional audio setting is visible in the creator. Audio is not played in the creator or static review.
+- The scratch-surface API accepts audioEnabled=true/false and saves an "audio" object inside the existing reveal_configurations.fields_json: enabled, cue="cinematic-drum-roll", trigger="first-scratch", delayMs=3000.
+- The static owner review shows the saved audio setting but never plays it.
+- The public fictional demonstration uses the original dependency-free ScratchCinematicAudio class, schedules the cue exactly 3000 ms after the first real scratch, and offers mute/unmute and replay.
+- The cue is a synthesised orchestral-percussion prototype, not a licensed/recorded orchestral soundtrack. Customer-authored music/audio will replace or supplement it later without changing timing rules.
+- The staged /r/:slug recipient page and its /scratch-data and /scratch-cover endpoints require existing legacy payment evidence: reveal status paid AND non-null paid_at. Unpaid states return 404 with no artwork or personalised content.
+- Paid scratch page uses the same Canvas engine and cue rules, with the saved enabled toggle, and no automatic foil clearing.
+- Staging checkout and Stripe webhooks remain disabled. Paid recipient route has automated tests but cannot yet be exercised through the complete real Stripe checkout journey.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
