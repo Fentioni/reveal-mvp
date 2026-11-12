@@ -958,8 +958,8 @@
       const result = await readJson(response);
       const {style,foil,hasImage} = result.surface;
       const {audio} = result;
-      const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',custom:'Your uploaded scratch image'};
-      elements.surfaceReviewDescription.textContent = (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
+      const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',festival:'Festival Access',backstage:'Backstage Pass',custom:'Your uploaded scratch image'};
+      elements.surfaceReviewDescription.textContent = (result.surface.variant === 'concert' ? 'Scratch Concert Ticket Reveal · ' : '') + (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
       elements.surfaceAudioDescription.textContent = audio?.enabled !== false
         ? 'Sound: cinematic orchestral drum roll begins approximately 3 seconds after the first scratch.'
         : 'Sound: disabled for the recipient.';
