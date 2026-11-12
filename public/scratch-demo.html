@@ -136,11 +136,8 @@
         </div>
         <canvas id="foilCanvas" aria-hidden="true"></canvas>
       </div>
-      <div class="status" id="status" aria-live="polite">Scratch the gold foil to uncover the surprise.</div>
+      <div class="status" id="status" aria-live="polite">Every part of the foil stays until you scratch it off.</div>
       <progress class="progress" id="scratchProgress" max="100" value="0" aria-label="Scratch-card reveal progress"></progress>
-      <div class="below">
-        <button id="accessibleReveal" class="btn" type="button">Reveal without scratching</button>
-      </div>
     </section>
   </main>
   <script type="module">
@@ -198,13 +195,12 @@
       canvas: byId('foilCanvas'),
       foil: currentFoil,
       brushSize: 49,
-      threshold: 0.54,
       onScratch: scratchSound,
       onProgress(value) { progress.value = Math.round(value * 100); },
       onComplete() {
         underlay.setAttribute('aria-hidden','false');
         stage.classList.add('reveal-complete');
-        status.textContent = 'Surprise! The fictional ticket has been revealed.';
+        status.textContent = 'All sampled foil areas have been scratched. Any remaining flecks can still be scratched away.';
         chime();
       }
     });
@@ -217,7 +213,7 @@
       scratch.reset();
       stage.classList.remove('reveal-complete');
       underlay.setAttribute('aria-hidden','true');
-      status.textContent = 'Scratch the ' + currentFoil + ' foil to uncover the surprise.';
+      status.textContent = 'Scratch the ' + currentFoil + ' foil. Only your strokes remove it.';
     }
 
     for (const button of document.querySelectorAll('[data-foil]')) {
@@ -229,11 +225,10 @@
         scratch.setFoil(currentFoil);
         stage.classList.remove('reveal-complete');
         underlay.setAttribute('aria-hidden','true');
-        status.textContent = 'Scratch the ' + currentFoil + ' foil to uncover the surprise.';
+        status.textContent = 'Scratch the ' + currentFoil + ' foil. Only your strokes remove it.';
       });
     }
     byId('replayButton').addEventListener('click', restart);
-    byId('accessibleReveal').addEventListener('click', () => scratch.reveal());
     soundButton.addEventListener('click', () => {
       if (!audioOn) {
         if (!initAudio()) {
