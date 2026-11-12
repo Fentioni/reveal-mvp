@@ -7,6 +7,11 @@ const textError = (message, status) => new Response(message, {
   headers: { 'content-type': 'text/plain; charset=utf-8', 'cache-control': 'no-store' }
 });
 
+const jsonError = (message, status) => new Response(JSON.stringify({success: false, error: message}), {
+  status,
+  headers: { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' }
+});
+
 export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
@@ -18,7 +23,7 @@ export default {
     if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
         (path === '/api/webhooks/stripe' ||
          /^\/api\/reveals\/[A-Za-z0-9_-]+\/checkout\/?$/.test(path))) {
-      return textError('Checkout is disabled in this staging environment.', 503);
+      return jsonError('Checkout is disabled in this staging environment.', 503);
     }
 
     if (path === '/api/catalogue' || path.startsWith('/api/catalogue/')) {
