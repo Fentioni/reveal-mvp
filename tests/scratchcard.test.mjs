@@ -270,3 +270,44 @@ test('background confetti persists without a red gift icon or blocking scratchin
   assert.match(demo, /calc\(100dvh \+ 48px\)/);
   assert.ok(!demo.includes('document.getElementById("celebrationConfetti").remove()'));
 });
+
+test('concert artwork draws natively at a true wide-ticket aspect ratio',()=>{
+  const canvas=fakeCanvas();
+  canvas.getBoundingClientRect=()=>({left:0,top:0,width:720,height:330});
+  const card=new ScratchCard({canvas,coverStyle:'concert',foil:'midnight'});
+  assert.equal(card.cssWidth,720);
+  assert.equal(card.cssHeight,330);
+  assert.ok(card.cssWidth/card.cssHeight>2);
+  for (const finish of ['concert','festival','backstage']) {
+    card.setCoverStyle(finish);
+    assert.equal(card.coverStyle,finish);
+    assert.equal(card.progress,0);
+  }
+  card.destroy();
+  const src=fs.readFileSync(path.join(root,'public/scratchcard.js'),'utf8');
+  assert.ok(src.includes("w > h * 1.4 && ['concert','festival','backstage'].includes(stage)"));
+  assert.ok(src.includes('drawLandscapeConcertArtwork(ctx,w,h,stage)'));
+  assert.ok(src.includes('const stubX=w*.78'));
+});
+
+test('landscape ticket is confined to concert variant in creator, review and paid page',()=>{
+  const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  const review=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
+  const recipient=fs.readFileSync(path.join(root,'public/recipient-scratch.html'),'utf8');
+  assert.match(creator, /body\[data-ticket-variant="concert"\] \.scratch-static-frame\{[\s\S]*?aspect-ratio:2\.15\/1/);
+  assert.ok(creator.includes('aspect-ratio:3 / 4'));
+  assert.ok(creator.includes('clip-path:polygon'));
+  assert.match(review, /body\[data-ticket-variant="concert"\] \.scratch-surface-thumb\{[\s\S]*?aspect-ratio:2\.15\/1/);
+  assert.ok(review.includes('aspect-ratio:3/4'));
+  assert.ok(review.includes("document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket'"));
+  assert.ok(review.includes('ticket.appendChild(elements.imageWrap)'));
+  assert.ok(review.includes('ticket.appendChild(elements.bookingCard)'));
+  assert.ok(recipient.includes("document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket'"));
+  assert.ok(recipient.includes("$('card').classList.toggle('concert-ticket',isConcert)"));
+  assert.ok(recipient.includes('.card.concert-ticket'));
+  assert.ok(recipient.includes('.concert-ticket .ticket-underlay'));
+  assert.ok(recipient.includes('.concert-ticket .ticket-grid'));
+  assert.ok(recipient.includes('clip-path:polygon'));
+  assert.ok(recipient.includes('recipientCardModel(data.reveal)'));
+  assert.ok(recipient.includes('applyDetails(model)'));
+});
