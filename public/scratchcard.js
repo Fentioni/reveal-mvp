@@ -11,7 +11,7 @@ const FOILS = Object.freeze({
   rose: ['#835465', '#FAD5D4', '#BE8398', '#FFE8DD', '#9C5A70']
 });
 
-const SURFACE_STYLES = Object.freeze(['classic','theatre','concert']);
+const SURFACE_STYLES = Object.freeze(['classic','theatre','concert','festival','backstage']);
 const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
 const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
   const dx = x2 - x1, dy = y2 - y1;
@@ -146,7 +146,7 @@ export class ScratchCard {
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const dark = this.foil === 'midnight' || this.coverStyle === 'concert' || Boolean(this.coverImage);
+    const dark = this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
     const labelY = h / 2;
     const labelWidth = Math.min(w - 36, 350);
     ctx.fillStyle = dark ? 'rgba(7,9,23,.76)' : 'rgba(255,251,236,.67)';
@@ -210,6 +210,53 @@ export class ScratchCard {
       ctx.fillText('VIP ACCESS',w/2,h*.19,w*.78);
       ctx.font = '600 ' + clamp(w*.038,12,17) + 'px system-ui, sans-serif';
       ctx.fillText('YOUR NEXT BIG NIGHT OUT',w/2,h*.84,w*.78);
+    } else if (stage === 'festival') {
+      // Original festival pass artwork: sunset stage lights, wristband bands,
+      // sweeping beams and central access lettering.
+      const sunset = ctx.createLinearGradient(0,0,w,h);
+      sunset.addColorStop(0,'#142D46');
+      sunset.addColorStop(.38,'#22456E');
+      sunset.addColorStop(.7,'#AC467C');
+      sunset.addColorStop(1,'#E59D5E');
+      ctx.fillStyle=sunset;ctx.fillRect(0,0,w,h);
+      for(let i=0;i<7;i++){
+        const x=w*(i+.35)/7;
+        ctx.strokeStyle=i%2?'rgba(255,235,173,.31)':'rgba(74,255,220,.27)';
+        ctx.lineWidth=Math.max(9,w*.04);
+        ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(w*(.12+i*.13),h*.82);ctx.stroke();
+      }
+      ctx.fillStyle='#11223D';
+      ctx.fillRect(0,h*.06,w,h*.11);
+      ctx.fillRect(0,h*.86,w,h*.085);
+      ctx.textAlign='center';ctx.fillStyle='#FCE6B4';
+      ctx.font='800 '+clamp(w*.069,19,31)+'px system-ui, sans-serif';
+      ctx.fillText('FESTIVAL ACCESS',w/2,h*.11,w*.87);
+      ctx.font='700 '+clamp(w*.043,13,19)+'px system-ui, sans-serif';
+      ctx.fillText('THE SHOW STARTS HERE',w/2,h*.9,w*.81);
+    } else if (stage === 'backstage') {
+      // Original all-access lanyard treatment, with gold pass borders,
+      // deep stage-red panel and engraved angular highlights.
+      const pass=ctx.createLinearGradient(0,0,w,h);
+      pass.addColorStop(0,'#101326');pass.addColorStop(.5,'#401529');
+      pass.addColorStop(1,'#11192E');
+      ctx.fillStyle=pass;ctx.fillRect(0,0,w,h);
+      ctx.strokeStyle='#E9C57F';ctx.lineWidth=Math.max(3,w*.011);
+      ctx.strokeRect(w*.065,h*.045,w*.87,h*.91);
+      ctx.lineWidth=Math.max(1,w*.004);
+      ctx.strokeRect(w*.085,h*.06,w*.83,h*.88);
+      ctx.fillStyle='#D7A963';
+      ctx.fillRect(0,h*.12,w,h*.13);
+      ctx.fillRect(0,h*.79,w,h*.09);
+      ctx.fillStyle='#211629';ctx.textAlign='center';
+      ctx.font='900 '+clamp(w*.073,20,33)+'px system-ui, sans-serif';
+      ctx.fillText('BACKSTAGE',w/2,h*.195,w*.82);
+      ctx.fillStyle='#FCE8BC';
+      ctx.font='700 '+clamp(w*.049,14,23)+'px system-ui, sans-serif';
+      ctx.fillText('ALL ACCESS PASS',w/2,h*.83,w*.84);
+      ctx.fillStyle='rgba(255,219,163,.13)';
+      for(let i=0;i<9;i++){
+        ctx.fillRect(w*(i*.15-.7),h*.25,w*.07,h*.55);
+      }
     } else {
       // A ticket-inspired, finely etched foil design in each classic finish.
       const light = this.foil === 'midnight';
@@ -226,7 +273,7 @@ export class ScratchCard {
       ctx.fillText('ONE MOMENT • ONE MEMORY',w/2,h*.82,w*.82);
     }
     // Perforated ticket edging, engraved as a repeatable motif.
-    ctx.fillStyle = stage === 'concert' ? '#DDCAFF' : '#FBE3A5';
+    ctx.fillStyle = ['concert','festival','backstage'].includes(stage) ? '#DDCAFF' : '#FBE3A5';
     ctx.globalAlpha = .68;
     for(let y = h*.22;y < h*.79;y += Math.max(12,h*.034)){
       for(const x of [w*.04,w*.96]){
