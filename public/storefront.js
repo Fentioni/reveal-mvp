@@ -166,6 +166,7 @@ async function productPage(slug) {
     $('div',{className:'product-layout'},[
       $('div',{className:'detail'},[
         $('div',{className:'product-visual',text:iconFor(p.slug)}),
+        isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/scratch-demo',text:'Try the fictional scratch-card demo  ↗'}) : null,
         $('h2',{text:'How this reveal works'}),
         $('p',{className:'product-copy',text:ready?'Personalise the ticket information, review the details and continue to secure payment. Your recipient sees the animated experience only after payment has been confirmed.':
             p.slug==='reveal-quest'?'The purchaser selects a story theme and uses ready-made, adaptable or fully custom clues. The recipient solves each clue in sequence to unlock the final paid reveal.':'This planned product will use a personalised, mobile-friendly create, review and unlock journey.'}),
