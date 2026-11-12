@@ -147,20 +147,23 @@ export class ScratchCard {
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     const dark = this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
-    const labelY = h / 2;
-    const labelWidth = Math.min(w - 36, 350);
+    const landscape = w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle);
+    const labelY = landscape ? h * .58 : h / 2;
+    const labelX = landscape ? w * .41 : w / 2;
+    const labelWidth = landscape ? Math.min(w * .54, 345) : Math.min(w - 36, 350);
+    const labelHeight = landscape ? Math.min(60,h*.34) : 74;
     ctx.fillStyle = dark ? 'rgba(7,9,23,.76)' : 'rgba(255,251,236,.67)';
-    ctx.fillRect((w - labelWidth) / 2, labelY - 32, labelWidth, 74);
+    ctx.fillRect(labelX-labelWidth/2,labelY-labelHeight/2,labelWidth,labelHeight);
     ctx.strokeStyle = dark ? 'rgba(255,221,154,.86)' : 'rgba(104,66,22,.72)';
     ctx.lineWidth = 1.5;
-    ctx.strokeRect((w - labelWidth) / 2 + 5, labelY - 27, labelWidth - 10, 64);
+    ctx.strokeRect(labelX-labelWidth/2+5,labelY-labelHeight/2+5,labelWidth-10,labelHeight-10);
     ctx.fillStyle = dark ? '#FFF0C8' : '#362314';
     ctx.shadowColor = dark ? '#08061A' : '#FFFFFF';
     ctx.shadowBlur = 7;
     ctx.font = '800 ' + clamp(w * 0.054, 12, 22) + 'px system-ui, sans-serif';
-    ctx.fillText('✦  SCRATCH TO REVEAL  ✦', w / 2, labelY - 5, labelWidth - 20);
+    ctx.fillText('✦  SCRATCH TO REVEAL  ✦', labelX, labelY - (landscape ? 7 : 5), labelWidth - 20);
     ctx.font = '500 ' + clamp(w * 0.033, 10, 14) + 'px system-ui, sans-serif';
-    ctx.fillText('THE SURPRISE IS UNDER HERE', w / 2, labelY + 22, labelWidth - 28);
+    ctx.fillText('THE SURPRISE IS UNDER HERE', labelX, labelY + (landscape ? 14 : 22), labelWidth - 28);
     ctx.restore();
   }
 
@@ -168,6 +171,13 @@ export class ScratchCard {
     const ctx = this.ctx, w = this.cssWidth, h = this.cssHeight;
     const stage = this.coverStyle;
     ctx.save();
+    // The concert variant uses a wide, ticket-shaped canvas. Its three art
+    // finishes are painted as concert tickets, not stretched portrait cards.
+    if (w > h * 1.4 && ['concert','festival','backstage'].includes(stage)) {
+      this.drawLandscapeConcertArtwork(ctx,w,h,stage);
+      ctx.restore();
+      return;
+    }
     // Original scalable ornament artwork: no external images or libraries.
     if (stage === 'theatre') {
       const curtain = ctx.createLinearGradient(0, 0, w * 0.25, 0);
@@ -294,6 +304,74 @@ export class ScratchCard {
       }
     }
     ctx.restore();
+  }
+
+  drawLandscapeConcertArtwork(ctx,w,h,stage) {
+    // A traditional concert admission pass: artwork, central reveal panel,
+    // a 22% detachable stub and perforation. Original vector Canvas drawing.
+    const base=ctx.createLinearGradient(0,0,w,h);
+    if (stage === 'festival') {
+      base.addColorStop(0,'#172F52');
+      base.addColorStop(.48,'#724A9A');
+      base.addColorStop(1,'#F6A15E');
+    } else if (stage === 'backstage') {
+      base.addColorStop(0,'#161326');
+      base.addColorStop(.52,'#602442');
+      base.addColorStop(1,'#1A1426');
+    } else {
+      base.addColorStop(0,'#101C42');
+      base.addColorStop(.52,'#6E246B');
+      base.addColorStop(1,'#131A40');
+    }
+    ctx.fillStyle=base;
+    ctx.fillRect(0,0,w,h);
+
+    // Fan out concert beams from the left, behind the reveal panel.
+    for (let i=0;i<6;i++) {
+      ctx.beginPath();
+      ctx.strokeStyle=i%2
+        ? 'rgba(251,189,112,.28)' : 'rgba(93,214,251,.24)';
+      ctx.lineWidth=Math.max(8,w*.021);
+      ctx.moveTo(w*(.06+i*.046),0);
+      ctx.lineTo(w*(.04+i*.13),h);
+      ctx.stroke();
+    }
+
+    const stubX=w*.78;
+    ctx.fillStyle=stage==='backstage' ? 'rgba(11,8,20,.72)' : 'rgba(8,15,36,.67)';
+    ctx.fillRect(stubX,0,w-stubX,h);
+    // Gold inner rule around the traditional landscape ticket.
+    ctx.strokeStyle=FOILS[this.foil][3];
+    ctx.lineWidth=Math.max(1,w*.004);
+    ctx.strokeRect(w*.019,h*.045,w*.962,h*.91);
+    // Tear-off perforation.
+    ctx.fillStyle=FOILS[this.foil][3];
+    for(let y=h*.055;y<h*.95;y+=Math.max(7,h*.055)) {
+      ctx.fillRect(stubX-1.5,y,3,Math.max(4,h*.029));
+    }
+
+    ctx.textAlign='center';
+    ctx.textBaseline='middle';
+    ctx.fillStyle='#FFF1D4';
+    ctx.font='800 '+clamp(h*.14,15,34)+'px system-ui,sans-serif';
+    const headline=stage==='festival'?'FESTIVAL PASS'
+      :stage==='backstage'?'ALL ACCESS'
+      :'LIVE IN CONCERT';
+    ctx.fillText(headline,stubX*.5,h*.205,stubX*.87);
+    ctx.font='600 '+clamp(h*.067,9,17)+'px system-ui,sans-serif';
+    ctx.fillStyle='#F6D6AF';
+    ctx.fillText('ONE SHOW  ·  ONE UNFORGETTABLE MOMENT',stubX*.5,h*.365,stubX*.86);
+    ctx.fillStyle=FOILS[this.foil][3];
+    ctx.font='900 '+clamp(h*.15,16,36)+'px Georgia,serif';
+    ctx.fillText('✦',stubX+(w-stubX)*.5,h*.27,(w-stubX)*.45);
+    ctx.font='750 '+clamp(h*.085,10,20)+'px system-ui,sans-serif';
+    ctx.fillText('ADMISSION',stubX+(w-stubX)*.5,h*.52,(w-stubX)*.88);
+    ctx.font='700 '+clamp(h*.06,9,16)+'px system-ui,sans-serif';
+    ctx.fillText('REVEAL PASS',stubX+(w-stubX)*.5,h*.69,(w-stubX)*.86);
+    ctx.fillText('✦  ✦  ✦',stubX+(w-stubX)*.5,h*.83,(w-stubX)*.75);
+    ctx.fillStyle='rgba(255,234,185,.85)';
+    ctx.font='650 '+clamp(h*.065,10,17)+'px system-ui,sans-serif';
+    ctx.fillText('YOUR NEXT BIG NIGHT',stubX*.5,h*.84,stubX*.84);
   }
 
   point(event) {
