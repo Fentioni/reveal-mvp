@@ -72,7 +72,7 @@
       <div><div class="label">A SURPRISE FOR</div><h2 class="recipient" id="name"></h2><div class="label">YOU ARE INVITED TO…</div></div>
       <h3 class="headline" id="headline">A special surprise</h3>
       <article class="ticket">
-        <div class="kicker">PERSONALISED EVENT TICKET</div>
+        <div class="kicker" id="ticketKicker">PERSONALISED EVENT TICKET</div>
         <h2 id="eventName"></h2>
         <div id="eventImageWrap" class="event-image-wrap" hidden>
           <img id="eventImage" alt="Personal image included with this surprise">
@@ -153,7 +153,8 @@
     text('title','A surprise for ' + model.recipient);
     text('name',model.recipient);
     text('eventName',model.eventName);
-    text('headline','Your special surprise');
+    text('headline', data.scratchSurface.variant === 'concert' ? 'The big night awaits!' : 'Your special surprise');
+    text('ticketKicker', data.scratchSurface.variant === 'concert' ? 'PERSONALISED CONCERT TICKET' : 'PERSONALISED EVENT TICKET');
     applyDetails(model);
     if (model.hasEventImage) {
       const image = $('eventImage');
