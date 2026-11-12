@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#f7f3eb">
   <meta name="referrer" content="no-referrer">
 
-  <title>Create your reveal</title>
+  <title>Create Ticket &amp; Concert Reveal | Reveal</title>
 
   <style>
     :root {
@@ -423,11 +423,11 @@
 <body>
   <main class="page">
     <header class="page-header">
-      <div class="eyebrow">Digital gift reveal</div>
-      <h1>Create your surprise</h1>
+      <div class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
+      <h1>Create your ticket reveal</h1>
       <p class="intro">
-        Turn a gift, trip or experience into something special to open.
-        Your template preview updates as you create it.
+        Personalise an event, concert or theatre surprise for someone special.
+        Your live template preview updates as you type. Checkout is disabled in this staging test.
       </p>
     </header>
 
@@ -936,7 +936,7 @@
         localStorage.setItem("reveal_edit_" + id, token);
 
         location.assign(
-          "reveal.html?id=" + encodeURIComponent(id)
+          "/reveal?id=" + encodeURIComponent(id)
         );
 
       } catch (error) {
