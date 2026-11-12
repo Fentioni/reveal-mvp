@@ -196,7 +196,7 @@ test('creator, review and demo inline module scripts parse as valid JavaScript',
 test('customer static review displays the chosen scratch cover but disables scratching', () => {
   const html=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
   assert.ok(html.includes('id="surfaceReviewCanvas"'));
-  assert.ok(html.includes("if (isStagingTest) await loadSurface()"));
+  assert.ok(html.includes("if (isStagingTest && !await loadQuizReview()) await loadSurface()"));
   assert.ok(html.includes("'/scratch-surface/image'"));
   assert.ok(html.includes("staticScratchCard.canvas.style.pointerEvents = 'none'"));
   assert.ok(!html.includes("staticScratchCard.reveal("));
