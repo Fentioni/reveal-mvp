@@ -233,7 +233,11 @@ test('decorative confetti and red gift icon appear on every public demo load wit
   assert.match(demo, /animation:confetti-fall\s+var\(--duration\)\s+linear\s+var\(--delay\)\s+infinite/);
   assert.match(demo, /@media\(prefers-reduced-motion:reduce\)/);
   assert.match(demo, /\.confetti-field\{display:none\}/);
-  assert.ok(demo.indexOf('id="celebrationConfetti"') > demo.indexOf('id="foilCanvas"'));
+  assert.ok(demo.indexOf('id="celebrationConfetti"') < demo.indexOf('<header class="header"'), 'confetti must live at page level');
+  assert.ok(demo.indexOf('id="celebrationConfetti"') < demo.indexOf('id="scratchWindow"'), 'confetti must be outside scratch-card window');
+  assert.match(demo, /\.confetti-field\{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0\}/);
+  assert.match(demo, /\.header,\.layout\{position:relative;z-index:1\}/);
+  assert.match(demo, /calc\(100dvh \+ 48px\)/);
   assert.ok(demo.indexOf('id="redGiftBadge"') > demo.indexOf('id="foilCanvas"'));
   assert.ok(!demo.includes('document.getElementById("celebrationConfetti").remove()'));
 });
