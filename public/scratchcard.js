@@ -21,7 +21,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 };
 
 export class ScratchCard {
-  constructor({ canvas, foil = 'gold', brushSize = 48, threshold = 0.53,
+  constructor({ canvas, foil = 'gold', brushSize = 48,
     coverImage = null, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -34,7 +34,6 @@ export class ScratchCard {
     this.ctx = context;
     this.foil = FOILS[foil] ? foil : 'gold';
     this.brushSize = clamp(Number(brushSize) || 48, 12, 120);
-    this.threshold = clamp(Number(threshold) || 0.53, 0.15, 0.95);
     this.onScratch = onScratch;
     this.onProgress = onProgress;
     this.onComplete = onComplete;
@@ -95,10 +94,6 @@ export class ScratchCard {
         const a = stroke[Math.max(0, i - 1)], b = stroke[i];
         this.eraseSegment(a, b, false);
       }
-    }
-    if (this.completed) {
-      this.canvas.style.opacity = '0';
-      this.canvas.style.pointerEvents = 'none';
     }
     this.onProgress(this.progress);
   }
@@ -163,7 +158,7 @@ export class ScratchCard {
   }
 
   pointerDown(event) {
-    if (this.completed || this.activePointer !== null || (event.pointerType === 'mouse' && event.button !== 0)) return;
+    if (this.activePointer !== null || (event.pointerType === 'mouse' && event.button !== 0)) return;
     event.preventDefault();
     this.activePointer = event.pointerId;
     try { this.canvas.setPointerCapture(event.pointerId); } catch {}
@@ -173,7 +168,7 @@ export class ScratchCard {
   }
 
   pointerMove(event) {
-    if (this.completed || event.pointerId !== this.activePointer) return;
+    if (event.pointerId !== this.activePointer) return;
     event.preventDefault();
     const pt = this.point(event);
     const stroke = this.strokes[this.strokes.length - 1];
@@ -229,20 +224,13 @@ export class ScratchCard {
       const progress = this.progress;
       this.onScratch(progress);
       this.onProgress(progress);
-      if (progress >= this.threshold) this.reveal();
+      // Completion is informational only: foil is never cleared or faded
+      // automatically. Every exposed area must be erased by a user gesture.
+      if (progress === 1 && !this.completed) {
+        this.completed = true;
+        this.onComplete();
+      }
     }
-  }
-
-  reveal() {
-    if (this.completed) return;
-    this.completed = true;
-    this.activePointer = null;
-    this.canvas.style.pointerEvents = 'none';
-    const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    this.canvas.style.transition = reduceMotion ? 'none' : 'opacity 550ms ease-out';
-    this.canvas.style.opacity = '0';
-    this.onProgress(1);
-    this.onComplete();
   }
 
   reset() {
@@ -250,9 +238,6 @@ export class ScratchCard {
     this.cells.fill(0);
     this.completed = false;
     this.activePointer = null;
-    this.canvas.style.transition = 'none';
-    this.canvas.style.opacity = '1';
-    this.canvas.style.pointerEvents = 'auto';
     this.paintCover();
     this.onProgress(0);
   }
