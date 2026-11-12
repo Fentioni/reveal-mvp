@@ -144,6 +144,7 @@ async function productPage(slug) {
   const ready = data.canCreate === true;
   const isStaging = location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev';
   const canTestTicketCreator = isStaging && p.slug === 'ticket-reveal' && !ready;
+  const canTestQuizCreator = isStaging && p.slug === 'three-question-quiz' && !ready;
   const mechanics = data.mechanics||[],themes=data.themes||[];
   const price = priceText(data.price);
   const parent = data.categories?.[0];
@@ -155,9 +156,10 @@ async function productPage(slug) {
     $('p',{text:ready?(price?`Base price: ${price} before any applicable tax.`:'The price is confirmed at checkout.'):'This product is not available to purchase yet.'}),
     ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) :
       canTestTicketCreator ? $('a',{className:'button',href:'/legacy-create',text:'Test creator in staging  ↗'}) :
+      canTestQuizCreator ? $('a',{className:'button',href:'/quiz-create',text:'Test three-question quiz creator  ↗'}) :
       $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
     $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':
-      canTestTicketCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
+      canTestTicketCreator||canTestQuizCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
       'There is no payment or pre-purchase access for this product.'})
   ]);
   elMain.replaceChildren($('div',{className:'page'},[
@@ -168,9 +170,11 @@ async function productPage(slug) {
         $('div',{className:'product-visual',text:iconFor(p.slug)}),
         isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/legacy-create?variant=concert',text:'Try the Scratch Concert Ticket creator  ↗'}) : null,
         isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/scratch-demo',text:'Try the fictional scratch-card demo  ↗'}) : null,
+        isStaging && p.slug === 'three-question-quiz' ? $('a',{className:'button',href:'/quiz-demo',text:'Try the fictional recipient quiz  ↗'}) : null,
         $('h2',{text:'How this reveal works'}),
         $('p',{className:'product-copy',text:ready?'Personalise the ticket information, review the details and continue to secure payment. Your recipient sees the animated experience only after payment has been confirmed.':
-            p.slug==='reveal-quest'?'The purchaser selects a story theme and uses ready-made, adaptable or fully custom clues. The recipient solves each clue in sequence to unlock the final paid reveal.':'This planned product will use a personalised, mobile-friendly create, review and unlock journey.'}),
+            p.slug==='reveal-quest'?'The purchaser selects a story theme and uses ready-made, adaptable or fully custom clues. The recipient solves each clue in sequence to unlock the final paid reveal.':
+            p.slug==='three-question-quiz'?'Write exactly three questions with four choices each, choose the correct answer and an optional hint. The recipient answers each question once payment is verified and unlocks a revisitable surprise after three correct answers.':'This planned product will use a personalised, mobile-friendly create, review and unlock journey.'}),
         $('ul',{},[
           $('li',{text:`Reveal style: ${mechanics.map(m=>m.name).join(', ')||'To be confirmed'}`}),
           $('li',{text:`Design theme: ${themes.map(t=>t.name).join(', ')||'To be confirmed'}`}),
