@@ -447,7 +447,7 @@
     if(item.url)URL.revokeObjectURL(item.url);
     item.url=URL.createObjectURL(blob);
     item.file=newUpload?blob:null;
-    item.existing=!newUpload;
+    if(!newUpload)item.existing=true; // Replacement retains knowledge of its prior saved image.
     item.remove=false;
     $('questionImagePreview'+q).src=item.url;
     $('questionImagePreview'+q).hidden=false;
