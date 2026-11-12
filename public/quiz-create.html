@@ -52,11 +52,57 @@
     .answer-field input[type=radio]{min-width:18px;min-height:18px;margin:0 3px 0 5px}
     .correct-explanation{color:#c6b8cd;font-size:.74rem;margin:8px 0 15px}
     .theme-panel{margin-bottom:25px;border:1px solid #6b6076;border-radius:16px;padding:17px}
-    .quiz-theme-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
-    .theme-choice{border:1px solid #6b6076;border-radius:12px;background:#282435;color:#f8efe7;
-      min-height:48px;padding:9px 13px;font:600 .8rem system-ui;cursor:pointer}
-    .theme-choice[aria-pressed=true]{border-color:#e8cb96;box-shadow:0 0 0 2px #eed7ad44}
-    .theme-choice:before{content:"✦ ";color:#d9af7c}
+    .quiz-theme-choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+    /* Each button is a miniature version of its chosen quiz theme, not a
+       neutral selector. The same base palette is used in the live preview. */
+    .theme-choice{
+      position:relative;isolation:isolate;overflow:hidden;display:flex;flex-direction:column;
+      justify-content:flex-end;align-items:flex-start;gap:3px;text-align:left;
+      border:2px solid #8e7a8b;border-radius:15px;min-height:112px;padding:13px 15px;
+      background:#282435;color:#fff;font:inherit;cursor:pointer;
+      box-shadow:0 8px 20px #0005;transition:border-color .18s,box-shadow .18s,transform .18s
+    }
+    .theme-choice::after{
+      content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;
+      background:linear-gradient(180deg,transparent 20%,#09071596 100%)
+    }
+    .theme-choice[data-theme="classic-gold"]{
+      background:radial-gradient(circle at 80% 13%,#e8c16d8c,transparent 36%),
+        linear-gradient(125deg,#59412a,#211d2b 63%,#11121c);border-color:#c2a369
+    }
+    .theme-choice[data-theme="travel-adventure"]{
+      background:radial-gradient(circle at 85% 10%,#9ddcd6b0,transparent 40%),
+        linear-gradient(130deg,#245b76,#18536b 43%,#102c42);border-color:#79bcc5
+    }
+    .theme-choice[data-theme="romantic"]{
+      background:radial-gradient(circle at 83% 15%,#efb1c3a6,transparent 38%),
+        linear-gradient(125deg,#96566f,#713e61 44%,#40283f);border-color:#d8a4b8
+    }
+    .theme-choice[data-theme="birthday-celebration"]{
+      background:radial-gradient(circle at 80% 12%,#ffcc83b9,transparent 35%),
+        linear-gradient(135deg,#9c5571,#654277 47%,#312a60);border-color:#e3a0aa
+    }
+    .theme-choice:hover{transform:translateY(-2px);box-shadow:0 12px 27px #0007}
+    .theme-choice[aria-pressed="true"]{
+      border-color:#fff4db;box-shadow:0 0 0 3px #f2d4a3,0 13px 32px #0008
+    }
+    .theme-choice[aria-pressed="true"]::before{
+      content:"✓";position:absolute;right:11px;bottom:11px;
+      display:grid;place-items:center;width:22px;height:22px;border-radius:50%;
+      color:#211c2a;background:#fff2d2;font-size:.77rem;font-weight:900
+    }
+    .theme-visual-icon{
+      font:normal 1.6rem/1 Georgia,serif;color:#ffe1a7;
+      text-shadow:0 2px 8px #0008;margin-bottom:6px
+    }
+    .theme-choice[data-theme="travel-adventure"] .theme-visual-icon{color:#c0fff0}
+    .theme-choice[data-theme="romantic"] .theme-visual-icon{color:#ffe2ed}
+    .theme-choice[data-theme="birthday-celebration"] .theme-visual-icon{color:#fff2b1}
+    .theme-title{display:block;font:700 .9rem/1.25 system-ui,sans-serif;color:#fffaf5;
+      text-shadow:0 1px 5px #0009}
+    .theme-description{display:block;font:.72rem/1.3 system-ui,sans-serif;color:#f0e5e6;
+      text-shadow:0 1px 4px #000a;padding-right:13px}
+    @media(prefers-reduced-motion:reduce){.theme-choice{transition:none!important}}
     .details-heading{margin-top:35px;border-top:1px solid #645568;padding-top:27px}
     .image-preview{display:none;width:100%;max-height:230px;object-fit:contain;background:#2d2633;
       border:1px solid #685d70;border-radius:12px;margin-top:12px}
@@ -74,7 +120,7 @@
     aside{position:sticky;top:22px;min-width:0}
     .preview-label{color:#ebce96;letter-spacing:.16em;text-transform:uppercase;text-align:center;font-size:.71rem;margin-bottom:14px}
     .preview{border:2px solid #d3b782;border-radius:24px;min-height:580px;padding:27px 23px;
-      text-align:center;background:radial-gradient(ellipse at 50% 6%,#695183,transparent 57%),#1d1c33;
+      text-align:center;background:radial-gradient(ellipse at 50% 6%,#9d773a,transparent 57%),#1d1c28;
       box-shadow:0 25px 70px #0008}
     .preview[data-theme="travel-adventure"]{background:radial-gradient(ellipse at 50% 6%,#48879a,transparent 58%),#162c3d}
     .preview[data-theme="romantic"]{background:radial-gradient(ellipse at 50% 6%,#b06f87,transparent 58%),#45293a}
@@ -120,10 +166,10 @@
         <p class="section-copy">The theme changes the colours and mood, not the rules.</p>
         <div class="theme-panel">
           <div class="quiz-theme-choices" id="themeChoices" role="group" aria-label="Quiz theme">
-            <button type="button" class="theme-choice" data-theme="classic-gold" aria-pressed="true">Classic Mystery</button>
-            <button type="button" class="theme-choice" data-theme="travel-adventure" aria-pressed="false">Travel Adventure</button>
-            <button type="button" class="theme-choice" data-theme="romantic" aria-pressed="false">Romantic Reveal</button>
-            <button type="button" class="theme-choice" data-theme="birthday-celebration" aria-pressed="false">Birthday Challenge</button>
+            <button type="button" class="theme-choice" data-theme="classic-gold" aria-pressed="true"><span class="theme-visual-icon" aria-hidden="true">✦</span><span class="theme-title">Classic Mystery</span><span class="theme-description">Charcoal &amp; gold</span></button>
+            <button type="button" class="theme-choice" data-theme="travel-adventure" aria-pressed="false"><span class="theme-visual-icon" aria-hidden="true">✈</span><span class="theme-title">Travel Adventure</span><span class="theme-description">Ocean blue &amp; teal</span></button>
+            <button type="button" class="theme-choice" data-theme="romantic" aria-pressed="false"><span class="theme-visual-icon" aria-hidden="true">♥</span><span class="theme-title">Romantic Reveal</span><span class="theme-description">Blush &amp; rose</span></button>
+            <button type="button" class="theme-choice" data-theme="birthday-celebration" aria-pressed="false"><span class="theme-visual-icon" aria-hidden="true">✹</span><span class="theme-title">Birthday Challenge</span><span class="theme-description">Plum &amp; confetti gold</span></button>
           </div>
         </div>
 
