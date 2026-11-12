@@ -357,8 +357,19 @@ test('quiz creator optional fields stay inside their container at narrow and iOS
   assert.ok(html.includes('.field{margin:0 0 18px;min-width:0;max-width:100%}'));
   assert.ok(html.includes('#quizForm input:not([type="radio"]),#quizForm textarea,#quizForm select'));
   assert.ok(html.includes('display:block;width:100%;min-width:0;max-width:100%'));
-  assert.ok(html.includes('#quizForm input[type="date"],#quizForm input[type="time"]'));
-  assert.ok(html.includes('-webkit-min-logical-width:0;min-width:0;max-width:100%'));
+  assert.equal((html.match(/class="native-picker-shell"/g)||[]).length,2,
+    'date and time each use a constrained visual shell');
+  assert.ok(html.includes('inline-size:100%;min-inline-size:0;max-inline-size:100%'));
+  assert.ok(html.includes('min-height:47px;padding:10px 12px;overflow:hidden'));
+  assert.ok(html.includes('#quizForm .native-picker-shell > input[type="date"]'));
+  assert.ok(html.includes('#quizForm .native-picker-shell > input[type="time"]'));
+  assert.ok(html.includes('position:absolute;z-index:1;inset:0;display:block'));
+  assert.ok(html.includes('border:0;opacity:0;cursor:pointer;font-size:16px'));
+  assert.ok(html.includes('id="eventDateDisplay"'));
+  assert.ok(html.includes('id="eventTimeDisplay"'));
+  assert.ok(html.includes('function updatePickerLabels()'));
+  assert.ok(html.includes("control.addEventListener('change',updatePickerLabels)"));
+  assert.ok(html.includes('control.showPicker()'));
   assert.ok(html.includes('@media(max-width:650px){.small-grid{grid-template-columns:minmax(0,1fr)}}'));
   for(const field of ['eventDate','eventTime','venue','admit','personalMessage','ticketUrl']){
     assert.ok(html.includes('id="'+field+'"'),field+' remains available');
