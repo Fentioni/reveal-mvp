@@ -144,6 +144,9 @@
     .scratch-art-icon.classic{background:linear-gradient(135deg,#72501c,#f8dda0,#a57732)}
     .scratch-art-icon.theatre{background:repeating-linear-gradient(90deg,#67152e 0,#aa3752 9px,#591329 18px)}
     .scratch-art-icon.concert{background:linear-gradient(135deg,#2d245b,#b32e98,#1b8fd4)}
+    .scratch-art-icon.festival{background:linear-gradient(140deg,#123955 5%,#3b74a2 37%,#b3457f 68%,#efb36a)}
+    .scratch-art-icon.backstage{background:linear-gradient(140deg,#141326 5%,#5b193c 43%,#e1b776 52%,#301529 75%)}
+    .scratch-art-option[hidden]{display:none!important}
     .scratch-art-icon.custom{background:linear-gradient(135deg,#40334e,#a293b3)}
     .scratch-art-option strong{display:block;font-weight:700;font-size:.83rem}
     .scratch-art-option small{display:block;margin:3px 0 0;text-align:left;font-size:.71rem;color:#736450;line-height:1.3}
@@ -538,9 +541,9 @@
   <main class="page">
     <header class="page-header">
       <a class="creator-brand" href="/" aria-label="Reveal home">✦ REVEAL<span>.</span></a>
-      <div class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
-      <h1>Make the moment <em>unforgettable.</em></h1>
-      <p class="intro">Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.</p>
+      <div id="creatorEyebrow" class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
+      <h1 id="creatorTitle">Make the moment <em>unforgettable.</em></h1>
+      <p class="intro" id="creatorIntro">Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.</p>
     </header>
 
     <div class="builder-layout">
@@ -562,7 +565,7 @@
 
         <form id="revealForm">
           <div class="scratch-choice">
-            <h3>Your scratch-card surface</h3>
+            <h3 id="surfaceHeading">Your scratch-card surface</h3>
             <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
             <div id="scratchFoilLabel" class="scratch-option-label">Foil finish</div>
             <div class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel">
@@ -579,15 +582,19 @@
             </select>
             <div id="scratchArtLabel" class="scratch-option-label">Surface artwork</div>
             <div class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel">
-              <button type="button" class="scratch-art-option" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
-              <button type="button" class="scratch-art-option" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="both" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="concert" data-scratch-style="festival" aria-pressed="false" hidden><span class="scratch-art-icon festival" aria-hidden="true">☀</span><span><strong>Festival Access</strong><small>Sunset stages and festival lights</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="concert" data-scratch-style="backstage" aria-pressed="false" hidden><span class="scratch-art-icon backstage" aria-hidden="true">★</span><span><strong>Backstage Pass</strong><small>All-access lanyard artwork</small></span></button>
+              <button type="button" class="scratch-art-option" data-show-for="both" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
             </div>
             <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
               <option value="classic">Classic foil</option>
               <option value="theatre">Theatre Velvet</option>
               <option value="concert">Concert Lights</option>
+              <option value="festival">Festival Access</option>
+              <option value="backstage">Backstage Pass</option>
               <option value="custom">Your own image</option>
             </select>
             <div class="scratch-one-upload"><div class="field">
@@ -847,7 +854,9 @@
     const button = $("reviewButton");
     const message = $("messageBox");
 
-    let id = new URLSearchParams(location.search).get("edit");
+    const urlParams = new URLSearchParams(location.search);
+    let id = urlParams.get("edit");
+    let currentVariant = !id && urlParams.get("variant") === "concert" ? "concert" : "ticket";
     let token = null;
     let revision = null;
     let ready = false;
@@ -862,6 +871,39 @@
     let savedScratchUrl = null;
     let existingScratchImage = false;
     let scratchSelectionSequence = 0;
+    const concertArtworks = new Set(["concert","festival","backstage","custom"]);
+    function setCreatorVariant(variant, initialiseChoice = false) {
+      currentVariant = variant === "concert" ? "concert" : "ticket";
+      document.body.dataset.ticketVariant = currentVariant;
+      const isConcert = currentVariant === "concert";
+      document.title = isConcert
+        ? "Create Scratch Concert Ticket Reveal | Reveal"
+        : "Create Ticket & Concert Reveal | Reveal";
+      $("creatorEyebrow").textContent = isConcert
+        ? "Scratch Concert Ticket Reveal · staging test"
+        : "Ticket & Concert Reveal · staging test";
+      $("creatorTitle").innerHTML = isConcert
+        ? "Reveal the <em>big gig.</em>"
+        : "Make the moment <em>unforgettable.</em>";
+      $("creatorIntro").textContent = isConcert
+        ? "Choose concert, festival or backstage cover artwork, then personalise the surprise. The same static review and protected-payment journey applies."
+        : "Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.";
+      $("surfaceHeading").textContent = isConcert
+        ? "Your concert scratch-card cover" : "Your scratch-card surface";
+      for (const button of form.querySelectorAll("[data-scratch-style]")) {
+        button.hidden = button.dataset.showFor !== "both" &&
+          button.dataset.showFor !== currentVariant;
+      }
+      if (initialiseChoice) {
+        $("scratchStyle").value = isConcert ? "concert" : "classic";
+        $("scratchFoil").value = isConcert ? "midnight" : "gold";
+      }
+      // Historic drafts outside the concert palette stay in the classic creator.
+      if (isConcert && !concertArtworks.has($("scratchStyle").value)) {
+        $("scratchStyle").value = "concert";
+      }
+    }
+    setCreatorVariant(currentVariant, !id);
     const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
@@ -1214,6 +1256,7 @@
         localStorage.setItem("reveal_edit_" + id, token);
 
         const surfaceBody = new FormData();
+        surfaceBody.append("variant", currentVariant);
         surfaceBody.append("style", $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
@@ -1319,6 +1362,7 @@
           "/api/reveals/" + encodeURIComponent(id) + "/scratch-surface",
           {headers: {"X-Edit-Token": token}}
         );
+        setCreatorVariant(savedSurface.surface.variant || "ticket");
         $("scratchStyle").value = savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
