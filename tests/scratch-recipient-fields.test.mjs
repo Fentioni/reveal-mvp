@@ -69,7 +69,7 @@ test('recipient scratch document binds every optional element to the paid model'
   assert.ok(html.includes('applyDetails(model)'));
   for(const name of ['date','time','venue','admit'])
     assert.ok(html.includes('id="'+name+'Row" hidden'));
-  for(const name of ['messageWrap','senderWrap','bookingRow','eventImageWrap'])
+  for(const name of ['messageWrap','senderWrap','closingDetails','bookingRow','eventImageWrap'])
     assert.ok(html.includes('id="'+name+'"'));
   assert.ok(html.includes("$('ticketGrid').hidden = model.details.length === 0"));
   assert.ok(html.includes("$('bookingRow').hidden = !bookingLink"));
