@@ -11,6 +11,7 @@ const IMAGE_TYPES = Object.freeze({
 });
 const STYLES = new Set(['classic', 'theatre', 'concert', 'custom']);
 const FOILS = new Set(['gold', 'silver', 'midnight', 'rose']);
+const DEFAULT_AUDIO = Object.freeze({enabled:true,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000});
 const DEFAULT_SURFACE = Object.freeze({
   style: 'classic',
   foil: 'gold',
@@ -55,7 +56,8 @@ async function details(env, id) {
     foil: FOILS.has(saved.foil) ? saved.foil : 'gold',
     coverAssetId: asset ? asset.id : null
   };
-  return {fields, surface, asset};
+  const audio = {...DEFAULT_AUDIO,enabled:fields.audio?.enabled !== false};
+  return {fields, surface, asset, audio};
 }
 
 async function dimensions(file) {
@@ -174,7 +176,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           style:current.surface.style,
           foil:current.surface.foil,
           hasImage:Boolean(current.asset && current.surface.style==='custom')
-        }
+        },
+        audio:current.audio
       });
     }
     if (reveal.status !== 'draft') return error('Amend the reveal before changing its surface.',409);
@@ -188,6 +191,11 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     const style = body.get('style');
     const foil = body.get('foil');
     const uploaded = body.get('coverImage');
+    const enabledText = body.get('audioEnabled');
+    if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
+      return error('Invalid audio setting.');
+    }
+    const audio = {...DEFAULT_AUDIO,enabled:enabledText !== 'false'};
     if (typeof style !== 'string' || !STYLES.has(style) || typeof foil !== 'string' || !FOILS.has(foil)) {
       return error('Choose a valid scratch surface and foil finish.');
     }
@@ -227,7 +235,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           style,
           foil,
           coverAssetId:style==='custom' ? newAssetId : null
-        }
+        },
+        audio
       };
       const stamp = timestamp();
       const statements = [];
@@ -252,7 +261,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
-      return json({success:true,surface:{style,foil,hasImage:style==='custom'}});
+      return json({success:true,surface:{style,foil,hasImage:style==='custom'},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;
