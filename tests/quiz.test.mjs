@@ -202,7 +202,7 @@ test('wrong options cannot progress; only the active correct answer advances',as
       assert.equal(body.reveal.hasEventImage,true);
     }
   }
-  assert.equal(m.data.events.size,3);
+  assert.equal(m.data.events.size,4,'one ruled-out answer plus three successful question completions');
   const revisit=await quizRecipientResponse(publicRequest('/quiz-state'),m.env,{});
   const returned=await revisit.json();
   assert.equal(returned.unlocked,true);
