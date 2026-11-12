@@ -197,6 +197,7 @@
     else $('booking').removeAttribute('href');
     $('eventImage').hidden=true;
     if(model.hasEventImage&&!demo){
+      $('eventImage').onerror=()=>{ $('eventImage').hidden=true; };
       $('eventImage').src='/r/'+encodeURIComponent(slug)+'/quiz-image';
       $('eventImage').hidden=false;
     }
@@ -230,6 +231,7 @@
       $('choices').append(button);
     });
     $('hintButton').hidden=!state.question.hint;
+    $('hintButton').textContent='Need a hint?';
     $('hintText').hidden=true;
     $('hintText').textContent=state.question.hint||'';
     $('feedback').hidden=true;
