@@ -222,11 +222,11 @@ test('out-of-date asynchronous image loads cannot replace the current scratch su
 });
 
 
-test('decorative confetti and red gift icon appear on every public demo load without blocking scratching', () => {
+test('background confetti persists without a red gift icon or blocking scratching', () => {
   const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
   assert.match(demo, /id="celebrationConfetti"[^>]*aria-hidden="true"/);
-  assert.match(demo, /id="redGiftBadge"\s+aria-hidden="true"/);
-  assert.match(demo, /\.red-gift-badge\s*\{[^}]*pointer-events:none/);
+  assert.ok(!demo.includes('redGiftBadge'));
+  assert.ok(!demo.includes('red-gift-badge'));
   assert.match(demo, /\.confetti-field\s*\{[^}]*pointer-events:none/);
   assert.match(demo, /@keyframes confetti-fall/);
   assert.equal((demo.match(/class="confetti-piece"/g) || []).length, 28);
@@ -243,6 +243,5 @@ test('decorative confetti and red gift icon appear on every public demo load wit
   assert.ok(demo.includes("window.addEventListener('resize', queueConfettiLayout"), 'clips must update on responsive resize');
   assert.match(demo, /\.header,\.layout\{position:relative;z-index:1\}/);
   assert.match(demo, /calc\(100dvh \+ 48px\)/);
-  assert.ok(demo.indexOf('id="redGiftBadge"') > demo.indexOf('id="foilCanvas"'));
   assert.ok(!demo.includes('document.getElementById("celebrationConfetti").remove()'));
 });
