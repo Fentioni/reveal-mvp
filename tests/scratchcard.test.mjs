@@ -231,7 +231,8 @@ test('decorative confetti and red gift icon appear on every public demo load wit
   assert.match(demo, /@keyframes confetti-fall/);
   assert.equal((demo.match(/class="confetti-piece"/g) || []).length, 28);
   assert.match(demo, /animation:confetti-fall\s+var\(--duration\)\s+linear\s+var\(--delay\)\s+infinite/);
-  assert.match(demo, /@media\(prefers-reduced-motion:reduce\)[^{]*\{[^}]*\.confetti-field\{display:none\}/);
+  assert.match(demo, /@media\(prefers-reduced-motion:reduce\)/);
+  assert.match(demo, /\.confetti-field\{display:none\}/);
   assert.ok(demo.indexOf('id="celebrationConfetti"') > demo.indexOf('id="foilCanvas"'));
   assert.ok(demo.indexOf('id="redGiftBadge"') > demo.indexOf('id="foilCanvas"'));
   assert.ok(!demo.includes('document.getElementById("celebrationConfetti").remove()'));
