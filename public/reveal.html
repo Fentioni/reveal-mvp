@@ -558,6 +558,12 @@
         animation: none;
       }
     }
+    .scratch-surface-summary{margin:22px 0;padding:20px;border:1px solid #d9c8a9;border-radius:17px;background:#fbf7ee;color:#493c2f}
+    .scratch-surface-summary[hidden]{display:none!important}
+    .scratch-surface-summary h2{font-family:Georgia,serif;font-weight:500;margin:0 0 7px;font-size:1.35rem}
+    .scratch-surface-summary p{font-size:.83rem;line-height:1.6;color:#665a4c}
+    .scratch-surface-thumb{width:min(100%,220px);aspect-ratio:3/4;margin:16px auto;border:3px solid #c49d5c;border-radius:15px;overflow:hidden;position:relative;background:#a47c33}
+    .scratch-surface-thumb canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none!important}
   </style>
 </head>
 
@@ -652,6 +658,13 @@
         </div>
       </section>
 
+      <section id="surfaceReview" class="scratch-surface-summary" hidden aria-label="Static scratch surface review">
+        <h2>Scratch-card surface</h2>
+        <p id="surfaceReviewDescription"></p>
+        <div class="scratch-surface-thumb"><canvas id="surfaceReviewCanvas" aria-hidden="true"></canvas></div>
+        <p>This is a static representation of your chosen surface. Only the paid recipient can interact with the final scratch card.</p>
+      </section>
+
       <div id="reviewActions" class="actions" hidden>
         <button id="editButton" class="button button-secondary" type="button">
           Amend details
@@ -729,7 +742,8 @@
     </div>
   </main>
 
-  <script>
+  <script type="module">
+    import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
     'use strict';
 
     const params = new URLSearchParams(window.location.search);
@@ -767,12 +781,17 @@
       openRevealButton: document.getElementById('openRevealButton'),
       imageWrap: document.getElementById('imageWrap'),
       reviewImage: document.getElementById('reviewImage'),
-      bookingCard: document.getElementById('bookingCard')
+      bookingCard: document.getElementById('bookingCard'),
+      surfaceReview: document.getElementById('surfaceReview'),
+      surfaceReviewCanvas: document.getElementById('surfaceReviewCanvas'),
+      surfaceReviewDescription: document.getElementById('surfaceReviewDescription')
     };
 
     let reveal = null;
     let imageObjectUrl = null;
     let paymentPolling = false;
+    let surfaceObjectUrl = null;
+    let staticScratchCard = null;
 
     if (isStagingTest) {
       elements.reviewIntro.textContent = 'Check your test reveal carefully. You can amend the details, confirm the draft and return to the editor without making a payment.';
@@ -853,6 +872,8 @@
           await loadImage();
         }
 
+        if (isStagingTest) await loadSurface();
+
         elements.loadingCard.hidden = true;
         elements.reviewContent.hidden = false;
         renderState();
@@ -916,6 +937,35 @@
         elements.imageWrap.hidden = false;
       } catch {
         elements.imageWrap.hidden = true;
+      }
+    }
+
+    async function loadSurface() {
+      const response = await fetch(
+        '/api/reveals/' + encodeURIComponent(revealId) + '/scratch-surface',
+        {headers:ownerHeaders(),cache:'no-store'}
+      );
+      const result = await readJson(response);
+      const {style,foil,hasImage} = result.surface;
+      const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',custom:'Your uploaded scratch image'};
+      elements.surfaceReviewDescription.textContent = (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
+      elements.surfaceReview.hidden = false;
+      if (staticScratchCard) staticScratchCard.destroy();
+      staticScratchCard = new ScratchCard({canvas:elements.surfaceReviewCanvas,
+        foil,coverStyle:style === 'custom' ? 'classic' : style});
+      staticScratchCard.canvas.style.pointerEvents = 'none';
+      if (hasImage) {
+        const imageResponse = await fetch(
+          '/api/reveals/' + encodeURIComponent(revealId) + '/scratch-surface/image',
+          {headers:ownerHeaders(),cache:'no-store'}
+        );
+        if (!imageResponse.ok) throw new Error('The saved scratch image could not be loaded. Amend the reveal or try again.');
+        const blob = await imageResponse.blob();
+        if (!['image/jpeg','image/png','image/webp'].includes(blob.type)) throw new Error('Unexpected scratch image format.');
+        if (surfaceObjectUrl) URL.revokeObjectURL(surfaceObjectUrl);
+        surfaceObjectUrl = URL.createObjectURL(blob);
+        await staticScratchCard.setCoverImage(surfaceObjectUrl);
+        staticScratchCard.canvas.style.pointerEvents = 'none';
       }
     }
 
