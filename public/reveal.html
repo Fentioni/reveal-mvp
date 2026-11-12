@@ -970,7 +970,7 @@
         elements.paymentBadge.textContent = 'Checkout ready';
         elements.paymentHeading.textContent = 'Complete your payment';
         elements.paymentCopy.textContent =
-          'Your reveal remains locked until Stripe confirms the At checkout payment.';
+          'Your reveal remains locked until Stripe confirms payment.';
         elements.payButton.textContent = 'Continue to secure payment';
       } else {
         elements.paymentBadge.textContent = 'Awaiting payment';
@@ -1194,7 +1194,7 @@
     }
 
     function goToEditor() {
-      window.location.href = '/index.html?edit=' + encodeURIComponent(revealId);
+      window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId);
     }
 
     function normaliseCheckoutUrl(value) {
