@@ -534,6 +534,31 @@
     .scratch-one-upload .warning-box{margin-top:12px}
     .preview-details > [hidden],.live-message[hidden]{display:none!important}
     #liveBookingUrl{overflow-wrap:anywhere;word-break:break-word}
+
+    /* Landscape admission ticket: concert variant only. Existing portrait
+       creator and shared form logic are intentionally unchanged. */
+    body[data-ticket-variant="concert"] .scratch-static-frame{
+      aspect-ratio:2.15/1;width:100%;max-width:550px;border:3px solid #d3aa6a;
+      border-radius:11px;box-shadow:0 20px 60px #0009;
+      clip-path:polygon(0 0,76% 0,78% 5%,80% 0,100% 0,100% 100%,80% 100%,78% 95%,76% 100%,0 100%);
+    }
+    body[data-ticket-variant="concert"] .scratch-static-frame::after{
+      content:"";position:absolute;left:78%;top:0;bottom:0;border-left:2px dashed #f1d59d91;
+      pointer-events:none;z-index:3
+    }
+    body[data-ticket-variant="concert"] .scratch-desktop-dock{width:100%}
+    body[data-ticket-variant="concert"] .scratch-mobile-dock .scratch-static-frame{
+      width:100%;max-width:550px;border-radius:10px
+    }
+    body[data-ticket-variant="concert"] .preview-details-toggle summary{border-color:#a2749d}
+    body[data-ticket-variant="concert"] .scratch-art-option[aria-pressed="true"]{
+      border-color:#dabbf7;box-shadow:0 0 0 2px #a879d244
+    }
+    @media(max-width:600px){
+      body[data-ticket-variant="concert"] .scratch-static-frame{
+        aspect-ratio:2.15/1;border-width:2px
+      }
+    }
   </style>
 </head>
 
