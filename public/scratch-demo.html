@@ -45,6 +45,8 @@
     .scratch-window{position:relative;width:100%;aspect-ratio:3/4;overflow:hidden;border-radius:27px;border:4px solid #b58d4d;
       box-shadow:0 30px 75px #0008,inset 0 0 0 1px #fce5a2;background:#1c1730;isolation:isolate}
     .scratch-window::after{content:"";position:absolute;inset:8px;border:1px solid #f7dfae55;border-radius:19px;z-index:2;pointer-events:none}
+    #underlay{visibility:hidden}
+    .scratch-window.foil-ready #underlay{visibility:visible}
     .reveal{width:100%;height:100%;padding:clamp(20px,5vw,32px) clamp(17px,5vw,28px);
       display:flex;flex-direction:column;justify-content:space-between;align-items:center;text-align:center;
       background:radial-gradient(ellipse at 50% 13%,#57417c 0%,transparent 43%),
@@ -206,6 +208,10 @@
         chime();
       }
     });
+
+    // Keep the fictional surprise invisible until the Canvas foil has been painted.
+    // Module loading can take longer than the first browser paint on mobile.
+    byId('scratchWindow').classList.add('foil-ready');
 
     function restart() {
       scratch.reset();
