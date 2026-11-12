@@ -38,12 +38,14 @@ export class ScratchCinematicAudio {
     this.started = false;
     this.fired = false;
     this.destroyed = false;
+    this.generation = 0;
     this.activeNodes = new Set();
   }
 
   setEnabled(value) {
     this.enabled = Boolean(value);
     if (!this.enabled) {
+      this.generation++;
       if (this.timer !== null) this.cancel(this.timer);
       this.timer = null;
       for (const node of this.activeNodes) {
@@ -67,9 +69,10 @@ export class ScratchCinematicAudio {
         if (resumed?.catch) resumed.catch(() => {});
       }
       this.onStart();
+      const generation = ++this.generation;
       this.timer = this.schedule(() => {
         this.timer = null;
-        if (this.destroyed || !this.enabled || this.fired) return;
+        if (this.destroyed || !this.enabled || this.fired || generation !== this.generation) return;
         this.fired = true;
         try { this.play(this.context); } catch {}
         this.onCue();
@@ -134,6 +137,7 @@ export class ScratchCinematicAudio {
   }
 
   reset() {
+    this.generation++;
     if (this.timer !== null) this.cancel(this.timer);
     this.timer = null;
     this.started = false;
