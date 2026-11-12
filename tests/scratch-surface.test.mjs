@@ -169,3 +169,23 @@ test('ticket creator contains static surface preview and saves/restores owner co
   assert.ok(creator.includes('"/scratch-surface/image"'));
   assert.ok(creator.includes('await setScratchPreview()'));
 });
+
+
+test('creator, review and demo inline module scripts parse as valid JavaScript', () => {
+  for(const name of ['legacy-create.html','reveal.html','scratch-demo.html']) {
+    const html=fs.readFileSync(path.join(root,'public',name),'utf8');
+    const scripts=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
+    assert.equal(scripts.length,1,name+' should have one module script');
+    const code=scripts[0][1].replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];\s*/m,'');
+    assert.doesNotThrow(() => new Function(code),name+' script contains invalid syntax');
+  }
+});
+
+test('customer static review displays the chosen scratch cover but disables scratching', () => {
+  const html=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
+  assert.ok(html.includes('id="surfaceReviewCanvas"'));
+  assert.ok(html.includes("if (isStagingTest) await loadSurface()"));
+  assert.ok(html.includes("'/scratch-surface/image'"));
+  assert.ok(html.includes("staticScratchCard.canvas.style.pointerEvents = 'none'"));
+  assert.ok(!html.includes("staticScratchCard.reveal("));
+});
