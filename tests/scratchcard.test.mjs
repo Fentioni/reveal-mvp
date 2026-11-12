@@ -120,3 +120,15 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   assert.equal(response.status,200);
   assert.deepEqual(paths,['/scratch-demo']);
 });
+
+
+test('scratch demo hides its underlying ticket until the foil is painted', () => {
+  const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
+  assert.match(demo, /#underlay\s*\{\s*visibility:\s*hidden\s*\}/);
+  assert.match(demo, /\.scratch-window\.foil-ready #underlay\s*\{\s*visibility:\s*visible\s*\}/);
+  const init = demo.indexOf('const scratch = new ScratchCard(');
+  const ready = demo.indexOf("byId('scratchWindow').classList.add('foil-ready')");
+  assert.ok(init > -1 && ready > init, 'The foil-ready flag must not be added until ScratchCard has initialised.');
+  const canvas = demo.indexOf('<canvas id="foilCanvas"');
+  assert.ok(canvas > -1, 'The scratch foil must be a separate canvas overlay.');
+});
