@@ -648,6 +648,9 @@
     .quiz-review p{color:#dccedc;font-size:.86rem;line-height:1.55}
     .quiz-review-item{background:#f9f0e1;color:#322b3c;padding:17px;border-radius:13px;margin:13px 0}
     .quiz-review-item strong{display:block;font:normal 1.22rem Georgia,serif;overflow-wrap:anywhere}
+    .quiz-review-item .quiz-question-image{display:block;max-width:100%;width:100%;
+      max-height:250px;object-fit:contain;margin:13px 0;border-radius:10px;
+      border:1px solid #dcc8d7;background:#fffaf4}
     .quiz-review-item ul{margin:12px 0 0;padding-left:18px;display:grid;gap:6px}
     .quiz-review-item li{font-size:.87rem;overflow-wrap:anywhere}
     .quiz-review-item li.correct{font-weight:750;color:#27634e}
@@ -891,6 +894,7 @@
     let surfaceObjectUrl = null;
     let staticScratchCard = null;
     let isQuizReview = false;
+    const quizReviewImageUrls = [];
 
     if (isStagingTest) {
       elements.reviewIntro.textContent = 'Check your test reveal carefully. You can amend the details, confirm the draft and return to the editor without making a payment.';
@@ -1073,7 +1077,7 @@
       const theme = document.createElement('p');
       theme.textContent = 'Theme: ' + (names[quiz.theme] || 'Classic Mystery');
       holder.replaceChildren(theme);
-      quiz.questions.forEach((question,index) => {
+      for (const [index,question] of quiz.questions.entries()) {
         const item = document.createElement('section');
         item.className = 'quiz-review-item';
         const title = document.createElement('strong');
@@ -1086,7 +1090,26 @@
           if(i===question.correctIndex) li.className='correct';
           list.append(li);
         });
-        item.append(title,list);
+        item.append(title);
+        const imageResponse=await fetch(
+          '/api/reveals/'+encodeURIComponent(revealId)+'/quiz/question-image/'+(index+1),
+          {headers:ownerHeaders(),cache:'no-store'}
+        );
+        if(imageResponse.status!==404){
+          if(!imageResponse.ok)throw new Error('Question '+(index+1)+' image could not be loaded.');
+          const blob=await imageResponse.blob();
+          if(!['image/png','image/jpeg','image/webp'].includes(blob.type)){
+            throw new Error('Question '+(index+1)+' image has an unsupported format.');
+          }
+          const src=URL.createObjectURL(blob);
+          quizReviewImageUrls.push(src);
+          const preview=document.createElement('img');
+          preview.className='quiz-question-image';
+          preview.src=src;
+          preview.alt='Uploaded image for question '+(index+1);
+          item.append(preview);
+        }
+        item.append(list);
         if(question.hint){
           const hint=document.createElement('p');
           hint.className='hint';
@@ -1094,7 +1117,7 @@
           item.append(hint);
         }
         holder.append(item);
-      });
+      }
       document.querySelector('.review-shell').before(section);
       section.hidden=false;
       return true;
