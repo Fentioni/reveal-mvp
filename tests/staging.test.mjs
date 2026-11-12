@@ -90,7 +90,8 @@ test('staging Ticket test entry is kept separate from catalogue activation', () 
 
 test('Ticket creator saves to the canonical review route', () => {
   const creator = fs.readFileSync(path.join(root, 'public/legacy-create.html'), 'utf8');
-  assert.ok(creator.includes('Create your ticket reveal'));
+  assert.ok(creator.includes('Make the moment <em>unforgettable.</em>'));
+  assert.ok(creator.includes('Create Ticket &amp; Concert Reveal'));
   assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
   assert.ok(!creator.includes('"reveal.html?id="'));
 });
