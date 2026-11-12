@@ -338,8 +338,10 @@ test('each quiz theme button shows its own full colour fill and accessible chose
   for(const theme of themeNames){
     assert.ok(html.includes('.theme-choice[data-theme="'+theme+'"]{'),theme+' has themed filled background');
     assert.ok(html.includes('data-theme="'+theme+'" aria-pressed='),theme+' remains selectable');
-    const section=html.match(new RegExp('\\\\.theme-choice\\\\[data-theme="'+theme+'"\\\\]\\\\{([^}]*)\\\\}'));
-    assert.ok(section?.[1].includes('background:'),theme+' has actual gradient fill');
+    const anchor='.theme-choice[data-theme="'+theme+'"]{';
+    const pos=html.indexOf(anchor);
+    const section=html.slice(pos+anchor.length,html.indexOf('}',pos));
+    assert.ok(section.includes('background:'),theme+' has actual gradient fill');
   }
   assert.ok(html.includes('class="theme-visual-icon" aria-hidden="true"'));
   assert.ok(html.includes('class="theme-description"'));
