@@ -27,7 +27,10 @@ test('staging blocks payment initiation at legacy checkout path', async () => {
     {STAGING_DISABLE_CHECKOUT: 'true'},
   );
   assert.equal(response.status, 503);
-  assert.match(await response.text(), /disabled/);
+  assert.match(response.headers.get('content-type'), /application\/json/);
+  const result = await response.json();
+  assert.equal(result.success, false);
+  assert.match(result.error, /disabled/);
 });
 
 test('staging blocks payment webhook handling', async () => {
@@ -36,7 +39,10 @@ test('staging blocks payment webhook handling', async () => {
     {STAGING_DISABLE_CHECKOUT: 'true'},
   );
   assert.equal(response.status, 503);
-  assert.match(await response.text(), /disabled/);
+  assert.match(response.headers.get('content-type'), /application\/json/);
+  const result = await response.json();
+  assert.equal(result.success, false);
+  assert.match(result.error, /disabled/);
 });
 
 test('product, category and interactive preview pages preserve their browser paths', async () => {
@@ -94,4 +100,19 @@ test('review Amend action returns to the staging creator, not storefront', () =>
   assert.ok(review.includes("window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId)"));
   assert.ok(!review.includes("'/index.html?edit='"));
   assert.ok(!review.includes('At checkout payment'));
+});
+
+
+test('staging review hides checkout and allows amendment of confirmed draft', () => {
+  const review = fs.readFileSync(path.join(root, 'public/reveal.html'), 'utf8');
+  assert.ok(review.includes("const isStagingTest = window.location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev'"));
+  assert.ok(review.includes("elements.paymentHeading.textContent = 'Your test draft is confirmed'"));
+  assert.ok(review.includes('elements.payButton.hidden = true'));
+  assert.ok(review.includes('elements.payButton.disabled = true'));
+  assert.ok(review.includes('elements.paymentPricePanel.hidden = true'));
+  assert.ok(review.includes('elements.paymentIncludedList.hidden = true'));
+  assert.ok(review.includes('elements.paymentSecurityNote.hidden = true'));
+  assert.ok(review.includes('elements.paymentAmendButton.disabled = false'));
+  assert.ok(review.includes("showPaymentError('Checkout is disabled in this staging environment.')"));
+  assert.ok(review.includes("window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId)"));
 });
