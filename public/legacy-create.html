@@ -493,8 +493,6 @@
     .scratch-art-icon{flex:0 0 53px;height:54px;border:1px solid #ffffff44;border-radius:7px}
     .scratch-art-option strong{font-size:.83rem}
     .scratch-art-option small{font-size:.72rem;color:#d1c4b5;margin:3px 0 0;text-align:left}
-    .scratch-choice #scratchUploadField{padding:13px;border:1px dashed #8b7755;border-radius:13px;margin-top:14px}
-    .scratch-choice #scratchUploadField p{color:#d1c5b7}
     .scratch-static-frame{width:min(100%,440px);border:4px solid #b58d4d;border-radius:27px;
       box-shadow:0 30px 75px #0008,inset 0 0 0 1px #fce5a2;margin:0 auto 8px;
       background:#1c1730;aspect-ratio:3 / 4}
@@ -527,6 +525,10 @@
       .form-card{padding:0}.scratch-static-frame{border-radius:23px}
       .preview-shell{padding:22px 15px}}
     @media(max-width:370px){.scratch-art-grid{grid-template-columns:1fr}}
+    .scratch-one-upload{margin:22px 0 12px;border:1px dashed #8b7755;border-radius:13px;padding:13px}
+    .scratch-one-upload .field{margin:0}
+    .scratch-one-upload .field-help{color:#d7c9be}
+    .scratch-one-upload .warning-box{margin-top:12px}
   </style>
 </head>
 
@@ -586,10 +588,45 @@
               <option value="concert">Concert Lights</option>
               <option value="custom">Your own image</option>
             </select>
-            <div class="field" id="scratchUploadField" hidden>
-              <label for="scratchCoverImage">Your image for the scratch layer</label>
-              <input type="file" id="scratchCoverImage" accept="image/jpeg,image/png,image/webp">
-              <p>JPEG, PNG or WebP, up to 10 MB. Minimum 640 × 640 pixels. Image is cropped to fill the scratch card.</p>
+            <div class="scratch-one-upload"><div class="field">
+                <label for="image">Add an image</label>
+                <p class="field-help">
+                  Optional. Use this single upload for your photo, poster or personalised scratch-card cover.
+                  When you upload an image, “Your own image” is selected automatically.
+                </p>
+
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+
+                <div class="warning-box">
+                  Avoid uploading visible QR codes, barcodes or other
+                  information that could allow somebody else to use the real ticket.
+                </div>
+
+                <div id="imagePreviewWrap" class="image-preview-wrap">
+                  <img
+                    id="imagePreview"
+                    class="image-preview"
+                    alt="Selected gift image"
+                  >
+
+                  <div class="image-caption">
+                    <span id="imageCaption">Image selected</span>
+                    <button
+                      id="removeImageButton"
+                      class="remove-image-button"
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+
             </div>
             <input type="checkbox" id="scratchAudioEnabled" hidden aria-hidden="true" tabindex="-1">
             <p class="field-help">Music and sound design will be added at a later stage.</p>
@@ -634,44 +671,6 @@
               maxlength="160"
               required
             >
-          </div>
-
-          <div class="field">
-            <label for="image">Add an image</label>
-            <p class="field-help">
-              Optional. Add a photo, event image or poster with no ticket
-              codes or private booking details.
-            </p>
-
-            <input
-              id="image"
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-            >
-
-            <div class="warning-box">
-              Avoid uploading visible QR codes, barcodes or other
-              information that could allow somebody else to use the real ticket.
-            </div>
-
-            <div id="imagePreviewWrap" class="image-preview-wrap">
-              <img
-                id="imagePreview"
-                class="image-preview"
-                alt="Selected gift image"
-              >
-
-              <div class="image-caption">
-                <span id="imageCaption">Image selected</span>
-                <button
-                  id="removeImageButton"
-                  class="remove-image-button"
-                  type="button"
-                >
-                  Remove
-                </button>
-              </div>
-            </div>
           </div>
 
 
@@ -1029,7 +1028,6 @@
       const style = $("scratchStyle").value;
       const foil = $("scratchFoil").value;
       const useImage = style === "custom";
-      $("scratchUploadField").hidden = !useImage;
       scratchPreview.setFoil(foil);
       if (useImage && (selectedScratchUrl || savedScratchUrl)) {
         await scratchPreview.setCoverImage(selectedScratchUrl || savedScratchUrl);
@@ -1068,6 +1066,10 @@
       button.addEventListener("click", () => {
         if (!ready || busy) return;
         $("scratchStyle").value = button.dataset.scratchStyle;
+        if (button.dataset.scratchStyle === "custom" &&
+            !selectedScratchImage && !existingScratchImage && !selectedImage && !existingImage) {
+          $("image").focus();
+        }
         setScratchPreview().catch(error => show(error.message));
       });
     }
@@ -1085,23 +1087,6 @@
     $("scratchFoil").addEventListener("change", () => {
       setScratchPreview().catch(error => show(error.message));
     });
-    $("scratchCoverImage").addEventListener("change", async () => {
-      if (!ready || busy) return;
-      const file = $("scratchCoverImage").files?.[0];
-      if (!file) return;
-      try {
-        const next = await examineScratchFile(file);
-        if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
-        selectedScratchUrl = next;
-        selectedScratchImage = file;
-        $("scratchStyle").value = "custom";
-        await setScratchPreview();
-        hide();
-      } catch(error) {
-        $("scratchCoverImage").value = "";
-        show(error.message || "The scratch image could not be loaded.");
-      }
-    });
     window.addEventListener("pagehide", () => {
       if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
       if (savedScratchUrl) URL.revokeObjectURL(savedScratchUrl);
@@ -1113,41 +1098,44 @@
       $(key).addEventListener("change", preview);
     }
 
-    $("image").addEventListener("change", () => {
+    $("image").addEventListener("change", async () => {
       if (!ready || busy) return;
-
-      const file = $("image").files[0];
+      const file = $("image").files?.[0];
       if (!file) return;
-
-      if (
-        !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
-        file.size > 10 * 1024 * 1024 ||
-        file.size === 0
-      ) {
+      try {
+        // One user image can be used in both existing product image storage
+        // and the private R2 scratch-cover asset. No second file selector.
+        const next = await examineScratchFile(file);
+        if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
+        selectedScratchUrl = next;
+        selectedScratchImage = file;
+        selectedImage = file;
+        removeImage = false;
+        $("scratchStyle").value = "custom";
+        await setScratchPreview();
+        showImage(file, file.name);
+        hide();
+      } catch (error) {
         $("image").value = "";
-
-        show(
-          "Choose a JPEG, PNG or WebP image up to 10 MB. Your previous image selection has been kept."
-        );
-
-        return;
+        show(error.message || "Choose a JPEG, PNG or WebP image at least 640 × 640 pixels, up to 10 MB.");
       }
-
-      selectedImage = file;
-      removeImage = false;
-
-      showImage(file, file.name);
-      hide();
     });
 
     $("removeImageButton").addEventListener("click", () => {
       if (!ready || busy) return;
 
       selectedImage = null;
+      selectedScratchImage = null;
+      if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
+      selectedScratchUrl = null;
       $("image").value = "";
       removeImage = existingImage;
 
+      if ($("scratchStyle").value === "custom") {
+        $("scratchStyle").value = "classic";
+      }
       clearImage();
+      setScratchPreview().catch(error => show(error.message));
       hide();
     });
 
@@ -1156,7 +1144,8 @@
 
       if (!ready || busy || !form.reportValidity()) return;
       if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage) {
-        show("Please choose an image for your custom scratch-card surface.");
+        show("Choose an image using Add an image to create your custom scratch-card cover.");
+        $("image").focus();
         return;
       }
 
@@ -1331,6 +1320,7 @@
             throw new Error("Saved scratch-surface image has an unexpected format.");
           }
           savedScratchUrl = URL.createObjectURL(blob);
+          if (!reveal.hasImage) showImage(blob, "Current saved scratch image");
         }
         await setScratchPreview();
 
@@ -1367,6 +1357,12 @@
             }
 
             showImage(blob, "Current saved image");
+            if ($("scratchStyle").value === "custom" && !existingScratchImage && !selectedScratchImage) {
+              const prior = new File([blob], "saved-cover." + (blob.type.split("/")[1] === "jpeg" ? "jpg" : blob.type.split("/")[1]), {type:blob.type});
+              selectedScratchUrl = await examineScratchFile(prior);
+              selectedScratchImage = prior;
+              await setScratchPreview();
+            }
 
           } catch {
             $("imagePreviewWrap").classList.add("visible");
