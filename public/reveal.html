@@ -583,11 +583,11 @@
       <div class="eyebrow">Final check</div>
       <h1>Review your reveal</h1>
 
-      <p class="intro">
+      <p id="reviewIntro" class="intro">
         Check everything carefully. You can amend the details before payment.
       </p>
 
-      <div class="notice">
+      <div id="reviewNotice" class="notice">
         This is a static review only. The full recipient reveal, opening experience and permanent sharing link remain locked until payment is confirmed.
       </div>
 
@@ -670,12 +670,12 @@
           Make one secure payment to unlock the recipient experience and permanent sharing link.
         </p>
 
-        <div class="price-panel">
+        <div id="paymentPricePanel" class="price-panel">
           <span class="price-label">One-off payment<br>No subscription</span>
           <strong class="price">At checkout</strong>
         </div>
 
-        <ul class="included-list">
+        <ul id="paymentIncludedList" class="included-list">
           <li>Full recipient reveal experience</li>
           <li>Permanent link that can be revisited</li>
           <li>Your private booking details remain protected</li>
@@ -697,7 +697,7 @@
           Check payment status
         </button>
 
-        <p class="secure-note">
+        <p id="paymentSecurityNote" class="secure-note">
           Payment is completed securely on Stripe. Reveal does not store your card details.
         </p>
       </section>
@@ -735,6 +735,7 @@
     const params = new URLSearchParams(window.location.search);
     const revealId = params.get('id');
     const paymentReturn = params.get('payment');
+    const isStagingTest = window.location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev';
 
     const elements = {
       loadingCard: document.getElementById('loadingCard'),
@@ -745,6 +746,11 @@
       returnNotice: document.getElementById('returnNotice'),
       reviewActions: document.getElementById('reviewActions'),
       paymentStage: document.getElementById('paymentStage'),
+      paymentPricePanel: document.getElementById('paymentPricePanel'),
+      paymentIncludedList: document.getElementById('paymentIncludedList'),
+      paymentSecurityNote: document.getElementById('paymentSecurityNote'),
+      reviewIntro: document.getElementById('reviewIntro'),
+      reviewNotice: document.getElementById('reviewNotice'),
       paidStage: document.getElementById('paidStage'),
       confirmButton: document.getElementById('confirmButton'),
       editButton: document.getElementById('editButton'),
@@ -767,6 +773,12 @@
     let reveal = null;
     let imageObjectUrl = null;
     let paymentPolling = false;
+
+    if (isStagingTest) {
+      elements.reviewIntro.textContent = 'Check your test reveal carefully. You can amend the details, confirm the draft and return to the editor without making a payment.';
+      elements.reviewNotice.textContent = 'Staging test only. This is a static review, not the recipient animation. Payment, sharing and unlocking are disabled here.';
+      elements.confirmButton.textContent = 'Confirm test draft';
+    }
 
     function getEditToken() {
       if (!revealId) {
@@ -846,6 +858,7 @@
         renderState();
 
         if (
+          !isStagingTest &&
           paymentReturn === 'success' &&
           ['confirmed', 'checkout'].includes(reveal.status)
         ) {
@@ -938,6 +951,10 @@
     }
 
     function showReturnNotice() {
+      if (isStagingTest) {
+        elements.returnNotice.hidden = true;
+        return;
+      }
       elements.returnNotice.classList.remove('success');
 
       if (paymentReturn === 'cancelled') {
@@ -963,8 +980,22 @@
 
     function showPaymentState() {
       elements.paymentStage.hidden = false;
-      elements.payButton.disabled = false;
       elements.paymentAmendButton.disabled = false;
+
+      if (isStagingTest) {
+        elements.paymentBadge.textContent = 'Staging test';
+        elements.paymentHeading.textContent = 'Your test draft is confirmed';
+        elements.paymentCopy.textContent = 'Your details are saved. Checkout and the recipient reveal are disabled in this test environment. Select Amend details to return to your editor.';
+        elements.paymentPricePanel.hidden = true;
+        elements.paymentIncludedList.hidden = true;
+        elements.paymentSecurityNote.hidden = true;
+        elements.payButton.hidden = true;
+        elements.payButton.disabled = true;
+        return;
+      }
+
+      elements.payButton.hidden = false;
+      elements.payButton.disabled = false;
 
       if (reveal.status === 'checkout') {
         elements.paymentBadge.textContent = 'Checkout ready';
@@ -1023,11 +1054,15 @@
       } catch (error) {
         window.alert(error.message);
       } finally {
-        setButtonBusy(elements.confirmButton, false, 'Confirm and continue');
+        setButtonBusy(elements.confirmButton, false, isStagingTest ? 'Confirm test draft' : 'Confirm and continue');
       }
     }
 
     async function startPayment() {
+      if (isStagingTest) {
+        showPaymentError('Checkout is disabled in this staging environment.');
+        return;
+      }
       hidePaymentMessage();
       setButtonBusy(elements.payButton, true, 'Opening secure checkout...');
       elements.paymentAmendButton.disabled = true;
