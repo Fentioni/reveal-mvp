@@ -95,7 +95,7 @@ async function dimensions(file) {
     if(ascii(12,4) === 'VP8L') {
       if (b[20] !== 47) return null;
       return {
-        width: 1 + (((b[21] & 63) << 8) | b[20 + 1 - 1 + 1 - 1 + 0]),
+        width: 1 + (b[21] | ((b[22] & 63) << 8)),
         height: 1 + (((b[24] & 15) << 10) | (b[23] << 2) | ((b[22] & 192) >> 6))
       };
     }
