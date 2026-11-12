@@ -30,6 +30,16 @@
 - `status === 'paid'` AND a non-null `paid_at` are mandatory for every public quiz endpoint. Missing or unconfigured products are denied; non-quiz paid reveals continue their existing routes.
 - Client HTML remains a static shell with no answer keys or final surprise embedded. Only the fictional demo includes hardcoded sample answers.
 
+## Stage 4G.1 — Optional image per quiz question (12 November 2026)
+- The purchaser may attach **one optional image to each of the three questions**, independently of the existing final surprise image. All questions remain exactly four-option single-select.
+- In the creator, each question panel has an upload picker (JPEG, PNG or WebP, up to 10 MB), an inline image preview, and a remove/replace action. Live static preview can switch between all three questions using labelled question tabs or when a question is focused. No purchaser-side playable quiz is exposed.
+- Question images use the existing `reveal_assets` table with separate `kind` values `quiz-question-1`, `quiz-question-2`, and `quiz-question-3`, and the existing private R2 bucket. This requires no new D1 tables, migration, product, pricing or checkout.
+- The owner-only `GET/HEAD/PUT/DELETE /api/reveals/:id/quiz/question-image/:number` endpoints require the original private edit token. PUT/DELETE require draft status. Both upload and replacement validate size, supported MIME and binary signature. R2 replacements are committed to D1 before old objects are removed; storage errors fail closed.
+- Creator save persists the quiz record first, then uploads/removes question images individually; partial failures leave the same amendable draft and preserve unsaved local image choices for retry. Editing restores each saved question image. Static owner review shows each image alongside the corresponding question and answer key.
+- For paid recipient access, `GET/HEAD /r/:slug/quiz-question-image/:number` returns only the active question's image after the pre-existing `paid` + `paid_at` gate. The image URL is unavailable for later questions and stops being available once the question is completed; questions advertise `hasImage` without exposing R2 keys. Other original reveal images and the final surprise remain inaccessible until the separate quiz unlock conditions.
+- A recipient's answer choices are still checked by the server. The final-surprise picture is still a separate, single image upload and is only accessible after all three correct answers.
+- Staging-only implementation. Automated tests cover storage operations, owner authorization, invalid image submissions, draft-only changes and paid recipient image-step isolation. Browser/device rendering and staging deployment remain to be verified.
+
 ## Acceptance and deferred work
 - Automated tests cover required question/option validation, private editing tokens, persistence, wrong-answer retry, no skip, single-use unlock, revisits, final-data/image gate, unpaid access refusal, and preservation of ticket routes.
 - The GitHub test workflow checks code compatibility and SQL upgrades only. It is **not a Cloudflare deployment workflow**; the live staging URL must be separately deployed/visually verified before claiming the page is active.
