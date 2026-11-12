@@ -9,13 +9,16 @@ const IMAGE_TYPES = Object.freeze({
   'image/png': '.png',
   'image/webp': '.webp'
 });
-const STYLES = new Set(['classic', 'theatre', 'concert', 'custom']);
+const STYLES = new Set(['classic', 'theatre', 'concert', 'festival', 'backstage', 'custom']);
+const VARIANTS = new Set(['ticket','concert']);
+const CONCERT_STYLES = new Set(['concert','festival','backstage','custom']);
 const FOILS = new Set(['gold', 'silver', 'midnight', 'rose']);
 const DEFAULT_AUDIO = Object.freeze({enabled:true,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000});
 const DEFAULT_SURFACE = Object.freeze({
   style: 'classic',
   foil: 'gold',
-  coverAssetId: null
+  coverAssetId: null,
+  variant: 'ticket'
 });
 
 function error(message, status = 400) {
@@ -54,7 +57,8 @@ async function details(env, id) {
   const surface = {
     style: STYLES.has(saved.style) ? saved.style : 'classic',
     foil: FOILS.has(saved.foil) ? saved.foil : 'gold',
-    coverAssetId: asset ? asset.id : null
+    coverAssetId: asset ? asset.id : null,
+    variant: saved.variant === 'concert' ? 'concert' : 'ticket'
   };
   const audio = {...DEFAULT_AUDIO,enabled:fields.audio?.enabled !== false};
   return {fields, surface, asset, audio};
@@ -175,7 +179,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         surface:{
           style:current.surface.style,
           foil:current.surface.foil,
-          hasImage:Boolean(current.asset && current.surface.style==='custom')
+          hasImage:Boolean(current.asset && current.surface.style==='custom'),
+          variant:current.surface.variant
         },
         audio:current.audio
       });
@@ -190,14 +195,17 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     const body = await request.formData();
     const style = body.get('style');
     const foil = body.get('foil');
+    const variant = body.get('variant') ?? current.surface.variant;
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
       return error('Invalid audio setting.');
     }
     const audio = {...DEFAULT_AUDIO,enabled:enabledText !== 'false'};
-    if (typeof style !== 'string' || !STYLES.has(style) || typeof foil !== 'string' || !FOILS.has(foil)) {
-      return error('Choose a valid scratch surface and foil finish.');
+    if (typeof style !== 'string' || !STYLES.has(style) || typeof foil !== 'string' || !FOILS.has(foil) ||
+        typeof variant !== 'string' || !VARIANTS.has(variant) ||
+        (variant === 'concert' && !CONCERT_STYLES.has(style))) {
+      return error('Choose a valid scratch surface and foil finish for this product.');
     }
     if (uploaded !== null && (typeof uploaded === 'string' || typeof uploaded.size !== 'number')) {
       return error('Invalid uploaded image.');
@@ -234,6 +242,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         scratchSurface:{
           style,
           foil,
+          variant,
           coverAssetId:style==='custom' ? newAssetId : null
         },
         audio
@@ -261,7 +270,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
-      return json({success:true,surface:{style,foil,hasImage:style==='custom'},audio});
+      return json({success:true,surface:{style,foil,hasImage:style==='custom',variant},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;
