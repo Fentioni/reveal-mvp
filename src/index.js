@@ -4,6 +4,7 @@ import { catalogueResponse } from './catalogue.js';
 import { scratchSurfaceResponse } from './scratch-surface.js';
 import { scratchRecipientResponse } from './scratch-recipient.js';
 import { quizOwnerResponse,quizRecipientResponse } from './quiz.js';
+import { quizQuestionImageResponse } from './quiz-question-images.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -34,12 +35,17 @@ export default {
       return scratchSurfaceResponse(request, env, ctx, originalWorker);
     }
 
+    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/quiz\/question-image\/[1-3]\/?$/.test(path)) {
+      if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.',404);
+      return quizQuestionImageResponse(request,env,ctx,originalWorker);
+    }
+
     if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/quiz\/?$/.test(path)) {
       if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.',404);
       return quizOwnerResponse(request,env,ctx,originalWorker);
     }
 
-    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:quiz-state|quiz-answer|quiz-image|image))?\/?$/.test(path)) {
+    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:quiz-state|quiz-answer|quiz-image|quiz-question-image\/[1-3]|image))?\/?$/.test(path)) {
       const paidQuiz=await quizRecipientResponse(request,env,ctx);
       if (paidQuiz) return paidQuiz;
     }
