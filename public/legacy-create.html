@@ -136,6 +136,28 @@
     .scratch-choice label{display:block;margin:12px 0 7px;font-size:.9rem}
     .scratch-choice p{font-size:.82rem;color:#6b6151;line-height:1.55}
     .scratch-choice [hidden]{display:none!important}
+    .scratch-option-label{margin:16px 0 9px;font-size:.88rem;font-weight:650;color:#54432b}
+    .scratch-art-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+    .scratch-art-option{display:flex;align-items:center;text-align:left;gap:9px;min-width:0;padding:10px;border:2px solid #ded2bd;border-radius:13px;background:#fffdf8;color:#342d24;cursor:pointer}
+    .scratch-art-option[aria-pressed="true"]{border-color:#a77220;box-shadow:0 0 0 2px #e9c99155}
+    .scratch-art-icon{width:49px;height:54px;flex:none;border-radius:8px;display:grid;place-items:center;font-size:1.45rem;color:#ffeba8}
+    .scratch-art-icon.classic{background:linear-gradient(135deg,#72501c,#f8dda0,#a57732)}
+    .scratch-art-icon.theatre{background:repeating-linear-gradient(90deg,#67152e 0,#aa3752 9px,#591329 18px)}
+    .scratch-art-icon.concert{background:linear-gradient(135deg,#2d245b,#b32e98,#1b8fd4)}
+    .scratch-art-icon.custom{background:linear-gradient(135deg,#40334e,#a293b3)}
+    .scratch-art-option strong{display:block;font-weight:700;font-size:.83rem}
+    .scratch-art-option small{display:block;margin:3px 0 0;text-align:left;font-size:.71rem;color:#736450;line-height:1.3}
+    .scratch-foil-grid{display:flex;gap:12px;flex-wrap:wrap;margin:6px 0 12px}
+    .scratch-foil-option{width:48px;height:48px;border:3px solid #f8f4eb;border-radius:50%;cursor:pointer;box-shadow:0 0 0 1px #a99a82}
+    .scratch-foil-option[aria-pressed="true"]{box-shadow:0 0 0 3px #986322}
+    .scratch-foil-option.gold{background:linear-gradient(135deg,#946423,#ffeaaa,#a97d36)}
+    .scratch-foil-option.silver{background:linear-gradient(135deg,#858f99,#fff,#778593)}
+    .scratch-foil-option.midnight{background:linear-gradient(135deg,#0b1230,#5c70c9,#121831)}
+    .scratch-foil-option.rose{background:linear-gradient(135deg,#935867,#ffe1da,#a46678)}
+    .scratch-audio-choice{display:flex;align-items:center;gap:12px;margin:12px 0;border:1px solid #d9c8ab;padding:12px;border-radius:12px;background:#fffef9}
+    .scratch-audio-choice input{width:20px;height:20px;flex:none;accent-color:#9b681e}
+    .scratch-audio-choice span{font-size:.86rem;line-height:1.4}
+    @media(max-width:380px){.scratch-art-grid{grid-template-columns:1fr}}
     .scratch-static-frame{width:min(100%,240px);aspect-ratio:3 / 4;border:3px solid #c49e5c;border-radius:16px;overflow:hidden;position:relative;margin:15px auto 8px;background:#a87b35}
     .scratch-static-frame canvas{width:100%;height:100%;position:absolute;inset:0;display:block;pointer-events:none!important;touch-action:auto!important}
     .scratch-choice small{display:block;text-align:center;color:#655a48;margin-bottom:10px}
@@ -533,29 +555,41 @@
           <div class="scratch-choice">
             <h3>Your scratch-card surface</h3>
             <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
-            <div class="field">
-              <label for="scratchStyle">Scratch-card artwork</label>
-              <select id="scratchStyle">
-                <option value="classic">Classic premium foil</option>
-                <option value="theatre">Theatre Velvet</option>
-                <option value="concert">Concert Lights</option>
-                <option value="custom">Upload my own surface image</option>
-              </select>
+            <div id="scratchArtLabel" class="scratch-option-label">Surface artwork</div>
+            <div class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel">
+              <button type="button" class="scratch-art-option" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
+              <button type="button" class="scratch-art-option" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
             </div>
-            <div class="field">
-              <label for="scratchFoil">Foil finish</label>
-              <select id="scratchFoil">
-                <option value="gold">Gold</option>
-                <option value="silver">Silver</option>
-                <option value="midnight">Midnight</option>
-                <option value="rose">Rose</option>
-              </select>
+            <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
+              <option value="classic">Classic foil</option>
+              <option value="theatre">Theatre Velvet</option>
+              <option value="concert">Concert Lights</option>
+              <option value="custom">Your own image</option>
+            </select>
+            <div id="scratchFoilLabel" class="scratch-option-label">Foil finish</div>
+            <div class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel">
+              <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
+              <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
+              <button type="button" class="scratch-foil-option midnight" data-scratch-foil="midnight" aria-label="Midnight foil" aria-pressed="false"></button>
+              <button type="button" class="scratch-foil-option rose" data-scratch-foil="rose" aria-label="Rose foil" aria-pressed="false"></button>
             </div>
+            <select id="scratchFoil" hidden aria-hidden="true" tabindex="-1">
+              <option value="gold">Gold</option>
+              <option value="silver">Silver</option>
+              <option value="midnight">Midnight</option>
+              <option value="rose">Rose</option>
+            </select>
             <div class="field" id="scratchUploadField" hidden>
               <label for="scratchCoverImage">Your image for the scratch layer</label>
               <input type="file" id="scratchCoverImage" accept="image/jpeg,image/png,image/webp">
               <p>JPEG, PNG or WebP, up to 10 MB. Minimum 640 × 640 pixels. Image is cropped to fill the scratch card.</p>
             </div>
+            <label class="scratch-audio-choice" for="scratchAudioEnabled">
+              <input type="checkbox" id="scratchAudioEnabled" checked>
+              <span>Cinematic orchestral drum roll — starts 3 seconds after the recipient first scratches (optional sound)</span>
+            </label>
             <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
               <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
             </div>
@@ -755,7 +789,7 @@
     }
 
     function lock(locked) {
-      for (const control of form.querySelectorAll("input, textarea, button")) {
+      for (const control of form.querySelectorAll("input, textarea, select, button")) {
         control.disabled = locked;
       }
 
@@ -887,7 +921,17 @@
       return data;
     }
 
+    function refreshScratchChoices() {
+      for (const button of form.querySelectorAll("[data-scratch-style]")) {
+        button.setAttribute("aria-pressed", String(button.dataset.scratchStyle === $("scratchStyle").value));
+      }
+      for (const button of form.querySelectorAll("[data-scratch-foil]")) {
+        button.setAttribute("aria-pressed", String(button.dataset.scratchFoil === $("scratchFoil").value));
+      }
+    }
+
     async function setScratchPreview() {
+      refreshScratchChoices();
       const sequence = ++scratchSelectionSequence;
       const style = $("scratchStyle").value;
       const foil = $("scratchFoil").value;
@@ -925,6 +969,21 @@
         URL.revokeObjectURL(url);
         throw error;
       }
+    }
+
+    for (const button of form.querySelectorAll("[data-scratch-style]")) {
+      button.addEventListener("click", () => {
+        if (!ready || busy) return;
+        $("scratchStyle").value = button.dataset.scratchStyle;
+        setScratchPreview().catch(error => show(error.message));
+      });
+    }
+    for (const button of form.querySelectorAll("[data-scratch-foil]")) {
+      button.addEventListener("click", () => {
+        if (!ready || busy) return;
+        $("scratchFoil").value = button.dataset.scratchFoil;
+        setScratchPreview().catch(error => show(error.message));
+      });
     }
 
     $("scratchStyle").addEventListener("change", () => {
@@ -1061,6 +1120,7 @@
         const surfaceBody = new FormData();
         surfaceBody.append("style", $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
+        surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         if ($("scratchStyle").value === "custom" && selectedScratchImage) {
           surfaceBody.append("coverImage", selectedScratchImage);
         }
@@ -1165,6 +1225,7 @@
         );
         $("scratchStyle").value = savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
+        $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         existingScratchImage = Boolean(savedSurface.surface.hasImage);
         if (existingScratchImage) {
           const coverResponse = await fetch(
