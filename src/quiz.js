@@ -129,20 +129,34 @@ function unlockedReveal(row) {
   };
 }
 
-function visibleState(row,quiz,step) {
+async function publicQuizState(env,row,quiz,step) {
+  // Do not expose media keys or later questions. Only the active question
+  // advertises an image, and only after the payment gate has passed.
+  let hasQuestionImage=false;
+  if(step<3){
+    const asset=await env.DB.prepare(
+      'SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1'
+    ).bind(row.id,'quiz-question-'+(step+1)).first();
+    hasQuestionImage=Boolean(asset);
+  }
+  return visibleState(row,quiz,step,hasQuestionImage);
+}
+
+function visibleState(row,quiz,step,hasQuestionImage=false) {
   const unlocked=step===3;
   return {success:true,recipient:row.recipient,theme:quiz.theme,
     completed:step,questionCount:3,unlocked,
     ...(unlocked ? {reveal:unlockedReveal(row)} : {
       question:{number:step+1,prompt:quiz.questions[step].prompt,
-        options:quiz.questions[step].options,hint:quiz.questions[step].hint}
+        options:quiz.questions[step].options,hint:quiz.questions[step].hint,
+        ...(hasQuestionImage?{hasImage:true}:{})}
     })
   };
 }
 
 export async function quizRecipientResponse(request,env,ctx) {
   const url=new URL(request.url);
-  const match=url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(quiz-state|quiz-answer|quiz-image|image))?\/?$/);
+  const match=url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(quiz-state|quiz-answer|quiz-image|image|quiz-question-image\/[1-3]))?\/?$/);
   if (!match) return null;
   if (env.STAGING_DISABLE_CHECKOUT!=='true') return null;
   const [,slug,action] = match;
@@ -172,7 +186,7 @@ export async function quizRecipientResponse(request,env,ctx) {
       if (!request.headers.get('content-type')?.toLowerCase().startsWith('application/json')) {
         return fail('Answer must be JSON.',415);
       }
-      if (step===3) return json({correct:true,...visibleState(row,quiz,step)});
+      if (step===3) return json({correct:true,...await publicQuizState(env,row,quiz,step)});
       if (Number(request.headers.get('content-length'))>600) return fail('Answer too large.',413);
       const raw=await request.text();
       if (raw.length>600) return fail('Answer too large.',413);
@@ -191,14 +205,34 @@ export async function quizRecipientResponse(request,env,ctx) {
         ).bind(qKey(row.id,step+1),row.id,'quiz-step-'+(step+1),'{}',new Date().toISOString()).run();
       }
       const updated=correct?await progress(env,row.id):step;
-      return json({correct,...visibleState(row,quiz,updated)});
+      return json({correct,...await publicQuizState(env,row,quiz,updated)});
     }
 
     if (request.method!=='GET' && request.method!=='HEAD') return fail('Method not allowed.',405);
     if (action==='quiz-state') {
-      const response=json(visibleState(row,quiz,step));
+      const response=json(await publicQuizState(env,row,quiz,step));
       return request.method==='HEAD'
         ? new Response(null,{status:response.status,headers:response.headers}):response;
+    }
+    if (action?.startsWith('quiz-question-image/')) {
+      // A paid recipient can access only the CURRENT question image, never
+      // a later question or an image from a different reveal.
+      const number=Number(action.slice('quiz-question-image/'.length));
+      if(step!==number-1 || !env.IMAGES)return hide();
+      const asset=await env.DB.prepare(
+        'SELECT r2_key FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1'
+      ).bind(row.id,'quiz-question-'+number).first();
+      if(!asset)return hide();
+      const object=await env.IMAGES.get(asset.r2_key);
+      if(!object)return hide();
+      const meta=new Headers();
+      object.writeHttpMetadata(meta);
+      const mime=meta.get('Content-Type');
+      if(!['image/jpeg','image/png','image/webp'].includes(mime))return hide();
+      return new Response(request.method==='HEAD'?null:object.body,{
+        headers:{'content-type':mime,'cache-control':'private, no-store',
+          'x-content-type-options':'nosniff','referrer-policy':'no-referrer'}
+      });
     }
     if (action==='quiz-image'||action==='image') {
       if (step!==3 || !row.image_key || !env.IMAGES) return hide();
