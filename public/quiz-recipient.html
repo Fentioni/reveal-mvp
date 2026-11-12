@@ -28,6 +28,9 @@
     padding:clamp(19px,5vw,32px);box-shadow:0 25px 70px #0007}
   .panel .kicker{text-transform:uppercase;letter-spacing:.16em;color:#987647;font-size:.7rem;font-weight:800}
   .question-title{font:normal clamp(1.5rem,5vw,2.15rem)/1.2 Georgia,serif;margin:13px 0 24px;overflow-wrap:anywhere}
+  .question-image{display:block;width:100%;height:auto;max-height:280px;object-fit:contain;
+    background:#eee4d5;border-radius:12px;margin:0 0 22px}
+  .question-image[hidden]{display:none!important}
   .progress{display:flex;gap:9px;justify-content:center;margin:21px 0 27px}
   .progress span{width:38px;height:38px;border-radius:50%;border:1px solid #d6c4b9;
     display:grid;place-items:center;color:#e7dce4;font-weight:800}
@@ -83,6 +86,7 @@
     <section id="questionPanel" class="panel" aria-labelledby="questionText">
       <div id="counter" class="kicker">Question 1 of 3</div>
       <h2 id="questionText" class="question-title"></h2>
+      <img id="questionImage" class="question-image" alt="Image accompanying this question" hidden>
       <div id="choices" class="choices"></div>
       <button id="hintButton" type="button" class="hint-button" hidden>Need a hint?</button>
       <p id="hintText" class="hint-text" hidden></p>
@@ -219,6 +223,18 @@
     }
     $('counter').textContent='Question '+state.question.number+' of 3';
     $('questionText').textContent=state.question.prompt;
+    const picture=$('questionImage');
+    picture.hidden=true;
+    picture.removeAttribute('src');
+    if(state.question.hasImage&&!demo){
+      const activeQuestion=state.question.number;
+      picture.onload=()=>{
+        picture.hidden=!latestState || latestState.unlocked ||
+          latestState.question.number!==activeQuestion;
+      };
+      picture.onerror=()=>{picture.hidden=true;};
+      picture.src='/r/'+encodeURIComponent(slug)+'/quiz-question-image/'+activeQuestion;
+    }
     $('choices').replaceChildren();
     state.question.options.forEach((label,index)=>{
       const button=document.createElement('button');
