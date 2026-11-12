@@ -162,10 +162,21 @@ test('ticket creator contains static surface preview and saves/restores owner co
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   assert.ok(creator.includes('id="scratchStyle"'));
   assert.ok(creator.includes('id="scratchFoil"'));
-  assert.ok(creator.includes('id="scratchCoverImage"'));
+  assert.ok(creator.includes('id="image"'));
+  assert.ok(!creator.includes('id="scratchCoverImage"'));
+  assert.ok(!creator.includes('id="scratchUploadField"'));
+  assert.equal((creator.match(/type="file"/g) || []).length,1,
+    'ticket creator must have one image selector');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
+  assert.ok(creator.includes('selectedScratchImage = file;'));
+  assert.ok(creator.includes('selectedImage = file;'));
+  assert.ok(creator.includes('$("scratchStyle").value = "custom";'));
+  assert.ok(creator.includes('body.append("image", selectedImage)'));
   assert.ok(creator.includes('surfaceBody.append("coverImage", selectedScratchImage)'));
+  assert.ok(creator.includes('if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage)'));
+  assert.ok(creator.includes('setScratchPreview().catch(error => show(error.message));'));
+  assert.ok(creator.includes('selectedScratchImage = null;'));
   assert.ok(creator.includes('"/scratch-surface/image"'));
   assert.ok(creator.includes('await setScratchPreview()'));
 });
@@ -238,4 +249,25 @@ test('invalid audio setting rejected and no D1 writes occur', async () => {
   const reply=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(reply.status,400);
   assert.equal(state.config,null);
+});
+
+
+test('the single image picker supports custom scratch cover without a second file selection', () => {
+  const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  const form=creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
+  assert.equal((form.match(/type="file"/g)||[]).length,1);
+  assert.ok(form.includes('id="image"'));
+  assert.ok(!form.includes('scratchCoverImage'));
+  assert.ok(form.indexOf('id="scratchArtLabel"') < form.indexOf('id="image"'));
+  assert.ok(form.indexOf('id="image"') < form.indexOf('id="recipient"'));
+  assert.ok(creator.includes('const next = await examineScratchFile(file);'));
+  assert.ok(creator.includes('selectedScratchUrl = next;'));
+  assert.ok(creator.includes('selectedScratchImage = file;'));
+  assert.ok(creator.includes('selectedImage = file;'));
+  assert.ok(creator.includes('showImage(file, file.name);'));
+  assert.ok(creator.includes('surfaceBody.append("coverImage", selectedScratchImage);'));
+  assert.ok(creator.includes('body.append("image", selectedImage);'));
+  assert.ok(creator.includes('Choose an image using Add an image to create your custom scratch-card cover.'));
+  assert.ok(creator.includes('selectedScratchImage = null;'));
+  assert.ok(creator.includes('await setScratchPreview();'));
 });
