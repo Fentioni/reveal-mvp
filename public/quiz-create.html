@@ -80,6 +80,19 @@
     .small-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:15px}
     .questions{display:grid;gap:18px;margin-bottom:33px}
     .question-card{border:1px solid #696173;background:#20202d;border-radius:20px;padding:20px}
+    .question-image-preview{display:block;width:100%;max-height:210px;object-fit:contain;
+      border:1px solid #857187;border-radius:12px;background:#151524;margin-top:12px}
+    .question-image-preview[hidden],.remove-question-image[hidden]{display:none!important}
+    .remove-question-image{margin-top:9px;min-height:42px;border:1px solid #aa92a4;
+      background:#382939;color:#fff;border-radius:99px;padding:9px 16px;cursor:pointer}
+    .question-preview-tabs{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;margin:13px 0 15px}
+    .question-preview-tab{min-width:0;border:1px solid #c1a6c8;border-radius:9px;
+      background:#352b43;color:#f7e7f6;padding:9px 4px;cursor:pointer;min-height:42px;font-weight:650}
+    .question-preview-tab[aria-pressed="true"]{background:#ecd2a7;color:#30233b;border-color:#ecd2a7}
+    .preview-question-image{display:block;max-width:100%;width:100%;max-height:190px;
+      object-fit:contain;margin:0 0 15px;border-radius:8px;background:#eae3d5}
+    .preview-question-image[hidden]{display:none!important}
     .q-head{display:flex;align-items:center;gap:11px;margin-bottom:20px}
     .q-number{width:34px;height:34px;border-radius:50%;background:#dcc391;color:#221729;display:grid;
       place-items:center;font-weight:800}
@@ -275,9 +288,15 @@
         <h2 id="previewTitle">A mystery awaits!</h2>
         <p>Three questions stand between you and your surprise.</p>
         <div class="step" aria-hidden="true"><span>1</span><span>2</span><span>3</span></div>
+        <div class="question-preview-tabs" id="previewTabs" role="group" aria-label="Preview individual quiz questions">
+          <button type="button" class="question-preview-tab" data-preview-question="0" aria-pressed="true">Question 1</button>
+          <button type="button" class="question-preview-tab" data-preview-question="1" aria-pressed="false">Question 2</button>
+          <button type="button" class="question-preview-tab" data-preview-question="2" aria-pressed="false">Question 3</button>
+        </div>
         <div class="static-q">
-          <div class="tag">Question 1 of 3</div>
+          <div class="tag" id="previewCounter">Question 1 of 3</div>
           <h3 id="previewPrompt">Your first question will appear here.</h3>
+          <img id="previewQuestionImage" class="preview-question-image" alt="Question artwork preview" hidden>
           <div class="static-answers" id="previewOptions">
             <div class="static-option">Choice A</div><div class="static-option">Choice B</div>
             <div class="static-option">Choice C</div><div class="static-option">Choice D</div>
@@ -295,6 +314,8 @@
   const query=new URLSearchParams(location.search);
   let id=query.get('edit'), token=null, revision=null, theme='classic-gold';
   let ready=!id, busy=false, selectedImage=null, existingImage=false, removeImage=false, objectUrl=null;
+  const questionImages=Array.from({length:3},()=>({file:null,existing:false,remove:false,url:null}));
+  let previewStep=0;
 
   function message(text) {
     $('notice').textContent=text;
@@ -326,6 +347,20 @@
       field.append(make('input',{type:'text',id:'prompt'+q,maxlength:'180',
         placeholder:'Write question '+(q+1),required:true}));
       card.append(field);
+      const questionImage=make('div',{class:'field'});
+      questionImage.append(make('label',{htmlFor:'questionImage'+q,text:'Add an image to question '+(q+1)+' (optional)'}));
+      questionImage.append(make('p',{class:'field-help',text:'JPEG, PNG or WebP, up to 10 MB. This appears with the question, not with the final surprise.'}));
+      questionImage.append(make('input',{id:'questionImage'+q,type:'file',
+        accept:'image/jpeg,image/png,image/webp'}));
+      const imagePreview=make('img',{id:'questionImagePreview'+q,class:'question-image-preview',
+        alt:'Image for question '+(q+1),hidden:''});
+      imagePreview.hidden=true;
+      questionImage.append(imagePreview);
+      const removeButton=make('button',{id:'removeQuestionImage'+q,type:'button',
+        class:'remove-question-image',text:'Remove question image',hidden:''});
+      removeButton.hidden=true;
+      questionImage.append(removeButton);
+      card.append(questionImage);
       card.append(make('label',{text:'Four possible answers'}));
       const answers=make('div',{class:'answers'});
       for(let a=0;a<4;a++) {
@@ -391,13 +426,63 @@
     $('preview').dataset.theme=theme;
     $('previewTitle').textContent=$('recipient').value.trim()
       ? $('recipient').value.trim()+', a mystery awaits!' : 'A mystery awaits!';
-    $('previewPrompt').textContent=$('prompt0').value.trim()||'Your first question will appear here.';
+    $('previewCounter').textContent='Question '+(previewStep+1)+' of 3';
+    $('previewPrompt').textContent=$('prompt'+previewStep).value.trim()||
+      'Your question '+(previewStep+1)+' will appear here.';
+    const picture=questionImages[previewStep].url;
+    $('previewQuestionImage').hidden=!picture;
+    if(picture)$('previewQuestionImage').src=picture;
+    else $('previewQuestionImage').removeAttribute('src');
+    for(const button of $('previewTabs').querySelectorAll('button')){
+      button.setAttribute('aria-pressed',String(Number(button.dataset.previewQuestion)===previewStep));
+    }
     const nodes=$('previewOptions').children;
-    for(let i=0;i<4;i++) nodes[i].textContent=$('answer0-'+i).value.trim()||'Choice '+String.fromCharCode(65+i);
+    for(let i=0;i<4;i++) nodes[i].textContent=$('answer'+previewStep+'-'+i).value.trim()||'Choice '+String.fromCharCode(65+i);
     for(const button of document.querySelectorAll('[data-theme]')){
       button.setAttribute('aria-pressed',String(button.dataset.theme===theme));
     }
   }
+  function setQuestionImage(q,blob,{newUpload=false}={}){
+    const item=questionImages[q];
+    if(item.url)URL.revokeObjectURL(item.url);
+    item.url=URL.createObjectURL(blob);
+    item.file=newUpload?blob:null;
+    item.existing=!newUpload;
+    item.remove=false;
+    $('questionImagePreview'+q).src=item.url;
+    $('questionImagePreview'+q).hidden=false;
+    $('removeQuestionImage'+q).hidden=false;
+    previewStep=q;
+    updatePreview();
+  }
+  function clearQuestionImage(q){
+    const item=questionImages[q];
+    if(item.url)URL.revokeObjectURL(item.url);
+    item.url=null;item.file=null;
+    item.remove=item.existing;
+    $('questionImage'+q).value='';
+    $('questionImagePreview'+q).hidden=true;
+    $('questionImagePreview'+q).removeAttribute('src');
+    $('removeQuestionImage'+q).hidden=true;
+    previewStep=q;
+    updatePreview();
+  }
+  async function syncQuestionImages(){
+    for(let q=0;q<3;q++){
+      const item=questionImages[q];
+      const path='/api/reveals/'+encodeURIComponent(id)+'/quiz/question-image/'+(q+1);
+      if(item.file){
+        const body=new FormData();
+        body.append('image',item.file);
+        await api(path,{method:'PUT',headers:{'X-Edit-Token':token},body});
+        item.file=null;item.existing=true;item.remove=false;
+      }else if(item.remove){
+        await api(path,{method:'DELETE',headers:{'X-Edit-Token':token}});
+        item.existing=false;item.remove=false;
+      }
+    }
+  }
+
   function imagePreview(blob){
     if(objectUrl) URL.revokeObjectURL(objectUrl);
     objectUrl=URL.createObjectURL(blob);
@@ -463,6 +548,9 @@
         method:'PUT',headers:{'X-Edit-Token':token,'Content-Type':'application/json'},
         body:JSON.stringify({theme,questions:getQuestions()})
       });
+      // New, replaced and removed question pictures are saved independently.
+      // A partial failure keeps the same draft and pending uploads for retry.
+      await syncQuestionImages();
       location.href='/reveal?id='+encodeURIComponent(id);
     }catch(error){message(error.message||'The quiz could not be saved.');setBusy(false);}
   }
@@ -489,11 +577,59 @@
         {headers:{'X-Edit-Token':token}});
       theme=configuration.quiz.theme;
       setQuestions(configuration.quiz.questions);
+      for(let q=0;q<3;q++){
+        const image=await fetch('/api/reveals/'+encodeURIComponent(id)+'/quiz/question-image/'+(q+1),
+          {headers:{'X-Edit-Token':token},cache:'no-store'});
+        if(image.status===404)continue;
+        if(!image.ok)throw new Error('Saved image for question '+(q+1)+' could not be opened.');
+        const blob=await image.blob();
+        if(!['image/png','image/jpeg','image/webp'].includes(blob.type)){
+          throw new Error('Question '+(q+1)+' has an unsupported saved image.');
+        }
+        setQuestionImage(q,blob);
+      }
+      previewStep=0;
       updatePreview();
       ready=true;
     }catch(error){message(error.message||'The saved quiz could not be loaded.');}
   }
   buildQuestions();
+  $('questionCards').addEventListener('change',event=>{
+    if(!event.target.matches('input[type="file"]'))return;
+    const q=Number(event.target.closest('.question-card')?.dataset.q);
+    if(!Number.isInteger(q)||q<0||q>2)return;
+    const file=event.target.files?.[0];
+    if(!file)return;
+    if(!['image/jpeg','image/png','image/webp'].includes(file.type)||
+       !file.size||file.size>10*1024*1024){
+      event.target.value='';
+      message('Choose a JPEG, PNG or WebP question image up to 10 MB.');
+      return;
+    }
+    setQuestionImage(q,file,{newUpload:true});
+    message('');
+  });
+  $('questionCards').addEventListener('click',event=>{
+    const remove=event.target.closest('.remove-question-image');
+    if(!remove)return;
+    const q=Number(remove.closest('.question-card')?.dataset.q);
+    if(Number.isInteger(q)&&q>=0&&q<3)clearQuestionImage(q);
+  });
+  $('questionCards').addEventListener('focusin',event=>{
+    const question=event.target.closest('.question-card');
+    if(!question)return;
+    const q=Number(question.dataset.q);
+    if(Number.isInteger(q)&&q>=0&&q<3){
+      previewStep=q;
+      updatePreview();
+    }
+  });
+  $('previewTabs').addEventListener('click',event=>{
+    const button=event.target.closest('[data-preview-question]');
+    if(!button)return;
+    previewStep=Number(button.dataset.previewQuestion);
+    updatePreview();
+  });
   $('quizForm').addEventListener('submit',save);
   $('quizForm').addEventListener('input',updatePreview);
   $('quizForm').addEventListener('change',updatePreview);
@@ -524,7 +660,10 @@
     selectedImage=null;removeImage=existingImage;$('image').value='';
     clearImage();
   });
-  window.addEventListener('pagehide',()=>{if(objectUrl)URL.revokeObjectURL(objectUrl);});
+  window.addEventListener('pagehide',()=>{
+    if(objectUrl)URL.revokeObjectURL(objectUrl);
+    for(const item of questionImages)if(item.url)URL.revokeObjectURL(item.url);
+  });
   updatePreview();
   if(id)restore();
 </script>
