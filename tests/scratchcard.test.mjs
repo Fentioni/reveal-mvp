@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {ScratchCard, FOILS} from '../public/scratchcard.js';
+import {ScratchCard, FOILS, SURFACE_STYLES} from '../public/scratchcard.js';
 import worker from '../src/index.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
@@ -17,8 +17,8 @@ function fakeCanvas() {
       this.context = {
         createLinearGradient: () => gradient,
         setTransform() {}, clearRect() {}, fillRect() {},
-        beginPath() {}, moveTo() {}, lineTo() {}, arc() {},
-        stroke() {}, fill() {}, save() {}, restore() {}, fillText() {}
+        beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, strokeRect() {},
+        stroke() {}, fill() {}, save() {}, restore() {}, fillText() {}, drawImage() {}
       };
     }
     getContext(type) { return type === '2d' ? this.context : null; }
@@ -45,6 +45,7 @@ const eventAt = (x,y) => ({
 
 test('original scratch engine exposes reusable commercial-product configuration', () => {
   assert.deepEqual(Object.keys(FOILS), ['gold','silver','midnight','rose']);
+  assert.deepEqual(SURFACE_STYLES, ['classic','theatre','concert']);
   const code = fs.readFileSync(path.join(root, 'public/scratchcard.js'), 'utf8');
   assert.ok(!code.includes('https://cdn.'));
   assert.ok(code.includes('destination-out'));
@@ -124,6 +125,13 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   const storefront = fs.readFileSync(path.join(root, 'public/storefront.js'), 'utf8');
   assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js?v=manual-scratch-v1'"));
   assert.ok(demo.includes('Fictional demo only'));
+  assert.ok(demo.includes('data-surface="theatre"'));
+  assert.ok(demo.includes('data-surface="concert"'));
+  assert.ok(demo.includes('data-surface="custom"'));
+  assert.ok(demo.includes('type="file" accept="image/jpeg,image/png,image/webp"'));
+  assert.ok(demo.includes('The image is cropped to fill the card'));
+  assert.ok(demo.includes('it is not uploaded or saved'));
+  assert.ok(!demo.includes('fetch('));
   assert.ok(demo.includes('Chloe'));
   assert.ok(demo.includes('The Midnight Show'));
   assert.ok(!demo.includes('Reveal without scratching'));
@@ -154,4 +162,61 @@ test('scratch demo hides its underlying ticket until the foil is painted', () =>
   assert.ok(init > -1 && ready > init, 'The foil-ready flag must not be added until ScratchCard has initialised.');
   const canvas = demo.indexOf('<canvas id="foilCanvas"');
   assert.ok(canvas > -1, 'The scratch foil must be a separate canvas overlay.');
+});
+
+
+test('the scratch card can switch between original theatre and concert artwork', () => {
+  const canvas = fakeCanvas();
+  const card = new ScratchCard({canvas});
+  for (const style of ['theatre','concert','classic']) {
+    card.setCoverStyle(style);
+    assert.equal(card.coverStyle, style);
+    assert.equal(card.progress, 0);
+  }
+  card.pointerDown(eventAt(40,40));
+  card.pointerMove(eventAt(180,180));
+  card.pointerEnd(eventAt(180,180));
+  assert.ok(card.progress > 0);
+  card.setCoverStyle('theatre');
+  assert.equal(card.progress, 0, 'Switching presets resets all previous scratches');
+  assert.throws(() => card.setCoverStyle('does-not-exist'), RangeError);
+  card.destroy();
+});
+
+test('uploaded cover images are applied only after decoding and reset the scratch surface', async () => {
+  const canvas = fakeCanvas();
+  let requested = [];
+  globalThis.Image = class {
+    constructor() {this.complete = true;this.naturalWidth = 1000;this.naturalHeight = 1200;}
+    set src(value) {requested.push(value);queueMicrotask(() => this.onload?.());}
+  };
+  const card = new ScratchCard({canvas});
+  card.pointerDown(eventAt(20,20));
+  card.pointerMove(eventAt(180,180));
+  card.pointerEnd(eventAt(180,180));
+  assert.ok(card.progress > 0);
+  assert.equal(await card.setCoverImage('blob:photo-1'), true);
+  assert.deepEqual(requested,['blob:photo-1']);
+  assert.equal(card.progress, 0);
+  assert.ok(card.coverImage);
+  assert.equal(await card.setCoverImage(null), true);
+  assert.equal(card.coverImage, null);
+  card.destroy();
+});
+
+test('out-of-date asynchronous image loads cannot replace the current scratch surface', async () => {
+  const canvas = fakeCanvas();
+  let oldImage;
+  globalThis.Image = class {
+    constructor() {this.complete = true;this.naturalWidth = 1000;this.naturalHeight = 1200;}
+    set src(value) {if(value === 'blob:old') oldImage = this; else queueMicrotask(() => this.onload?.());}
+  };
+  const card = new ScratchCard({canvas});
+  const old = card.setCoverImage('blob:old');
+  const current = card.setCoverImage('blob:new');
+  assert.equal(await current, true);
+  oldImage.onload();
+  assert.equal(await old, false);
+  assert.equal(card.coverImage !== oldImage, true);
+  card.destroy();
 });
