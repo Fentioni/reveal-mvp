@@ -229,7 +229,9 @@
 
         <h2 class="section-heading">Write your three questions</h2>
         <p class="section-copy">Each question has exactly four options. Mark the one correct answer.
-          Hints are optional. Do not put the final surprise in a question.</p>
+          A wrong choice turns grey and cannot be chosen again. A hint appears after two wrong answers;
+          after three, the correct answer is the only remaining choice.
+          Personalised hints are optional. Do not put the final surprise in a question.</p>
         <div class="questions" id="questionCards"></div>
 
         <h2 class="section-heading details-heading">Personalise the final reveal</h2>
@@ -377,7 +379,7 @@
       card.append(answers);
       card.append(make('p',{class:'correct-explanation',text:'Select the circle beside the correct answer.'}));
       const hint=make('div',{class:'field'});
-      hint.append(make('label',{htmlFor:'hint'+q,text:'Hint (optional)'}));
+      hint.append(make('label',{htmlFor:'hint'+q,text:'Personalised hint (optional — shown after 2 wrong answers)'}));
       hint.append(make('input',{id:'hint'+q,type:'text',maxlength:'240',
         placeholder:'A helpful clue if they get stuck'}));
       card.append(hint);
