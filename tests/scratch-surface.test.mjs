@@ -176,7 +176,7 @@ test('creator, review and demo inline module scripts parse as valid JavaScript',
     const html=fs.readFileSync(path.join(root,'public',name),'utf8');
     const scripts=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
     assert.equal(scripts.length,1,name+' should have one module script');
-    const code=scripts[0][1].replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];\s*/m,'');
+    const code=scripts[0][1].replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];\s*/gm,'');
     assert.doesNotThrow(() => new Function(code),name+' script contains invalid syntax');
   }
 });
@@ -188,4 +188,47 @@ test('customer static review displays the chosen scratch cover but disables scra
   assert.ok(html.includes("'/scratch-surface/image'"));
   assert.ok(html.includes("staticScratchCard.canvas.style.pointerEvents = 'none'"));
   assert.ok(!html.includes("staticScratchCard.reveal("));
+});
+
+
+test('ticket creator shows all four visual artwork choices and four foil swatches', () => {
+  const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+  for (const id of ['classic','theatre','concert','custom']) {
+    assert.ok(creator.includes('data-scratch-style="'+id+'"'), 'missing artwork '+id);
+  }
+  for (const foil of ['gold','silver','midnight','rose']) {
+    assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);
+  }
+  assert.ok(creator.includes('id="scratchAudioEnabled" checked'));
+  assert.ok(creator.includes('surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked))'));
+  assert.ok(creator.includes('$("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false'));
+});
+
+test('audio configuration is stored in D1 and returned to the owner review', async () => {
+  const {env,legacy,state}=makeMocks();
+  const body=new FormData();
+  body.append('style','concert');body.append('foil','midnight');body.append('audioEnabled','false');
+  const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+  assert.equal(saved.status,200);
+  const answer=await saved.json();
+  assert.deepEqual(answer.audio,{
+    enabled:false,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000
+  });
+  const fields=JSON.parse(state.config.fields_json);
+  assert.deepEqual(fields.audio,answer.audio);
+  const owner=await scratchSurfaceResponse(request(),env,{},legacy);
+  assert.deepEqual((await owner.json()).audio,answer.audio);
+  const review=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
+  assert.ok(review.includes('id="surfaceAudioDescription"'));
+  assert.ok(review.includes('approximately 3 seconds after the first scratch'));
+  assert.ok(!review.includes('cinematic.onFirstScratch'));
+});
+
+test('invalid audio setting rejected and no D1 writes occur', async () => {
+  const {env,legacy,state}=makeMocks();
+  const body=new FormData();
+  body.append('style','classic');body.append('foil','gold');body.append('audioEnabled','banana');
+  const reply=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+  assert.equal(reply.status,400);
+  assert.equal(state.config,null);
 });
