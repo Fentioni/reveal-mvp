@@ -235,7 +235,12 @@ test('decorative confetti and red gift icon appear on every public demo load wit
   assert.match(demo, /\.confetti-field\{display:none\}/);
   assert.ok(demo.indexOf('id="celebrationConfetti"') < demo.indexOf('<header class="header"'), 'confetti must live at page level');
   assert.ok(demo.indexOf('id="celebrationConfetti"') < demo.indexOf('id="scratchWindow"'), 'confetti must be outside scratch-card window');
-  assert.match(demo, /\.confetti-field\{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0\}/);
+  assert.match(demo, /\.confetti-field\{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0;visibility:hidden\}/);
+  assert.ok(demo.includes("for (const name of ['bottom', 'left', 'right'])"), 'four background clips required');
+  assert.ok(demo.includes('scratchWindow.getBoundingClientRect()'), 'card clipping follows actual viewport position');
+  assert.ok(demo.includes("layer.style.clipPath = 'inset('"), 'CSS clips must exclude the card');
+  assert.ok(demo.includes("window.addEventListener('scroll', queueConfettiLayout"), 'clips must update when the page scrolls');
+  assert.ok(demo.includes("window.addEventListener('resize', queueConfettiLayout"), 'clips must update on responsive resize');
   assert.match(demo, /\.header,\.layout\{position:relative;z-index:1\}/);
   assert.match(demo, /calc\(100dvh \+ 48px\)/);
   assert.ok(demo.indexOf('id="redGiftBadge"') > demo.indexOf('id="foilCanvas"'));
