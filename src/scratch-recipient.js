@@ -16,7 +16,7 @@ const FOILS = new Set(['gold','silver','midnight','rose']);
 
 export async function scratchRecipientResponse(request, env, ctx) {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(scratch-data|scratch-cover))?\/?$/);
+  const match = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(scratch-data|scratch-cover|scratch-image))?\/?$/);
   if (!match) return null;
   // Existing legacy /r route remains untouched outside the staging Worker.
   if (env.STAGING_DISABLE_CHECKOUT !== 'true') return null;
@@ -62,7 +62,26 @@ export async function scratchRecipientResponse(request, env, ctx) {
           eventTime:row.event_time,
           venue:row.venue,
           admit:row.admit,
-          personalMessage:row.personal_message
+          personalMessage:row.personal_message,
+          ticketUrl:row.ticket_url,
+          hasEventImage:Boolean(row.image_key)
+        }
+      });
+    }
+    // The recipient sees the purchaser's one uploaded event image only
+    // after the identical payment gate checked above. Never expose the R2 key.
+    if (action === 'scratch-image') {
+      if (!row.image_key || !env.IMAGES) return hide();
+      const object = await env.IMAGES.get(row.image_key);
+      if (!object) return hide();
+      const headers = new Headers();
+      object.writeHttpMetadata(headers);
+      const type = headers.get('Content-Type');
+      if (!IMAGE_TYPES.has(type)) return hide();
+      return new Response(request.method === 'HEAD' ? null : object.body,{
+        headers:{
+          'content-type':type, 'cache-control':'private, no-store',
+          'x-content-type-options':'nosniff','referrer-policy':'no-referrer'
         }
       });
     }
