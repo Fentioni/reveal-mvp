@@ -890,6 +890,14 @@
         : "Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.";
       $("surfaceHeading").textContent = isConcert
         ? "Your concert scratch-card cover" : "Your scratch-card surface";
+      $("scratchFoilLabel").textContent = isConcert ? "Concert foil finish" : "Foil finish";
+      const foilLabels = isConcert
+        ? {gold:"VIP Gold",silver:"Chrome Silver",midnight:"Midnight Stage",rose:"Neon Rose"}
+        : {gold:"Gold",silver:"Silver",midnight:"Midnight",rose:"Rose"};
+      for (const button of form.querySelectorAll("[data-scratch-foil]")) {
+        button.setAttribute("aria-label", foilLabels[button.dataset.scratchFoil] + " foil");
+        button.title = foilLabels[button.dataset.scratchFoil];
+      }
       for (const button of form.querySelectorAll("[data-scratch-style]")) {
         button.hidden = button.dataset.showFor !== "both" &&
           button.dataset.showFor !== currentVariant;
