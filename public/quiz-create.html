@@ -42,9 +42,37 @@
     #quizForm input:not([type="radio"]),#quizForm textarea,#quizForm select{
       display:block;width:100%;min-width:0;max-width:100%
     }
-    #quizForm input[type="date"],#quizForm input[type="time"]{
-      -webkit-min-logical-width:0;min-width:0;max-width:100%;
-      font-size:16px
+    /* iOS Safari may enforce an intrinsic minimum width on native date/time
+       controls even with min-width:0. Render a bounded visual control and keep
+       the actual native picker as an invisible, full-area touch target. */
+    .native-picker-shell{
+      position:relative;isolation:isolate;box-sizing:border-box;
+      display:flex;align-items:center;justify-content:space-between;gap:9px;
+      inline-size:100%;min-inline-size:0;max-inline-size:100%;
+      min-height:47px;padding:10px 12px;overflow:hidden;
+      border:1px solid #746976;border-radius:11px;background:#252332;
+      color:#fff8ee;cursor:pointer
+    }
+    .native-picker-shell:focus-within{outline:3px solid #e9bf81;outline-offset:2px}
+    .native-picker-shell .picker-value{
+      display:block;min-width:0;flex:1;overflow:hidden;
+      text-overflow:ellipsis;white-space:nowrap;
+      font-size:16px;color:#fff8ee;pointer-events:none
+    }
+    .native-picker-shell .picker-value.empty{color:#c0b3bd}
+    .native-picker-shell .picker-symbol{
+      flex:0 0 auto;color:#e4c58e;font-size:1rem;pointer-events:none
+    }
+    #quizForm .native-picker-shell > input[type="date"],
+    #quizForm .native-picker-shell > input[type="time"]{
+      position:absolute;z-index:1;inset:0;display:block;
+      inline-size:100%!important;block-size:100%!important;
+      min-inline-size:0!important;max-inline-size:100%!important;
+      min-block-size:0!important;margin:0;padding:0;
+      border:0;opacity:0;cursor:pointer;font-size:16px
+    }
+    @supports not (overflow:clip){
+      .native-picker-shell{overflow:hidden}
     }
     #quizForm textarea{overflow-wrap:anywhere}
     #quizForm label,#quizForm .field-help{overflow-wrap:anywhere}
@@ -203,8 +231,22 @@
         <div class="field"><label for="eventName">What's the surprise?</label>
           <input id="eventName" type="text" maxlength="160" required placeholder="You're going to Rome!"></div>
         <div class="small-grid">
-          <div class="field"><label for="eventDate">Date (optional)</label><input id="eventDate" type="date"></div>
-          <div class="field"><label for="eventTime">Time (optional)</label><input id="eventTime" type="time"></div>
+          <div class="field">
+            <label for="eventDate">Date (optional)</label>
+            <div class="native-picker-shell">
+              <span id="eventDateDisplay" class="picker-value empty" aria-hidden="true">Choose a date</span>
+              <span class="picker-symbol" aria-hidden="true">▦</span>
+              <input id="eventDate" type="date" aria-label="Choose optional event date">
+            </div>
+          </div>
+          <div class="field">
+            <label for="eventTime">Time (optional)</label>
+            <div class="native-picker-shell">
+              <span id="eventTimeDisplay" class="picker-value empty" aria-hidden="true">Choose a time</span>
+              <span class="picker-symbol" aria-hidden="true">◷</span>
+              <input id="eventTime" type="time" aria-label="Choose optional event time">
+            </div>
+          </div>
         </div>
         <div class="field"><label for="venue">Venue or destination (optional)</label>
           <input id="venue" type="text" maxlength="200" placeholder="Destination or venue"></div>
@@ -325,7 +367,27 @@
       $('hint'+q).value=row.hint||'';
     });
   }
+  function updatePickerLabels() {
+    const date=$('eventDate').value;
+    const time=$('eventTime').value;
+    const dateLabel=$('eventDateDisplay');
+    const timeLabel=$('eventTimeDisplay');
+    let readableDate=date;
+    if (/^\\d{4}-\\d{2}-\\d{2}$/.test(date)) {
+      const parsed=new Date(date+'T12:00:00Z');
+      if (!Number.isNaN(parsed.getTime())) {
+        readableDate=new Intl.DateTimeFormat('en-GB',{
+          day:'numeric',month:'short',year:'numeric',timeZone:'UTC'
+        }).format(parsed);
+      }
+    }
+    dateLabel.textContent=readableDate||'Choose a date';
+    timeLabel.textContent=time||'Choose a time';
+    dateLabel.classList.toggle('empty',!date);
+    timeLabel.classList.toggle('empty',!time);
+  }
   function updatePreview(){
+    updatePickerLabels();
     $('preview').dataset.theme=theme;
     $('previewTitle').textContent=$('recipient').value.trim()
       ? $('recipient').value.trim()+', a mystery awaits!' : 'A mystery awaits!';
@@ -435,6 +497,16 @@
   $('quizForm').addEventListener('submit',save);
   $('quizForm').addEventListener('input',updatePreview);
   $('quizForm').addEventListener('change',updatePreview);
+  for(const id of ['eventDate','eventTime']){
+    const control=$(id);
+    control.addEventListener('click',()=>{
+      if(typeof control.showPicker==='function'){
+        try{control.showPicker();}catch{/* Native picker remains available. */}
+      }
+    });
+    control.addEventListener('input',updatePickerLabels);
+    control.addEventListener('change',updatePickerLabels);
+  }
   $('themeChoices').addEventListener('click',event=>{
     const b=event.target.closest('[data-theme]');
     if(!b||busy)return;
