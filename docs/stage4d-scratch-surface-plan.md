@@ -38,6 +38,16 @@
 - `/scratch-demo` stays recipient-only with a fixed fictional reveal and no design controls. Payment-gated live recipient route is unchanged.
 - All changes remain confined to the stage4b branch, no production checkout changes.
 
+## Stage 4E single image-upload decision (12 November 2026)
+- Ticket & Concert Reveal has one visible `Add an image` uploader in the actual purchaser creator; the separate `scratchCoverImage` uploader has been removed.
+- Choosing one photo automatically selects the custom scratch-cover artwork, updates the non-interactive cover preview, and sends the same file through the existing owner image save and private scratch-cover save paths.
+- Artwork/foil selection and all ticket information remain editable. The recipient demonstration still has no design controls.
+- JPEG/PNG/WebP uploads must be at least 640 by 640 pixels and 10 MB or smaller for use as a scratch surface.
+- The single Remove control clears the selected image and reverts custom artwork to classic, avoiding an absent cover at review.
+- For a saved draft, existing private scratch-cover imagery can still be restored; the first uploader also represents the saved image without prompting for a second file.
+- No schema or API contract change was required. The existing `image` field and owner-authenticated `scratch-surface` API still receive the necessary data.
+- Music remains deferred, and customer scratch interaction remains payment protected.
+
 ## Restrictions still in place
 - All 30 catalogue products remain in draft mode; no payment or public recipient scratch unlock is enabled in staging.
 - No shareable paid recipient scratch card or keepsake is provided until its own tested stage.
