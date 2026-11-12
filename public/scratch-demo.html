@@ -177,10 +177,9 @@
         <p id="uploadError" class="upload-error" role="alert"></p>
       </div>
       <div class="controls">
-        <button id="soundButton" class="btn" type="button" aria-pressed="true">♫ Sound on</button>
         <button id="replayButton" class="btn primary" type="button">↻ Restart scratch</button>
       </div>
-      <p class="demo-disclaimer">Sound starts approximately three seconds after the first scratch gesture when enabled. The cue is an original synthesised cinematic-percussion prototype, ready to be replaced with your authored orchestral audio. Fictional demo only. No account, payment or real ticket is involved. Your own personalised animation will not be available before payment.</p>
+      <p class="demo-disclaimer">Fictional demo only. No account, payment or real ticket is involved. Your own personalised animation will not be available before payment.</p>
     </section>
     <section class="stage" id="stage" aria-label="Fictional interactive scratch-card demonstration">
       <div class="halo" aria-hidden="true"></div>
@@ -216,7 +215,6 @@
   </main>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
-    import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
 
 
     // Render falling confetti ONLY in four background-only screen regions.
@@ -279,11 +277,7 @@
     const stage = byId('stage');
     const status = byId('status');
     const progress = byId('scratchProgress');
-    const soundButton = byId('soundButton');
     const underlay = byId('underlay');
-    let audioOn = true;
-    let audioContext = null;
-    let lastScratchSound = 0;
     let currentFoil = 'gold';
     let currentSurface = 'classic';
     let currentUploadUrl = null;
@@ -292,61 +286,15 @@
     const surfaceInput = byId('surfaceImage');
     const uploadError = byId('uploadError');
 
-    function initAudio() {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return null;
-      if (!audioContext) audioContext = new AudioContextClass();
-      if (audioContext.state === 'suspended') audioContext.resume();
-      return audioContext;
-    }
-    function scratchSound() {
-      if (!audioOn || !audioContext || audioContext.state !== 'running') return;
-      const time = performance.now();
-      if (time - lastScratchSound < 85) return;
-      lastScratchSound = time;
-      const rate = audioContext.sampleRate, length = Math.max(1, Math.floor(rate * 0.07));
-      const buffer = audioContext.createBuffer(1, length, rate);
-      const samples = buffer.getChannelData(0);
-      for (let i = 0; i < length; i++) samples[i] = (Math.random() * 2 - 1) * (1 - i / length);
-      const src = audioContext.createBufferSource(), filter = audioContext.createBiquadFilter(), gain = audioContext.createGain();
-      src.buffer = buffer; filter.type = 'lowpass'; filter.frequency.value = 1250;
-      gain.gain.setValueAtTime(0.018, audioContext.currentTime);
-      src.connect(filter).connect(gain).connect(audioContext.destination);
-      src.start(); src.stop(audioContext.currentTime + 0.08);
-    }
-    function chime() {
-      if (!audioOn || !audioContext || audioContext.state !== 'running') return;
-      const time = audioContext.currentTime;
-      for (const [index, note] of [392, 493.88, 659.25].entries()) {
-        const start = time + index * 0.13;
-        const osc = audioContext.createOscillator(), volume = audioContext.createGain();
-        osc.type = 'sine'; osc.frequency.value = note;
-        volume.gain.setValueAtTime(0, start);
-        volume.gain.linearRampToValueAtTime(0.055, start + 0.035);
-        volume.gain.exponentialRampToValueAtTime(0.001, start + 0.5);
-        osc.connect(volume).connect(audioContext.destination);
-        osc.start(start); osc.stop(start + 0.52);
-      }
-    }
-
-    const cinematic = new ScratchCinematicAudio({
-      enabled: true,
-      delayMs: 3000,
-      createContext: () => initAudio(),
-      onCue: () => { status.textContent = 'The cinematic drum roll has begun — continue scratching to reveal the surprise.'; }
-    });
-
     const scratch = new ScratchCard({
       canvas: byId('foilCanvas'),
       foil: currentFoil,
       brushSize: 49,
-      onScratch: () => { cinematic.onFirstScratch(); scratchSound(); },
       onProgress(value) { progress.value = Math.round(value * 100); },
       onComplete() {
         underlay.setAttribute('aria-hidden','false');
         stage.classList.add('reveal-complete');
         status.textContent = 'All sampled foil areas have been scratched. Any remaining flecks can still be scratched away.';
-        chime();
       }
     });
 
@@ -355,7 +303,6 @@
     byId('scratchWindow').classList.add('foil-ready');
 
     function restart() {
-      cinematic.reset();
       scratch.reset();
       stage.classList.remove('reveal-complete');
       underlay.setAttribute('aria-hidden','true');
@@ -371,7 +318,6 @@
     }
 
     async function choosePreset(style) {
-      cinematic.reset();
       imageSelection++;
       chooseVisualSurface(style);
       uploadError.textContent = '';
@@ -426,7 +372,6 @@
         if (!ready || selected !== imageSelection) { URL.revokeObjectURL(url); return; }
         if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
         currentUploadUrl = url;
-        cinematic.reset();
         chooseVisualSurface('custom');
         stage.classList.remove('reveal-complete');
         underlay.setAttribute('aria-hidden','true');
@@ -439,7 +384,6 @@
     });
 
     window.addEventListener('pagehide', () => {
-      cinematic.destroy();
       if (currentUploadUrl) URL.revokeObjectURL(currentUploadUrl);
     });
 
@@ -449,7 +393,6 @@
         for (const swatch of document.querySelectorAll('[data-foil]')) {
           swatch.setAttribute('aria-pressed', String(swatch === button));
         }
-        cinematic.reset();
         scratch.setFoil(currentFoil);
         stage.classList.remove('reveal-complete');
         underlay.setAttribute('aria-hidden','true');
@@ -457,18 +400,6 @@
       });
     }
     byId('replayButton').addEventListener('click', restart);
-    soundButton.addEventListener('click', () => {
-      if (!audioOn) {
-        if (!initAudio()) {
-          status.textContent = 'This browser does not support audio playback.';
-          return;
-        }
-      }
-      audioOn = !audioOn;
-      cinematic.setEnabled(audioOn);
-      soundButton.setAttribute('aria-pressed', String(audioOn));
-      soundButton.textContent = audioOn ? '♫ Sound on' : '♫ Sound off';
-    });
   </script>
 </body>
 </html>
