@@ -168,7 +168,7 @@ test('staging-only paid scratch recipient route is wired, and public static shel
   assert.ok(!html.includes('Chloe'));
   const scripts=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length,1);
-  assert.doesNotThrow(()=>new Function(scripts[0][1].replace(/^\s*import\s+\{[^}]*\}\s+from\s+['"][^'"]+['"];\s*/gm,'')));
+  assert.doesNotThrow(()=>new Function(scripts[0][1].replace(/^[ \t]*import[ \t]+\{[^}]*\}[ \t]+from[ \t]+['"][^'"]+['"];[ \t]*$/gm,'')));
   const noStage=recipientEnv();
   noStage.env.STAGING_DISABLE_CHECKOUT='false';
   assert.equal(await scratchRecipientResponse(publicReq(),noStage.env,{}),null);
