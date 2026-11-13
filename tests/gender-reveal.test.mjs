@@ -37,9 +37,9 @@ function mock({paid=false,configured=true,product='gender-reveal'}={}){
           const event=data.events.get(key);
           return event?{metadata_json:event.metadata_json}:null;
         }
-        if(sql.includes('SELECT event_type FROM reveal_events')){
+        if(sql.startsWith('SELECT event_type,metadata_json FROM reveal_events')){
           const event=data.events.get(this.args[1]);
-          return event?{event_type:event.event_type}:null;
+          return event?{event_type:event.event_type,metadata_json:event.metadata_json}:null;
         }
         throw Error('Unexpected FIRST: '+sql);
       },
@@ -52,6 +52,13 @@ function mock({paid=false,configured=true,product='gender-reveal'}={}){
             }
           }
           return {results:[...counts].map(([event_type,total])=>({event_type,total}))};
+        }
+        if(sql.includes('ORDER BY created_at ASC,id ASC LIMIT ?')){
+          const rows=[...data.events.values()]
+            .filter(event=>['gender-vote-boy','gender-vote-girl'].includes(event.event_type))
+            .sort((a,b)=>a.created_at.localeCompare(b.created_at)||a.id.localeCompare(b.id))
+            .slice(0,this.args[1]);
+          return {results:rows.map(x=>({event_type:x.event_type,metadata_json:x.metadata_json}))};
         }
         throw Error('Unexpected ALL: '+sql);
       },
@@ -105,12 +112,12 @@ const ownerReq=(action='',method='GET',payload={result:'boy',theme:'pastel'},sec
     method,headers:{'X-Edit-Token':secret,...(method==='PUT'?{'Content-Type':'application/json'}:{})},
     ...(method==='PUT'?{body:JSON.stringify(payload)}:{})
   });
-const publicReq=(action='',{method='GET',voter=null,choice=null}={})=>{
+const publicReq=(action='',{method='GET',voter=null,choice=null,name='Test Guest'}={})=>{
   const headers={};
   if(voter)headers['X-Gender-Voter']=voter;
   if(method==='POST')headers['Content-Type']='application/json';
   return new Request(BASE+'/r/'+SLUG+(action?'/'+action:''),{
-    method,headers,...(method==='POST'?{body:JSON.stringify({voterId:voter,choice})}:{})
+    method,headers,...(method==='POST'?{body:JSON.stringify({voterId:voter,choice,name})}:{})
   });
 };
 const owner=(m,action='',method='GET',payload={result:'boy',theme:'pastel'},secret=SECRET)=>
@@ -162,7 +169,10 @@ test('paid audience gets shared live counts but no secret outcome while voting',
   const state=await lobby.json();
   assert.equal(state.phase,'voting');
   assert.deepEqual(state.counts,{boy:0,girl:0});
+  assert.deepEqual(state.names,{boy:[],girl:[]});
+  assert.deepEqual(state.remaining,{boy:0,girl:0});
   assert.equal(state.myVote,null);
+  assert.equal(state.myName,null);
   assert.equal(state.result,undefined);
   assert.equal(state.message,undefined);
   assert.ok(!JSON.stringify(state).includes("Our happy news!"));
@@ -181,10 +191,14 @@ test('one participant can vote only once; all guests see live totals',async()=>{
   const repeated=await duplicate.json();
   assert.equal(repeated.accepted,false);
   assert.equal(repeated.myVote,'boy');
+  assert.equal(repeated.myName,'Test Guest');
   assert.deepEqual(repeated.counts,{boy:1,girl:0});
+  assert.deepEqual(repeated.names,{boy:['Test Guest'],girl:[]});
   assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[1],choice:'girl'})).status,200);
   assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[2],choice:'boy'})).status,200);
-  assert.deepEqual((await (await guest(m,'gender-state')).json()).counts,{boy:2,girl:1});
+  const shared=(await (await guest(m,'gender-state')).json());
+  assert.deepEqual(shared.counts,{boy:2,girl:1});
+  assert.deepEqual(shared.names,{boy:['Test Guest','Test Guest'],girl:['Test Guest']});
   assert.equal((await (await guest(m,'gender-state',{voter:VOTERS[1]})).json()).myVote,'girl');
   assert.equal(m.data.events.size,3);
 });
