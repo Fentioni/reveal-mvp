@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<meta name="theme-color" content="#242440"><title>Gender Reveal — Join the Celebration | Reveal</title>
+<style>
+:root{color-scheme:dark;--pale:#ffe9ef;--ink:#fff8f4}
+*{box-sizing:border-box}[hidden]{display:none!important}
+body{margin:0;min-height:100svh;color:var(--ink);font:16px/1.55 system-ui,-apple-system,sans-serif;
+  background:radial-gradient(circle at 10% 8%,#4c8aad77,transparent 47%),
+    radial-gradient(circle at 88% 13%,#c778a45c,transparent 49%),#20233d}
+body[data-theme="confetti"]{background:radial-gradient(circle at top,#bc6c9d8c,transparent 60%),#2c264c}
+main{width:min(750px,100%);margin:auto;padding:25px clamp(15px,5vw,36px) 70px;text-align:center}
+.brand{font:700 .86rem Georgia,serif;letter-spacing:.18em;color:#fff1d5}
+.kicker{font-size:.71rem;letter-spacing:.18em;text-transform:uppercase;color:#ffdfbd;margin-top:30px;font-weight:700}
+h1{font:normal clamp(2.3rem,9vw,4.3rem)/1.05 Georgia,serif;margin:11px 0 15px;overflow-wrap:anywhere}
+.intro{color:#e6d6e8;max-width:540px;margin:0 auto 26px}
+.stage{background:linear-gradient(145deg,#faf4e8,#f2e0d6);color:#3a3450;
+ border:2px solid #ecddc6;border-radius:25px;padding:clamp(19px,5vw,32px);
+ box-shadow:0 25px 75px #0008}
+.stage h2{font:normal clamp(1.6rem,6vw,2.6rem)/1.15 Georgia,serif;margin:4px 0 13px}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:20px 0 9px}
+.count{border-radius:15px;padding:20px 12px;border:2px solid #c9bfd3;background:#fffdf9}
+.count[data-choice=boy]{border-color:#81b1d2;background:linear-gradient(140deg,#dff2ff,#c2deef)}
+.count[data-choice=girl]{border-color:#e5a7c5;background:linear-gradient(140deg,#fff0f7,#f6d2e4)}
+.count strong{display:block;color:#3e3454;font:normal clamp(2rem,8vw,3.5rem)/1 Georgia,serif;margin:8px 0}
+.count span{font-weight:750;letter-spacing:.08em}
+.buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:19px 0}
+.vote{min-height:56px;border:2px solid transparent;border-radius:999px;
+ font:800 1rem system-ui;cursor:pointer;color:#1c3655}
+.vote[data-choice=boy]{background:#b7dff6;border-color:#75b1d8}
+.vote[data-choice=girl]{background:#f0b9d5;border-color:#d895b5;color:#6d2d4d}
+.vote:not(:disabled):hover{filter:brightness(.95)}
+button:disabled{opacity:.65;cursor:default}
+.vote:focus-visible,button:focus-visible{outline:3px solid #b98c4c;outline-offset:3px}
+.status{font-size:.87rem;color:#5d5370;min-height:31px;margin:13px 0}
+.lock-note{margin-top:13px;padding:15px;border-radius:12px;background:#ede4f3;color:#59496e}
+.clock{font:normal clamp(6rem,30vw,12rem)/1 Georgia,serif;
+ color:#ffe7b2;text-shadow:0 8px 28px #0009;margin:12px 0 20px}
+.countdown-label{font-size:1.1rem;color:#f2dfe7}
+.reveal{position:relative;overflow:hidden;isolation:isolate;border:3px solid #fff2ce;
+ border-radius:23px;padding:48px 13px 40px;min-height:335px;background:#f4d5e5;
+ color:#603459;box-shadow:0 28px 80px #0008}
+.reveal[data-result=boy]{background:radial-gradient(ellipse at top,#f5fcff,#b1e2ff);color:#235c87}
+.reveal[data-result=girl]{background:radial-gradient(ellipse at top,#fff9fc,#ffc7e2);color:#8d366a}
+.reveal::before,.reveal::after{content:"";position:absolute;z-index:-1;width:180px;height:180px;
+ border:3px solid currentColor;border-radius:50%;opacity:.2;animation:float 5s ease-in-out infinite}
+.reveal::before{top:-90px;left:-50px}.reveal::after{bottom:-100px;right:-50px;animation-delay:-2s}
+.reveal .magic{font-size:3rem;animation:float 2.6s ease-in-out infinite}
+.reveal h2{font:normal clamp(3.1rem,13vw,6rem)/1.02 Georgia,serif;letter-spacing:-.04em;
+ margin:20px 0 15px;animation:entrance 1.1s ease both}
+.reveal .message{font:normal clamp(1rem,3vw,1.3rem)/1.5 Georgia,serif;
+ overflow-wrap:anywhere;white-space:pre-wrap;max-width:560px;margin:20px auto}
+.reveal .from{font-weight:750;margin:18px 0 0}
+.confetti{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:2}
+.confetti i{position:absolute;top:-20px;width:9px;height:16px;
+ background:var(--confetti-color,#e9a7c2);animation:fall 4s ease-in both;
+ left:var(--left,50%);animation-delay:var(--delay,0s);transform:rotate(var(--rotate,0deg))}
+.demo-start{padding:13px 20px;border-radius:99px;border:1px solid #e1c8a6;
+ background:#f5d5a6;color:#362845;font-weight:800;cursor:pointer;min-height:49px}
+.small{font-size:.78rem;color:#ded0df;line-height:1.55;margin-top:25px}
+.error{padding:16px;background:#6d3248;border:1px solid #bc8991;border-radius:12px}
+@keyframes fall{0%{transform:translateY(-15px) rotate(0)}100%{transform:translateY(480px) rotate(650deg);opacity:0}}
+@keyframes entrance{0%{transform:scale(.45);opacity:0;filter:blur(12px)}
+  65%{transform:scale(1.12);opacity:1;filter:blur(0)}100%{transform:scale(1);opacity:1}}
+@keyframes float{50%{transform:translateY(13px) rotate(12deg)}}
+@media(max-width:390px){.board,.buttons{gap:8px}.count{padding:15px 5px}
+  .count span{font-size:.83rem}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<main>
+<div class="brand">✦ REVEAL.</div>
+<div class="kicker">A surprise for everyone</div>
+<h1 id="eventTitle">Join the celebration!</h1>
+<p class="intro" id="intro">Make your guess, see how everyone voted and be here when the host begins.</p>
+<div id="error" class="error" role="alert" hidden></div>
+<section id="lobby" class="stage" hidden>
+  <h2>What's your guess?</h2>
+  <div class="board" aria-live="polite" aria-label="Live gender reveal vote totals">
+    <div class="count" data-choice="boy"><span>Boy</span><strong id="boys">0</strong><span>guesses</span></div>
+    <div class="count" data-choice="girl"><span>Girl</span><strong id="girls">0</strong><span>guesses</span></div>
+  </div>
+  <div id="voteControls" class="buttons">
+    <button type="button" class="vote" data-choice="boy">Guess Boy</button>
+    <button type="button" class="vote" data-choice="girl">Guess Girl</button>
+  </div>
+  <p id="voteStatus" class="status" role="status" aria-live="polite"></p>
+  <p class="lock-note">The surprise stays locked until the creator opens the reveal. Everyone sees the same five-second countdown.</p>
+</section>
+<section id="countdown" hidden aria-live="polite">
+  <p class="countdown-label">The big moment begins in…</p>
+  <div id="clock" class="clock" aria-label="Seconds remaining">5</div>
+  <p id="countdownNote" class="countdown-label">Get ready!</p>
+</section>
+<section id="reveal" class="reveal" aria-label="The gender reveal" hidden>
+  <div class="confetti" id="confetti" aria-hidden="true"></div>
+  <div class="magic" aria-hidden="true">✦ ✧ ✦</div>
+  <h2 id="resultText"></h2>
+  <p id="message" class="message" hidden></p>
+  <p id="sender" class="from" hidden></p>
+</section>
+<div id="demoControls" hidden>
+  <p class="small">Fictional demonstration only. Vote totals here are not shared between people.</p>
+  <button class="demo-start" id="demoStart" type="button">Demo: creator opens the reveal</button>
+</div>
+<p class="small" id="footer">One shared link for your whole group. Guess once; watch the results live.</p>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+const demo=location.pathname.replace(/\/$/,'')==='/gender-demo';
+const slug=demo?null:location.pathname.split('/').filter(Boolean)[1];
+let latest=null,lastPhase='',busy=false,offset=0,clockHandle=null,queuedRefresh=false;
+let voterId=null,demoVote=null,demoCounts={boy:6,girl:2},demoRevealAt=null;
+function voter(){
+  if(demo)return null;
+  const key='gender_vote_'+slug;
+  try{
+    let id=localStorage.getItem(key);
+    if(!id||!/^[0-9a-f-]{36}$/i.test(id)){
+      id=crypto.randomUUID();
+      localStorage.setItem(key,id);
+    }
+    return id;
+  }catch{
+    // Voting still works on a restricted browser for the current session.
+    if(!voterId)voterId=crypto.randomUUID();
+    return voterId;
+  }
+}
+function fail(message){
+  $('error').textContent=message;
+  $('error').hidden=false;
+  $('lobby').hidden=true;$('countdown').hidden=true;$('reveal').hidden=true;
+}
+function demoState(){
+  const now=Date.now();
+  const phase=demoRevealAt===null?'voting':now>=demoRevealAt?'revealed':'countdown';
+  return {success:true,title:'Boy or Girl?',sender:'Mum & Dad',theme:'confetti',
+    counts:{...demoCounts},phase,myVote:demoVote,
+    serverNowMs:now,revealAtMs:demoRevealAt,
+    ...(phase==='revealed'?{result:'girl',message:'A little miracle is on the way!'}:{})};
+}
+async function getState(){
+  if(demo)return demoState();
+  const response=await fetch('/r/'+encodeURIComponent(slug)+'/gender-state',{
+    cache:'no-store',headers:{'X-Gender-Voter':voter()}
+  });
+  if(!response.ok)throw Error('This gender reveal is not available yet.');
+  const data=await response.json();
+  if(!data.success)throw Error(data.error||'The reveal is unavailable.');
+  return data;
+}
+function elapsed(){
+  if(!latest?.revealAtMs)return 5;
+  return Math.max(0,Math.ceil((latest.revealAtMs-(Date.now()+offset))/1000));
+}
+function drawCountdown(){
+  if(!latest||latest.phase!=='countdown')return;
+  const remaining=elapsed();
+  $('clock').textContent=remaining>0?String(remaining):'✦';
+  $('clock').setAttribute('aria-label',remaining>0?remaining+' seconds remaining':'Opening reveal');
+  if(remaining===0)$('countdownNote').textContent='Revealing now…';
+  else $('countdownNote').textContent='Get ready!';
+  if(remaining===0&&!queuedRefresh){
+    queuedRefresh=true;
+    refresh().finally(()=>{queuedRefresh=false;});
+  }
+}
+function celebrate(){
+  const container=$('confetti');container.replaceChildren();
+  const colors=['#fff8c9','#e7a1be','#83b8de','#ffffff','#eac082'];
+  for(let i=0;i<47;i++){
+    const el=document.createElement('i');
+    el.style.setProperty('--left',Math.round(Math.random()*100)+'%');
+    el.style.setProperty('--delay',(Math.random()*.85).toFixed(2)+'s');
+    el.style.setProperty('--rotate',Math.round(Math.random()*180)+'deg');
+    el.style.setProperty('--confetti-color',colors[i%colors.length]);
+    container.append(el);
+  }
+}
+function render(data){
+  latest=data;
+  if(data.serverNowMs)offset=data.serverNowMs-Date.now();
+  document.body.dataset.theme=data.theme;
+  $('eventTitle').textContent=data.title||'Boy or Girl?';
+  $('boys').textContent=String(data.counts?.boy||0);
+  $('girls').textContent=String(data.counts?.girl||0);
+  $('error').hidden=true;
+  const phase=data.phase;
+  $('lobby').hidden=phase!=='voting';
+  $('countdown').hidden=phase!=='countdown';
+  $('reveal').hidden=phase!=='revealed';
+  $('demoControls').hidden=!demo||phase!=='voting';
+  if(phase==='voting'){
+    $('intro').textContent='Make your guess, follow the live totals and wait for the host.';
+    const hasVoted=Boolean(data.myVote);
+    $('voteControls').hidden=hasVoted;
+    $('voteStatus').textContent=hasVoted
+      ?'You guessed '+(data.myVote==='boy'?'Boy':'Girl')+'. Your vote is counted!'
+      :'Choose once. Your guess cannot be changed.';
+  }else if(phase==='countdown'){
+    $('intro').textContent='The host has opened the reveal. Watch together!';
+    drawCountdown();
+  }else{
+    $('intro').textContent='The surprise is out!';
+    const result=data.result==='boy'?'boy':'girl';
+    $('reveal').dataset.result=result;
+    $('resultText').textContent=result==='boy'?"It's a Boy!":"It's a Girl!";
+    $('message').hidden=!data.message;
+    $('message').textContent=data.message||'';
+    $('sender').hidden=!data.sender;
+    $('sender').textContent=data.sender?'With love from '+data.sender:'';
+    if(lastPhase!=='revealed')celebrate();
+    $('footer').textContent='The reveal is open and can be revisited anytime.';
+  }
+  lastPhase=phase;
+}
+async function refresh(){
+  try{render(await getState())}catch(error){if(!latest)fail(error.message);}
+}
+async function submit(choice){
+  if(busy||latest?.phase!=='voting'||latest.myVote)return;
+  busy=true;
+  for(const button of document.querySelectorAll('.vote'))button.disabled=true;
+  $('voteStatus').textContent='Saving your guess…';
+  try{
+    if(demo){
+      if(!demoVote){demoVote=choice;demoCounts[choice]++;}
+      render(demoState());
+    }else{
+      const response=await fetch('/r/'+encodeURIComponent(slug)+'/gender-vote',{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({voterId:voter(),choice})
+      });
+      const data=await response.json();
+      if(!response.ok||!data.success)throw Error(data.error||'Your guess could not be saved.');
+      render(data);
+    }
+  }catch(error){
+    $('voteStatus').textContent=error.message;
+    await refresh();
+  }finally{
+    busy=false;
+    for(const button of document.querySelectorAll('.vote'))button.disabled=false;
+  }
+}
+document.querySelectorAll('.vote').forEach(button=>button.addEventListener('click',()=>submit(button.dataset.choice)));
+$('demoStart').addEventListener('click',()=>{
+  if(!demo||demoRevealAt!==null)return;
+  demoRevealAt=Date.now()+5000;
+  render(demoState());
+});
+if(!demo&&!slug){fail('Invalid audience link.')}
+else{
+  voterId=voter();
+  refresh();
+  setInterval(()=>{if(!document.hidden)refresh();},1250);
+  clockHandle=setInterval(drawCountdown,125);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+}
+</script>
+</body></html>
