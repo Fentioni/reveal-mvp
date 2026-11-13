@@ -20,6 +20,22 @@ const voteId=(id,digest)=>'gender-'+id+'-vote-'+digest;
 const voterPattern=/^[a-f0-9]{8}-[a-f0-9]{4}-[1-8][a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/i;
 const safeVoter=value=>typeof value==='string'&&voterPattern.test(value);
 const lower=value=>typeof value==='string'?value.trim().toLowerCase():'';
+const MAX_VISIBLE_VOTERS=500;
+// Names are intentionally published to anyone with the paid audience link.
+// Normalise whitespace, reject markup/control characters and cap size.
+export function validateVoterName(value){
+  if(typeof value!=='string')return null;
+  const name=value.trim().replace(/\s+/gu,' ');
+  if(!name||Array.from(name).length>40||
+     /[<>\u0000-\u001f\u007f-\u009f]/u.test(name))return null;
+  return name;
+}
+function storedName(metadata){
+  try{
+    const name=validateVoterName(JSON.parse(metadata||'{}').name);
+    return name||'Unnamed guest';
+  }catch{return 'Unnamed guest'}
+}
 
 async function sha256(value){
   const bytes=new TextEncoder().encode(value);
@@ -132,39 +148,58 @@ export async function genderOwnerResponse(request,env,ctx,originalWorker){
 }
 
 async function aggregate(env,id){
-  const [start,totals]=await Promise.all([
+  const [start,totals,named]=await Promise.all([
     env.DB.prepare('SELECT metadata_json FROM reveal_events WHERE reveal_id=? AND id=?')
       .bind(id,startId(id)).first(),
     env.DB.prepare(
       "SELECT event_type,COUNT(*) AS total FROM reveal_events WHERE reveal_id=? "+
       "AND event_type IN ('gender-vote-boy','gender-vote-girl') GROUP BY event_type"
-    ).bind(id).all()
+    ).bind(id).all(),
+    env.DB.prepare(
+      "SELECT event_type,metadata_json FROM reveal_events WHERE reveal_id=? "+
+      "AND event_type IN ('gender-vote-boy','gender-vote-girl') "+
+      "ORDER BY created_at ASC,id ASC LIMIT ?"
+    ).bind(id,MAX_VISIBLE_VOTERS).all()
   ]);
   const counts={boy:0,girl:0};
   for(const line of totals.results||[]){
     if(line.event_type==='gender-vote-boy')counts.boy=Number(line.total)||0;
     if(line.event_type==='gender-vote-girl')counts.girl=Number(line.total)||0;
   }
+  const names={boy:[],girl:[]};
+  for(const entry of named.results||[]){
+    const choice=entry.event_type==='gender-vote-boy'?'boy':
+      entry.event_type==='gender-vote-girl'?'girl':null;
+    if(choice)names[choice].push(storedName(entry.metadata_json));
+  }
+  const remaining={
+    boy:Math.max(0,counts.boy-names.boy.length),
+    girl:Math.max(0,counts.girl-names.girl.length)
+  };
   const revealAtMs=start?JSON.parse(start.metadata_json).revealAtMs:null;
-  return {counts,revealAtMs};
+  return {counts,names,remaining,revealAtMs};
 }
 
 async function ownVote(env,id,voter){
   if(!safeVoter(voter))return null;
   const digest=await sha256(voter.toLowerCase());
   const event=await env.DB.prepare(
-    'SELECT event_type FROM reveal_events WHERE reveal_id=? AND id=?'
+    'SELECT event_type,metadata_json FROM reveal_events WHERE reveal_id=? AND id=?'
   ).bind(id,voteId(id,digest)).first();
-  return event?.event_type==='gender-vote-boy'?'boy':
-    event?.event_type==='gender-vote-girl'?'girl':null;
+  if(!event)return null;
+  const choice=event.event_type==='gender-vote-boy'?'boy':
+    event.event_type==='gender-vote-girl'?'girl':null;
+  if(!choice)return null;
+  return {choice,name:storedName(event.metadata_json)};
 }
 
 function audienceState(row,gender,aggregate,personal,clock=Date.now()){
-  const {counts,revealAtMs}=aggregate;
+  const {counts,names,remaining,revealAtMs}=aggregate;
   const phase=revealAtMs===null?'voting':
     clock>=revealAtMs?'revealed':'countdown';
   return {success:true,phase,serverNowMs:clock,
-    revealAtMs,counts,myVote:personal,
+    revealAtMs,counts,names,remaining,myVote:personal?.choice||null,
+    myName:personal?.name||null,
     title:row.event_name||'Boy or Girl?',sender:row.sender||'',
     theme:gender.theme,
     ...(phase==='revealed'?{result:gender.result,
@@ -203,6 +238,8 @@ export async function genderAudienceResponse(request,env,ctx){
       if(!safeVoter(vote?.voterId)||!VOTES.includes(vote?.choice)){
         return bad('Select Boy or Girl.');
       }
+      const name=validateVoterName(vote.name);
+      if(!name)return bad('Enter a name of up to 40 characters to display with your guess.');
       const token=vote.voterId.toLowerCase();
       const digest=await sha256(token);
       const id=voteId(row.id,digest);
@@ -210,12 +247,14 @@ export async function genderAudienceResponse(request,env,ctx){
       if(currently.revealAtMs!==null)return bad('Voting has closed: the reveal has started.',409);
       // D1 single-statement guard prevents a late vote being added once the
       // creator's start event is in the database. Deterministic vote key
-      // allows one anonymous vote per browser, not one per verified person.
+      // allows one vote per browser, not one per verified person.
+      // Only the deliberately public display name enters vote metadata;
+      // the unguessable browser UUID is never written as plain text.
       const saved=await env.DB.prepare(
         'INSERT OR IGNORE INTO reveal_events(id,reveal_id,event_type,metadata_json,created_at) '+
         'SELECT ?,?,?,?,? WHERE NOT EXISTS '+
         '(SELECT 1 FROM reveal_events WHERE reveal_id=? AND id=?)'
-      ).bind(id,row.id,'gender-vote-'+vote.choice,'{}',new Date().toISOString(),
+      ).bind(id,row.id,'gender-vote-'+vote.choice,JSON.stringify({name}),new Date().toISOString(),
         row.id,startId(row.id)).run();
       const theirs=await ownVote(env,row.id,token);
       const next=await aggregate(env,row.id);
