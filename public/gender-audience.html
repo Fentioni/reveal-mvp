@@ -208,6 +208,7 @@ button:disabled{opacity:.65;cursor:default}
 </style>
 </head>
 <body>
+<div id="ambientConfetti" class="ambient-confetti" aria-hidden="true"></div>
 <main>
 <div class="brand">✦ REVEAL.</div>
 <div class="kicker">A surprise for everyone</div>
@@ -244,10 +245,28 @@ button:disabled{opacity:.65;cursor:default}
   <p id="voteStatus" class="status" role="status" aria-live="polite"></p>
   <p class="lock-note">The surprise stays locked until the creator opens the reveal. Everyone sees the same five-second countdown.</p>
 </section>
-<section id="countdown" hidden aria-live="polite">
-  <p class="countdown-label">The big moment begins in…</p>
-  <div id="clock" class="clock" aria-label="Seconds remaining">5</div>
-  <p id="countdownNote" class="countdown-label">Get ready!</p>
+<section id="cinema" class="cinema" data-mode="countdown" aria-label="Synchronized gift box countdown and fireworks" hidden>
+  <div class="cinema-sky" aria-hidden="true"></div>
+  <div id="cinemaConfetti" class="ambient-confetti" aria-hidden="true"></div>
+  <div id="cinemaWorld" class="cinema-world" aria-hidden="true">
+    <div class="gift-ground"></div>
+    <div class="gift-stage">
+      <div id="giftBox" class="gift-box" data-strength="1">
+        <div class="gift-bow"><div class="gift-knot"></div></div>
+        <div class="gift-lid"></div>
+        <div class="gift-body">
+          <span id="clock" class="gift-count">5</span>
+        </div>
+      </div>
+    </div>
+    <div class="rocket" style="--rocket-x:-30px;--rocket-delay:.12s;--rocket-colour:#BFDFFF"></div>
+    <div class="rocket" style="--rocket-x:29px;--rocket-delay:.25s;--rocket-colour:#F6C4D8"></div>
+    <div class="rocket" style="--rocket-x:-63px;--rocket-delay:.42s;--rocket-colour:#BFDFFF"></div>
+    <div class="rocket" style="--rocket-x:57px;--rocket-delay:.58s;--rocket-colour:#F6C4D8"></div>
+    <div id="fireworkBursts" aria-hidden="true"></div>
+  </div>
+  <h2 id="countdown" class="cinema-heading">The big moment begins in…</h2>
+  <p id="countdownNote" class="cinema-caption" role="status" aria-live="polite">Get ready!</p>
 </section>
 <section id="reveal" class="reveal" aria-label="The gender reveal" hidden>
   <div class="confetti" id="confetti" aria-hidden="true"></div>
