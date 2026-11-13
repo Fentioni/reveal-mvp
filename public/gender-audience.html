@@ -26,6 +26,23 @@ h1{font:normal clamp(2.3rem,9vw,4.3rem)/1.05 Georgia,serif;margin:11px 0 15px;ov
 .count[data-choice=girl]{border-color:#e5a7c5;background:linear-gradient(140deg,#fff0f7,#f6d2e4)}
 .count strong{display:block;color:#3e3454;font:normal clamp(2rem,8vw,3.5rem)/1 Georgia,serif;margin:8px 0}
 .count span{font-weight:750;letter-spacing:.08em}
+.guest-list{list-style:none;margin:13px 0 0;padding:10px 0 0;
+  border-top:1px solid #a69dad66;max-height:190px;overflow-y:auto;
+  text-align:center;overflow-wrap:anywhere}
+.guest-list li{padding:4px 3px;color:#3d334f;font-size:.83rem;line-height:1.35;
+  overflow-wrap:anywhere}
+.guest-list li:nth-child(even){background:#ffffff57;border-radius:5px}
+.guest-list .empty{font-style:italic;opacity:.7}
+.guest-list .overflow-count{font-weight:700;color:#715775}
+.name-field{text-align:left;margin:19px 0 8px;min-width:0}
+.name-field label{display:block;font-weight:750;color:#493855;font-size:.87rem;margin-bottom:6px}
+.name-field input{display:block;box-sizing:border-box;min-width:0;max-width:100%;width:100%;
+  border:1px solid #ab9cb4;border-radius:10px;background:#fffdfb;color:#3e3049;
+  padding:12px 13px;font:16px system-ui;min-height:48px}
+.name-field input:focus-visible{outline:3px solid #9e749f;outline-offset:2px}
+.name-field p{font-size:.72rem;color:#6d5c79;line-height:1.45;margin:6px 0 0}
+.stage+.stage{margin-top:16px}
+.board-explainer{font-size:.74rem;color:#705b77;margin:10px 0 0}
 .buttons{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:19px 0}
 .vote{min-height:56px;border:2px solid transparent;border-radius:999px;
  font:800 1rem system-ui;cursor:pointer;color:#1c3655}
@@ -86,15 +103,32 @@ button:disabled{opacity:.65;cursor:default}
 <h1 id="eventTitle">Join the celebration!</h1>
 <p class="intro" id="intro">Make your guess, see how everyone voted and be here when the host begins.</p>
 <div id="error" class="error" role="alert" hidden></div>
+<section id="voteBoard" class="stage" aria-labelledby="boardTitle" hidden>
+  <h2 id="boardTitle">Everyone's guesses</h2>
+  <div class="board" aria-label="Live gender reveal guesses and names">
+    <div class="count" data-choice="boy">
+      <span>Boy</span><strong id="boys" aria-live="polite">0</strong><span>guesses</span>
+      <ul id="boyNames" class="guest-list" aria-label="People guessing Boy"></ul>
+    </div>
+    <div class="count" data-choice="girl">
+      <span>Girl</span><strong id="girls" aria-live="polite">0</strong><span>guesses</span>
+      <ul id="girlNames" class="guest-list" aria-label="People guessing Girl"></ul>
+    </div>
+  </div>
+  <p class="board-explainer">Everyone with this link can see the names and guesses.</p>
+</section>
 <section id="lobby" class="stage" hidden>
   <h2>What's your guess?</h2>
-  <div class="board" aria-live="polite" aria-label="Live gender reveal vote totals">
-    <div class="count" data-choice="boy"><span>Boy</span><strong id="boys">0</strong><span>guesses</span></div>
-    <div class="count" data-choice="girl"><span>Girl</span><strong id="girls">0</strong><span>guesses</span></div>
-  </div>
-  <div id="voteControls" class="buttons">
-    <button type="button" class="vote" data-choice="boy">Guess Boy</button>
-    <button type="button" class="vote" data-choice="girl">Guess Girl</button>
+  <div id="voteEntry">
+    <div class="name-field">
+      <label for="guestName">Your name</label>
+      <input id="guestName" type="text" maxlength="40" autocomplete="name" placeholder="e.g. Auntie Sarah" required>
+      <p>Your name will appear under your choice for everyone with this link.</p>
+    </div>
+    <div id="voteControls" class="buttons">
+      <button type="button" class="vote" data-choice="boy">Guess Boy</button>
+      <button type="button" class="vote" data-choice="girl">Guess Girl</button>
+    </div>
   </div>
   <p id="voteStatus" class="status" role="status" aria-live="polite"></p>
   <p class="lock-note">The surprise stays locked until the creator opens the reveal. Everyone sees the same five-second countdown.</p>
@@ -122,7 +156,9 @@ const $=id=>document.getElementById(id);
 const demo=location.pathname.replace(/\/$/,'')==='/gender-demo';
 const slug=demo?null:location.pathname.split('/').filter(Boolean)[1];
 let latest=null,lastPhase='',busy=false,offset=0,clockHandle=null,queuedRefresh=false,refreshing=false,deadlineCheckAt=0;
-let voterId=null,demoVote=null,demoCounts={boy:6,girl:2},demoRevealAt=null;
+let voterId=null,demoVote=null,demoName=null,demoCounts={boy:6,girl:2},demoRevealAt=null;
+const demoNames={boy:['Oliver','Auntie Jo','Uncle Tom','Amelia','Ben','Nan'],
+  girl:['Chloe','Lucy']};
 function voter(){
   if(demo)return null;
   const key='gender_vote_'+slug;
@@ -148,7 +184,8 @@ function demoState(){
   const now=Date.now();
   const phase=demoRevealAt===null?'voting':now>=demoRevealAt?'revealed':'countdown';
   return {success:true,title:'Boy or Girl?',sender:'Mum & Dad',theme:'confetti',
-    counts:{...demoCounts},phase,myVote:demoVote,
+    counts:{...demoCounts},names:{boy:[...demoNames.boy],girl:[...demoNames.girl]},
+    remaining:{boy:0,girl:0},phase,myVote:demoVote,myName:demoName,
     serverNowMs:now,revealAtMs:demoRevealAt,
     ...(phase==='revealed'?{result:'girl',message:'A little miracle is on the way!'}:{})};
 }
@@ -198,6 +235,28 @@ function celebrate(){
     container.append(el);
   }
 }
+function drawNames(id,names,remaining){
+  const holder=$(id);
+  holder.replaceChildren();
+  const items=Array.isArray(names)?names:[];
+  if(!items.length){
+    const empty=document.createElement('li');
+    empty.className='empty';
+    empty.textContent='No guesses yet';
+    holder.append(empty);
+  }
+  for(const name of items){
+    const item=document.createElement('li');
+    item.textContent=String(name); // Never insert guest-provided names as HTML.
+    holder.append(item);
+  }
+  if(remaining>0){
+    const overflow=document.createElement('li');
+    overflow.className='overflow-count';
+    overflow.textContent='And '+remaining+' more '+(remaining===1?'guest':'guests');
+    holder.append(overflow);
+  }
+}
 function render(data){
   latest=data;
   if(data.serverNowMs)offset=data.serverNowMs-Date.now();
@@ -205,19 +264,25 @@ function render(data){
   $('eventTitle').textContent=data.title||'Boy or Girl?';
   $('boys').textContent=String(data.counts?.boy||0);
   $('girls').textContent=String(data.counts?.girl||0);
+  drawNames('boyNames',data.names?.boy,data.remaining?.boy||0);
+  drawNames('girlNames',data.names?.girl,data.remaining?.girl||0);
   $('error').hidden=true;
   const phase=data.phase;
   $('lobby').hidden=phase!=='voting';
+  $('voteBoard').hidden=phase==='countdown';
   $('countdown').hidden=phase!=='countdown';
   $('reveal').hidden=phase!=='revealed';
+  // The tally is above the voting form, and below the big animation afterwards.
+  if(phase==='revealed')$('reveal').after($('voteBoard'));
+  else $('lobby').before($('voteBoard'));
   $('demoControls').hidden=!demo||phase!=='voting';
   if(phase==='voting'){
     $('intro').textContent='Make your guess, follow the live totals and wait for the host.';
     const hasVoted=Boolean(data.myVote);
-    $('voteControls').hidden=hasVoted;
+    $('voteEntry').hidden=hasVoted;
     $('voteStatus').textContent=hasVoted
-      ?'You guessed '+(data.myVote==='boy'?'Boy':'Girl')+'. Your vote is counted!'
-      :'Choose once. Your guess cannot be changed.';
+      ?(data.myName||'You')+' guessed '+(data.myVote==='boy'?'Boy':'Girl')+'. Your vote is counted!'
+      :'Enter your name and choose once. Your guess cannot be changed.';
   }else if(phase==='countdown'){
     $('intro').textContent='The host has opened the reveal. Watch together!';
     drawCountdown();
@@ -243,17 +308,26 @@ async function refresh(){
 }
 async function submit(choice){
   if(busy||latest?.phase!=='voting'||latest.myVote)return;
+  const name=$('guestName').value.trim().replace(/\s+/gu,' ');
+  if(!name||Array.from(name).length>40||/[<>\u0000-\u001f\u007f-\u009f]/u.test(name)){
+    $('voteStatus').textContent='Please enter your name (up to 40 characters).';
+    $('guestName').focus();
+    return;
+  }
   busy=true;
   for(const button of document.querySelectorAll('.vote'))button.disabled=true;
   $('voteStatus').textContent='Saving your guess…';
   try{
     if(demo){
-      if(!demoVote){demoVote=choice;demoCounts[choice]++;}
+      if(!demoVote){
+        demoVote=choice;demoName=name;
+        demoCounts[choice]++;demoNames[choice].push(name);
+      }
       render(demoState());
     }else{
       const response=await fetch('/r/'+encodeURIComponent(slug)+'/gender-vote',{
         method:'POST',headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({voterId:voter(),choice})
+        body:JSON.stringify({voterId:voter(),choice,name})
       });
       const data=await response.json();
       if(!response.ok||!data.success)throw Error(data.error||'Your guess could not be saved.');
