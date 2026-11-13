@@ -139,11 +139,13 @@ function draw(data){
   drawNames('boyNames',data.names?.boy,data.remaining?.boy||0);
   drawNames('girlNames',data.names?.girl,data.remaining?.girl||0);
   $('heading').textContent=data.phase==='voting'?'Guests are guessing…':
-    data.phase==='countdown'?'The countdown is live!':'The reveal is open!';
+    data.phase==='countdown'?'The countdown is live!':
+    data.phase==='fireworks'?'The fireworks are lighting up the sky!':'The reveal is open!';
   $('ready').hidden=data.phase!=='voting';
-  $('counting').hidden=data.phase!=='countdown';
+  $('counting').hidden=data.phase!=='countdown'&&data.phase!=='fireworks';
   $('complete').hidden=data.phase!=='revealed';
   if(data.phase==='countdown')countdown();
+  if(data.phase==='fireworks')$('clock').textContent='✦';
   if(data.phase==='revealed')$('result').textContent=data.result==='boy'?"It's a Boy!":"It's a Girl!";
   $('host').hidden=false;
 }
