@@ -111,7 +111,7 @@ button:disabled{opacity:.65;cursor:default}
 .cinema[data-mode=fireworks] .cinema-sky{animation:sky-rise 3.15s var(--film-offset,0s) ease-out both}
 .cinema::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
  background:radial-gradient(ellipse at 50% 68%,transparent 43%,#0b112b74 100%)}
-.cinema-world{position:absolute;inset:0;will-change:transform}
+.cinema-world{position:absolute;z-index:2;inset:0;will-change:transform}
 .cinema[data-mode=fireworks] .cinema-world{
  animation:camera-follow 2.5s var(--film-offset,0s) cubic-bezier(.25,.75,.25,1) both}
 .cinema-heading{position:absolute;z-index:6;top:calc(5vh + env(safe-area-inset-top));
