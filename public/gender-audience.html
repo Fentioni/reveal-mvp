@@ -308,15 +308,17 @@ function voter(){
 function fail(message){
   $('error').textContent=message;
   $('error').hidden=false;
-  $('lobby').hidden=true;$('countdown').hidden=true;$('reveal').hidden=true;
+  $('lobby').hidden=true;$('cinema').hidden=true;$('reveal').hidden=true;
 }
 function demoState(){
   const now=Date.now();
-  const phase=demoRevealAt===null?'voting':now>=demoRevealAt?'revealed':'countdown';
+  const phase=demoRevealAt===null?'voting':
+    now<demoRevealAt?'countdown':
+    now<demoRevealAt+5600?'fireworks':'revealed';
   return {success:true,title:'Boy or Girl?',sender:'Mum & Dad',theme:'confetti',
     counts:{...demoCounts},names:{boy:[...demoNames.boy],girl:[...demoNames.girl]},
     remaining:{boy:0,girl:0},phase,myVote:demoVote,myName:demoName,
-    serverNowMs:now,revealAtMs:demoRevealAt,
+    serverNowMs:now,revealAtMs:demoRevealAt,fireworksDurationMs:5600,
     ...(phase==='revealed'?{result:'girl',message:'A little miracle is on the way!'}:{})};
 }
 async function getState(){
@@ -333,24 +335,98 @@ function elapsed(){
   if(!latest?.revealAtMs)return 5;
   return Math.max(0,Math.ceil((latest.revealAtMs-(Date.now()+offset))/1000));
 }
+function triggerDeadlineRefresh(){
+  if(queuedRefresh||Date.now()-deadlineCheckAt<700)return;
+  queuedRefresh=true;
+  deadlineCheckAt=Date.now();
+  refresh().finally(()=>{queuedRefresh=false;});
+}
 function drawCountdown(){
-  if(!latest||latest.phase!=='countdown')return;
-  const remaining=elapsed();
-  $('clock').textContent=remaining>0?String(remaining):'✦';
-  $('clock').setAttribute('aria-label',remaining>0?remaining+' seconds remaining':'Opening reveal');
-  if(remaining===0)$('countdownNote').textContent='Revealing now…';
-  else $('countdownNote').textContent='Get ready!';
-  if(remaining===0&&!queuedRefresh&&Date.now()-deadlineCheckAt>700){
-    queuedRefresh=true;
-    deadlineCheckAt=Date.now();
-    refresh().finally(()=>{queuedRefresh=false;});
+  if(!latest?.revealAtMs)return;
+  if(latest.phase==='countdown'){
+    const remaining=elapsed();
+    $('clock').textContent=remaining>0?String(remaining):'✦';
+    $('clock').setAttribute('aria-label',remaining>0?remaining+' seconds remaining':'Present opening');
+    $('giftBox').dataset.strength=String(Math.max(1,Math.min(5,6-remaining)));
+    $('countdownNote').textContent=remaining>0
+      ?'The surprise is almost here…':'The gift is opening…';
+    if(remaining===0)triggerDeadlineRefresh();
+  }else if(latest.phase==='fireworks'){
+    const end=latest.revealAtMs+(latest.fireworksDurationMs||5600);
+    if(Date.now()+offset>=end)triggerDeadlineRefresh();
   }
+}
+function buildAmbient(){
+  const colours=['#E7C56D','#D9D9E2','#BFDFFF','#F6C4D8'];
+  for(const id of ['ambientConfetti','cinemaConfetti']){
+    const layer=$(id);
+    const fragment=document.createDocumentFragment();
+    for(let i=0;i<28;i++){
+      const part=document.createElement('i');
+      // A stable slow drift rather than changing positions on every poll.
+      const x=(i*37+19)%97+1;
+      const size=3+i%4;
+      part.style.setProperty('--left',x+'%');
+      part.style.setProperty('--size',size+'px');
+      part.style.setProperty('--height',(size+2)+'px');
+      part.style.setProperty('--opacity',(.26+(i%4)*.085).toFixed(2));
+      part.style.setProperty('--color',colours[i%4]);
+      part.style.setProperty('--radius',i%3===0?'50%':'2px');
+      part.style.setProperty('--duration',(17+(i*7)%12)+'s');
+      part.style.setProperty('--delay',(-((i*11)%23))+'s');
+      part.style.setProperty('--drift',((i%2?1:-1)*(13+(i*5)%41))+'px');
+      fragment.append(part);
+    }
+    layer.append(fragment);
+  }
+}
+function buildFireworks(){
+  const bursts=$('fireworkBursts');
+  const palette=['#BFDFFF','#F6C4D8'];
+  const events=[
+    {left:'25%',top:'-10%',time:1.9,color:palette[0],radius:107},
+    {left:'72%',top:'-7%',time:2.24,color:palette[1],radius:116},
+    {left:'42%',top:'0%',time:3.02,color:palette[0],radius:83},
+    {left:'60%',top:'-14%',time:3.48,color:palette[1],radius:102},
+    {left:'21%',top:'-1%',time:3.68,color:palette[1],radius:76},
+    {left:'79%',top:'2%',time:3.85,color:palette[0],radius:74}
+  ];
+  for(const event of events){
+    const burst=document.createElement('div');
+    burst.className='burst';
+    burst.style.setProperty('--burst-left',event.left);
+    burst.style.setProperty('--burst-top',event.top);
+    burst.style.setProperty('--burst-delay',event.time+'s');
+    burst.style.setProperty('--burst-colour',event.color);
+    for(let i=0;i<20;i++){
+      const particle=document.createElement('i');
+      const angle=i/20*Math.PI*2;
+      const radius=event.radius*(.77+(i%4)*.09);
+      particle.style.setProperty('--spark-x',Math.round(Math.cos(angle)*radius)+'px');
+      particle.style.setProperty('--spark-y',Math.round(Math.sin(angle)*radius)+'px');
+      particle.style.setProperty('--burst-colour',event.color);
+      burst.append(particle);
+    }
+    bursts.append(burst);
+  }
+}
+function enterFireworks(data){
+  const elapsedSeconds=Math.max(0,
+    Math.min((data.fireworksDurationMs||5600)/1000,
+      (Date.now()+offset-data.revealAtMs)/1000));
+  const screen=$('cinema');
+  // Initial negative delay catches late-joining guests up to the shared
+  // timeline. Do NOT change it on every poll or playback would speed up.
+  screen.style.setProperty('--film-offset',(-elapsedSeconds).toFixed(3)+'s');
+  screen.dataset.mode='fireworks';
+  $('countdown').textContent='The sky is lighting up!';
+  $('countdownNote').textContent='Baby blue and baby pink fireworks!';
 }
 function celebrate(){
   const container=$('confetti');container.replaceChildren();
   const pastel=latest?.theme!=='confetti';
   container.classList.toggle('pastel',pastel);
-  const colors=['#fff8c9','#e7a1be','#83b8de','#ffffff','#eac082'];
+  const colors=['#E7C56D','#D9D9E2','#BFDFFF','#F6C4D8'];
   const pieces=pastel?29:47;
   for(let i=0;i<pieces;i++){
     const el=document.createElement('i');
@@ -401,9 +477,15 @@ function render(data){
   $('error').hidden=true;
   const phase=data.phase;
   $('lobby').hidden=phase!=='voting';
-  $('voteBoard').hidden=phase==='countdown';
-  $('countdown').hidden=phase!=='countdown';
+  $('voteBoard').hidden=phase==='countdown'||phase==='fireworks';
+  $('cinema').hidden=phase!=='countdown'&&phase!=='fireworks';
   $('reveal').hidden=phase!=='revealed';
+  if(phase==='countdown' && lastPhase!=='countdown'){
+    $('cinema').dataset.mode='countdown';
+    $('countdown').textContent='The big moment begins in…';
+    $('cinema').style.removeProperty('--film-offset');
+  }
+  if(phase==='fireworks' && lastPhase!=='fireworks')enterFireworks(data);
   // The tally is above the voting form, and below the big animation afterwards.
   if(phase==='revealed'&&$('reveal').nextElementSibling!==$('voteBoard')){
     $('reveal').after($('voteBoard'));
@@ -420,6 +502,9 @@ function render(data){
       :'Enter your name and choose once. Your guess cannot be changed.';
   }else if(phase==='countdown'){
     $('intro').textContent='The host has opened the reveal. Watch together!';
+    drawCountdown();
+  }else if(phase==='fireworks'){
+    $('intro').textContent='The rockets are flying! Watch the fireworks together.';
     drawCountdown();
   }else{
     $('intro').textContent='The surprise is out!';
@@ -485,8 +570,10 @@ $('demoStart').addEventListener('click',()=>{
 if(!demo&&!slug){fail('Invalid audience link.')}
 else{
   voterId=voter();
+  buildAmbient();
+  buildFireworks();
   refresh();
-  setInterval(()=>{if(!document.hidden)refresh();},1250);
+  setInterval(()=>{if(!document.hidden)refresh();},1000);
   clockHandle=setInterval(drawCountdown,125);
   document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
 }
