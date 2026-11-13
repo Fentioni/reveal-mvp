@@ -75,7 +75,7 @@ export async function quizOwnerResponse(request,env,ctx,originalWorker) {
       'SELECT product_id,fields_json FROM reveal_configurations WHERE reveal_id=?'
     ).bind(match[1]).first();
     if (existing && existing.product_id!==PRODUCT) {
-      return fail('This reveal belongs to another product.',409);
+      return request.method==='GET' ? hide() : fail('This reveal belongs to another product.',409);
     }
     if (request.method==='GET') {
       if (!existing) return hide();
