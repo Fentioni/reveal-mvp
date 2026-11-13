@@ -11,7 +11,13 @@ body{margin:0;min-height:100svh;color:var(--ink);font:16px/1.55 system-ui,-apple
   background:radial-gradient(circle at 10% 8%,#4c8aad77,transparent 47%),
     radial-gradient(circle at 88% 13%,#c778a45c,transparent 49%),#20233d}
 body[data-theme="confetti"]{background:radial-gradient(circle at top,#bc6c9d8c,transparent 60%),#2c264c}
-main{width:min(750px,100%);margin:auto;padding:25px clamp(15px,5vw,36px) 70px;text-align:center}
+main{position:relative;z-index:2;width:min(750px,100%);margin:auto;padding:25px clamp(15px,5vw,36px) 70px;text-align:center}
+.ambient-confetti{position:fixed;z-index:1;inset:0;overflow:hidden;pointer-events:none;contain:layout paint}
+.ambient-confetti i{position:absolute;display:block;top:-22px;left:var(--left);
+ width:var(--size,5px);height:var(--height,9px);opacity:var(--opacity,.48);
+ border-radius:var(--radius,2px);background:var(--color,#E7C56D);
+ box-shadow:0 0 5px #ffffff26;animation:ambient-fall var(--duration,20s) var(--delay,0s) linear infinite}
+@keyframes ambient-fall{to{transform:translate3d(var(--drift,18px),108vh,0) rotate(480deg)}}
 .brand{font:700 .86rem Georgia,serif;letter-spacing:.18em;color:#fff1d5}
 .kicker{font-size:.71rem;letter-spacing:.18em;text-transform:uppercase;color:#ffdfbd;margin-top:30px;font-weight:700}
 h1{font:normal clamp(2.3rem,9vw,4.3rem)/1.05 Georgia,serif;margin:11px 0 15px;overflow-wrap:anywhere}
@@ -91,6 +97,111 @@ button:disabled{opacity:.65;cursor:default}
   50%{opacity:.9;transform:scale(1.25) translateY(-15px)}
   100%{opacity:0;transform:scale(.65) translateY(-38px)}
 }
+
+/* Five-second vibrating gift box followed by upward tracking fireworks.
+   Film offset allows joining an in-progress synchronised reveal. */
+.cinema{position:fixed;z-index:30;inset:0;overflow:hidden;isolation:isolate;
+ background:radial-gradient(ellipse at 50% 96%,#8a6994 0%,transparent 38%),
+ linear-gradient(180deg,#141c40 0%,#233c67 58%,#54426b 100%);color:#fff7ed}
+.cinema[hidden]{display:none!important}
+.cinema-sky{position:absolute;inset:-45vh -10vw;background:
+ radial-gradient(ellipse at 25% 15%,#9aa4da3d,transparent 37%),
+ radial-gradient(ellipse at 75% 57%,#d8aac439,transparent 40%),
+ linear-gradient(180deg,#0c1736 2%,#1f3761 60%,#5a426d 100%);will-change:transform}
+.cinema[data-mode=fireworks] .cinema-sky{animation:sky-rise 3.15s var(--film-offset,0s) ease-out both}
+.cinema::after{content:"";position:absolute;inset:0;z-index:4;pointer-events:none;
+ background:radial-gradient(ellipse at 50% 68%,transparent 43%,#0b112b74 100%)}
+.cinema-world{position:absolute;inset:0;will-change:transform}
+.cinema[data-mode=fireworks] .cinema-world{
+ animation:camera-follow 2.5s var(--film-offset,0s) cubic-bezier(.25,.75,.25,1) both}
+.cinema-heading{position:absolute;z-index:6;top:calc(5vh + env(safe-area-inset-top));
+ left:16px;right:16px;text-align:center;color:#fff5de;
+ font:normal clamp(1.3rem,5vw,2rem)/1.2 Georgia,serif;text-shadow:0 3px 20px #000c}
+.cinema-caption{position:absolute;z-index:6;left:12px;right:12px;
+ bottom:calc(5vh + env(safe-area-inset-bottom));text-align:center;
+ letter-spacing:.16em;text-transform:uppercase;font-size:clamp(.7rem,2.8vw,.89rem);
+ color:#fff0de;text-shadow:0 3px 15px #000b}
+.gift-ground{position:absolute;z-index:1;width:min(70vw,350px);height:46px;
+ left:50%;bottom:13%;border-radius:50%;transform:translateX(-50%);
+ background:#dfb6d456;filter:blur(22px)}
+.gift-stage{position:absolute;z-index:4;left:50%;bottom:17%;
+ width:min(51vw,250px);height:min(53vw,262px);transform:translateX(-50%);
+ filter:drop-shadow(0 20px 26px #090e2c88)}
+.gift-box{position:absolute;inset:0;transform-origin:50% 100%;
+ --shake-x:1px;--shake-angle:.65deg;--shake-time:.38s;
+ animation:gift-shake var(--shake-time) ease-in-out infinite alternate}
+.gift-box[data-strength="2"]{--shake-x:2px;--shake-angle:1deg;--shake-time:.28s}
+.gift-box[data-strength="3"]{--shake-x:4px;--shake-angle:1.8deg;--shake-time:.20s}
+.gift-box[data-strength="4"]{--shake-x:7px;--shake-angle:3deg;--shake-time:.14s}
+.gift-box[data-strength="5"]{--shake-x:11px;--shake-angle:5deg;--shake-time:.095s}
+.gift-body{position:absolute;left:11%;right:11%;bottom:0;height:66%;
+ border:3px solid #fff3d6;border-radius:8px 8px 17px 17px;
+ background:linear-gradient(108deg,#e8bdd2,#f4dbe0 35%,#c9bddf 73%,#9daed8);
+ box-shadow:inset 7px 0 18px #fff7,inset -12px -8px 25px #52395741;overflow:hidden}
+.gift-body::before,.gift-lid::before{content:"";position:absolute;top:0;bottom:0;left:43%;
+ width:14%;background:linear-gradient(90deg,#c9aa56,#fff3b6 49%,#d8b15b);box-shadow:0 0 10px #fff7}
+.gift-body::after{content:"";position:absolute;left:0;right:0;top:38%;height:14%;
+ background:linear-gradient(180deg,#c9aa56,#fff2b3 53%,#d4b466)}
+.gift-lid{position:absolute;left:4%;right:4%;top:21%;height:19%;z-index:4;
+ border:3px solid #fff4d7;border-radius:12px 12px 7px 7px;
+ background:linear-gradient(110deg,#f0cbdb,#fff1e8 48%,#c2b6d9);
+ box-shadow:0 10px 15px #20204166;transform-origin:50% 90%}
+.gift-bow{position:absolute;z-index:5;top:0;left:50%;width:30%;height:25%;transform:translateX(-50%)}
+.gift-bow::before,.gift-bow::after{content:"";position:absolute;top:14%;width:52%;height:71%;
+ border:clamp(5px,1.4vw,10px) solid #e8ca83;border-radius:70% 40% 70% 40%;
+ box-shadow:inset 1px 1px 6px #fff7,0 2px 5px #0004}
+.gift-bow::before{left:1%;transform:rotate(-27deg)}
+.gift-bow::after{right:1%;transform:rotate(27deg) scaleX(-1)}
+.gift-knot{position:absolute;z-index:6;top:49%;left:50%;width:14%;aspect-ratio:1;
+ transform:translateX(-50%);border-radius:50%;background:#ffe5a3;border:2px solid #bb974e}
+.gift-count{position:absolute;z-index:5;left:50%;top:49%;transform:translate(-50%,-50%);
+ width:clamp(58px,18vw,94px);height:clamp(58px,18vw,94px);
+ display:grid;place-items:center;border-radius:50%;color:#fff8e9;background:#564b72;
+ border:2px solid #fff2d3;box-shadow:0 0 26px #ffd9bf86,0 5px 15px #241b476b;
+ font:normal clamp(2.8rem,9vw,4.4rem)/1 Georgia,serif}
+.cinema[data-mode=fireworks] .gift-box{animation:gift-blast .9s var(--film-offset,0s) ease-out both}
+.cinema[data-mode=fireworks] .gift-lid{animation:lid-open 1.2s var(--film-offset,0s) ease-out both}
+.cinema[data-mode=fireworks] .gift-bow{animation:bow-open 1.1s var(--film-offset,0s) ease-out both}
+.cinema[data-mode=fireworks] .gift-count{opacity:0}
+.rocket{position:absolute;z-index:7;left:calc(50% + var(--rocket-x,0px));
+ bottom:calc(17% + min(26vw,130px));width:7px;height:30px;border-radius:60% 60% 3px 3px;
+ background:var(--rocket-colour,#BFDFFF);box-shadow:0 0 16px var(--rocket-colour,#BFDFFF);
+ transform:translateY(0) scale(.35);opacity:0;pointer-events:none}
+.rocket::after{content:"";position:absolute;left:3px;top:21px;width:2px;height:95px;
+ background:linear-gradient(180deg,var(--rocket-colour),transparent);
+ box-shadow:0 0 11px var(--rocket-colour);filter:blur(2px)}
+.cinema[data-mode=fireworks] .rocket{
+ animation:rocket-launch 2.65s calc(var(--film-offset,0s) + var(--rocket-delay,0s))
+ cubic-bezier(.38,.01,.36,.75) both}
+.burst{position:absolute;left:var(--burst-left,25%);top:var(--burst-top,-5%);
+ width:4px;height:4px;z-index:7;pointer-events:none}
+.burst i{position:absolute;left:0;top:0;width:5px;height:5px;
+ background:var(--burst-colour,#BFDFFF);border-radius:50%;
+ box-shadow:0 0 9px var(--burst-colour,#BFDFFF),0 0 19px var(--burst-colour,#BFDFFF);
+ opacity:0;transform:scale(.1)}
+.cinema[data-mode=fireworks] .burst i{
+ animation:firework-burst 2s calc(var(--film-offset,0s) + var(--burst-delay,1.9s))
+ cubic-bezier(.12,.64,.3,1) both}
+.cinema[data-mode=fireworks] .cinema-heading,
+.cinema[data-mode=fireworks] #countdownNote{animation:heading-fade .45s var(--film-offset,0s) both}
+@keyframes gift-shake{
+ from{transform:translateX(calc(-1 * var(--shake-x))) rotate(calc(-1 * var(--shake-angle)))}
+ to{transform:translateX(var(--shake-x)) rotate(var(--shake-angle))}}
+@keyframes gift-blast{0%{transform:scale(1)}35%{transform:scale(1.14)}100%{transform:scale(.96)}}
+@keyframes lid-open{0%{transform:translateY(0) rotate(0)}
+ 45%{transform:translateY(-39%) rotate(-16deg)}
+ 100%{transform:translateY(-150%) rotate(-36deg)}}
+@keyframes bow-open{from{transform:translateX(-50%) translateY(0)}
+ to{transform:translateX(-100%) translateY(-130%) rotate(-30deg)}}
+@keyframes rocket-launch{0%{transform:translateY(0) scale(.35);opacity:0}
+ 12%{opacity:1}75%{opacity:1}100%{transform:translateY(-91vh) scale(1);opacity:0}}
+@keyframes camera-follow{to{transform:translateY(28vh)}}
+@keyframes sky-rise{to{transform:translateY(18vh)}}
+@keyframes firework-burst{0%{opacity:0;transform:translate(0,0) scale(.15)}
+ 12%{opacity:1}73%{opacity:1}
+ 100%{opacity:0;transform:translate(var(--spark-x),var(--spark-y)) scale(.25)}}
+@keyframes heading-fade{to{opacity:0}}
+
 @media(max-width:390px){.board,.buttons{gap:8px}.count{padding:15px 5px}
   .count span{font-size:.83rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
