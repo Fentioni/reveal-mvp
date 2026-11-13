@@ -8,6 +8,7 @@
  */
 const PRODUCT='gender-reveal';
 const START_DELAY_MS=5000;
+const FIREWORKS_DURATION_MS=5600; // Rockets, upward camera move, pink/blue bursts, then result.
 const VOTES=['boy','girl'];
 const THEMES=['pastel','confetti'];
 const HEADERS={'content-type':'application/json; charset=utf-8','cache-control':'private, no-store',
@@ -196,9 +197,11 @@ async function ownVote(env,id,voter){
 function audienceState(row,gender,aggregate,personal,clock=Date.now()){
   const {counts,names,remaining,revealAtMs}=aggregate;
   const phase=revealAtMs===null?'voting':
-    clock>=revealAtMs?'revealed':'countdown';
+    clock<revealAtMs?'countdown':
+    clock<revealAtMs+FIREWORKS_DURATION_MS?'fireworks':'revealed';
   return {success:true,phase,serverNowMs:clock,
-    revealAtMs,counts,names,remaining,myVote:personal?.choice||null,
+    revealAtMs,fireworksDurationMs:FIREWORKS_DURATION_MS,
+    counts,names,remaining,myVote:personal?.choice||null,
     myName:personal?.name||null,
     title:row.event_name||'Boy or Girl?',sender:row.sender||'',
     theme:gender.theme,
