@@ -247,7 +247,7 @@ test('named guest lists remain available through countdown and after reveal',asy
   assert.deepEqual(counting.names,{boy:['Auntie Sarah'],girl:['Chloe']});
   assert.equal(counting.result,undefined);
   const start=m.data.events.get('gender-'+ID+'-start');
-  start.metadata_json=JSON.stringify({revealAtMs:Date.now()-100});
+  start.metadata_json=JSON.stringify({revealAtMs:Date.now()-5700});
   const revealed=await (await guest(m,'gender-state')).json();
   assert.equal(revealed.phase,'revealed');
   assert.deepEqual(revealed.names,{boy:['Auntie Sarah'],girl:['Chloe']});
@@ -316,13 +316,67 @@ test('only private creator can open reveal; voting closes at start; all share th
   assert.equal(m.data.events.size,1,'no votes after countdown begins');
   // Move the saved start time into the past rather than sleeping five seconds.
   const id='gender-'+ID+'-start';
-  m.data.events.get(id).metadata_json=JSON.stringify({revealAtMs:Date.now()-1});
+  m.data.events.get(id).metadata_json=JSON.stringify({revealAtMs:Date.now()-5700});
   const finished=await (await guest(m,'gender-state')).json();
   assert.equal(finished.phase,'revealed');
   assert.equal(finished.result,'girl');
   assert.equal(finished.message,'Our happy news!');
   assert.deepEqual(finished.counts,{boy:0,girl:0});
   assert.equal((await (await guest(m,'gender-state')).json()).result,'girl');
+});
+
+
+test('secret result stays inaccessible during gift-box countdown AND fireworks until full film is over',async()=>{
+  const m=mock({paid:true});
+  const started=await owner(m,'start','POST');
+  assert.equal(started.status,200);
+  const timeline=m.data.events.get('gender-'+ID+'-start');
+  const five=await (await guest(m,'gender-state')).json();
+  assert.equal(five.phase,'countdown');
+  assert.equal(five.result,undefined);
+  assert.equal(five.message,undefined);
+  const actualStart=JSON.parse(timeline.metadata_json).revealAtMs;
+  timeline.metadata_json=JSON.stringify({revealAtMs:Date.now()-1500});
+  const rocketLaunch=await (await guest(m,'gender-state')).json();
+  assert.equal(rocketLaunch.phase,'fireworks');
+  assert.equal(rocketLaunch.revealAtMs!==null,true);
+  assert.equal(rocketLaunch.fireworksDurationMs,5600);
+  assert.equal(rocketLaunch.result,undefined);
+  assert.equal(rocketLaunch.message,undefined);
+  timeline.metadata_json=JSON.stringify({revealAtMs:Date.now()-5500});
+  const finalFireworks=await (await guest(m,'gender-state')).json();
+  assert.equal(finalFireworks.phase,'fireworks');
+  assert.equal(finalFireworks.result,undefined);
+  timeline.metadata_json=JSON.stringify({revealAtMs:Date.now()-5601});
+  const finale=await (await guest(m,'gender-state')).json();
+  assert.equal(finale.phase,'revealed');
+  assert.equal(finale.result,'girl');
+  assert.equal(finale.message,'Our happy news!');
+  assert.ok(actualStart>0);
+});
+
+test('mobile cinematic contains shaking gift box, 5-second countdown, rockets, upward camera pan and four-colour ambient background',()=>{
+  const html=fs.readFileSync(path.join(root,'public/gender-audience.html'),'utf8');
+  assert.ok(html.includes('id="cinema"'));
+  assert.ok(html.includes('id="giftBox"'));
+  assert.ok(html.includes('id="clock"'));
+  assert.ok(html.includes('id="fireworkBursts"'));
+  assert.ok(html.includes('id="ambientConfetti"'));
+  assert.ok(html.includes('id="cinemaConfetti"'));
+  for(const colour of ['#E7C56D','#D9D9E2','#BFDFFF','#F6C4D8']){
+    assert.ok(html.includes(colour),colour+' is part of the design');
+  }
+  assert.ok(html.includes('@keyframes gift-shake'));
+  assert.ok(html.includes('@keyframes lid-open'));
+  assert.ok(html.includes('@keyframes rocket-launch'));
+  assert.ok(html.includes('@keyframes camera-follow'));
+  assert.ok(html.includes('@keyframes firework-burst'));
+  assert.ok(html.includes("cinema').dataset.mode='countdown'"));
+  assert.ok(html.includes("screen.dataset.mode='fireworks'"));
+  assert.ok(html.includes("'--film-offset'"),'can synchronize late joins');
+  assert.ok(html.includes("const phase=demoRevealAt===null?'voting':"));
+  const host=fs.readFileSync(path.join(root,'public/gender-host.html'),'utf8');
+  assert.ok(host.includes("location.assign($('audienceLink').value)"));
 });
 
 test('unpaid and unconfigured recipients never see voting lobby, counts or result',async()=>{
