@@ -1,0 +1,140 @@
+<!doctype html><html lang="en-GB"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<title>Open Your Gender Reveal | Reveal</title>
+<style>
+:root{color-scheme:dark}*{box-sizing:border-box}
+body{margin:0;min-height:100svh;font:15px/1.6 system-ui,-apple-system,sans-serif;color:#fff6f0;
+background:radial-gradient(circle at top left,#5a759a67,transparent 52%),
+radial-gradient(circle at bottom right,#b5678766,transparent 53%),#1e2035}
+main{width:min(660px,100%);margin:auto;padding:28px 16px 75px;text-align:center}
+.brand{font:700 .85rem Georgia,serif;letter-spacing:.2em;color:#f1d0ad}
+.kicker{font-size:.73rem;text-transform:uppercase;letter-spacing:.17em;color:#f1d0ad;margin:32px 0 10px}
+h1{font:normal clamp(2.35rem,8vw,3.7rem)/1.08 Georgia,serif;margin:10px 0}
+.intro{color:#e2d3de;font-size:.96rem}
+.card{border:2px solid #cbb79e;background:#f7eee2;color:#362b46;
+border-radius:23px;margin:29px 0 18px;padding:clamp(18px,5vw,28px);box-shadow:0 23px 70px #0009}
+.card h2{font:normal 1.55rem Georgia,serif;margin:7px 0}
+.counts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:13px;margin:19px 0}
+.count{padding:15px 9px;border:1px solid #bdacbf;border-radius:14px;background:white}
+.count.boy{background:#d9edf8}.count.girl{background:#f9e0ed}
+.count strong{display:block;font:normal 2.8rem Georgia,serif;margin:6px 0}
+.count span{font-weight:750}
+.action{width:100%;min-height:56px;border:0;background:linear-gradient(110deg,#edcf98,#d4a97b);
+color:#32203b;font:800 1rem system-ui,sans-serif;border-radius:99px;cursor:pointer}
+.action:disabled{opacity:.6;cursor:default}
+.action:focus-visible,a:focus-visible{outline:3px solid #785d94;outline-offset:3px}
+.share{margin-top:19px}
+.share label{display:block;font-size:.74rem;text-transform:uppercase;letter-spacing:.14em;margin:0 0 6px}
+.share input{display:block;width:100%;min-width:0;font:14px system-ui;padding:12px 10px;border-radius:10px;
+border:1px solid #baa9b6;background:#fff;color:#48344c}
+.share a{display:inline-block;margin-top:10px;color:#5b3e84;overflow-wrap:anywhere}
+.note{font-size:.8rem;color:#69566c;margin:15px 0}
+.error{padding:16px;background:#713445;color:#fff;border-radius:12px;margin-top:20px}
+.status{min-height:22px;color:#675579}
+.clock{font:normal clamp(5rem,24vw,9rem) Georgia,serif;margin:15px 0;color:#9a619b}
+.result{font:normal clamp(2.6rem,10vw,4.5rem) Georgia,serif;margin:15px 0}
+[hidden]{display:none!important}
+</style></head>
+<body><main>
+<div class="brand">✦ REVEAL.</div>
+<p class="kicker">Private creator controls</p>
+<h1>Your big moment</h1>
+<p class="intro">Guests can use the shared audience link to guess and see the live totals.
+When you're ready, open the reveal here. Everyone will see the same five-second countdown.</p>
+<div id="error" class="error" role="alert" hidden></div>
+<section id="host" class="card" hidden>
+<h2 id="heading">Guests are guessing…</h2>
+<div class="counts"><div class="count boy"><span>Boy</span><strong id="boys">0</strong></div>
+<div class="count girl"><span>Girl</span><strong id="girls">0</strong></div></div>
+<div id="ready">
+<p>Once you open the reveal, voting closes immediately and the five-second countdown begins for everyone.</p>
+<button type="button" id="start" class="action">Open the reveal · start 5-second countdown</button>
+</div>
+<div id="counting" hidden><p>Everyone is counting down!</p><div id="clock" class="clock">5</div></div>
+<div id="complete" hidden><p>Your result is now visible to all guests:</p><div id="result" class="result"></div>
+<p>Your audience link remains revisitable.</p></div>
+<div class="share"><label for="audienceLink">One audience link for everyone</label>
+<input id="audienceLink" type="text" readonly>
+<button id="copy" type="button" class="action" style="margin-top:10px">Copy audience link</button>
+<a id="watch" href="#" target="_blank" rel="noopener">Open audience view in another tab</a></div>
+<p id="status" class="status" role="status" aria-live="polite"></p>
+</section>
+<p class="note">This is your private host screen. Do not share this page; share only the audience link above.</p>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+const id=new URLSearchParams(location.search).get('edit');
+const token=id?localStorage.getItem('reveal_edit_'+id):null;
+let config=null,state=null,offset=0,busy=false;
+function error(message){$('error').hidden=false;$('error').textContent=message;$('host').hidden=true;}
+async function api(path,opts={}){
+  const response=await fetch(path,{cache:'no-store',...opts});
+  let body;try{body=await response.json()}catch{throw Error('Unexpected server response.')}
+  if(!response.ok||!body.success)throw Error(body.error||'Request failed.');
+  return body;
+}
+async function owner(){
+  if(!id||!token)throw Error('This private host link needs the creator’s edit key on this browser. Open it from your purchaser review page.');
+  config=await api('/api/reveals/'+encodeURIComponent(id)+'/gender',{
+    headers:{'X-Edit-Token':token}
+  });
+  if(config.status!=='paid'||!config.shareUrl)throw Error('The group reveal cannot start until payment is confirmed.');
+  const url=new URL(config.shareUrl,location.origin);
+  if(url.origin!==location.origin||!/^\/r\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)){
+    throw Error('The audience link is not valid.');
+  }
+  $('audienceLink').value=url.href;
+  $('watch').href=url.href;
+}
+async function publicState(){
+  const response=await fetch($('audienceLink').value.replace(/\/$/,'')+'/gender-state',{cache:'no-store'});
+  if(!response.ok)throw Error('Could not check the shared reveal.');
+  const body=await response.json();
+  if(!body.success)throw Error('Could not check the shared reveal.');
+  return body;
+}
+function countdown(){
+  if(!state||state.phase!=='countdown')return;
+  const remaining=Math.max(0,Math.ceil((state.revealAtMs-(Date.now()+offset))/1000));
+  $('clock').textContent=remaining?String(remaining):'✦';
+}
+function draw(data){
+  state=data;offset=data.serverNowMs-Date.now();
+  $('boys').textContent=String(data.counts.boy);
+  $('girls').textContent=String(data.counts.girl);
+  $('heading').textContent=data.phase==='voting'?'Guests are guessing…':
+    data.phase==='countdown'?'The countdown is live!':'The reveal is open!';
+  $('ready').hidden=data.phase!=='voting';
+  $('counting').hidden=data.phase!=='countdown';
+  $('complete').hidden=data.phase!=='revealed';
+  if(data.phase==='countdown')countdown();
+  if(data.phase==='revealed')$('result').textContent=data.result==='boy'?"It's a Boy!":"It's a Girl!";
+  $('host').hidden=false;
+}
+async function refresh(){
+  if(!config)return;
+  try{draw(await publicState());}catch(error){$('status').textContent=error.message;}
+}
+$('start').addEventListener('click',async()=>{
+  if(busy||state?.phase!=='voting')return;
+  busy=true;$('start').disabled=true;
+  $('status').textContent='Opening the reveal for everyone…';
+  try{
+    await api('/api/reveals/'+encodeURIComponent(id)+'/gender/start',{
+      method:'POST',headers:{'X-Edit-Token':token}
+    });
+    $('status').textContent='';
+    await refresh();
+  }catch(error){$('status').textContent=error.message;}
+  finally{busy=false;$('start').disabled=false;}
+});
+$('copy').addEventListener('click',async()=>{
+  const value=$('audienceLink').value;
+  try{await navigator.clipboard.writeText(value);$('status').textContent='Audience link copied.';}
+  catch{$('audienceLink').focus();$('audienceLink').select();$('status').textContent='Select the link above and copy it.';}
+});
+owner().then(async()=>{await refresh();setInterval(()=>{if(!document.hidden)refresh()},1200);
+  setInterval(countdown,125);document.addEventListener('visibilitychange',()=>{if(!document.hidden)refresh();});
+}).catch(e=>error(e.message));
+</script></body></html>
