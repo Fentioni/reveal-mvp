@@ -20,6 +20,12 @@ border-radius:23px;margin:29px 0 18px;padding:clamp(18px,5vw,28px);box-shadow:0 
 .count.boy{background:#d9edf8}.count.girl{background:#f9e0ed}
 .count strong{display:block;font:normal 2.8rem Georgia,serif;margin:6px 0}
 .count span{font-weight:750}
+.count .guest-list{list-style:none;padding:10px 0 0;margin:11px 0 0;
+border-top:1px solid #bbb2bd;max-height:190px;overflow-y:auto;text-align:center}
+.count .guest-list li{font-size:.81rem;line-height:1.36;padding:4px 2px;
+overflow-wrap:anywhere;color:#4c4058}
+.count .guest-list li:nth-child(even){background:#ffffff80;border-radius:5px}
+.count .guest-list li.empty{font-style:italic;opacity:.75}
 .action{width:100%;min-height:56px;border:0;background:linear-gradient(110deg,#edcf98,#d4a97b);
 color:#32203b;font:800 1rem system-ui,sans-serif;border-radius:99px;cursor:pointer}
 .action:disabled{opacity:.6;cursor:default}
@@ -45,8 +51,14 @@ When you're ready, open the reveal here. Everyone will see the same five-second 
 <div id="error" class="error" role="alert" hidden></div>
 <section id="host" class="card" hidden>
 <h2 id="heading">Guests are guessing…</h2>
-<div class="counts"><div class="count boy"><span>Boy</span><strong id="boys">0</strong></div>
-<div class="count girl"><span>Girl</span><strong id="girls">0</strong></div></div>
+<div class="counts">
+  <div class="count boy"><span>Boy</span><strong id="boys">0</strong>
+    <ul class="guest-list" id="boyNames" aria-label="Guests guessing Boy"></ul>
+  </div>
+  <div class="count girl"><span>Girl</span><strong id="girls">0</strong>
+    <ul class="guest-list" id="girlNames" aria-label="Guests guessing Girl"></ul>
+  </div>
+</div>
 <div id="ready">
 <p>Once you open the reveal, voting closes immediately and the five-second countdown begins for everyone.</p>
 <button type="button" id="start" class="action">Open the reveal · start 5-second countdown</button>
@@ -99,10 +111,30 @@ function countdown(){
   const remaining=Math.max(0,Math.ceil((state.revealAtMs-(Date.now()+offset))/1000));
   $('clock').textContent=remaining?String(remaining):'✦';
 }
+function drawNames(id,names,remaining){
+  const list=$(id);list.replaceChildren();
+  if(!Array.isArray(names)||!names.length){
+    const empty=document.createElement('li');
+    empty.textContent='No guesses yet';empty.className='empty';
+    list.append(empty);
+  }
+  for(const name of (Array.isArray(names)?names:[])){
+    const entry=document.createElement('li');
+    entry.textContent=String(name);
+    list.append(entry);
+  }
+  if(remaining>0){
+    const extra=document.createElement('li');
+    extra.textContent='And '+remaining+' more '+(remaining===1?'guest':'guests');
+    list.append(extra);
+  }
+}
 function draw(data){
   state=data;offset=data.serverNowMs-Date.now();
   $('boys').textContent=String(data.counts.boy);
   $('girls').textContent=String(data.counts.girl);
+  drawNames('boyNames',data.names?.boy,data.remaining?.boy||0);
+  drawNames('girlNames',data.names?.girl,data.remaining?.girl||0);
   $('heading').textContent=data.phase==='voting'?'Guests are guessing…':
     data.phase==='countdown'?'The countdown is live!':'The reveal is open!';
   $('ready').hidden=data.phase!=='voting';
