@@ -237,6 +237,7 @@ function celebrate(){
 }
 function drawNames(id,names,remaining){
   const holder=$(id);
+  const scrollPosition=holder.scrollTop;
   holder.replaceChildren();
   const items=Array.isArray(names)?names:[];
   if(!items.length){
@@ -256,6 +257,7 @@ function drawNames(id,names,remaining){
     overflow.textContent='And '+remaining+' more '+(remaining===1?'guest':'guests');
     holder.append(overflow);
   }
+  holder.scrollTop=scrollPosition;
 }
 function render(data){
   latest=data;
@@ -273,8 +275,11 @@ function render(data){
   $('countdown').hidden=phase!=='countdown';
   $('reveal').hidden=phase!=='revealed';
   // The tally is above the voting form, and below the big animation afterwards.
-  if(phase==='revealed')$('reveal').after($('voteBoard'));
-  else $('lobby').before($('voteBoard'));
+  if(phase==='revealed'&&$('reveal').nextElementSibling!==$('voteBoard')){
+    $('reveal').after($('voteBoard'));
+  }else if(phase!=='revealed'&&$('lobby').previousElementSibling!==$('voteBoard')){
+    $('lobby').before($('voteBoard'));
+  }
   $('demoControls').hidden=!demo||phase!=='voting';
   if(phase==='voting'){
     $('intro').textContent='Make your guess, follow the live totals and wait for the host.';
