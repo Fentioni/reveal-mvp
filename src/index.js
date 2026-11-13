@@ -5,6 +5,7 @@ import { scratchSurfaceResponse } from './scratch-surface.js';
 import { scratchRecipientResponse } from './scratch-recipient.js';
 import { quizOwnerResponse,quizRecipientResponse } from './quiz.js';
 import { quizQuestionImageResponse } from './quiz-question-images.js';
+import { genderOwnerResponse,genderAudienceResponse } from './gender-reveal.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -28,6 +29,16 @@ export default {
         (path === '/api/webhooks/stripe' ||
          /^\/api\/reveals\/[A-Za-z0-9_-]+\/checkout\/?$/.test(path))) {
       return jsonError('Checkout is disabled in this staging environment.', 503);
+    }
+
+    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/gender(?:\/start)?\/?$/.test(path)) {
+      if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.',404);
+      return genderOwnerResponse(request,env,ctx,originalWorker);
+    }
+
+    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:gender-state|gender-vote))?\/?$/.test(path)) {
+      const groupReveal=await genderAudienceResponse(request,env,ctx);
+      if(groupReveal) return groupReveal;
     }
 
     if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/scratch-surface(?:\/image)?\/?$/.test(path)) {
@@ -90,6 +101,14 @@ export default {
         return textError('Catalogue unavailable.', 503);
       }
       return Response.redirect(url.origin + '/legacy-create.html', 302);
+    }
+
+    if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
+        /^\/gender-(?:create|host|demo)\/?$/.test(path)) {
+      if (!['GET','HEAD'].includes(request.method)) return textError('Method not allowed.',405);
+      if (!env.ASSETS) return textError('Staging page unavailable.',503);
+      const assetPath = path.startsWith('/gender-demo') ? '/gender-audience' : path.replace(/\/$/,'');
+      return env.ASSETS.fetch(new Request(new URL(assetPath,url),request));
     }
 
     if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
