@@ -57,6 +57,10 @@ button:disabled{opacity:.65;cursor:default}
 .confetti i{position:absolute;top:-20px;width:9px;height:16px;
  background:var(--confetti-color,#e9a7c2);animation:fall 4s ease-in both;
  left:var(--left,50%);animation-delay:var(--delay,0s);transform:rotate(var(--rotate,0deg))}
+.confetti.pastel i{width:var(--bubble-size,16px);height:var(--bubble-size,16px);
+ top:var(--bubble-top,45%);border-radius:50%;opacity:.7;filter:blur(1px);
+ box-shadow:0 0 23px var(--confetti-color,#ffc7e2);
+ animation:pastel-glow 2.8s ease-in-out 2 both}
 .demo-start{padding:13px 20px;border-radius:99px;border:1px solid #e1c8a6;
  background:#f5d5a6;color:#362845;font-weight:800;cursor:pointer;min-height:49px}
 .small{font-size:.78rem;color:#ded0df;line-height:1.55;margin-top:25px}
@@ -65,6 +69,11 @@ button:disabled{opacity:.65;cursor:default}
 @keyframes entrance{0%{transform:scale(.45);opacity:0;filter:blur(12px)}
   65%{transform:scale(1.12);opacity:1;filter:blur(0)}100%{transform:scale(1);opacity:1}}
 @keyframes float{50%{transform:translateY(13px) rotate(12deg)}}
+@keyframes pastel-glow{
+  0%{opacity:0;transform:scale(.2) translateY(8px)}
+  50%{opacity:.9;transform:scale(1.25) translateY(-15px)}
+  100%{opacity:0;transform:scale(.65) translateY(-38px)}
+}
 @media(max-width:390px){.board,.buttons{gap:8px}.count{padding:15px 5px}
   .count span{font-size:.83rem}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
@@ -112,7 +121,7 @@ button:disabled{opacity:.65;cursor:default}
 const $=id=>document.getElementById(id);
 const demo=location.pathname.replace(/\/$/,'')==='/gender-demo';
 const slug=demo?null:location.pathname.split('/').filter(Boolean)[1];
-let latest=null,lastPhase='',busy=false,offset=0,clockHandle=null,queuedRefresh=false;
+let latest=null,lastPhase='',busy=false,offset=0,clockHandle=null,queuedRefresh=false,refreshing=false,deadlineCheckAt=0;
 let voterId=null,demoVote=null,demoCounts={boy:6,girl:2},demoRevealAt=null;
 function voter(){
   if(demo)return null;
@@ -164,20 +173,28 @@ function drawCountdown(){
   $('clock').setAttribute('aria-label',remaining>0?remaining+' seconds remaining':'Opening reveal');
   if(remaining===0)$('countdownNote').textContent='Revealing now…';
   else $('countdownNote').textContent='Get ready!';
-  if(remaining===0&&!queuedRefresh){
+  if(remaining===0&&!queuedRefresh&&Date.now()-deadlineCheckAt>700){
     queuedRefresh=true;
+    deadlineCheckAt=Date.now();
     refresh().finally(()=>{queuedRefresh=false;});
   }
 }
 function celebrate(){
   const container=$('confetti');container.replaceChildren();
+  const pastel=latest?.theme!=='confetti';
+  container.classList.toggle('pastel',pastel);
   const colors=['#fff8c9','#e7a1be','#83b8de','#ffffff','#eac082'];
-  for(let i=0;i<47;i++){
+  const pieces=pastel?29:47;
+  for(let i=0;i<pieces;i++){
     const el=document.createElement('i');
     el.style.setProperty('--left',Math.round(Math.random()*100)+'%');
     el.style.setProperty('--delay',(Math.random()*.85).toFixed(2)+'s');
     el.style.setProperty('--rotate',Math.round(Math.random()*180)+'deg');
     el.style.setProperty('--confetti-color',colors[i%colors.length]);
+    if(pastel){
+      el.style.setProperty('--bubble-size',Math.round(10+Math.random()*18)+'px');
+      el.style.setProperty('--bubble-top',Math.round(10+Math.random()*80)+'%');
+    }
     container.append(el);
   }
 }
@@ -219,7 +236,10 @@ function render(data){
   lastPhase=phase;
 }
 async function refresh(){
+  if(refreshing)return;
+  refreshing=true;
   try{render(await getState())}catch(error){if(!latest)fail(error.message);}
+  finally{refreshing=false;}
 }
 async function submit(choice){
   if(busy||latest?.phase!=='voting'||latest.myVote)return;
