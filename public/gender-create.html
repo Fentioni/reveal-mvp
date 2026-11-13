@@ -65,7 +65,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px soli
 <p class="eyebrow">Gender Reveal · Group event · staging</p>
 <h1>One link.<br><em>Everyone joins in.</em></h1>
 <p class="intro">Create a surprise for your family and friends. Once paid, share one audience link with everyone.
-They can guess Boy or Girl and watch the live vote totals. Only you can start the five-second countdown and reveal.</p>
+They enter their name, guess Boy or Girl and see their names under the live vote totals. Only you can start the five-second countdown and reveal.</p>
 <div class="layout">
 <section class="form">
 <form id="create">
@@ -96,8 +96,10 @@ They can guess Boy or Girl and watch the live vote totals. Only you can start th
 <div class="preview" id="preview" data-theme="pastel">
 <div class="icon">✦</div><h2 id="previewTitle">Boy or Girl?</h2>
 <p>Cast your guess before the host opens the reveal.</p>
-<div class="board"><div class="vote-card"><strong>Boy</strong><span>0 guesses</span></div>
-<div class="vote-card"><strong>Girl</strong><span>0 guesses</span></div></div>
+<div class="board">
+  <div class="vote-card"><strong>Boy</strong><span>0 guesses</span><span>Guest names will appear here</span></div>
+  <div class="vote-card"><strong>Girl</strong><span>0 guesses</span><span>Guest names will appear here</span></div>
+</div>
 <div class="lock">Locked until the creator starts the five-second countdown.</div>
 <p id="previewSender">Join the celebration!</p>
 </div>
