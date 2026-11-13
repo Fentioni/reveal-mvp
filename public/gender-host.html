@@ -112,7 +112,9 @@ function countdown(){
   $('clock').textContent=remaining?String(remaining):'✦';
 }
 function drawNames(id,names,remaining){
-  const list=$(id);list.replaceChildren();
+  const list=$(id);
+  const scrollPosition=list.scrollTop;
+  list.replaceChildren();
   if(!Array.isArray(names)||!names.length){
     const empty=document.createElement('li');
     empty.textContent='No guesses yet';empty.className='empty';
@@ -128,6 +130,7 @@ function drawNames(id,names,remaining){
     extra.textContent='And '+remaining+' more '+(remaining===1?'guest':'guests');
     list.append(extra);
   }
+  list.scrollTop=scrollPosition;
 }
 function draw(data){
   state=data;offset=data.serverNowMs-Date.now();
