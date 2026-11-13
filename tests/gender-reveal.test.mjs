@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {genderOwnerResponse,genderAudienceResponse,validateGenderConfig} from '../src/gender-reveal.js';
+import {genderOwnerResponse,genderAudienceResponse,validateGenderConfig,validateVoterName} from '../src/gender-reveal.js';
 import worker from '../src/index.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -184,23 +184,116 @@ test('paid audience gets shared live counts but no secret outcome while voting',
 
 test('one participant can vote only once; all guests see live totals',async()=>{
   const m=mock({paid:true});
-  const one=await guest(m,'gender-vote',{method:'POST',voter:VOTERS[0],choice:'boy'});
+  const one=await guest(m,'gender-vote',{method:'POST',voter:VOTERS[0],choice:'boy',name:'Auntie Sarah'});
   assert.equal(one.status,200);
   assert.equal((await one.json()).accepted,true);
-  const duplicate=await guest(m,'gender-vote',{method:'POST',voter:VOTERS[0],choice:'girl'});
+  const duplicate=await guest(m,'gender-vote',{method:'POST',voter:VOTERS[0],choice:'girl',name:'Different Name'});
   const repeated=await duplicate.json();
   assert.equal(repeated.accepted,false);
   assert.equal(repeated.myVote,'boy');
-  assert.equal(repeated.myName,'Test Guest');
+  assert.equal(repeated.myName,'Auntie Sarah');
   assert.deepEqual(repeated.counts,{boy:1,girl:0});
-  assert.deepEqual(repeated.names,{boy:['Test Guest'],girl:[]});
-  assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[1],choice:'girl'})).status,200);
-  assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[2],choice:'boy'})).status,200);
+  assert.deepEqual(repeated.names,{boy:['Auntie Sarah'],girl:[]});
+  assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[1],choice:'girl',name:'Chloe'})).status,200);
+  assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[2],choice:'boy',name:'Uncle Tom'})).status,200);
   const shared=(await (await guest(m,'gender-state')).json());
   assert.deepEqual(shared.counts,{boy:2,girl:1});
-  assert.deepEqual(shared.names,{boy:['Test Guest','Test Guest'],girl:['Test Guest']});
+  assert.deepEqual(shared.names,{boy:['Auntie Sarah','Uncle Tom'],girl:['Chloe']});
   assert.equal((await (await guest(m,'gender-state',{voter:VOTERS[1]})).json()).myVote,'girl');
   assert.equal(m.data.events.size,3);
+});
+
+
+test('display names are validated and normalised before saving for everyone to see',async()=>{
+  assert.equal(validateVoterName('  Auntie   Sarah  '),'Auntie Sarah');
+  assert.equal(validateVoterName('Nan ❤️'),'Nan ❤️');
+  assert.equal(validateVoterName('Mum & Dad'),'Mum & Dad');
+  assert.equal(validateVoterName('Ana-María'),'Ana-María');
+  for(const invalid of ['', '   ', null, 8, '<img src=x onerror=alert(1)>',
+    'x'.repeat(41),'\u0000Bad']){
+    assert.equal(validateVoterName(invalid),null);
+  }
+  const m=mock({paid:true});
+  assert.equal((await guest(m,'gender-vote',{
+    method:'POST',voter:VOTERS[0],choice:'boy',name:'<script>alert(1)</script>'
+  })).status,400);
+  assert.equal((await guest(m,'gender-vote',{
+    method:'POST',voter:VOTERS[0],choice:'girl',name:' '
+  })).status,400);
+  assert.equal(m.data.events.size,0,'invalid names must not record votes');
+  const valid=await guest(m,'gender-vote',{
+    method:'POST',voter:VOTERS[0],choice:'girl',name:'  Nana   Sue '
+  });
+  assert.equal(valid.status,200);
+  const status=await valid.json();
+  assert.deepEqual(status.names,{boy:[],girl:['Nana Sue']});
+  assert.equal(status.myName,'Nana Sue');
+  assert.ok(!JSON.stringify(status).includes(VOTERS[0]),
+    'browser voter UUID must not appear in public response');
+  const saved=[...m.data.events.values()][0];
+  assert.deepEqual(JSON.parse(saved.metadata_json),{name:'Nana Sue'});
+  assert.ok(!saved.metadata_json.includes(VOTERS[0]));
+});
+
+test('named guest lists remain available through countdown and after reveal',async()=>{
+  const m=mock({paid:true});
+  await guest(m,'gender-vote',{method:'POST',voter:VOTERS[0],
+    choice:'boy',name:'Auntie Sarah'});
+  await guest(m,'gender-vote',{method:'POST',voter:VOTERS[1],
+    choice:'girl',name:'Chloe'});
+  await owner(m,'start','POST');
+  const counting=await (await guest(m,'gender-state')).json();
+  assert.equal(counting.phase,'countdown');
+  assert.deepEqual(counting.names,{boy:['Auntie Sarah'],girl:['Chloe']});
+  assert.equal(counting.result,undefined);
+  const start=m.data.events.get('gender-'+ID+'-start');
+  start.metadata_json=JSON.stringify({revealAtMs:Date.now()-100});
+  const revealed=await (await guest(m,'gender-state')).json();
+  assert.equal(revealed.phase,'revealed');
+  assert.deepEqual(revealed.names,{boy:['Auntie Sarah'],girl:['Chloe']});
+  assert.equal(revealed.result,'girl');
+  assert.equal((await guest(m,'gender-vote',{method:'POST',voter:VOTERS[2],
+    choice:'girl',name:'Late Guest'})).status,409);
+  assert.deepEqual((await (await guest(m,'gender-state')).json()).counts,
+    {boy:1,girl:1});
+});
+
+test('large audiences show first 500 names and an accurate count of additional voters',async()=>{
+  const m=mock({paid:true});
+  for(let i=0;i<505;i++){
+    const identifier='gender-'+ID+'-test-'+String(i).padStart(5,'0');
+    m.data.events.set(identifier,{
+      id:identifier,revealId:ID,event_type:'gender-vote-boy',
+      metadata_json:JSON.stringify({name:'Guest '+i}),
+      created_at:'2026-11-13T10:00:00.000Z'
+    });
+  }
+  const response=await guest(m,'gender-state');
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.counts.boy,505);
+  assert.equal(result.names.boy.length,500);
+  assert.equal(result.remaining.boy,5);
+  assert.equal(result.names.girl.length,0);
+  assert.equal(result.result,undefined);
+});
+
+test('gender voting page shows public name lists safely below each tally',()=>{
+  const audience=fs.readFileSync(path.join(root,'public/gender-audience.html'),'utf8');
+  const host=fs.readFileSync(path.join(root,'public/gender-host.html'),'utf8');
+  for(const html of [audience,host]){
+    assert.ok(html.includes('id="boyNames"'));
+    assert.ok(html.includes('id="girlNames"'));
+    assert.ok(html.includes('function drawNames('));
+    assert.ok(html.includes('entry.textContent=String(name)')||
+      html.includes('item.textContent=String(name)'));
+  }
+  assert.ok(audience.includes('id="guestName"'));
+  assert.ok(audience.includes('maxlength="40"'));
+  assert.ok(audience.includes('Your name will appear under your choice'));
+  assert.ok(audience.includes('body:JSON.stringify({voterId:voter(),choice,name})'));
+  assert.ok(audience.includes('demoNames[choice].push(name)'));
+  assert.ok(audience.includes("$('voteBoard').hidden=phase==='countdown'"));
 });
 
 test('only private creator can open reveal; voting closes at start; all share the same countdown',async()=>{
