@@ -159,8 +159,10 @@ $('start').addEventListener('click',async()=>{
     await api('/api/reveals/'+encodeURIComponent(id)+'/gender/start',{
       method:'POST',headers:{'X-Edit-Token':token}
     });
-    $('status').textContent='';
-    await refresh();
+    $('status').textContent='The countdown has started. Joining the audience experience…';
+    // The creator now sees exactly the same shaking box, flight and
+    // fireworks as guests, on the same protected paid audience URL.
+    location.assign($('audienceLink').value);
   }catch(error){$('status').textContent=error.message;}
   finally{busy=false;$('start').disabled=false;}
 });
