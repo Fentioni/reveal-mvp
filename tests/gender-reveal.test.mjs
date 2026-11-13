@@ -33,7 +33,8 @@ function mock({paid=false,configured=true,product='gender-reveal'}={}){
           return data.config?{product_id:data.product,fields_json:JSON.stringify(data.config)}:null;
         }
         if(sql.includes('SELECT metadata_json FROM reveal_events')){
-          const event=data.events.get(this.args[1]??this.args[0]);
+          const key=this.args.find(value=>typeof value==='string'&&value.endsWith('-start'));
+          const event=data.events.get(key);
           return event?{metadata_json:event.metadata_json}:null;
         }
         if(sql.includes('SELECT event_type FROM reveal_events')){
