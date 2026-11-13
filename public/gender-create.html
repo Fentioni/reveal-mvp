@@ -1,0 +1,189 @@
+<!doctype html>
+<html lang="en-GB">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex,nofollow"><meta name="referrer" content="no-referrer">
+<title>Create Group Gender Reveal | Reveal</title>
+<style>
+:root{color-scheme:dark;--gold:#eed2a8;--stroke:#7c697f}
+*{box-sizing:border-box}body{margin:0;min-height:100vh;background:
+  radial-gradient(ellipse at top left,#69507572,transparent 49%),
+  radial-gradient(ellipse at bottom right,#96738d53,transparent 50%),#171827;
+  color:#fcf4f1;font:15px/1.6 system-ui,-apple-system,sans-serif}
+main{width:min(1120px,100%);padding:25px clamp(17px,4vw,40px) 85px;margin:auto}
+a{color:inherit}.brand{text-decoration:none;letter-spacing:.18em;font:600 1.1rem Georgia,serif}
+.brand span{color:var(--gold)}
+.eyebrow{letter-spacing:.18em;color:var(--gold);font-size:.72rem;margin-top:32px;text-transform:uppercase}
+h1{font:normal clamp(2.6rem,6vw,4.8rem)/1.05 Georgia,serif;margin:10px 0 15px}
+h1 em{font-weight:normal;color:var(--gold)}
+.intro{color:#d9c8d5;max-width:750px;margin-bottom:28px}
+.layout{display:grid;grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);gap:clamp(22px,4vw,55px);align-items:start}
+.form,.preview-wrap{min-width:0}form{min-width:0}h2{font:normal 1.6rem Georgia,serif;margin:23px 0 7px}
+.help{font-size:.81rem;color:#d8c8d6;margin:0 0 17px}
+.field{margin:0 0 19px;min-width:0}label{display:block;font-weight:650;margin-bottom:7px}
+input[type="text"],textarea{width:100%;min-width:0;max-width:100%;font:16px system-ui,sans-serif;color:white;
+  background:#282737;border:1px solid var(--stroke);border-radius:11px;padding:12px;min-height:47px}
+textarea{min-height:85px;resize:vertical}input::placeholder,textarea::placeholder{color:#c7b7c5}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.choice{border:2px solid #786c7e;border-radius:15px;padding:16px 12px;min-height:110px;
+  cursor:pointer;text-align:left;background:#342c40;color:#fff;font:700 1.15rem system-ui}
+.choice small{display:block;font-size:.7rem;font-weight:450;margin-top:7px}
+.choice[data-choice="boy"]{background:linear-gradient(140deg,#306a93,#5c95af,#192c49)}
+.choice[data-choice="girl"]{background:linear-gradient(140deg,#a35886,#d88fa9,#553253)}
+.choice[aria-pressed="true"]{border-color:#fff0d4;box-shadow:0 0 0 2px #d8c5a2}
+.theme-choice{min-height:62px;font-size:.85rem}
+.theme-choice[data-theme="pastel"]{background:linear-gradient(115deg,#6c9cc2,#e7adc2)}
+.theme-choice[data-theme="confetti"]{background:linear-gradient(135deg,#50477e,#c480a6,#e6c578)}
+button:focus-visible,input:focus-visible,textarea:focus-visible{outline:3px solid #eed5a9;outline-offset:2px}
+.notice{display:none;padding:13px;background:#573044;border:1px solid #b88b91;border-radius:11px;margin:15px 0}
+.notice.show{display:block}
+.action{width:100%;min-height:52px;background:linear-gradient(110deg,#f6dca9,#deb983);
+  color:#242034;border:0;border-radius:99px;font:800 1rem system-ui;cursor:pointer}
+.action:disabled{opacity:.6;cursor:default}
+.preview-wrap{position:sticky;top:25px}
+.preview-label{font-size:.7rem;color:#ecd0a1;text-align:center;letter-spacing:.15em;text-transform:uppercase;margin-bottom:15px}
+.preview{border:2px solid #e5c69d;border-radius:22px;min-height:530px;padding:30px 22px;
+  background:linear-gradient(130deg,#345e82,#524d87 50%,#a6618c);text-align:center;
+  box-shadow:0 20px 60px #0009}
+.preview[data-theme="confetti"]{background:linear-gradient(140deg,#653e81,#be7089,#b2975f)}
+.preview .icon{font-size:3rem;color:#ffe9b9;margin-bottom:12px}
+.preview h2{font:normal clamp(1.8rem,4vw,2.7rem)/1.08 Georgia,serif;overflow-wrap:anywhere;margin:9px 0 15px}
+.preview p{color:#f4e0eb}
+.board{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin:24px 0}
+.vote-card{border:1px solid #ffffff91;background:#ffffff26;border-radius:14px;padding:18px 8px}
+.vote-card strong{font-size:1.45rem}.vote-card span{display:block;font-size:.82rem}
+.lock{margin:17px 0;padding:19px 10px;border:1px dashed #f6e6d5;border-radius:12px}
+.staging{font-size:.74rem;color:#d6c9cf;text-align:center;margin-top:17px}
+[hidden]{display:none!important}
+@media(max-width:850px){.layout{grid-template-columns:minmax(0,1fr)}.preview-wrap{position:static}}
+@media(max-width:390px){.choices{grid-template-columns:minmax(0,1fr)}main{padding:22px 15px 70px}}
+</style>
+</head>
+<body>
+<main>
+<a href="/" class="brand">✦ REVEAL<span>.</span></a>
+<p class="eyebrow">Gender Reveal · Group event · staging</p>
+<h1>One link.<br><em>Everyone joins in.</em></h1>
+<p class="intro">Create a surprise for your family and friends. Once paid, share one audience link with everyone.
+They can guess Boy or Girl and watch the live vote totals. Only you can start the five-second countdown and reveal.</p>
+<div class="layout">
+<section class="form">
+<form id="create">
+<div id="notice" class="notice" role="alert"></div>
+<h2>The secret result</h2><p class="help">For your eyes only. This is never sent to guests before the countdown finishes.</p>
+<div class="choices" id="results" role="group" aria-label="Secret result">
+<button type="button" class="choice" data-choice="boy" aria-pressed="true">It's a Boy!<small>Blue reveal animation</small></button>
+<button type="button" class="choice" data-choice="girl" aria-pressed="false">It's a Girl!<small>Pink reveal animation</small></button>
+</div>
+<h2>Choose an animation style</h2><p class="help">Your selection controls the colours and motion guests will see at the end.</p>
+<div class="choices" id="themes" role="group" aria-label="Reveal style">
+<button type="button" class="choice theme-choice" data-theme="pastel" aria-pressed="true">Pastel Magic</button>
+<button type="button" class="choice theme-choice" data-theme="confetti" aria-pressed="false">Confetti Celebration</button>
+</div>
+<h2>Invitation details</h2><p class="help">Keep the headline neutral. Don't put the result in the invitation or message if you want it to be a surprise.</p>
+<div class="field"><label for="eventName">Invitation headline</label>
+<input id="eventName" type="text" maxlength="160" required value="Boy or Girl?"></div>
+<div class="field"><label for="sender">Who is hosting?</label>
+<input id="sender" type="text" maxlength="80" required placeholder="From the proud parents"></div>
+<div class="field"><label for="personalMessage">Message to guests (optional; shown after the reveal)</label>
+<textarea id="personalMessage" maxlength="1200" placeholder="We can't wait to share our news with you!"></textarea></div>
+<button type="submit" id="save" class="action">Save and review</button>
+<p class="help">The recipient link and live voting become available only after payment. Staging checkout remains disabled.</p>
+</form>
+</section>
+<aside class="preview-wrap">
+<div class="preview-label">Static audience preview · Not live</div>
+<div class="preview" id="preview" data-theme="pastel">
+<div class="icon">✦</div><h2 id="previewTitle">Boy or Girl?</h2>
+<p>Cast your guess before the host opens the reveal.</p>
+<div class="board"><div class="vote-card"><strong>Boy</strong><span>0 guesses</span></div>
+<div class="vote-card"><strong>Girl</strong><span>0 guesses</span></div></div>
+<div class="lock">Locked until the creator starts the five-second countdown.</div>
+<p id="previewSender">Join the celebration!</p>
+</div>
+<p class="staging">The preview does not disclose the secret result or let anyone vote. Only the paid audience link is interactive.</p>
+</aside>
+</div>
+</main>
+<script type="module">
+const $=id=>document.getElementById(id);
+const params=new URLSearchParams(location.search);
+let id=params.get('edit'),token=null,revision=null,busy=false,ready=!id,result='boy',theme='pastel';
+const notice=msg=>{$('notice').textContent=msg;$('notice').classList.toggle('show',Boolean(msg))};
+function choose(){
+  for(const button of document.querySelectorAll('[data-choice]')){
+    button.setAttribute('aria-pressed',String(button.dataset.choice===result));
+  }
+  for(const button of document.querySelectorAll('[data-theme]')){
+    button.setAttribute('aria-pressed',String(button.dataset.theme===theme));
+  }
+  $('preview').dataset.theme=theme;
+  $('previewTitle').textContent=$('eventName').value.trim()||'Boy or Girl?';
+  $('previewSender').textContent=$('sender').value.trim()||'Join the celebration!';
+}
+function setBusy(value){busy=value;$('save').disabled=value;
+  $('save').textContent=value?'Saving...':'Save and review';}
+async function api(path,opts={}){
+  const r=await fetch(path,{cache:'no-store',...opts});
+  let data;try{data=await r.json()}catch{throw Error('Unexpected server response.')}
+  if(!r.ok||!data.success)throw Error(data.error||'Unable to save gender reveal.');
+  return data;
+}
+$('results').addEventListener('click',event=>{if(busy)return;
+  const button=event.target.closest('[data-choice]');if(!button)return;
+  result=button.dataset.choice;choose();
+});
+$('themes').addEventListener('click',event=>{if(busy)return;
+  const button=event.target.closest('[data-theme]');if(!button)return;
+  theme=button.dataset.theme;choose();
+});
+$('eventName').addEventListener('input',choose);
+$('sender').addEventListener('input',choose);
+$('create').addEventListener('submit',async event=>{
+  event.preventDefault();if(busy||!ready||!$('create').reportValidity())return;
+  setBusy(true);notice('');
+  try{
+    const body=new FormData();
+    body.append('recipient','Family & Friends');
+    body.append('sender',$('sender').value.trim());
+    body.append('eventName',$('eventName').value.trim());
+    body.append('personalMessage',$('personalMessage').value.trim());
+    if(id)body.append('revision',String(revision));
+    const saved=await api(id?'/api/reveals/'+encodeURIComponent(id):'/api/reveals',{
+      method:id?'PUT':'POST',headers:id?{'X-Edit-Token':token}:{},body
+    });
+    if(!id){id=saved.id;token=saved.editToken}
+    revision=saved.revision;
+    localStorage.setItem('reveal_edit_'+id,token);
+    history.replaceState(null,'','/gender-create?edit='+encodeURIComponent(id));
+    await api('/api/reveals/'+encodeURIComponent(id)+'/gender',{
+      method:'PUT',headers:{'X-Edit-Token':token,'Content-Type':'application/json'},
+      body:JSON.stringify({result,theme})
+    });
+    location.assign('/reveal?id='+encodeURIComponent(id));
+  }catch(error){notice(error.message);setBusy(false);}
+});
+async function restore(){
+  try{
+    token=localStorage.getItem('reveal_edit_'+id);
+    if(!token)throw Error('The private edit key is not available in this browser.');
+    const owner=await api('/api/reveals/'+encodeURIComponent(id),{
+      headers:{'X-Edit-Token':token}
+    });
+    if(owner.reveal.status!=='draft'){
+      location.replace('/reveal?id='+encodeURIComponent(id));return;
+    }
+    revision=owner.reveal.revision;
+    $('eventName').value=owner.reveal.eventName||'Boy or Girl?';
+    $('sender').value=owner.reveal.sender||'';
+    $('personalMessage').value=owner.reveal.personalMessage||'';
+    const config=await api('/api/reveals/'+encodeURIComponent(id)+'/gender',{
+      headers:{'X-Edit-Token':token}
+    });
+    result=config.gender.result;theme=config.gender.theme;
+    ready=true;choose();
+  }catch(error){notice(error.message);}
+}
+choose();if(id)restore();
+</script>
+</body></html>
