@@ -186,7 +186,8 @@ export async function genderAudienceResponse(request,env,ctx){
     if(!row||row.status!=='paid'||!row.paid_at)return deny();
     const config=await existingConfig(env,row.id);
     if(!config)return action?deny():null;
-    if(config.invalid||config.invalidProduct)return deny();
+    if(config.invalidProduct)return action?deny():null;
+    if(config.invalid)return deny();
     if(action==='gender-vote'){
       if(request.headers.get('Origin')&&request.headers.get('Origin')!==url.origin){
         return bad('Cross-origin voting is not allowed.',403);
