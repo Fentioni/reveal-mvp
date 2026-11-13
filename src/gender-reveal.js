@@ -77,7 +77,7 @@ export async function genderOwnerResponse(request,env,ctx,originalWorker){
   if(owner.response)return owner.response;
   try{
     const old=await existingConfig(env,id);
-    if(old?.invalidProduct)return bad('This reveal belongs to another product.',409);
+    if(old?.invalidProduct)return request.method==='GET'?deny():bad('This reveal belongs to another product.',409);
     if(action==='start'){
       if(owner.reveal.status!=='paid'||!owner.reveal.paidAt)return bad('Payment must be verified before the reveal can start.',409);
       if(!old || old.invalid)return deny();
