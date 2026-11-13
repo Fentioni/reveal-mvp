@@ -641,6 +641,13 @@
       body[data-ticket-variant="concert"] .details{grid-template-columns:1fr}
     }
 
+    .gender-review{margin:22px 0 25px;padding:23px;border:1px solid #e1b8c7;
+      border-radius:18px;background:linear-gradient(130deg,#26394c,#6b3a62);color:#fff7f4}
+    .gender-review[hidden]{display:none!important}
+    .gender-review h2{font:normal 1.6rem Georgia,serif;margin:0 0 12px}
+    .gender-review p{font-size:.9rem;line-height:1.55}
+    .gender-secret{font:normal 1.5rem Georgia,serif;padding:15px;border-radius:12px;
+      background:#fff0e6;color:#513659;margin:16px 0}
     .quiz-review{margin:22px 0 25px;padding:21px;border:1px solid #c8b38c;border-radius:19px;
       background:#262034;color:#fff4e5}
     .quiz-review[hidden]{display:none!important}
@@ -749,6 +756,14 @@
           <div class="booking-label">Official ticket or booking link</div>
           <div id="bookingValue" class="booking-value"></div>
         </div>
+      </section>
+
+      <section id="genderReview" class="gender-review" hidden aria-label="Private Gender Reveal review">
+        <h2>Group Gender Reveal · private purchaser review</h2>
+        <p>Only you can see the result here. Guests will receive one paid link for voting and will not see the result until you open the reveal and the five-second countdown finishes.</p>
+        <div class="gender-secret">Secret result: <span id="genderSecret"></span></div>
+        <p id="genderStyleReview"></p>
+        <p>Each guest can guess Boy or Girl once per browser or device. Everyone can watch the live totals. Your private host controls close voting and start the countdown.</p>
       </section>
 
       <section id="quizReview" class="quiz-review" hidden aria-label="Static Three-Question Quiz review">
@@ -894,6 +909,7 @@
     let surfaceObjectUrl = null;
     let staticScratchCard = null;
     let isQuizReview = false;
+    let isGenderReview = false;
     const quizReviewImageUrls = [];
 
     if (isStagingTest) {
@@ -975,7 +991,7 @@
           await loadImage();
         }
 
-        if (isStagingTest && !await loadQuizReview()) await loadSurface();
+        if (isStagingTest && !await loadQuizReview() && !await loadGenderReview()) await loadSurface();
 
         elements.loadingCard.hidden = true;
         elements.reviewContent.hidden = false;
@@ -1048,6 +1064,27 @@
       } catch {
         elements.imageWrap.hidden = true;
       }
+    }
+
+    async function loadGenderReview() {
+      const response=await fetch(
+        '/api/reveals/'+encodeURIComponent(revealId)+'/gender',
+        {headers:ownerHeaders(),cache:'no-store'}
+      );
+      if(response.status===404)return false;
+      const details=await readJson(response);
+      if(!details.gender)return false;
+      isGenderReview=true;
+      document.body.dataset.revealProduct='gender';
+      document.title='Review Group Gender Reveal | Reveal';
+      document.querySelector('.review-label').textContent='GROUP GENDER REVEAL';
+      document.querySelector('.ticket-label').textContent='SHARED VOTING INVITATION';
+      document.getElementById('genderSecret').textContent=
+        details.gender.result==='boy'?"It's a Boy!":"It's a Girl!";
+      document.getElementById('genderStyleReview').textContent='Animation: '+
+        (details.gender.theme==='confetti'?'Confetti Celebration':'Pastel Magic');
+      document.getElementById('genderReview').hidden=false;
+      return true;
     }
 
     async function loadQuizReview() {
@@ -1273,7 +1310,14 @@
       elements.returnNotice.hidden = true;
       elements.paidStage.hidden = false;
       elements.shareInput.value = shareUrl;
-      elements.openRevealButton.href = shareUrl;
+      elements.openRevealButton.href = isGenderReview
+        ? '/gender-host?edit='+encodeURIComponent(revealId) : shareUrl;
+      elements.openRevealButton.textContent = isGenderReview
+        ? 'Open private host controls' : 'Open recipient reveal';
+      const paidCopy=elements.paidStage.querySelector('.state-copy');
+      if(isGenderReview&&paidCopy){
+        paidCopy.textContent='Send the same audience link to as many guests as you like. They can vote Boy or Girl and watch live totals. Only you can open the reveal from private host controls.';
+      }
 
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('payment');
@@ -1479,7 +1523,9 @@
     }
 
     function goToEditor() {
-      if (isQuizReview) {
+      if(isGenderReview){
+        window.location.href='/gender-create?edit='+encodeURIComponent(revealId);
+      }else if (isQuizReview) {
         window.location.href = '/quiz-create?edit=' + encodeURIComponent(revealId);
       } else {
         window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId);
