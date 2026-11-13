@@ -145,11 +145,13 @@ async function productPage(slug) {
   const isStaging = location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev';
   const canTestTicketCreator = isStaging && p.slug === 'ticket-reveal' && !ready;
   const canTestQuizCreator = isStaging && p.slug === 'three-question-quiz' && !ready;
+  const canTestGenderCreator = isStaging && p.slug === 'gender-reveal' && !ready;
   const mechanics = data.mechanics||[],themes=data.themes||[];
   const price = priceText(data.price);
   const parent = data.categories?.[0];
   const intro = p.slug==='reveal-quest'?'Choose a theme, personalise the clues and solve a sequence of puzzles to unlock the final surprise.':
-    p.slug==='three-question-quiz'?'Three personalised questions, one exciting final reveal. A simple interactive way to surprise someone.':p.description;
+    p.slug==='three-question-quiz'?'Three personalised questions, one exciting final reveal. A simple interactive way to surprise someone.':
+    p.slug==='gender-reveal'?'One audience link for everyone. Guests guess Boy or Girl and watch live totals until the creator opens the five-second countdown.':p.description;
   const box = $('aside',{className:'purchase'},[
     $('span',{className:'tag'+(ready?' active':''),text:ready?'Available now':'Coming soon'}),
     $('h3',{text:ready?'Make it your own':'An exciting reveal is on its way'}),
@@ -157,9 +159,10 @@ async function productPage(slug) {
     ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) :
       canTestTicketCreator ? $('a',{className:'button',href:'/legacy-create',text:'Test creator in staging  ↗'}) :
       canTestQuizCreator ? $('a',{className:'button',href:'/quiz-create',text:'Test three-question quiz creator  ↗'}) :
+      canTestGenderCreator ? $('a',{className:'button',href:'/gender-create',text:'Test group Gender Reveal creator  ↗'}) :
       $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
     $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':
-      canTestTicketCreator||canTestQuizCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
+      canTestTicketCreator||canTestQuizCreator||canTestGenderCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
       'There is no payment or pre-purchase access for this product.'})
   ]);
   elMain.replaceChildren($('div',{className:'page'},[
@@ -171,10 +174,12 @@ async function productPage(slug) {
         isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/legacy-create?variant=concert',text:'Try the Scratch Concert Ticket creator  ↗'}) : null,
         isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/scratch-demo',text:'Try the fictional scratch-card demo  ↗'}) : null,
         isStaging && p.slug === 'three-question-quiz' ? $('a',{className:'button',href:'/quiz-demo',text:'Try the fictional recipient quiz  ↗'}) : null,
+        isStaging && p.slug === 'gender-reveal' ? $('a',{className:'button',href:'/gender-demo',text:'Try the fictional group voting and reveal  ↗'}) : null,
         $('h2',{text:'How this reveal works'}),
         $('p',{className:'product-copy',text:ready?'Personalise the ticket information, review the details and continue to secure payment. Your recipient sees the animated experience only after payment has been confirmed.':
             p.slug==='reveal-quest'?'The purchaser selects a story theme and uses ready-made, adaptable or fully custom clues. The recipient solves each clue in sequence to unlock the final paid reveal.':
-            p.slug==='three-question-quiz'?'Write exactly three questions with four choices each, choose the correct answer and an optional hint. The recipient answers each question once payment is verified and unlocks a revisitable surprise after three correct answers.':'This planned product will use a personalised, mobile-friendly create, review and unlock journey.'}),
+            p.slug==='three-question-quiz'?'Write exactly three questions with four choices each, choose the correct answer and an optional hint. The recipient answers each question once payment is verified and unlocks a revisitable surprise after three correct answers.':
+            p.slug==='gender-reveal'?'One paid audience link is sent to all guests. Each guest chooses Boy or Girl and everyone sees live totals. Only the creator may open the reveal: voting closes, a shared five-second countdown starts and the result appears for everyone.':'This planned product will use a personalised, mobile-friendly create, review and unlock journey.'}),
         $('ul',{},[
           $('li',{text:`Reveal style: ${mechanics.map(m=>m.name).join(', ')||'To be confirmed'}`}),
           $('li',{text:`Design theme: ${themes.map(t=>t.name).join(', ')||'To be confirmed'}`}),
