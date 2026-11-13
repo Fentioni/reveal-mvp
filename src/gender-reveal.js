@@ -83,7 +83,7 @@ export async function genderOwnerResponse(request,env,ctx,originalWorker){
       if(!old || old.invalid)return deny();
       const timestamp=Date.now();
       const revealAtMs=timestamp+START_DELAY_MS;
-      await env.DB.prepare(
+      const inserted=await env.DB.prepare(
         'INSERT OR IGNORE INTO reveal_events(id,reveal_id,event_type,metadata_json,created_at) '+
         'VALUES(?,?,?,?,?)'
       ).bind(startId(id),id,'gender-start',JSON.stringify({revealAtMs}),
@@ -93,7 +93,7 @@ export async function genderOwnerResponse(request,env,ctx,originalWorker){
       ).bind(startId(id),id).first();
       const saved=JSON.parse(started.metadata_json);
       return json({success:true,revealAtMs:saved.revealAtMs,serverNowMs:Date.now(),
-        alreadyStarted:saved.revealAtMs!==revealAtMs});
+        alreadyStarted:inserted.meta?.changes!==1});
     }
     if(request.method==='GET'){
       if(!old || old.invalid)return deny();
