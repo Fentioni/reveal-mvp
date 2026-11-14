@@ -145,8 +145,15 @@ async function solve(answer,assist=false){
    if(!out.correct){setError(out.message||'Try again.');return;}
    soundFx();
    stopPrompt();
-   const overlay=make('div','success');overlay.append(make('div','','✦ Chapter Complete ✦'));document.body.append(overlay);
-   const wait=reducedMotion?100:1100;
+   const messages=['The seal is broken','The suitcase is unlocked','The passport reveals its secret','The route is illuminated','The missing ticket is complete'];
+   const icons=['✉','✧','✦','✧','✈'];
+   const active=play.querySelector('.quest');if(active)active.classList.add('chapter-clear');
+   const overlay=make('div','success clear-'+stage.step);
+   const animation=make('div','chapter-animation');
+   animation.append(make('span','chapter-glyph',icons[stage.step]||'✦'),make('span','chapter-message',messages[stage.step]||'Chapter complete'));
+   overlay.append(animation);
+   document.body.append(overlay);
+   const wait=reducedMotion?100:1250;
    await new Promise(resolve=>setTimeout(resolve,wait));
    overlay.remove();stage=out;renderStep();
  }catch(e){setError(e.message);}
