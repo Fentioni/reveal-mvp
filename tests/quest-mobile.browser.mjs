@@ -37,7 +37,7 @@ async function playChapter(page,title,sceneName,index,preset){
  assert.equal(await page.locator('.quest h2').innerText(),title);
  const hero=page.locator('.hero-object.'+sceneName);
  assert.equal(await hero.count(),1);
- assert.ok(await hero.evaluate(el=>getComputedStyle(el).backgroundImage.includes('/quest-assets/'+sceneName+'.webp')),'Missing chapter artwork');
+ assert.ok(await hero.evaluate((el,scene)=>getComputedStyle(el).backgroundImage.includes('/quest-assets/'+scene+'.webp'),sceneName),'Missing chapter artwork');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  assert.ok(overflow<=2,'Horizontal overflow '+overflow+'px in '+preset+' / '+title);
  await page.screenshot({path:resolve(output,preset+'-chapter-'+(index+1)+'.png'),animations:'disabled',fullPage:true});
