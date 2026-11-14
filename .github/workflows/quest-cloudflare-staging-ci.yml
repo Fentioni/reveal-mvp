@@ -1,0 +1,23 @@
+name: Reveal Quest Cloudflare staging safety checks
+on:
+  push:
+    branches:
+      - feature/quest-cloudflare-staging
+  pull_request:
+    branches:
+      - main
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Verify staging bindings and Quest payment guard
+        run: npm test
+      - name: Verify exact target Worker and staging database
+        run: |
+          node --input-type=module -e "import fs from 'node:fs';const x=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));if(x.name!=='reveal-quest-staging'||x.d1_databases[0].database_name!=='revealstage4b'||x.r2_buckets[0].bucket_name!=='reveal-images-stage4b'||x.vars.STAGING_DISABLE_CHECKOUT!=='true')process.exit(1);console.log('Staging-safe Wrangler bindings verified.')"
