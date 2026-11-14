@@ -11,14 +11,7 @@
 
 ## Before deployment
 1. Back up the live D1 database in Cloudflare. The migration is additive, but must run **before** deploying this Worker.
-2. From the separate **reveal-quest-cinematic-assets.zip** attached to the ChatGPT response, extract the **quest-assets** folder directly into the repository root and commit it to this branch. It must contain:
-   - `quest-assets/letter.webp`
-   - `quest-assets/suitcase.webp`
-   - `quest-assets/passport.webp`
-   - `quest-assets/map.webp`
-   - `quest-assets/ticket.webp`
-   - `quest-assets/finale.webp`
-   These are actual generated background assets. The code has gradient fallbacks, but they are **not** a substitute for the agreed cinematic presentation. Do not approve deployment before these files are present.
+2. The six cinematic WebP backgrounds have been committed to `quest-assets/` in this branch. Verify all six load on mobile: letter, suitcase, passport, map, ticket and finale. Keep the separate ZIP only as an optional local asset backup.
 3. Validate the configured Cloudflare Worker name and D1/R2 bindings.
 4. Run `npm test`. The tests are designed for Node 22.
 5. Apply the D1 migration to the actual `reveal-db` database in Cloudflare D1's SQL Console or with:
@@ -50,5 +43,5 @@
 ## Known first-build limitations
 - Fixed five-chapter classic adventure is implemented; 3- and 7-stage variants are not yet wired in.
 - There is a cinematic camera drift, dust effect, transitions and object-themed controls, but individual objects still need bespoke frame-by-frame interaction polish.
-- The actual generated backgrounds must be committed separately as described above.
+- The six generated backgrounds are committed. Asset quality, object-specific animation and final mobile visual acceptance still require review.
 - The wider multi-product catalogue rollout (Stage 4B) was not present in the repository's main branch and is not overwritten by this feature branch.
