@@ -24,6 +24,8 @@ jobs:
       REVEAL_STAGING_STRIPE_PRICE_ID: ${{ vars.REVEAL_STAGING_STRIPE_PRICE_ID }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: feature/reveal-quest-travel-adventure
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
