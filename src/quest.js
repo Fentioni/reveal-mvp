@@ -53,7 +53,7 @@ const trim=(v,n=220)=>typeof v==='string'?v.trim().slice(0,n):'';
 const norm=v=>String(v||'').trim().toLocaleLowerCase('en-GB').replace(/\s+/g,' ');
 function originOK(request){const origin=request.headers.get('origin');return !origin||origin===new URL(request.url).origin;}
 function mustBeStaging(env){return env.STAGING_DISABLE_CHECKOUT==='true' && env.STRIPE_LIVE_MODE==='false';}
-function validConfig(input) {
+export function validateQuestConfig(input) {
   if(!input||typeof input!=='object'||!Object.hasOwn(QUEST_PRESETS,input.preset)||!['ready','adaptable','custom'].includes(input.mode))return null;
   const keys=QUEST_PRESETS[input.preset];
   if(!Array.isArray(input.clues)||input.clues.length!==keys.length)return null;
@@ -170,7 +170,7 @@ async function creator(req,env,originalWorker,ownerId){
  if(req.method!=='POST' && !(ownerId&&req.method==='PUT'))return error('Method not allowed.',405);
  if(Number(req.headers.get('content-length')||0)>11*1024*1024)return error('Upload too large.',413);
  let form;try{form=await req.formData();}catch{return error('Invalid form submission.',400);}
- let cfg;try{cfg=validConfig(JSON.parse(String(form.get('questConfig')||'')));}catch{}
+ let cfg;try{cfg=validateQuestConfig(JSON.parse(String(form.get('questConfig')||'')));}catch{}
  if(!cfg)return error('Check every clue, option, answer and hint before saving.',400);
  if(['recipient','sender','eventName'].some(k=>!trim(form.get(k),160)))return error('Recipient, sender and final surprise are required.',400);
  let owner;
