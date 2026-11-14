@@ -43,6 +43,7 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
  const url=new URL(request.url);
  const path=url.pathname;
  if(path==='/api/quest/test-payment-status' && request.method==='GET'){
+  if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
     enabled:questStripeTestReady(env),automaticTax:true,
     baseAmountMinor:199,currency:'gbp'});
