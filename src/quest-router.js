@@ -53,7 +53,8 @@ async function findPaid(env,slug){
   return row;
 }
 async function getSession(req,env,row,create) {
-  const match=(req.headers.get('cookie')||'').match(/(?:^|;\s*)rq_session=([A-Za-z0-9_-]{30,64})/);
+  const cookieName='rq_'+row.public_slug;
+  const match=(req.headers.get('cookie')||'').match(new RegExp('(?:^|;\\s*)'+cookieName+'=([A-Za-z0-9_-]{30,64})'));
   if(match){
     const hash=await digest(match[1]);
     const session=await env.DB.prepare('SELECT * FROM quest_sessions WHERE session_hash=? AND reveal_id=?').bind(hash,row.id).first();
@@ -63,7 +64,7 @@ async function getSession(req,env,row,create) {
   const raw=token(), hash=await digest(raw);
   const time=new Date().toISOString();
   await env.DB.prepare('INSERT INTO quest_sessions(session_hash,reveal_id,step,created_at,updated_at) VALUES(?,?,0,?,?)').bind(hash,row.id,time,time).run();
-  return {session:{session_hash:hash,step:0,attempts:0,last_attempt_at:null,completed_at:null}, cookie:'rq_session='+raw+'; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000'};
+  return {session:{session_hash:hash,step:0,attempts:0,last_attempt_at:null,completed_at:null}, cookie:'rq_'+row.public_slug+'='+raw+'; Path=/; Secure; HttpOnly; SameSite=Lax; Max-Age=31536000'};
 }
 function currentView(cfg,session,row){
   if(session.step>=cfg.clues.length || session.completed_at) {
