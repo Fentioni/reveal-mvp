@@ -934,6 +934,7 @@
     let isQuizReview = false;
     let isGenderReview = false;
     let isQuestReview = Boolean(revealId && localStorage.getItem('reveal_quest_' + revealId) === '1');
+    let questTestPaymentReady = false;
     const quizReviewImageUrls = [];
 
     if (isStagingTest) {
@@ -1009,6 +1010,9 @@
 
       try {
         await fetchReveal();
+        // Only the purchaser's Quest draft can offer a TEST checkout. The
+        // server independently verifies the flag, credentials and product.
+        if(isStagingTest && isQuestReview) await loadQuestPaymentStatus();
         populateReveal();
 
         if (reveal.hasImage) {
@@ -1028,7 +1032,7 @@
         renderState();
 
         if (
-          !isStagingTest &&
+          (!isStagingTest || (isQuestReview && questTestPaymentReady)) &&
           paymentReturn === 'success' &&
           ['confirmed', 'checkout'].includes(reveal.status)
         ) {
@@ -1267,7 +1271,7 @@
     }
 
     function showReturnNotice() {
-      if (isStagingTest) {
+      if (isStagingTest && !questTestPaymentReady) {
         elements.returnNotice.hidden = true;
         return;
       }
@@ -1294,11 +1298,27 @@
       elements.returnNotice.hidden = true;
     }
 
+    async function loadQuestPaymentStatus() {
+      questTestPaymentReady = false;
+      try {
+        const response = await fetch('/api/quest/test-payment-status', {
+          credentials: 'same-origin', cache: 'no-store', headers: {'accept':'application/json'}
+        });
+        if(!response.ok)return;
+        const data = await response.json();
+        questTestPaymentReady = data.environment === 'staging' &&
+          data.mode === 'test' && data.enabled === true &&
+          data.automaticTax === true;
+      }catch {
+        // Fail closed: an unavailable status endpoint must not show checkout.
+      }
+    }
+
     function showPaymentState() {
       elements.paymentStage.hidden = false;
       elements.paymentAmendButton.disabled = false;
 
-      if (isStagingTest) {
+      if (isStagingTest && !questTestPaymentReady) {
         elements.paymentBadge.textContent = 'Staging test';
         elements.paymentHeading.textContent = 'Your test draft is confirmed';
         elements.paymentCopy.textContent = 'Your details are saved. Checkout and the recipient reveal are disabled in this test environment. Select Amend details to return to your editor.';
@@ -1312,6 +1332,21 @@
 
       elements.payButton.hidden = false;
       elements.payButton.disabled = false;
+      elements.paymentPricePanel.hidden = false;
+      elements.paymentIncludedList.hidden = false;
+      elements.paymentSecurityNote.hidden = false;
+
+      if(isStagingTest && isQuestReview && questTestPaymentReady){
+        elements.paymentBadge.textContent = 'Stripe TEST mode';
+        elements.paymentHeading.textContent = reveal.status === 'checkout'
+          ? 'Continue test checkout' : 'Test your Quest purchase';
+        elements.paymentCopy.textContent =
+          'Test-mode payment only. One-off base price £1.99; Stripe calculates applicable tax based on billing location. No real charge or subscription.';
+        elements.payButton.textContent = 'Continue to Stripe test checkout';
+        elements.paymentSecurityNote.textContent =
+          'Stripe TEST mode only. Your Quest remains locked until a signed test webhook confirms payment.';
+        return;
+      }
 
       if (reveal.status === 'checkout') {
         elements.paymentBadge.textContent = 'Checkout ready';
@@ -1378,12 +1413,12 @@
       } catch (error) {
         window.alert(error.message);
       } finally {
-        setButtonBusy(elements.confirmButton, false, isStagingTest ? 'Confirm test draft' : 'Confirm and continue');
+        setButtonBusy(elements.confirmButton, false, isStagingTest && !questTestPaymentReady ? 'Confirm test draft' : 'Confirm and continue');
       }
     }
 
     async function startPayment() {
-      if (isStagingTest) {
+      if (isStagingTest && !(isQuestReview && questTestPaymentReady)) {
         showPaymentError('Checkout is disabled in this staging environment.');
         return;
       }
