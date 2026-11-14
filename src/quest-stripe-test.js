@@ -30,7 +30,7 @@ export function questStripeTestReady(env){
  return Boolean(
   isolatedStaging(env) &&
   env.QUEST_TEST_CHECKOUT_ENABLED==='true' &&
-  /^sk_test_[A-Za-z0-9]+$/.test(String(env.STRIPE_SECRET_KEY||'')) &&
+  /^(?:sk|rk)_test_[A-Za-z0-9]+$/.test(String(env.STRIPE_SECRET_KEY||'')) &&
   /^whsec_[A-Za-z0-9]+$/.test(String(env.STRIPE_WEBHOOK_SECRET||'')) &&
   /^price_[A-Za-z0-9]+$/.test(String(env.STRIPE_PRICE_ID||''))
  );
