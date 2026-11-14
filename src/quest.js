@@ -120,7 +120,7 @@ function state(cfg,session,reveal){
   }};
  }
  const c=cfg.clues[step];
- return {success:true,completed:false,total,step,chapter:c.title,scene:c.scene,kind:c.kind,question:c.question,options:c.options,recipient:reveal.recipient};
+ return {success:true,completed:false,total,step,chapter:c.title,key:c.key,scene:c.scene,kind:c.kind,question:c.question,options:c.options,recipient:reveal.recipient};
 }
 async function bootstrapStaging(env){
  // The only automatic schema creation in this product. It is a fixed DDL
