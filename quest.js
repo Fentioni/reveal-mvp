@@ -29,7 +29,7 @@ async function api(path, options={}){
  if(!response.ok)throw Error(data.error||'Unable to continue.');
  return data;
 }
-function top(step){
+function questHeader(step){
  const nav=make('div','topline');
  nav.innerHTML='<span class="brand">✦ &nbsp;REVEAL QUEST</span><div style="display:flex;gap:8px">'+(demoMode?'<button class="minibtn" id="close-demo" type="button" aria-label="Return to editor">✕</button>':'')+'<button class="minibtn" id="sound" type="button" aria-label="Toggle sound">'+(sound?'♫':'♪')+'</button></div>';
  const dots=make('div','progress');
@@ -39,7 +39,7 @@ function top(step){
 }
 function newScene(scene,step){
  const view=make('section','quest');
- const backdrop=make('div','scene '+scene);backdrop.setAttribute('aria-hidden','true');view.append(backdrop,top(step));
+ const backdrop=make('div','scene '+scene);backdrop.setAttribute('aria-hidden','true');view.append(backdrop,questHeader(step));
  view.addEventListener('click',e=>{if(e.target?.id==='close-demo'){closeDemo();}if(e.target?.id==='sound'){sound=!sound;e.target.textContent=sound?'♫':'♪';e.target.setAttribute('aria-pressed',String(sound));if(sound)soundFx();}});
  return view;
 }
