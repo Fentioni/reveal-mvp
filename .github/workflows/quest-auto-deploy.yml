@@ -1,0 +1,48 @@
+name: Deploy Reveal Quest staging into existing Cloudflare account
+on:
+  push:
+    branches:
+      - feature/quest-cloudflare-staging
+    paths:
+      - '.github/workflows/quest-auto-deploy.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment: quest-staging
+    timeout-minutes: 12
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: feature/quest-cloudflare-staging
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate production isolation and Quest tests
+        run: |
+          npm test
+          node --input-type=module -e "
+            import fs from 'node:fs';
+            const c=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8'));
+            if(c.name!=='reveal-quest-staging'||c.main!=='./src/quest-staging.js'||c.vars.STAGING_DISABLE_CHECKOUT!=='true'||c.vars.STRIPE_LIVE_MODE!=='false'||c.d1_databases?.[0]?.database_id!=='fbc9687a-642b-42e6-ba8d-56430867e857'||c.r2_buckets?.[0]?.bucket_name!=='reveal-images-stage4b'||c.vars.STRIPE_PRICE_ID) process.exit(1);
+            console.log('Production isolation verified: Quest staging only, checkout disabled.');
+          "
+      - name: Confirm Cloudflare deployment authorization
+        run: |
+          if [ -z "${CLOUDFLARE_API_TOKEN:-}" ] || [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]; then
+            echo 'DEPLOYMENT_BLOCKED: GitHub does not expose CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID to this staging job.'
+            echo 'No Cloudflare Worker has been created or changed.'
+            exit 1
+          fi
+      - name: Deploy separate staging Worker (never reveal-mvp)
+        run: npx --yes wrangler@4.102.0 deploy --config wrangler.jsonc
+      - name: Check public staging route
+        run: |
+          echo 'Staging Worker: reveal-quest-staging'
+          echo 'Route: /quest'
+          echo 'Checkout remains disabled until an explicit, separate test-payment stage.'
