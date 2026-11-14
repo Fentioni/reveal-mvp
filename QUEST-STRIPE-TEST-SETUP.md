@@ -1,146 +1,102 @@
-# Reveal Quest — Stripe TEST-mode activation
+# Reveal Quest — Stripe TEST rollout (14 November 2026)
 
-Status: CODE COMPLETE, NOT ACTIVATED. The active staging Worker is
-reveal-stage4b-test.michael-fenton9.workers.dev. The production Worker is NOT
-included in this rollout.
+Status: Stripe sandbox product and dedicated staging webhook VERIFIED. The
+staging Worker is deployed, but Quest checkout remains DISABLED. All production
+infrastructure and the existing production-bound webhook are untouched.
 
-## Historical tax issue — already resolved in Stripe
-The original 20 October 2026 completed TEST checkout had subtotal £1.99,
-automatic tax £0.40, total £2.39 and a verified webhook. The Stripe calculation
-was successful. Stage 3.1 fixed the Worker to compare the 199-pence SUBTOTAL
-instead of requiring the tax-inclusive total to equal 199 pence. Stage 3.2
-verified the Worker health and retained the required billing address.
+## Verified directly in Stripe — Reveal Development sandbox
 
-One outstanding user-facing bug is separate from Stripe: production main
-reveal.html still hard-codes £2.39 in five places. The STAGING
-public/reveal.html replaces it with 'At checkout'. Do not reactivate fixed
-£2.39 wording when Quest moves toward production.
+- Sandbox account: Reveal Development (acct_1USbEJKEVPKWz2E9), TEST mode only
+- Product: prod_VTYUf4muHEcajR ("Reveal - Digital Gift Reveal"), active
+- One-time Price: price_1USbNbKEVPKWz2E9zmH0mabR, GBP 199p, tax-exclusive, active
+- Product tax code: txcd_10506001
+- Stripe Tax settings: active; tax behaviour exclusive
+- Historical successful completed test checkouts: £1.99 subtotal, £0.40 UK
+  automatic tax, £2.39 total; automatic_tax.enabled true and liability Stripe
+- Production-bound TEST webhook (must retain):
+  we_1UScAPKEVPKWz2E9ArtykWGm
+  https://reveal-mvp.michael-fenton9.workers.dev/api/webhooks/stripe
+- NEW dedicated staging TEST webhook created and verified enabled:
+  we_1UbjiyKEVPKWz2E9vS5yWo8y
+  https://reveal-stage4b-test.michael-fenton9.workers.dev/api/webhooks/stripe
+- Staging webhook listens for:
+  checkout.session.completed, checkout.session.async_payment_succeeded,
+  checkout.session.async_payment_failed, checkout.session.expired
 
-## What is already deployed
-- Dedicated /api/quest/test-payment-status, GET-only, cache disabled.
-- Checkout and Stripe webhook guarded in src/quest-stripe-test.js.
-- Quest-only checkout; all other products remain payment-disabled.
-- Original, established Stripe Worker processes payment status after validating
-  the Stripe signature, event type, Stripe mode, payment/session IDs and amount.
-- Stripe Checkout request sets automatic_tax[enabled]=true only for Quest tests,
-  with required billing address; currency GBP, base subtotal 199 pence.
-- Payment return alone never unlocks a recipient link. Paid status only changes
-  after the valid signed Stripe webhook.
-- Recipient must still complete every Quest clue before final details/images.
+No further Stripe product, price, tax-rate or webhook creation is needed.
+Stripe's webhook signing secret is not returned when reading the endpoint; it
+must be viewed in Stripe's secure Dashboard. Do not paste it into chat or GitHub.
 
-## Current evidence from 14 November 2026 — read before enabling payment
-A read-only audit of the actual `reveal-stage4b-test` Cloudflare Worker
-confirmed ALL three bindings absent: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
-and STRIPE_PRICE_ID. QUEST_TEST_CHECKOUT_ENABLED is false. No credentials,
-Stripe amounts, or secret values were exposed. The temporary diagnostic and
-associated one-time workflow were removed afterward.
+## Staging Cloudflare Worker
 
-The currently connected Stripe TEST account named Macalla Digital
-(account acct_1URWJfGu7hy9PVSn) reported **zero products, zero prices,
-zero checkout sessions and zero webhook endpoints**. Its tax settings show
-status active, default tax behaviour exclusive, and provider stripe, but the
-previous `price_1USbNbKEVPKWz2E9zmH0mabR` and
-`prod_VTYUf4muHEcajR` were not found. This is not evidence that the
-historical Stripe product was deleted; the connection may be pointing at a
-different test account or context. Resolve the account mismatch before
-creating any replacement Stripe product or enabling payment.
+- Worker: reveal-stage4b-test
+- Branch: feature/stage4b-cloudflare-staging
+- Staging D1: revealstage4b
+- Staging R2: reveal-images-stage4b
+- Existing vars are preserved: STRIPE_LIVE_MODE=false,
+  STAGING_DISABLE_CHECKOUT=true and QUEST_TEST_CHECKOUT_ENABLED=false
+- As of this commit, wrangler.jsonc now contains the verified
+  NONSECRET STRIPE_PRICE_ID=price_1USbNbKEVPKWz2E9zmH0mabR
+- A previous read-only presence audit confirmed STRIPE_SECRET_KEY and
+  STRIPE_WEBHOOK_SECRET absent from staging. Its temporary diagnostic endpoint
+  and audit workflow have been removed.
 
-Original Reveal used a restricted `rk_test_` key; Quest's test gate supports
-appropriately scoped `rk_test_` or `sk_test_` keys. It rejects live keys.
+## The only two remaining credentials (secure Cloudflare setup)
 
-## Step 1 — Stripe TEST dashboard (never live)
-In the existing Macalla Digital Stripe account, switch to test mode.
+Open Cloudflare Dashboard > Workers & Pages > reveal-stage4b-test >
+Settings > Variables and Secrets. Add these as ENCRYPTED Secrets:
 
-1. REUSE the existing Macalla Digital Stripe TEST product and price from
-   the verified October 20 test, not a duplicate product or new £1.99 price:
-   Product: prod_VTYUf4muHEcajR
-   Price: price_1USbNbKEVPKWz2E9zmH0mabR
-   Amount: GBP 1.99 one-time, tax-exclusive
-   Product tax category: "Digital Greeting Cards - Audio Visual"
-   Product tax code: txcd_10506001
-2. The previous test Checkout already verified automatic_tax.enabled=true,
-   tax liability Stripe, Stripe Managed Payments, a UK billing location and
-   £0.40 calculated tax (total £2.39). The £2.39 figure is ONE test result,
-   never a universal tax-inclusive price.
-3. Verify these existing values still apply to the saved product/price and
-   Managed Payments settings. Do not reconfigure Stripe Tax or create another
-   tax rate merely because this Quest implementation is a new product journey.
-   Checkout already sends automatic_tax[enabled]=true for Quest tests. Do not
-   pass any manual tax rate alongside automatic tax.
-4. In Cloudflare's STAGING Worker, the STRIPE_PRICE_ID secret should be exactly
-   price_1USbNbKEVPKWz2E9zmH0mabR. Keep the account's test API key secret.
-5. Create a separate TEST-mode webhook/event destination for:
-   https://reveal-stage4b-test.michael-fenton9.workers.dev/api/webhooks/stripe
-6. Subscribe to checkout.session.completed,
-   checkout.session.async_payment_succeeded,
-   checkout.session.async_payment_failed and checkout.session.expired.
-7. Keep the TEST API secret key (sk_test_... or appropriately scoped rk_test_...)
-   and TEST webhook signing secret
-   (whsec_...) private. No screenshots or keys should be sent in chat.
+1. STRIPE_SECRET_KEY: an API key from **Reveal Development** sandbox, not the
+   ordinary Macalla Digital test-mode account. Use the existing appropriately
+   scoped rk_test_ restricted key, if it supports Stripe Checkout Session
+   creation and retrieval; otherwise a TEST sk_test_ key for this sandbox.
+2. STRIPE_WEBHOOK_SECRET: the whsec_ signing secret from **the new staging**
+   endpoint we_1UbjiyKEVPKWz2E9vS5yWo8y. Do not use the older reveal-mvp
+   endpoint's signing secret.
 
-## Step 2 — Cloudflare's existing staging Worker (not production)
-Open the existing Worker reveal-stage4b-test under Workers & Pages.
-Use Settings > Variables and Secrets, adding these 3 as encrypted secrets:
-- STRIPE_SECRET_KEY — existing appropriately scoped Stripe rk_test_...
-  restricted test key (or sk_test_... if required for permitted API operations)
-- STRIPE_WEBHOOK_SECRET — Stripe whsec_... from the staging event destination
-- STRIPE_PRICE_ID — price_1USbNbKEVPKWz2E9zmH0mabR
-  (existing one-time £1.99 tax-exclusive TEST price; do not create a new price)
+Do not add STRIPE_PRICE_ID as a secret: the verified public price ID is already
+bound through wrangler.jsonc. Do not share any secret values in chat, GitHub,
+files, issues, logs, screenshots, or source control.
 
-The Worker already has STRIPE_LIVE_MODE=false and STAGING_DISABLE_CHECKOUT=true.
-Retain both values and the existing staging D1/R2 resources.
+The available ChatGPT integrations cannot currently create encrypted Cloudflare
+Worker bindings or retrieve a Stripe API secret key. Only account-authorised
+Cloudflare access can complete these steps.
 
-Do not configure a live Stripe key or add any of these to the GitHub repository,
-CI logs, source files or the ChatGPT conversation.
+## Once both secrets exist
 
-## Step 3 — Explicit controlled activation (after Step 2)
-Change ONLY QUEST_TEST_CHECKOUT_ENABLED in the STAGING branch's wrangler.jsonc
-from "false" to "true", commit through the existing GitHub/Cloudflare pipeline,
-and re-run the automated CI and live smoke check. Never alter production
-wrangler.jsonc or switch off STAGING_DISABLE_CHECKOUT.
+After validating the two secret bindings, update only
+QUEST_TEST_CHECKOUT_ENABLED in the STAGING branch's wrangler.jsonc to "true".
+Keep STRIPE_LIVE_MODE=false and STAGING_DISABLE_CHECKOUT=true; these allow
+Quest-only guarded test requests without enabling any other product checkout.
 
-The activation flag is currently "false". Adding secrets alone does not enable
-purchases. The server accepts only sk_test_ or rk_test_ credentials and rejects live keys.
+Run all automated tests and GET /api/quest/test-payment-status, which must report
+enabled:true, mode:test, automaticTax:true. If anything differs, disable the
+flag immediately.
 
-GET /api/quest/test-payment-status must return enabled:true before testing.
+Use a fictional Quest created on the staging Worker. Confirm its review, pay
+with a Stripe TEST card, verify the subtotal/tax calculated by Stripe from the
+test billing address, and verify the return does NOT unlock the surprise until
+the signed Stripe webhook marks D1 paid. Open the /r/... link in a separate
+browser. Solve all clues, confirm details/images unlock only after the final
+correct puzzle, revisit the paid link, and download the PNG/PDF keepsakes.
 
-## Step 4 — End-to-end TEST payment
-1. Create a fictional Reveal Quest draft (e.g. recipient Chloe) in staging.
-2. Review, amend if needed, then confirm the draft.
-3. Select 'Continue to Stripe test checkout', enter a TEST card such as
-   4242 4242 4242 4242 (future expiration, any valid CVC).
-4. Confirm Stripe calculates the one-off payment and applicable tax using the
-   test billing address. Do NOT hard-code a £2.39 total on Reveal.
-5. Return to Reveal; remain locked until the signed event changes the database
-   payment/reveal state to paid. Payment return is not proof of payment.
-6. Copy the new /r/... link into another browser and complete every clue.
-7. Verify the final private details/image stay hidden before the last puzzle,
-   then become available and revisitable. Test PNG keepsake and printable PDF.
-8. Test cancelled checkout, expired sessions, a declined test card, duplicate
-   webhooks, unexpected tax/mode/currency and non-Quest checkout access.
-9. Confirm the real live Stripe account and reveal-mvp production Worker have
-   NOT recorded transactions or changed.
+Test unsigned/duplicate/mismatched webhooks, cancelled/expired/declined
+checkouts, cross-origin requests and attempts to pay for non-Quest products.
+Never send production checkout data or reveal details through the staging
+webhook. Never mark a reveal paid manually.
 
-## Automatic tests already passed
-- src/quest-stripe-test.js activation and test-key restrictions.
-- tests/quest-stripe-test.test.mjs: staging, other products, checkout, secrets,
-  webhook routing, source-only automatic tax and purchaser review behaviour.
-- tests/quest-stripe-workflow.test.mjs: uses a fake Stripe API with actual
-  HMAC-signed webhooks and SQLite/D1-style payment state; verifies valid
-  signatures only, amounts/mode/tax checks and puzzle completion after payment.
-- Existing legacy compatibility suite and mobile Chromium/WebKit tests.
+## Historical tax/UI issue
 
-These mock tests are NOT a substitute for a genuine Stripe TEST checkout. Real
-Stripe test credentials and the test webhook destination must be configured
-inside the user's Cloudflare and Stripe accounts before that can be run.
+Stripe's original UK tax calculation was correct; Stage 3.1 changed the Worker
+to validate the 199-pence SUBTOTAL rather than equating the tax-inclusive total
+with 199p. Production main/reveal.html still contains five hard-coded £2.39
+references and must be separately corrected before launching ANY products.
+Staging public/reveal.html appropriately displays "At checkout".
 
-## Separate Cloudflare build issue
-Production Worker reveal-mvp is still listening to staging-branch pushes and
-producing failed Cloudflare build checks. This does NOT confirm a production
-deployment or change of running production code, but should be corrected in the
-Cloudflare Dashboard:
-- reveal-mvp > Settings > Builds: production branch should be main, not
-  feature/stage4b-cloudflare-staging.
-- reveal-stage4b-test > Settings > Builds: keep production branch
-  feature/stage4b-cloudflare-staging.
-- Do not try to fix this by renaming the staging wrangler.jsonc to reveal-mvp.
+## Cloudflare branch hygiene
+
+The production reveal-mvp Worker has generated failed builds from staging
+branch pushes. Correct its Cloudflare Build branch mapping in the Dashboard:
+reveal-mvp -> main; reveal-stage4b-test ->
+feature/stage4b-cloudflare-staging. Do not copy staging wrangler.jsonc into
+the production Worker or merge the staging config into main.
