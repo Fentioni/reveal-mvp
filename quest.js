@@ -12,7 +12,7 @@ const QUEST = [
  {title:'The Missing Itinerary',kind:'order',question:'Reassemble the recovered ticket fragments in their proper order.',options:['Gold seal','Flight symbol','Route line'],answer:'Route line|Flight symbol|Gold seal',hint1:'The route is the beginning of this ticket.',hint2:'The flight symbol sits between the route and the gold seal.'}
 ];
 const classes=['letter','suitcase','passport','map','ticket'];
-const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false;
+const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
  const root=$('#ambient');root.replaceChildren();
@@ -121,7 +121,7 @@ async function hint(){
  const b=$('#hint-control'),area=$('#hint-area');
  if(hintLevel<2){
    b.disabled=true;try{
-     const out=demoMode?{hint:QUEST[stage.step][hintLevel===0?'hint1':'hint2']}:await api('/api/quest/'+encodeURIComponent(slug)+'/hint?level='+(hintLevel+1));
+     const out=demoMode?{hint:(demoClues||QUEST)[stage.step][hintLevel===0?'hint1':'hint2']}:await api('/api/quest/'+encodeURIComponent(slug)+'/hint?level='+(hintLevel+1));
      hintLevel++;
      area.replaceChildren(make('div','hint',out.hint));
      b.textContent=hintLevel===1?'Show a stronger hint':'Use assisted solution';
@@ -178,21 +178,23 @@ function saveKeepsake(data){
 }
 
 function demoAnswer(answer,assist){
- const base=QUEST[stage.step];
+ const base=(demoClues||QUEST)[stage.step];
  const correct=assist || String(answer??'').trim().toLowerCase()===base.answer.toLowerCase();
  if(!correct)return {correct:false,message:'Not quite. Try again, or use a hint.'};
  const next=stage.step+1;
  if(next>=5)return {success:true,correct:true,completed:true,step:5,final:{recipient:'Chloe',sender:'Reveal',title:'Your personalised surprise will appear here after payment',message:'This is a sample quest. No purchaser details have been revealed.'}};
- const nextChapter=QUEST[next];
+ const nextChapter=(demoClues||QUEST)[next];
  return {success:true,correct:true,completed:false,step:next,total:5,chapter:nextChapter.title,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
 }
 function launchDemo(){
+ const snapshot=readConfig();
+ demoClues=snapshot.clues.map((clue,i)=>({...QUEST[i],...clue}));
  demoMode=true;create.hidden=true;play.hidden=false;
- const base=QUEST[0];stage={step:0,total:5,chapter:base.title,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
+ const base=demoClues[0];stage={step:0,total:5,chapter:base.title,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
  hintLevel=0;showIntro();
 }
 function closeDemo(){
- stopPrompt();demoMode=false;stage=null;play.replaceChildren();play.hidden=true;create.hidden=false;
+ stopPrompt();demoMode=false;demoClues=null;stage=null;play.replaceChildren();play.hidden=true;create.hidden=false;
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
@@ -236,6 +238,10 @@ function initialCreator(){
  form.append(left,right);template.append(form);create.replaceChildren(template);
  const image=$('input[name=image]',form);image.accept='image/jpeg,image/png,image/webp';
  form.addEventListener('submit',saveCreator);
+ form.addEventListener('input',()=>{if($('select[name=mode]',form).value!=='ready'){
+   const question=String(form.elements.namedItem('q0')?.value||'').trim();
+   const el=preview.querySelector('p'); if(el)el.textContent=question||'Your opening riddle will appear here.';
+ }});
  $('select[name=mode]',form).addEventListener('change',updateEditMode);
  updateEditMode();
 }
