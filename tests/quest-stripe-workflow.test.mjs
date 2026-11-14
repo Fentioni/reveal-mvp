@@ -120,8 +120,17 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   assert.equal(wrongTax.status,200);
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
 
-  const success=await worker.fetch(signed(event(session)),env,{});
+  const successfulEvent=event(session);
+  const success=await worker.fetch(signed(successfulEvent),env,{});
   assert.equal(success.status,200,await success.clone().text());
+  const paidAt=sql.prepare('SELECT paid_at FROM payments').get().paid_at;
+  // A repeated signed webhook must not create a second payment or reissue
+  // the recipient reveal. Stripe retries events in ordinary operation.
+  const repeat=await worker.fetch(signed(successfulEvent),env,{});
+  assert.equal(repeat.status,200);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS count FROM stripe_events').get().count,1);
+  assert.equal(sql.prepare('SELECT paid_at FROM payments').get().paid_at,paidAt);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS count FROM payments').get().count,1);
   assert.equal(sql.prepare('SELECT status FROM payments').get().status,'paid');
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'paid');
   const first=await worker.fetch(makeReq('/api/quest/'+slug+'/state'),env,{});
