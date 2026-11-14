@@ -664,6 +664,16 @@
     .quiz-review-item .hint{font-size:.8rem;color:#756176;margin:11px 0 0}
     body[data-reveal-product="quiz"] .review-shell{background:linear-gradient(145deg,#342643,#18172c)}
     body[data-reveal-product="quiz"] .review-label{color:#e8c7ed}
+  
+    .share-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:12px}
+    .share-grid .button{min-height:45px;font-size:.82rem;border:1px solid rgba(185,139,71,.52);padding:10px 8px}
+    .share-grid .button[hidden]{display:none}
+    .qr-panel{margin-top:14px;padding:18px;border:1px solid rgba(185,139,71,.46);border-radius:14px;text-align:center}
+    .qr-panel p{line-height:1.5;font-size:.85rem}
+    .qr-code-area{display:flex;justify-content:center;align-items:center;margin:12px auto;max-width:100%;background:white;padding:10px;border-radius:10px}
+    .qr-code-area svg{width:min(260px,100%);height:auto;aspect-ratio:1}
+    @media (min-width:700px){.share-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+
   </style>
 </head>
 
@@ -853,10 +863,23 @@
             Open recipient reveal
           </a>
         </div>
+        <div class="share-grid" aria-label="Share your paid reveal">
+          <a id="whatsAppShare" class="button button-secondary" href="#" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+          <a id="smsShare" class="button button-secondary" href="#">SMS</a>
+          <a id="emailShare" class="button button-secondary" href="#">Email</a>
+          <button id="qrShare" class="button button-secondary" type="button" aria-expanded="false" aria-controls="qrPanel">QR code</button>
+          <button id="nativeShare" class="button button-secondary" type="button" hidden>Share with your device</button>
+        </div>
+        <section id="qrPanel" class="qr-panel" hidden aria-label="Private recipient QR code">
+          <p>Scan to open the recipient link. The code contains the link only, not the surprise or ticket details.</p>
+          <div id="qrCodeArea" class="qr-code-area" aria-label="Scannable QR code"></div>
+          <button id="qrDownload" class="button button-secondary" type="button">Save QR image</button>
+        </section>
       </section>
     </div>
   </main>
 
+  <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
     'use strict';
