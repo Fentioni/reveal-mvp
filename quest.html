@@ -84,6 +84,36 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 @keyframes questFinalBurst{0%{opacity:0;transform:scale(.25)}13%{opacity:1}55%{opacity:.62}100%{opacity:0;transform:scale(1.8)}}
 @media print{.topline,.actions,#ambient,.progress{display:none!important}.scene{opacity:.25}.finale-content{color:black}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition:none!important;scroll-behavior:auto!important}}
+
+/* Actual stage artwork remains visible during puzzle play rather than being
+   hidden behind the controls. Portrait crops frame the hero object on phones. */
+.hero-object{
+  position:relative;isolation:isolate;flex:none;width:100%;max-width:620px;
+  height:clamp(190px,29svh,315px);overflow:hidden;border-radius:18px;
+  border:1px solid rgba(252,219,165,.30);
+  box-shadow:0 20px 44px rgba(0,0,0,.68),inset 0 1px rgba(255,233,187,.24);
+  background-position:center 58%;background-size:cover;background-repeat:no-repeat;
+  animation:hero-arrival .9s cubic-bezier(.19,1,.22,1) both;
+}
+.hero-object:before{content:"";position:absolute;inset:0;
+  background:linear-gradient(180deg,rgba(1,1,1,.03) 45%,rgba(15,9,6,.32) 100%);
+  pointer-events:none}
+.hero-object:after{content:"";position:absolute;inset:-35% -110%;
+  background:linear-gradient(110deg,transparent 41%,rgba(255,216,145,.08) 50%,transparent 59%);
+  animation:hero-glint 12s linear infinite;pointer-events:none}
+.hero-object.letter{background-image:url('/quest-assets/letter.webp');background-position:center 61%}
+.hero-object.suitcase{background-image:url('/quest-assets/suitcase.webp');background-position:center 62%}
+.hero-object.passport{background-image:url('/quest-assets/passport.webp');background-position:center 67%}
+.hero-object.map{background-image:url('/quest-assets/map.webp');background-position:center 66%}
+.hero-object.ticket{background-image:url('/quest-assets/ticket.webp');background-position:center 65%}
+@keyframes hero-arrival{from{opacity:.12;transform:perspective(800px) translateY(24px) rotateX(5deg) scale(.98);filter:brightness(.55)}
+ to{opacity:1;transform:perspective(800px) translateY(0) rotateX(0) scale(1);filter:brightness(1)}}
+@keyframes hero-glint{from{transform:translateX(-48%)}to{transform:translateX(48%)}}
+.stage-body:has(.hero-object){justify-content:flex-start;padding-top:18px}
+.stage-body:has(.hero-object) h2{margin-bottom:5px!important}
+.stage-body:has(.hero-object) .stage-card{margin-top:3px}
+@media(min-width:800px){.hero-object{height:clamp(230px,37vh,390px)}}
+
 </style>
 </head>
 <body>
