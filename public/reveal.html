@@ -1339,6 +1339,7 @@
       elements.returnNotice.hidden = true;
       elements.paidStage.hidden = false;
       elements.shareInput.value = shareUrl;
+      configureShareOptions(shareUrl);
       elements.openRevealButton.href = isGenderReview
         ? '/gender-host?edit='+encodeURIComponent(revealId) : shareUrl;
       elements.openRevealButton.textContent = isGenderReview
@@ -1602,6 +1603,56 @@
       }
     }
 
+    function configureShareOptions(shareUrl) {
+      const safe=normaliseShareUrl(shareUrl);
+      if(!safe)return;
+      const message='A surprise is waiting for you. Open your Reveal link: '+safe;
+      document.getElementById('whatsAppShare').href='https://wa.me/?text='+encodeURIComponent(message);
+      document.getElementById('smsShare').href='sms:?body='+encodeURIComponent(message);
+      document.getElementById('emailShare').href='mailto:?subject='+encodeURIComponent('A surprise for you')+'&body='+encodeURIComponent(message);
+      const native=document.getElementById('nativeShare');
+      native.hidden=typeof navigator.share!=='function';
+      document.getElementById('qrPanel').hidden=true;
+      document.getElementById('qrShare').setAttribute('aria-expanded','false');
+      document.getElementById('qrCodeArea').replaceChildren();
+    }
+    function toggleRecipientQr() {
+      const safe=normaliseShareUrl(elements.shareInput.value);
+      if(!safe)return;
+      const panel=document.getElementById('qrPanel');
+      const button=document.getElementById('qrShare');
+      if(!panel.hidden){
+        panel.hidden=true;button.setAttribute('aria-expanded','false');return;
+      }
+      if(!window.QRCode?.generateSVG){
+        elements.copyStatus.textContent='QR code generator unavailable; use Copy link.';
+        return;
+      }
+      try{
+        const svg=window.QRCode.generateSVG(safe,{ecclevel:'M',modulesize:5,margin:4});
+        document.getElementById('qrCodeArea').replaceChildren(svg);
+        panel.hidden=false;button.setAttribute('aria-expanded','true');
+      }catch{
+        elements.copyStatus.textContent='Unable to generate a QR code for this link.';
+      }
+    }
+    function saveRecipientQr() {
+      const safe=normaliseShareUrl(elements.shareInput.value);
+      if(!safe||!window.QRCode?.generatePNG)return;
+      try{
+        const png=window.QRCode.generatePNG(safe,{ecclevel:'M',modulesize:9,margin:4});
+        const a=document.createElement('a');a.href=png;a.download='Reveal-Recipient-QR.png';a.click();
+      }catch{elements.copyStatus.textContent='QR image unavailable.';}
+    }
+    async function nativeShareRecipient() {
+      const safe=normaliseShareUrl(elements.shareInput.value);
+      if(!safe)return;
+      if(typeof navigator.share==='function'){
+        try{await navigator.share({title:'A surprise for you',text:'A surprise awaits you on Reveal.',url:safe});}
+        catch(e){if(e?.name!=='AbortError')elements.copyStatus.textContent='Unable to share. You can copy the link instead.';}
+      }
+    }
+
     function setButtonBusy(button, busy, busyText) {
       button.disabled = busy;
 
@@ -1681,6 +1732,9 @@
     elements.paymentAmendButton.addEventListener('click', amendReveal);
     elements.refreshPaymentButton.addEventListener('click', refreshPaymentStatus);
     elements.copyButton.addEventListener('click', copyShareLink);
+    document.getElementById('qrShare').addEventListener('click',toggleRecipientQr);
+    document.getElementById('qrDownload').addEventListener('click',saveRecipientQr);
+    document.getElementById('nativeShare').addEventListener('click',nativeShareRecipient);
 
     window.addEventListener('pagehide', () => {
       if (imageObjectUrl) {
