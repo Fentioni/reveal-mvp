@@ -10,7 +10,8 @@
   "vars": {
     "STRIPE_LIVE_MODE": "false",
     "STAGING_DISABLE_CHECKOUT": "true",
-    "QUEST_TEST_CHECKOUT_ENABLED": "false"
+    "QUEST_TEST_CHECKOUT_ENABLED": "false",
+    "STRIPE_PRICE_ID": "price_1USbNbKEVPKWz2E9zmH0mabR"
   },
   "d1_databases": [
     {
