@@ -137,7 +137,9 @@ function renderStep(nextData=null){
    const sequence=make('div','sequence');sequence.id='sequence';sequence.setAttribute('aria-live','polite');card.append(sequence);
    const options=make('div','sortable');options.id='sortable';
    stage.options.forEach(opt=>{const b=btn(opt,()=>toggleOption(opt,b),'option');options.append(b);});
-   card.append(options);
+   if(['passport','map','ticket'].includes(sceneId)){
+     hero.setAttribute('role','group');hero.setAttribute('aria-label','Interactive '+stage.chapter+' scene');hero.append(options);
+   } else card.append(options);
    card.append(btn('Check sequence',()=>solve(selected.join('|'))));
  }
  const helper=make('div','actions');const hintBtn=btn('✧ Need a hint?',()=>hint(),'btn secondary');hintBtn.id='hint-control';helper.append(hintBtn);
