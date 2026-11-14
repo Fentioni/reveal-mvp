@@ -1,0 +1,18 @@
+name: Reveal Quest one-time staged image upload verification
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - '.github/workflows/quest-r2.yml'
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node tools/quest-r2-smoke.mjs
