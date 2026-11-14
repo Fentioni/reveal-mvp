@@ -1902,6 +1902,10 @@ async function stripeWebhook(
     !session ||
     session.object !==
       'checkout.session' ||
+    // A real Stripe TEST event must also contain a TEST-mode Checkout
+    // Session. An account-level event flag alone is not sufficient.
+    Boolean(session.livemode) !== stripeLiveMode(env) ||
+    (env.STRIPE_AUTOMATIC_TAX === 'true' && session.automatic_tax?.enabled !== true) ||
     session.metadata?.integration !==
       'reveal-mvp' ||
     session.metadata?.price_id !==
