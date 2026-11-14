@@ -77,6 +77,10 @@ function renderStep(nextData=null){
  stopPrompt();hintLevel=0;selected=[];digits=[0,0,0];
  const scene=newScene(classes[stage.step]||'letter',stage.step);const body=make('div','stage-body');
  heading(body,stage.chapter,stage.step);
+ const hero=make('div','hero-object '+classes[stage.step]);
+ hero.setAttribute('role','img');
+ hero.setAttribute('aria-label','Illustrated '+stage.chapter+' scene');
+ body.append(hero);
  const card=make('div','stage-card');
  const p=make('p','',stage.question);card.append(p);
  if(stage.kind==='choice'){
