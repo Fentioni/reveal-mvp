@@ -1,0 +1,35 @@
+name: Reveal Quest cinematic mobile acceptance
+on:
+  push:
+    branches:
+      - feature/stage4b-cloudflare-staging
+    paths:
+      - 'src/quest.js'
+      - 'public/quest.js'
+      - 'public/quest.html'
+      - 'public/quest-assets/**'
+      - 'tests/quest-mobile.browser.mjs'
+      - '.github/workflows/quest-mobile.yml'
+permissions:
+  contents: read
+jobs:
+  quest-mobile:
+    runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
+      - run: node --test tests/quest-mobile.browser.mjs
+      - run: QUEST_BROWSER=webkit node --test tests/quest-mobile.browser.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reveal-quest-three-five-seven-mobile-screenshots
+          path: test-output/quest-*/*.png
+          if-no-files-found: ignore
+          retention-days: 7
