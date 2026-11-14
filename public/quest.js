@@ -113,6 +113,28 @@ function renderStep(nextData=null){
  const hero=make('div','hero-object '+sceneId);
  hero.setAttribute('role',stage.kind==='lock'?'group':'img');
  hero.setAttribute('aria-label','Illustrated '+stage.chapter+' scene');
+ // Actual layered animated overlays attach to physical scene objects.
+ // They animate after the answer is validated, rather than on an arbitrary timer.
+ if(sceneId==='suitcase'){
+   const lid=make('div','case-lid');lid.setAttribute('aria-hidden','true');hero.append(lid);
+ }
+ if(sceneId==='letter'){
+   const seal=make('div','seal-flare');seal.setAttribute('aria-hidden','true');hero.append(seal);
+ }
+ if(sceneId==='passport'){
+   const pageTurn=make('div','passport-page-turn');pageTurn.setAttribute('aria-hidden','true');hero.append(pageTurn);
+ }
+ if(sceneId==='map'){
+   const route=document.createElementNS('http://www.w3.org/2000/svg','svg');
+   route.classList.add('map-journey');route.setAttribute('viewBox','0 0 900 500');
+   route.setAttribute('aria-hidden','true');
+   const path=document.createElementNS('http://www.w3.org/2000/svg','path');
+   path.setAttribute('d','M140,350 C200,290 270,370 335,255 S495,165 560,225 S710,165 775,110');
+   route.append(path);hero.append(route);
+ }
+ if(sceneId==='ticket'){
+   const glow=make('div','ticket-light');glow.setAttribute('aria-hidden','true');hero.append(glow);
+ }
  body.append(hero);
  const card=make('div','stage-card');
  const p=make('p','',stage.question);card.append(p);
@@ -195,7 +217,18 @@ async function solve(answer,assist=false){
  }catch(e){setError(e.message);}
 }
 function showFinal(data){
- stopPrompt();const scene=newScene('finale',5);scene.classList.add('played');const container=make('div','finale-content');
+ stopPrompt();const scene=newScene('finale',stage?.total||QUEST.length);scene.classList.add('played');
+ const fireworks=make('div','finale-sky');fireworks.setAttribute('aria-hidden','true');
+ for(let i=0;i<29;i++){
+   const spark=make('i','finale-spark');
+   spark.style.setProperty('--x',(8+(i*37)%85)+'%');
+   spark.style.setProperty('--y',(12+(i*23)%70)+'%');
+   spark.style.setProperty('--delay',((i%13)*0.17)+'s');
+   spark.style.setProperty('--diameter',(2+(i%5)*2)+'px');
+   fireworks.append(spark);
+ }
+ scene.append(fireworks);
+ const container=make('div','finale-content');
  container.append(make('div','eyebrow','THE MYSTERY IS SOLVED'),make('h1','serif','Your adventure awaits'));
  const name=make('h2','serif',data.title||'A wonderful surprise');name.style.margin='12px 0 18px';container.append(name);
  const tag=make('p','stage-copy','For '+data.recipient+' · From '+data.sender);container.append(tag);
