@@ -17,3 +17,9 @@ scripts/
 test-output/
 wrangler.staging.generated.jsonc
 quest-ci-visual/
+*.md
+*.mjs
+.gitignore
+demo-banner.js
+preview-public/
+*.txt
