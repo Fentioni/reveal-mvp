@@ -3,7 +3,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "test": "node --test tests/quest.test.mjs",
+    "test": "node --test tests/quest.test.mjs tests/staging.test.mjs",
     "test:browser": "node --test tests/quest.browser.test.mjs"
   },
   "engines": {
