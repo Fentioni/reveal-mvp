@@ -71,6 +71,17 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 .review-note{padding:14px;border-radius:10px;background:#29231b;color:#f3d7a8;font-size:13px;line-height:1.5}
 @media(max-width:690px){.creator-grid{grid-template-columns:1fr}.stage-body{padding:14px 14px 25px}.stage-card{padding:16px 14px}.create-intro{margin:50px auto 28px}.scene.suitcase{background-position:center 44%}.scene.letter{background-position:center 37%}}
 @media(min-width:800px){.stage-body{padding-bottom:6vh}.stage-card{max-width:575px}.quest .scene{background-position:center 48%}}
+
+/* Cinematic final-stage transition. All visual content is still gated on the Worker. */
+.quest.played .scene.finale{animation:questFinalCamera 3.2s cubic-bezier(.16,.74,.24,1) both}
+.quest.played .finale-content{animation:questFinalText 2.2s cubic-bezier(.2,.65,.2,1) both}
+.quest.played:before{content:"";pointer-events:none;position:absolute;inset:0;z-index:-1;
+ background:radial-gradient(circle at 50% 37%,rgba(255,240,184,.78),rgba(237,176,74,.33) 17%,transparent 45%),
+ repeating-conic-gradient(from 20deg at 50% 36%,transparent 0deg 12deg,rgba(255,214,119,.08) 13deg 15deg,transparent 16deg 28deg);
+ animation:questFinalBurst 2.8s ease-out both}
+@keyframes questFinalCamera{0%{transform:scale(1.35) translateY(5%);filter:brightness(2.0) blur(6px)}45%{filter:brightness(1.2) blur(0)}100%{transform:scale(1.055) translateY(0);filter:brightness(1)}}
+@keyframes questFinalText{0%,22%{opacity:0;transform:translateY(24px) scale(.92);filter:blur(6px)}90%,100%{opacity:1;transform:translateY(0) scale(1);filter:blur(0)}}
+@keyframes questFinalBurst{0%{opacity:0;transform:scale(.25)}13%{opacity:1}55%{opacity:.62}100%{opacity:0;transform:scale(1.8)}}
 @media print{.topline,.actions,#ambient,.progress{display:none!important}.scene{opacity:.25}.finale-content{color:black}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.001ms!important;transition:none!important;scroll-behavior:auto!important}}
 </style>
