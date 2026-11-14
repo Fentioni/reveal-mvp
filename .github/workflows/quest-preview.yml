@@ -1,0 +1,33 @@
+name: Reveal Quest temporary visual preview
+on:
+  push:
+    branches:
+      - feature/reveal-quest-travel-adventure
+    paths:
+      - '.github/workflows/quest-preview.yml'
+permissions:
+  contents: read
+jobs:
+  preview:
+    runs-on: ubuntu-latest
+    timeout-minutes: 7
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Package only the public sample
+        run: |
+          mkdir -p preview-public/quest-assets
+          cp quest-assets/*.webp preview-public/quest-assets/
+          cp quest.js demo-banner.js preview-public/
+          node --input-type=module -e "import {readFileSync,writeFileSync} from 'node:fs'; const html=readFileSync('quest.html','utf8'); writeFileSync('preview-public/quest.html',html.replace('</body>','<script src=\"/demo-banner.js\"></script></body>'))"
+      - name: Publish 60-minute sample-only Cloudflare preview
+        run: node scripts/deploy-temporary-preview.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sample-only-preview-link
+          path: preview-url.txt
+          if-no-files-found: ignore
+          retention-days: 1
