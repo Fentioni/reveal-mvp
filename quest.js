@@ -148,7 +148,7 @@ async function solve(answer,assist=false){
  }catch(e){setError(e.message);}
 }
 function showFinal(data){
- stopPrompt();const scene=newScene('finale',5);const container=make('div','finale-content');
+ stopPrompt();const scene=newScene('finale',5);scene.classList.add('played');const container=make('div','finale-content');
  container.append(make('div','eyebrow','THE MYSTERY IS SOLVED'),make('h1','serif','Your adventure awaits'));
  const name=make('h2','serif',data.title||'A wonderful surprise');name.style.margin='12px 0 18px';container.append(name);
  const tag=make('p','stage-copy','For '+data.recipient+' · From '+data.sender);container.append(tag);
