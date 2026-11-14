@@ -279,6 +279,64 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  .quest-print-card .print-footer{margin-top:auto;font:11pt Georgia,serif;color:#a57837;letter-spacing:.08em}
 }
 
+
+/* The final physical ticket emerges before the purchaser's surprise arrives.
+   This layer uses no customer data and can be skipped or replayed. */
+.quest-cinematic-curtain{position:absolute;z-index:20;inset:0;
+  display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:80px 22px 28px;overflow:hidden;
+  background:radial-gradient(ellipse at 50% 55%,#9c67355c 0%,#22160cf0 52%,#090805fa 100%);
+  isolation:isolate;opacity:1;
+}
+.quest-cinematic-curtain.release{animation:curtain-reveal .88s ease-out both;pointer-events:none}
+.cinematic-prelude{position:relative;z-index:3;text-align:center;width:min(92%,470px);
+  display:flex;align-items:center;flex-direction:column;gap:20px}
+.cinematic-gold-ticket{position:relative;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;width:min(80%,310px);aspect-ratio:1.65;
+  overflow:hidden;border:2px solid #f9dda2;border-radius:12px;
+  background:linear-gradient(145deg,#e6c28a,#936227 49%,#f7e1a5 73%,#62411c);
+  box-shadow:0 0 35px #ffe3a861,0 0 110px #ce9a4a80,0 18px 45px #0009;
+  transform-style:preserve-3d;animation:recovered-ticket 7.5s cubic-bezier(.2,.7,.35,1) both}
+.cinematic-gold-ticket::before,.cinematic-gold-ticket::after{content:"";
+  position:absolute;top:-8%;bottom:-8%;width:1px;border-left:2px dashed #ffefc1aa}
+.cinematic-gold-ticket::before{left:14%}.cinematic-gold-ticket::after{right:14%}
+.cinematic-ticket-star{font:normal clamp(53px,14vw,94px)/1 Georgia,serif;color:#fff7d5;
+  text-shadow:0 0 11px #fff,0 0 35px #f4dc9c}
+.cinematic-ticket-mark{font:700 clamp(8px,2.1vw,12px)/1.4 Georgia,serif;
+  letter-spacing:.23em;color:#fff3d2;text-shadow:0 1px 4px #512f1a}
+.cinematic-message{font:normal clamp(21px,6vw,32px)/1.2 Georgia,serif;color:#fff3d0;
+  text-shadow:0 2px 16px #000;animation:message-lift 7s ease-in-out both}
+.cinematic-burst{position:absolute;z-index:1;width:130vmax;height:130vmax;top:50%;left:50%;
+  border-radius:50%;background:radial-gradient(circle,#fff2b6 0%,#f7c672d9 8%,#bd823a6e 19%,#aa70352b 40%,transparent 60%);
+  filter:blur(5px);pointer-events:none;
+  animation:quest-finale-lightburst 7.5s ease-in-out both}
+.cinematic-skip{position:absolute;z-index:5;bottom:calc(30px + env(safe-area-inset-bottom));
+  left:50%;transform:translateX(-50%);border-radius:30px!important;min-height:43px!important;
+  white-space:nowrap;background:#1c150ec9!important;color:#fff3d0!important}
+@keyframes recovered-ticket{
+  0%{opacity:0;transform:perspective(620px) translateY(75px) rotateY(-25deg) rotateZ(-6deg) scale(.65);filter:brightness(.5)}
+  21%{opacity:1;transform:perspective(620px) translateY(0) rotateY(8deg) rotateZ(-2deg) scale(.95);filter:brightness(1)}
+  48%{opacity:1;transform:perspective(620px) translateY(-20px) rotateY(-6deg) rotateZ(1deg) scale(1.06);filter:brightness(1.25)}
+  73%{opacity:1;transform:perspective(620px) translateY(-105px) rotateY(1deg) rotateZ(0) scale(1.32);filter:brightness(1.65)}
+  100%{opacity:0;transform:perspective(620px) translateY(-190px) rotateY(0) rotateZ(0) scale(2.8);filter:brightness(4)}
+}
+@keyframes message-lift{
+  0%,12%{opacity:0;transform:translateY(18px)}
+  30%,67%{opacity:1;transform:translateY(0)}
+  100%{opacity:0;transform:translateY(-40px)}
+}
+@keyframes quest-finale-lightburst{
+  0%,58%{opacity:0;transform:translate(-50%,-50%) scale(.12)}
+  83%{opacity:.95;transform:translate(-50%,-50%) scale(.7)}
+  100%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}
+}
+@keyframes curtain-reveal{
+  0%{opacity:1;transform:scale(1);filter:brightness(1)}
+  30%{opacity:1;transform:scale(1.02);filter:brightness(1.85)}
+  100%{opacity:0;transform:scale(1.12);filter:brightness(4)}
+}
+@media(prefers-reduced-motion:reduce){.quest-cinematic-curtain{display:none!important}}
+
 </style>
 </head>
 <body>
