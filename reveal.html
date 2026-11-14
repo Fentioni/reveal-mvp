@@ -672,7 +672,7 @@
 
         <div class="price-panel">
           <span class="price-label">One-off payment<br>No subscription</span>
-          <strong class="price">£2.39</strong>
+          <strong class="price" style="font-size:1.1rem">Final total shown at Stripe Checkout</strong>
         </div>
 
         <ul class="included-list">
@@ -689,7 +689,7 @@
           </button>
 
           <button id="payButton" class="button button-primary" type="button">
-            Pay £2.39 securely
+            Continue to secure payment
           </button>
         </div>
 
@@ -970,14 +970,14 @@
         elements.paymentBadge.textContent = 'Checkout ready';
         elements.paymentHeading.textContent = 'Complete your payment';
         elements.paymentCopy.textContent =
-          'Your reveal remains locked until Stripe confirms the £2.39 payment.';
+          'Your reveal remains locked until Stripe confirms the payment.';
         elements.payButton.textContent = 'Continue to secure payment';
       } else {
         elements.paymentBadge.textContent = 'Awaiting payment';
         elements.paymentHeading.textContent = 'Unlock your reveal';
         elements.paymentCopy.textContent =
           'Make one secure payment to unlock the recipient experience and permanent sharing link.';
-        elements.payButton.textContent = 'Pay £2.39 securely';
+        elements.payButton.textContent = 'Continue to secure payment';
       }
     }
 
@@ -1064,7 +1064,7 @@
         elements.payButton.textContent =
           reveal.status === 'checkout'
             ? 'Continue to secure payment'
-            : 'Pay £2.39 securely';
+            : 'Pay the amount shown at checkout securely';
       }
     }
 
@@ -1194,7 +1194,7 @@
     }
 
     function goToEditor() {
-      window.location.href = '/index.html?edit=' + encodeURIComponent(revealId);
+      window.location.href = (localStorage.getItem('reveal_quest_' + revealId) ? '/quest.html?edit=' : '/index.html?edit=') + encodeURIComponent(revealId);
     }
 
     function normaliseCheckoutUrl(value) {

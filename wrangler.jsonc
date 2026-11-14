@@ -1,6 +1,6 @@
 {
   "name": "reveal-mvp",
-  "main": "./src/index.js",
+  "main": "./src/quest-router.js",
   "compatibility_date": "2026-10-12",
 
   "assets": {
