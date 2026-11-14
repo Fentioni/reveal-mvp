@@ -61,9 +61,10 @@ test('Payment capability is published safely, without credentials or tax-inclusi
  assert.equal(off.status,200);
  assert.deepEqual(await off.json(),{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:true,baseAmountMinor:199,currency:'gbp'});
  const on=await questStripeTestResponse(req('/api/quest/test-payment-status'),envBase,{},legacy);
+ const onBody=await on.clone().text();
  assert.equal((await on.json()).enabled,true);
  assert.equal(on.headers.get('cache-control'),'no-store');
- assert.ok(!(await on.clone().text()).includes('sk_test_'));
+ assert.ok(!onBody.includes('sk_test_'));
 });
 test('All other product checkouts stay blocked even when Quest test mode is switched on',async()=>{
  const notQuest={
