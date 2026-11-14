@@ -26,6 +26,8 @@ jobs:
       - run: npm test
   mobile-browser:
     runs-on: ubuntu-latest
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
@@ -33,7 +35,6 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.0
-      - run: npx playwright install --with-deps chromium
       - run: npm run test:browser
       - if: always()
         uses: actions/upload-artifact@v4
