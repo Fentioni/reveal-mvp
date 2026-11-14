@@ -241,20 +241,86 @@ function showFinal(data){
  if(demoMode){acts.append(btn('Return to your editor',closeDemo,'btn'));container.append(acts);scene.append(container);play.replaceChildren(scene);return;}
  acts.append(btn('Replay the finale ✦',()=>{scene.classList.remove('played');void scene.offsetWidth;scene.classList.add('played');soundFx();},'btn'));
  acts.append(btn('Save keepsake image',()=>saveKeepsake(data),'btn secondary'));
- acts.append(btn('Print or save PDF',()=>window.print(),'btn secondary'));
+ acts.append(btn('Print or save PDF',()=>printKeepsake(data),'btn secondary'));
+ buildPrintKeepsake(data);
  container.append(acts);
  scene.append(container);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
-function saveKeepsake(data){
- const canvas=document.createElement('canvas');canvas.width=1080;canvas.height=1350;const c=canvas.getContext('2d');
- const grad=c.createLinearGradient(0,0,1080,1350);grad.addColorStop(0,'#50331e');grad.addColorStop(.5,'#14100e');grad.addColorStop(1,'#28190e');
- c.fillStyle=grad;c.fillRect(0,0,1080,1350);c.strokeStyle='#e3c28b';c.lineWidth=4;c.strokeRect(48,48,984,1254);
- c.textAlign='center';c.fillStyle='#f5dca8';c.font='37px Georgia';c.fillText('REVEAL QUEST',540,210);
- c.font='40px Georgia';c.fillText('THE MYSTERY IS SOLVED',540,390);
- const lines=(data.title||'A wonderful surprise').match(/.{1,18}(?:\s|$)/g)||['A wonderful surprise'];
- c.font='bold 73px Georgia';lines.slice(0,5).forEach((t,i)=>c.fillText(t.trim(),540,550+i*90));
- c.font='38px Georgia';c.fillText('For '+(data.recipient||'you'),540,1040);c.fillText('From '+(data.sender||'someone special'),540,1110);
- const a=document.createElement('a');a.download='Reveal-Quest-Keepsake.png';a.href=canvas.toDataURL('image/png');a.click();
+function buildPrintKeepsake(data){
+ let card=$('#quest-print-card');
+ if(!card){card=make('section','quest-print-card');card.id='quest-print-card';card.setAttribute('aria-label','Printable Reveal Quest keepsake');document.body.append(card);}
+ card.replaceChildren(make('div','print-mark','✦ REVEAL QUEST ✦'),make('p','print-eyebrow','THE MYSTERY IS SOLVED'));
+ card.append(make('h1','serif',data.title||'A wonderful surprise'));
+ card.append(make('p','print-dedication','For '+(data.recipient||'you')+' · From '+(data.sender||'someone special')));
+ if(data.imageUrl){const img=make('img','print-photo');img.src=data.imageUrl;img.alt='Your surprise image';card.append(img);}
+ for(const line of [data.message,data.date?'Date: '+data.date:'',data.time?'Time: '+data.time:'',
+   data.venue?'Where: '+data.venue:'',data.admit?'For: '+data.admit:'']){
+   if(line)card.append(make('p','print-detail',line));
+ }
+ card.append(make('p','print-footer','A moment worth remembering · Reveal Quest'));
+}
+function printKeepsake(data){buildPrintKeepsake(data);window.print();}
+function drawWrapped(c,text,x,y,width,font,lineHeight,maxLines=3){
+ c.font=font;
+ const words=String(text||'').split(/\s+/).filter(Boolean);
+ let line='',count=0;
+ for(const word of words){
+   const next=line?line+' '+word:word;
+   if(line && c.measureText(next).width>width){
+     c.fillText(line,x,y+count*lineHeight);count++;line=word;
+     if(count>=maxLines)return y+count*lineHeight;
+   }else line=next;
+ }
+ if(line&&count<maxLines){c.fillText(line,x,y+count*lineHeight);count++;}
+ return y+count*lineHeight;
+}
+async function saveKeepsake(data){
+ const canvas=document.createElement('canvas');canvas.width=1200;canvas.height=1800;
+ const c=canvas.getContext('2d');
+ if(!c)throw Error('Canvas unavailable');
+ const gradient=c.createLinearGradient(0,0,1200,1800);
+ gradient.addColorStop(0,'#62462d');gradient.addColorStop(.35,'#25180f');gradient.addColorStop(1,'#110e0d');
+ c.fillStyle=gradient;c.fillRect(0,0,1200,1800);
+ c.strokeStyle='#e0b973';c.lineWidth=5;c.strokeRect(47,47,1106,1706);
+ c.lineWidth=1;c.strokeRect(62,62,1076,1676);
+ c.textAlign='center';c.fillStyle='#f7d99c';c.font='bold 40px Georgia';
+ c.fillText('✦   REVEAL QUEST   ✦',600,184);
+ c.font='33px Georgia';c.fillText('THE MYSTERY IS SOLVED',600,294);
+ c.fillStyle='#fff1d5';
+ const title=String(data.title||'A wonderful surprise').trim();
+ drawWrapped(c,title,600,410,1000,'bold 68px Georgia',78,4);
+ c.fillStyle='#e9c98f';c.font='36px Georgia';
+ c.fillText('For '+(data.recipient||'you')+' · From '+(data.sender||'someone special'),600,730,1080);
+ let photoDrawn=false;
+ if(data.imageUrl){
+   try{
+     const image=new Image();image.crossOrigin='anonymous';image.src=data.imageUrl;
+     await image.decode();
+     if(image.naturalWidth){
+       const ratio=Math.min(985/image.naturalWidth,490/image.naturalHeight);
+       const w=Math.round(image.naturalWidth*ratio),h=Math.round(image.naturalHeight*ratio);
+       const x=(1200-w)/2,y=775+(490-h)/2;
+       c.fillStyle='#16110c';c.fillRect(x-8,y-8,w+16,h+16);
+       c.strokeStyle='#ddbd80';c.strokeRect(x-8,y-8,w+16,h+16);
+       c.drawImage(image,x,y,w,h);
+       photoDrawn=true;
+     }
+   }catch{ /* Recipient's private image may not load offline; keep text keepsake. */ }
+ }
+ if(!photoDrawn){
+   c.font='180px Georgia';c.fillStyle='#dba960';c.fillText('✧',600,1080);
+   c.strokeStyle='#af8a4c';c.beginPath();c.moveTo(300,1170);c.lineTo(900,1170);c.stroke();
+ }
+ c.fillStyle='#f4e4c5';let y=1330;
+ if(data.message)y=drawWrapped(c,data.message,600,y,1000,'32px Georgia',42,3)+20;
+ c.font='28px Georgia';c.fillStyle='#ddc79e';
+ for(const row of [data.date?'Date: '+data.date:'',data.time?'Time: '+data.time:'',
+   data.venue?'Where: '+data.venue:'',data.admit?'For: '+data.admit:'']){
+   if(row && y<1650){c.fillText(row,600,y,1040);y+=41;}
+ }
+ c.fillStyle='#d3b37a';c.font='24px Georgia';c.fillText('A MOMENT WORTH REMEMBERING',600,1710);
+ const a=document.createElement('a');a.download='Reveal-Quest-Keepsake.png';
+ a.href=canvas.toDataURL('image/png');a.click();
 }
 
 function demoAnswer(answer,assist){
