@@ -256,6 +256,29 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  .finale-spark{display:none}
 }
 
+
+/* One-page keepsake output: the printable view is shown only on completed paid reveals. */
+.quest-print-card{display:none}
+@media print {
+ @page{size:A4;margin:14mm}
+ *{animation:none!important;transition:none!important}
+ html,body{height:auto!important;background:#fff!important;color:#3b2616!important}
+ #app,#ambient{display:none!important}
+ .quest-print-card{display:flex!important;box-sizing:border-box;page-break-inside:avoid;
+  min-height:254mm;width:100%;padding:22mm 14mm 16mm;
+  flex-direction:column;align-items:center;justify-content:flex-start;text-align:center;
+  color:#4a311b;background:#fff9ee!important;
+  border:2pt solid #ad824a;outline:1pt solid #dbbd86;outline-offset:-10px;
+  -webkit-print-color-adjust:exact;print-color-adjust:exact}
+ .quest-print-card .print-mark{font:700 20pt Georgia,serif;color:#a57837;letter-spacing:.14em}
+ .quest-print-card .print-eyebrow{font:12pt Georgia,serif;letter-spacing:.14em;margin:25mm 0 5mm;color:#825a2b}
+ .quest-print-card h1{font:normal 34pt/1.16 Georgia,serif;color:#392412!important;text-shadow:none!important;max-width:155mm;overflow-wrap:anywhere}
+ .quest-print-card .print-dedication{font:15pt Georgia,serif;margin:8mm auto 12mm;color:#8f662e}
+ .quest-print-card .print-photo{width:auto;max-width:140mm;max-height:90mm;object-fit:contain;border:1.5pt solid #d3af75}
+ .quest-print-card .print-detail{font:12pt/1.45 Georgia,serif;max-width:145mm;margin:3mm auto;color:#4b3624}
+ .quest-print-card .print-footer{margin-top:auto;font:11pt Georgia,serif;color:#a57837;letter-spacing:.08em}
+}
+
 </style>
 </head>
 <body>
