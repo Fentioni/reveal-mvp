@@ -6,6 +6,7 @@ import { scratchRecipientResponse } from './scratch-recipient.js';
 import { quizOwnerResponse,quizRecipientResponse } from './quiz.js';
 import { quizQuestionImageResponse } from './quiz-question-images.js';
 import { genderOwnerResponse,genderAudienceResponse } from './gender-reveal.js';
+import { questResponse } from './quest.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -65,6 +66,11 @@ export default {
       const paidScratch = await scratchRecipientResponse(request, env, ctx);
       if (paidScratch) return paidScratch;
     }
+
+    // Reveal Quest is an additional product, not a replacement for existing
+    // gender/quiz/scratch routes. It returns null for unrelated requests.
+    const quest=await questResponse(request,env,ctx,originalWorker);
+    if (quest) return quest;
 
     if (path === '/api/catalogue' || path.startsWith('/api/catalogue/')) {
       return catalogueResponse(request, env);
