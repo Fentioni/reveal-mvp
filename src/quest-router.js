@@ -174,7 +174,7 @@ export default {
     const path=url.pathname;
     try{
       if(path.startsWith('/api/quest/'))return await handleApi(request,env,url);
-      if(path==='/quest'||path==='/quest/'){
+      if(path==='/quest'||path==='/quest/'||path==='/create/reveal-quest'||path==='/create/reveal-quest/'){
         return env.ASSETS.fetch(new Request(new URL('/quest.html',url),request));
       }
       const found=path.match(/^\/r\/([A-Za-z0-9_-]+)(\/image)?\/?$/);
