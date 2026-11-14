@@ -100,6 +100,31 @@ async function handleApi(req,env,url){
     await env.DB.prepare('INSERT INTO quest_configs(reveal_id,config_json,created_at,updated_at) VALUES(?,?,?,?)').bind(data.id,JSON.stringify(config),new Date().toISOString(),new Date().toISOString()).run();
     return res({success:true,id:data.id,editToken:data.editToken,reviewUrl:'/reveal.html?id='+encodeURIComponent(data.id)},201);
   }
+  const owner=path.match(/^\/api\/quest\/owner\/([A-Za-z0-9_-]+)$/);
+  if(owner && (req.method==='GET'||req.method==='PUT')){
+    if(!originOK(req))return res({error:'Invalid origin'},403);
+    const id=owner[1];
+    const row=await env.DB.prepare('SELECT * FROM reveals WHERE id=?').bind(id).first();
+    if(!row)return res({error:'Reveal not found'},404);
+    const cfg=await configFor(env,id);if(!cfg)return res({error:'Quest not found'},404);
+    const check=await legacy.fetch(new Request(new URL('/api/reveals/'+id,req.url),{method:'GET',headers:{'X-Edit-Token':req.headers.get('X-Edit-Token')||''}}),env);
+    if(!check.ok)return check;
+    if(req.method==='GET')return res({success:true,config:cfg,reveal:(await check.json()).reveal});
+    if(row.status!=='draft')return res({error:'Use Amend before updating this Quest'},409);
+    if(Number(req.headers.get('content-length')||0)>11*1024*1024)return res({error:'Submission too large'},413);
+    let form;try{form=await req.formData();}catch{return res({error:'Invalid form data'},400);}
+    let input;try{input=JSON.parse(String(form.get('questConfig')||''));}catch{return res({error:'Invalid quest config'},400);}
+    const next=configCheck(input);if(!next)return res({error:'Invalid clue configuration'},400);
+    const fd=new FormData();
+    for(const key of ['recipient','sender','eventName','eventDate','eventTime','venue','admit','personalMessage','ticketUrl','revision']){
+      const val=form.get(key);if(typeof val==='string')fd.set(key,val);
+    }
+    const img=form.get('image');if(img&&typeof img!=='string'&&img.size>0)fd.set('image',img,img.name);
+    const updated=await legacy.fetch(new Request(new URL('/api/reveals/'+id,req.url),{method:'PUT',headers:{'X-Edit-Token':req.headers.get('X-Edit-Token')||'',Origin:url.origin},body:fd}),env);
+    if(!updated.ok)return updated;
+    await env.DB.prepare('UPDATE quest_configs SET config_json=?,updated_at=? WHERE reveal_id=?').bind(JSON.stringify(next),new Date().toISOString(),id).run();
+    return res({success:true,id,reviewUrl:'/reveal.html?id='+encodeURIComponent(id)});
+  }
   const match=path.match(/^\/api\/quest\/([A-Za-z0-9_-]+)\/(state|answer|hint|assist)$/);
   if(!match)return res({error:'Not found'},404);
   const [,slug,action]=match;
