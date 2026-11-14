@@ -1454,6 +1454,13 @@ async function createStripeCheckout(
     'required'
   );
 
+  // Activated only by the isolated Reveal Quest TEST checkout wrapper.
+  // Stripe determines tax from the purchaser's billing location. Never
+  // advertise or hard-code a guessed tax-inclusive total in Reveal.
+  if (env.STRIPE_AUTOMATIC_TAX === 'true') {
+    form.set('automatic_tax[enabled]', 'true');
+  }
+
   form.set(
     'expires_at',
     String(expiresAt)
@@ -1535,6 +1542,7 @@ async function createStripeCheckout(
     session.status === 'open' &&
     session.payment_status === 'unpaid' &&
     validStripeAmounts(session) &&
+    (env.STRIPE_AUTOMATIC_TAX !== 'true' || session.automatic_tax?.enabled === true) &&
     session.currency === STRIPE_CURRENCY &&
     Boolean(session.livemode) ===
       stripeLiveMode(env);
