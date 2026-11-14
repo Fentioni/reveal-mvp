@@ -1,0 +1,47 @@
+name: Reveal Quest isolated staging deployment
+on:
+  workflow_dispatch:
+    inputs:
+      confirm_staging_only:
+        description: 'Confirm this deployment must use a separate staging database, bucket, and test Stripe credentials'
+        required: true
+        type: boolean
+        default: false
+permissions:
+  contents: read
+jobs:
+  deploy-staging:
+    if: ${{ inputs.confirm_staging_only == true }}
+    runs-on: ubuntu-latest
+    environment: quest-staging
+    timeout-minutes: 15
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      REVEAL_STAGING_D1_ID: ${{ vars.REVEAL_STAGING_D1_ID }}
+      REVEAL_STAGING_D1_NAME: ${{ vars.REVEAL_STAGING_D1_NAME }}
+      REVEAL_STAGING_R2_BUCKET: ${{ vars.REVEAL_STAGING_R2_BUCKET }}
+      REVEAL_STAGING_STRIPE_PRICE_ID: ${{ vars.REVEAL_STAGING_STRIPE_PRICE_ID }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Ensure Cloudflare credentials exist
+        run: |
+          if [ -z "$CLOUDFLARE_API_TOKEN" ] || [ -z "$CLOUDFLARE_ACCOUNT_ID" ]; then
+            echo 'Staging requires Cloudflare account ID and API token GitHub secrets.'
+            exit 1
+          fi
+      - name: Run automated backend tests
+        run: npm test
+      - name: Build staging-only configuration with hard production guardrails
+        run: node scripts/build-quest-staging.mjs
+      - name: Verify isolated staging DB already has legacy schema
+        run: npx wrangler@4.102.0 d1 execute "$REVEAL_STAGING_D1_NAME" --config wrangler.staging.generated.jsonc --remote --command "SELECT id FROM reveals LIMIT 0"
+      - name: Verify staging payment table
+        run: npx wrangler@4.102.0 d1 execute "$REVEAL_STAGING_D1_NAME" --config wrangler.staging.generated.jsonc --remote --command "SELECT id FROM payments LIMIT 0"
+      - name: Apply additive Quest migration to staging only
+        run: npx wrangler@4.102.0 d1 execute "$REVEAL_STAGING_D1_NAME" --config wrangler.staging.generated.jsonc --remote --file sql/01-reveal-quest.sql
+      - name: Deploy isolated staging Worker
+        run: npx wrangler@4.102.0 deploy --config wrangler.staging.generated.jsonc --strict
