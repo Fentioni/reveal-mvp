@@ -42,6 +42,25 @@ function isCheckout(path){
 export async function questStripeTestResponse(request,env,ctx,originalWorker){
  const url=new URL(request.url);
  const path=url.pathname;
+ // TEMPORARY staging-only read-only diagnostic: names and booleans only,
+ // protected by a deployment-only diagnostic header. Never emit any secrets.
+ if(path==='/api/quest/config-audit-b2f41' && request.method==='GET'){
+  if(request.headers.get('x-quest-audit')!=='U7X69jw8SzPYxT5NB4kw9VHrmFeQ2a' || !isolatedStaging(env)){
+   return reply({success:false,error:'Not found.'},404);
+  }
+  const key=String(env.STRIPE_SECRET_KEY||'');
+  const webhook=String(env.STRIPE_WEBHOOK_SECRET||'');
+  const price=String(env.STRIPE_PRICE_ID||'');
+  return reply({
+   staging:true,
+   keyExists:Boolean(key),keyIsTest:key.startsWith('sk_test_'),
+   webhookExists:Boolean(webhook),webhookIsSigningSecret:webhook.startsWith('whsec_'),
+   priceExists:Boolean(price),
+   priceIsHistoricalTestId:price==='price_1USbNbKEVPKWz2E9zmH0mabR',
+   featureFlagEnabled:env.QUEST_TEST_CHECKOUT_ENABLED==='true',
+   liveModeDisabled:env.STRIPE_LIVE_MODE==='false'
+  });
+ }
  if(path==='/api/quest/test-payment-status' && request.method==='GET'){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
