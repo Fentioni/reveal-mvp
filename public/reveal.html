@@ -1527,6 +1527,8 @@
         window.location.href='/gender-create?edit='+encodeURIComponent(revealId);
       }else if (isQuizReview) {
         window.location.href = '/quiz-create?edit=' + encodeURIComponent(revealId);
+      } else if (localStorage.getItem('reveal_quest_' + revealId)) {
+        window.location.href = '/quest.html?edit=' + encodeURIComponent(revealId);
       } else {
         window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId);
       }
