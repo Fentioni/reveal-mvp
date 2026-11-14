@@ -12,7 +12,7 @@ const engine=process.env.QUEST_BROWSER==='webkit'?'webkit':'chromium';
 const browserType=engine==='webkit'?webkit:chromium;
 const output=resolve(root,'test-output','quest-paid-'+engine);
 const pixel=Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScL/nwAAAABJRU5ErkJggg=='),x=>x.charCodeAt(0));
-const resultTitle='A surprise trip to Gower';
+const resultTitle='A surprise trip to the coast';
 
 function mockDatabase(){
  let session=null;
@@ -20,7 +20,7 @@ function mockDatabase(){
   id:'paid-test-1',public_slug:'quest-simulated-paid',status:'paid',paid_at:'2026-11-14T10:00:00Z',
   recipient:'Chloe',sender:'Your favourite person',event_name:resultTitle,
   personal_message:'Pack your bags for an adventure.',event_date:'2027-06-04',
-  event_time:'13:00',venue:'Gower, Swansea',admit:'Two',ticket_url:'https://example.com/private',
+  event_time:'13:00',venue:'A secret coastal destination',admit:'Two',ticket_url:'https://example.com/private',
   image_key:'synthetic.png'
  };
  const config={story:'missing-itinerary',theme:'travel-adventure',preset:'quick',mode:'ready',
@@ -127,13 +127,13 @@ test('simulated-paid recipient sees no prize until solving then can reopen and s
   assert.ok(!(await page.locator('body').innerText()).includes(resultTitle));
   for(const word of ['Route line','Flight symbol','Gold seal'])await page.getByRole('button',{name:word}).click();
   await page.getByRole('button',{name:'Check sequence'}).click();
-  await page.getByText(resultTitle).waitFor();
+  await page.locator('.finale-content h2').filter({hasText:resultTitle}).waitFor();
   assert.ok((await page.locator('body').innerText()).includes('Pack your bags'));
   assert.ok((await page.locator('#quest-print-card').innerText()).includes(resultTitle));
   assert.equal(await page.evaluate(()=>fetch('/r/quest-simulated-paid/image').then(r=>r.status)),200);
   await page.screenshot({path:resolve(output,'paid-recipient-finale.png'),animations:'disabled',fullPage:true});
   await page.reload({waitUntil:'networkidle'});
-  await page.getByText(resultTitle).waitFor({timeout:6000});
+  await page.locator('.finale-content h2').filter({hasText:resultTitle}).waitFor({timeout:6000});
   const [download]=await Promise.all([
     page.waitForEvent('download'),
     page.getByRole('button',{name:'Save keepsake image'}).click()
