@@ -1,0 +1,21 @@
+name: Reveal Quest Cloudflare live staging smoke
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - 'tools/smoke-quest-staging.mjs'
+      - '.github/workflows/quest-smoke.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Check deployed Quest staging, never production
+        run: node tools/smoke-quest-staging.mjs
