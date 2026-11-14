@@ -910,6 +910,7 @@
     let staticScratchCard = null;
     let isQuizReview = false;
     let isGenderReview = false;
+    let isQuestReview = Boolean(revealId && localStorage.getItem('reveal_quest_' + revealId) === '1');
     const quizReviewImageUrls = [];
 
     if (isStagingTest) {
@@ -991,7 +992,12 @@
           await loadImage();
         }
 
-        if (isStagingTest && !await loadQuizReview() && !await loadGenderReview()) await loadSurface();
+        if (isQuestReview) {
+          document.body.dataset.revealProduct='quest';
+          document.title='Review Reveal Quest | Reveal';
+          document.querySelector('.review-label').textContent='REVEAL QUEST · PURCHASER REVIEW';
+        }
+        if (isStagingTest && !isQuestReview && !await loadQuizReview() && !await loadGenderReview()) await loadSurface();
 
         elements.loadingCard.hidden = true;
         elements.reviewContent.hidden = false;
@@ -1523,7 +1529,9 @@
     }
 
     function goToEditor() {
-      if(isGenderReview){
+      if(isQuestReview){
+        window.location.href='/quest?edit='+encodeURIComponent(revealId);
+      }else if(isGenderReview){
         window.location.href='/gender-create?edit='+encodeURIComponent(revealId);
       }else if (isQuizReview) {
         window.location.href = '/quiz-create?edit=' + encodeURIComponent(revealId);
