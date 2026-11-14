@@ -4,14 +4,46 @@
 const $ = (sel,root=document) => root.querySelector(sel);
 const make = (tag,className,text) => {const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;};
 const escapeHtml = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const QUEST = [
+let QUEST = [
  {title:'The Mysterious Letter',kind:'choice',question:'I travel without moving and always point north. Which object am I?',options:['A map','A compass','A telescope'],answer:'A compass',hint1:'Look for the object that helps travellers find north.',hint2:'It has a magnetic needle.'},
  {title:'The Locked Suitcase',kind:'lock',question:'The note gives the order: compass, mountain, star. Match that order to the numbered luggage tags to open the suitcase.',options:[],answer:'427',hint1:'Inspect the luggage tags, not the travel stickers.',hint2:'The compass tag is 4, the mountain tag is 2 and the star tag is 7.'},
  {title:'The Passport Mystery',kind:'order',question:'Arrange the three stamps in chronological order, earliest first.',options:['Lisbon · 19 Apr','Barcelona · 12 Apr','Rome · 08 Apr'],answer:'Rome · 08 Apr|Barcelona · 12 Apr|Lisbon · 19 Apr',hint1:'The dates are more important than the cities.',hint2:'Start with 08 April, followed by 12 April.'},
  {title:'The Secret Map',kind:'order',question:'Follow the clues and visit the landmarks in the correct sequence.',options:['Mountain peak','Lighthouse','Forest'],answer:'Lighthouse|Forest|Mountain peak',hint1:'The sea is where your route begins.',hint2:'Start at the lighthouse, then visit the forest.'},
  {title:'The Missing Itinerary',kind:'order',question:'Reassemble the recovered ticket fragments in their proper order.',options:['Gold seal','Flight symbol','Route line'],answer:'Route line|Flight symbol|Gold seal',hint1:'The route is the beginning of this ticket.',hint2:'The flight symbol sits between the route and the gold seal.'}
 ];
-const classes=['letter','suitcase','passport','map','ticket'];
+const LIBRARY=Object.fromEntries(QUEST.map((q,i)=>{
+ const key=['letter','suitcase','passport','map','ticket'][i];
+ return [key,{...q,key,scene:key}];
+}));
+LIBRARY.compass={key:'compass',scene:'letter',title:'The Compass Rose',kind:'order',
+ question:'Follow the compass rose clockwise, starting from North.',
+ options:['West','South','East'],answer:'East|South|West',
+ hint1:'Imagine turning clockwise from north.',hint2:'East, then south, then west.'};
+LIBRARY.cipher={key:'cipher',scene:'ticket',title:'The Final Cipher',kind:'choice',
+ question:'The last clue says: I take you somewhere new, yet never leave my page. What am I?',
+ options:['An itinerary','A lantern','A suitcase'],answer:'An itinerary',
+ hint1:'The missing object describes the journey.',hint2:'It is a written travel plan.'};
+const PRESET_KEYS={
+ quick:['letter','suitcase','ticket'],
+ classic:['letter','suitcase','passport','map','ticket'],
+ epic:['letter','compass','suitcase','passport','map','cipher','ticket']
+};
+let selectedPreset='classic';
+function setPreset(value){
+ if(!Object.hasOwn(PRESET_KEYS,value))return;
+ selectedPreset=value;
+ QUEST=PRESET_KEYS[value].map(key=>({...LIBRARY[key]}));
+ const editors=$('#editors');
+ if(editors){
+  editors.replaceChildren(...QUEST.map((chapter,i)=>buildEditor(i,chapter)));
+  updateEditMode();
+ }
+ const lengthInfo=$('#chapter-count');
+ if(lengthInfo)lengthInfo.textContent=QUEST.length+' chapters · '+({quick:'3–5',classic:'5–8',epic:'10–15'}[value])+' minute target';
+ const story=$('#quest-intro-copy');
+ if(story)story.textContent='A connected '+QUEST.length+'-chapter cinematic adventure. Your recipient solves the mystery before unlocking their surprise.';
+}
+setPreset('classic');
 const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
@@ -33,8 +65,8 @@ function questHeader(step){
  const nav=make('div','topline');
  nav.innerHTML='<span class="brand">✦ &nbsp;REVEAL QUEST</span><div style="display:flex;gap:8px">'+(demoMode?'<button class="minibtn" id="close-demo" type="button" aria-label="Return to editor">✕</button>':'')+'<button class="minibtn" id="sound" type="button" aria-label="Toggle sound">'+(sound?'♫':'♪')+'</button></div>';
  const dots=make('div','progress');
- dots.setAttribute('aria-label','Chapter '+Math.min(5,step+1)+' of 5');
- for(let i=0;i<5;i++){const s=make('span',i<=step?'active':'');dots.append(s);}
+ dots.setAttribute('aria-label','Chapter '+Math.min(stage?.total||QUEST.length,step+1)+' of '+(stage?.total||QUEST.length));
+ for(let i=0;i<(stage?.total||QUEST.length);i++){const s=make('span',i<=step?'active':'');dots.append(s);}
  nav.appendChild(dots);return nav;
 }
 function newScene(scene,step){
@@ -52,7 +84,7 @@ function btn(text,handler,kind='btn'){
  const b=make('button',kind,text);b.type='button';b.addEventListener('click',handler);return b;
 }
 function heading(parent,chapter,step){
- const label=make('div','eyebrow','Chapter '+(step+1)+' of 5');parent.append(label);
+ const label=make('div','eyebrow','Chapter '+(step+1)+' of '+(stage?.total||QUEST.length));parent.append(label);
  const h=make('h2','serif',chapter);h.style.margin='4px 0 6px';parent.append(h);
 }
 function stopPrompt(){if(promptTimer)clearTimeout(promptTimer);promptTimer=null;}
@@ -63,7 +95,7 @@ function showIntro(){
  const scene=newScene('letter',0);const body=make('div','stage-body');
  const eyebrow=make('div','eyebrow','A MYSTERY FOR '+(stage?.recipient||'YOU').toUpperCase());const h=make('h1','serif','The Missing Itinerary');
  const orn=make('div','ornament','✦');
- const desc=make('p','stage-copy','An extraordinary journey awaits. Your itinerary has disappeared, and five discoveries stand between you and your surprise.');
+ const desc=make('p','stage-copy','An extraordinary journey awaits. Your itinerary has disappeared, and '+(stage?.total||QUEST.length)+' discoveries stand between you and your surprise.');
  const card=make('div','stage-card');card.innerHTML='<p>Follow the clues. Collect the evidence. Unlock the secret.</p>';
  card.append(btn(stage?.step>0?'Continue your adventure →':'Begin the adventure →',()=>renderStep(), 'btn'));
  if(demoMode)card.append(make('p','eyebrow','Sample story only · No actual surprise shown'));
@@ -75,10 +107,11 @@ function renderStep(nextData=null){
  if(!stage)return;
  if(stage.completed){showFinal(stage.final);return;}
  stopPrompt();hintLevel=0;selected=[];digits=[0,0,0];
- const scene=newScene(classes[stage.step]||'letter',stage.step);const body=make('div','stage-body');
+ const sceneId=stage.scene||QUEST[stage.step]?.scene||'letter';
+ const scene=newScene(sceneId,stage.step);const body=make('div','stage-body');
  heading(body,stage.chapter,stage.step);
- const hero=make('div','hero-object '+classes[stage.step]);
- hero.setAttribute('role','img');
+ const hero=make('div','hero-object '+sceneId);
+ hero.setAttribute('role',stage.kind==='lock'?'group':'img');
  hero.setAttribute('aria-label','Illustrated '+stage.chapter+' scene');
  body.append(hero);
  const card=make('div','stage-card');
@@ -95,7 +128,7 @@ function renderStep(nextData=null){
      const down=btn('⌄',()=>turn(i,-1),'down');down.setAttribute('aria-label','Decrease digit '+(i+1));
      wheel.append(up,out,down);wheels.append(wheel);
    }
-   card.append(wheels);
+   hero.append(wheels);
    const note=make('p','stage-copy','Luggage tags: ★ Star 7  ·  ◇ Mountain 2  ·  ✧ Compass 4');
    note.style.fontSize='13px';card.append(note);
    card.append(btn('Unlock suitcase',()=>solve(digits.join(''))));
@@ -145,12 +178,13 @@ async function solve(answer,assist=false){
    if(!out.correct){setError(out.message||'Try again.');return;}
    soundFx();
    stopPrompt();
-   const messages=['The seal is broken','The suitcase is unlocked','The passport reveals its secret','The route is illuminated','The missing ticket is complete'];
-   const icons=['✉','✧','✦','✧','✈'];
+   const messages={letter:'The seal is broken',compass:'The compass reveals the route',suitcase:'The suitcase is unlocked',passport:'The passport reveals its secret',map:'The route is illuminated',cipher:'The final clue is solved',ticket:'The missing ticket is complete'};
+   const icons={letter:'✉',compass:'✧',suitcase:'✦',passport:'✦',map:'✧',cipher:'✧',ticket:'✈'};
+   const key=QUEST[stage.step]?.key||stage.scene||'ticket';
    const active=play.querySelector('.quest');if(active)active.classList.add('chapter-clear');
    const overlay=make('div','success clear-'+stage.step);
    const animation=make('div','chapter-animation');
-   animation.append(make('span','chapter-glyph',icons[stage.step]||'✦'),make('span','chapter-message',messages[stage.step]||'Chapter complete'));
+   animation.append(make('span','chapter-glyph',icons[key]||'✦'),make('span','chapter-message',messages[key]||'Chapter complete'));
    overlay.append(animation);
    document.body.append(overlay);
    const wait=reducedMotion?100:1250;
@@ -193,15 +227,15 @@ function demoAnswer(answer,assist){
  const correct=assist || String(answer??'').trim().toLowerCase()===base.answer.toLowerCase();
  if(!correct)return {correct:false,message:'Not quite. Try again, or use a hint.'};
  const next=stage.step+1;
- if(next>=5)return {success:true,correct:true,completed:true,step:5,final:{recipient:'Chloe',sender:'Reveal',title:'Your personalised surprise will appear here after payment',message:'This is a sample quest. No purchaser details have been revealed.'}};
+ if(next>=QUEST.length)return {success:true,correct:true,completed:true,step:QUEST.length,total:QUEST.length,final:{recipient:'Chloe',sender:'Reveal',title:'Your personalised surprise will appear here after payment',message:'This is a sample quest. No purchaser details have been revealed.'}};
  const nextChapter=(demoClues||QUEST)[next];
- return {success:true,correct:true,completed:false,step:next,total:5,chapter:nextChapter.title,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
+ return {success:true,correct:true,completed:false,step:next,total:QUEST.length,chapter:nextChapter.title,scene:nextChapter.scene,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
 }
 function launchDemo(){
  const snapshot=readConfig();
  demoClues=snapshot.clues.map((clue,i)=>({...QUEST[i],...clue}));
  demoMode=true;create.hidden=true;play.hidden=false;
- const base=demoClues[0];stage={step:0,total:5,chapter:base.title,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
+ const base=demoClues[0];stage={step:0,total:QUEST.length,chapter:base.title,scene:base.scene,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
  hintLevel=0;showIntro();
 }
 function closeDemo(){
@@ -233,11 +267,15 @@ function buildEditor(i,step){
 }
 function initialCreator(){
  const template=make('div','create-inner');
- template.innerHTML='<header class="topline"><span class="brand">✦ &nbsp; REVEAL QUEST</span><a href="/" class="btn ghost">Reveal home</a></header><div class="create-intro"><div class="eyebrow">MYSTERY &amp; CLUES · TRAVEL ADVENTURE</div><h1 class="serif">The Missing Itinerary</h1><div class="ornament">✦</div><p>Build a beautiful five-chapter mystery. Your recipient solves each clue in sequence before your surprise is revealed. The real adventure stays locked until Stripe confirms payment.</p></div>';
+ template.innerHTML='<header class="topline"><span class="brand">✦ &nbsp; REVEAL QUEST</span><a href="/" class="btn ghost">Reveal home</a></header><div class="create-intro"><div class="eyebrow">MYSTERY &amp; CLUES · TRAVEL ADVENTURE</div><h1 class="serif">The Missing Itinerary</h1><div class="ornament">✦</div><p>Build a cinematic adventure of three, five or seven chapters. Your recipient solves each clue in sequence before your surprise is revealed. The real adventure stays locked until Stripe confirms payment.</p></div>';
  const form=make('form','creator-grid');form.id='creatorForm';
  const left=make('section','panel');left.innerHTML='<h2 class="serif">Your surprise</h2><small>Only the purchaser sees these details before payment. The recipient receives one private link after you have paid.</small>';
  left.append(field('Recipient name *','recipient','text','Chloe'),field('From *','sender','text'),field('Final surprise *','eventName','text','','e.g. We are going to Rome!'),field('Date (optional)','eventDate','date'),field('Time (optional)','eventTime','time'),field('Where (optional)','venue'),field('Booking / details link (optional)','ticketUrl','url'),field('Personal message','personalMessage','textarea'),field('Optional ticket / event image','image','file'));
- const right=make('section','panel');right.innerHTML='<h2 class="serif">The adventure</h2><p style="line-height:1.55">Five connected cinematic chapters: letter, suitcase, passport, map and ticket. Customise clues without replacing the cinematic world.</p>';
+ const right=make('section','panel');right.innerHTML='<h2 class="serif">The adventure</h2><p id="quest-intro-copy" style="line-height:1.55">Five connected cinematic chapters: letter, suitcase, passport, map and ticket.</p>';
+ const presetLabel=make('label');presetLabel.textContent='Adventure length';
+ const presetSelect=make('select');presetSelect.name='preset';presetSelect.innerHTML='<option value="quick">Quick — 3 chapters</option><option value="classic" selected>Classic — 5 chapters</option><option value="epic">Epic — 7 chapters</option>';
+ presetLabel.append(presetSelect);right.append(presetLabel);
+ const lengthInfo=make('p','eyebrow','5 chapters · 5–8 minute target');lengthInfo.id='chapter-count';right.append(lengthInfo);
  const mode=field('Clue creation mode','mode','select');mode.querySelector('input').replaceWith(Object.assign(make('select'),{name:'mode',innerHTML:'<option value="ready">Ready-made puzzles</option><option value="adaptable">Adaptable clues</option><option value="custom">Fully custom clues</option>'}));right.append(mode);
  const preview=make('div','preview');preview.innerHTML='<div class="eyebrow">YOUR RECIPIENT WILL SEE</div><h3>The Mysterious Letter</h3><p>The letter is waiting. Discover its secret to begin the journey.</p>';
  preview.append(btn('Play the sample adventure',launchDemo,'btn secondary'));
@@ -248,12 +286,14 @@ function initialCreator(){
  right.append(submit,status);
  form.append(left,right);template.append(form);create.replaceChildren(template);
  const image=$('input[name=image]',form);image.accept='image/jpeg,image/png,image/webp';
+ for(const name of ['recipient','sender','eventName'])form.elements.namedItem(name).required=true;
  form.addEventListener('submit',saveCreator);
  form.addEventListener('input',()=>{if($('select[name=mode]',form).value!=='ready'){
    const question=String(form.elements.namedItem('q0')?.value||'').trim();
    const el=preview.querySelector('p'); if(el)el.textContent=question||'Your opening riddle will appear here.';
  }});
  $('select[name=mode]',form).addEventListener('change',updateEditMode);
+ presetSelect.addEventListener('change',()=>setPreset(presetSelect.value));
  updateEditMode();
 }
 function updateEditMode(){
@@ -265,12 +305,12 @@ function readConfig(){
  const form=$('#creatorForm');
  const mode=$('select[name=mode]',form).value;
  const clues=QUEST.map((d,i)=>{
-   if(mode==='ready')return {question:d.question,answer:d.answer,hint1:d.hint1,hint2:d.hint2,options:d.options};
+   if(mode==='ready')return {key:d.key,question:d.question,answer:d.answer,hint1:d.hint1,hint2:d.hint2,options:d.options};
    const val=n=>String(form.elements.namedItem(n+i)?.value||'').trim();
-   return{question:val('q'),answer:d.kind==='order'?val('a').split(/\n/).map(x=>x.trim()).filter(Boolean).join('|'):val('a'),
+   return{key:d.key,question:val('q'),answer:d.kind==='order'?val('a').split(/\n/).map(x=>x.trim()).filter(Boolean).join('|'):val('a'),
      hint1:val('h1'),hint2:val('h2'),options:d.kind==='lock'?[]:val('o').split(/\n/).map(x=>x.trim()).filter(Boolean)};
  });
- return{story:'missing-itinerary',mode,clues};
+ return{story:'missing-itinerary',preset:selectedPreset,mode,clues};
 }
 async function saveCreator(e){
  e.preventDefault();const form=$('#creatorForm'),status=$('#createStatus'),button=$('#saveButton');
@@ -297,6 +337,8 @@ async function loadEdit(id){
    for(const key of ['recipient','sender','eventName','eventDate','eventTime','venue','admit','ticketUrl','personalMessage']){
      if(form.elements.namedItem(key))form.elements.namedItem(key).value=data.reveal[key]||'';
    }
+   form.elements.namedItem('preset').value=data.config.preset||'classic';
+   setPreset(form.elements.namedItem('preset').value);
    form.elements.namedItem('mode').value=data.config.mode;
    data.config.clues.forEach((c,i)=>{
      const put=(name,value)=>{const el=form.elements.namedItem(name+i);if(el)el.value=value;};
