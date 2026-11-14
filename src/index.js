@@ -7,6 +7,7 @@ import { quizOwnerResponse,quizRecipientResponse } from './quiz.js';
 import { quizQuestionImageResponse } from './quiz-question-images.js';
 import { genderOwnerResponse,genderAudienceResponse } from './gender-reveal.js';
 import { questResponse } from './quest.js';
+import { questStripeTestResponse } from './quest-stripe-test.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -23,14 +24,10 @@ export default {
     const url = new URL(request.url);
     const path = url.pathname;
 
-    // This branch is configured to be a non-paying staging environment.
-    // Prevent any checkout or webhook processing until test-mode Stripe
-    // is separately configured and this guard is explicitly removed.
-    if (env.STAGING_DISABLE_CHECKOUT === 'true' &&
-        (path === '/api/webhooks/stripe' ||
-         /^\/api\/reveals\/[A-Za-z0-9_-]+\/checkout\/?$/.test(path))) {
-      return jsonError('Checkout is disabled in this staging environment.', 503);
-    }
+    // Stripe remains disabled unless separate TEST secrets and an explicit
+    // Quest-only feature flag are present. Never enable other product checkouts.
+    const questPayment=await questStripeTestResponse(request,env,ctx,originalWorker);
+    if(questPayment)return questPayment;
 
     if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/gender(?:\/start)?\/?$/.test(path)) {
       if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.',404);
