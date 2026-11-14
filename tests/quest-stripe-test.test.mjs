@@ -33,7 +33,7 @@ test('Quest test checkout is disabled by default and explicitly turned off in re
  assert.equal(config.vars.STRIPE_LIVE_MODE,'false');
  assert.equal(config.vars.STAGING_DISABLE_CHECKOUT,'true');
  assert.equal(config.vars.QUEST_TEST_CHECKOUT_ENABLED,'false');
- assert.equal(config.vars.STRIPE_PRICE_ID,undefined);
+ assert.equal(config.vars.STRIPE_PRICE_ID,'price_1USbNbKEVPKWz2E9zmH0mabR');
  assert.notEqual(config.d1_databases[0].database_name,'reveal-db');
  assert.equal(questStripeTestReady({...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false'}),false);
  assert.equal(questStripeTestReady({...envBase,QUEST_TEST_CHECKOUT_ENABLED:undefined}),false);
