@@ -4,13 +4,15 @@ import {createServer} from 'node:http';
 import {readFile, mkdir} from 'node:fs/promises';
 import {resolve, extname} from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {chromium} from 'playwright';
+import {chromium, webkit} from 'playwright';
 
 const root = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const mimetypes = {'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.webp':'image/webp'};
 let server;
 let browser;
 let base;
+const browserEngine = process.env.QUEST_BROWSER==='webkit' ? 'webkit' : 'chromium';
+const outputDir = resolve(root,'test-output',browserEngine);
 
 async function start() {
   server=createServer(async(req,res)=>{
@@ -29,8 +31,8 @@ async function start() {
   });
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
   base='http://127.0.0.1:'+server.address().port;
-  browser=await chromium.launch({headless:true});
-  await mkdir(resolve(root,'test-output'),{recursive:true});
+  browser=await (browserEngine==='webkit'?webkit:chromium).launch({headless:true});
+  await mkdir(outputDir,{recursive:true});
 }
 async function cleanup() {
   await browser?.close();
@@ -65,7 +67,7 @@ test('portrait mobile Quest: every cinematic chapter is playable without overflo
       assert.equal(await scene.count(),1);
       const ok=await scene.evaluate(el=>getComputedStyle(el).backgroundImage.includes('.webp'));
       assert.equal(ok,true,'Chapter '+i+' lacks cinematic art');
-      await page.screenshot({path:resolve(root,'test-output','chapter-'+i+'.png'),fullPage:true,animations:'disabled'});
+      await page.screenshot({path:resolve(outputDir,'chapter-'+i+'.png'),fullPage:true,animations:'disabled'});
     }
 
     await chapter(1,'The Mysterious Letter');
@@ -93,7 +95,7 @@ test('portrait mobile Quest: every cinematic chapter is playable without overflo
 
     await page.getByText('Your personalised surprise will appear here after payment').waitFor();
     assert.ok(await page.locator('.scene.finale').count());
-    await page.screenshot({path:resolve(root,'test-output','finale.png'),fullPage:true,animations:'disabled'});
+    await page.screenshot({path:resolve(outputDir,'finale.png'),fullPage:true,animations:'disabled'});
     await page.getByRole('button',{name:'Return to your editor'}).click();
     assert.equal(await page.locator('#creatorForm').isVisible(),true);
     assert.deepEqual(errs,[]);
