@@ -1,0 +1,19 @@
+name: Reveal Quest one-time staging D1 integration
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - '.github/workflows/quest-integration.yml'
+permissions:
+  contents: read
+jobs:
+  integration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Exercise staging-only creator, amendments and protection
+        run: node tools/quest-staging-integration.mjs
