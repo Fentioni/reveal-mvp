@@ -161,12 +161,42 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  40%{opacity:1;transform:scale(1.35)}
  100%{opacity:.8;transform:scale(1)}}
 
+
+/* In-world controls: the actual suitcase wheels, stamped documents, map
+   landmarks and ticket fragments are touched inside the cinematic object. */
+.hero-object{overflow:visible}
+.hero-object.suitcase{overflow:hidden}
+.hero-object.suitcase .wheels{position:absolute;z-index:4;bottom:8px;left:50%;
+  transform:translateX(-50%);margin:0;display:flex;gap:6px;justify-content:center;
+  padding:5px 8px;border:1px solid #d7ae65b3;border-radius:14px;
+  background:linear-gradient(125deg,#201508cc,#594124b3,#17120de6);backdrop-filter:blur(8px);
+  box-shadow:0 9px 29px #000c,inset 0 1px #fff4;width:min(290px,95%);
+}
+.hero-object.suitcase .wheel{min-width:55px;width:27%;max-width:76px;padding:1px;border-radius:8px;box-shadow:0 3px 10px #0009}
+.hero-object.suitcase .wheel button{min-height:28px;font-size:22px}
+.hero-object.suitcase .wheel output{font-size:31px;line-height:1.3}
+.hero-object .sortable{position:absolute;z-index:4;bottom:8px;left:50%;
+  transform:translateX(-50%);margin:0;display:flex;justify-content:center;
+  flex-wrap:wrap;align-items:stretch;gap:5px;width:calc(100% - 14px);
+}
+.hero-object .sortable button{flex:1;min-width:0;padding:8px 4px;
+  min-height:49px;font-size:clamp(10px,2.75vw,13px);
+  background:linear-gradient(160deg,#4a3119ee,#17120ce8);color:#fff1ce;
+  border:1px solid #e1bb7ebd;border-radius:9px;
+  box-shadow:0 4px 14px #000c,0 0 12px #e7b97221;backdrop-filter:blur(4px)
+}
+.hero-object.passport .sortable button{border-radius:50% 12% 49% 15%;transform:rotate(-2deg)}
+.hero-object.map .sortable button{border-radius:50px;background:linear-gradient(#3b2a19ed,#14150ff0)}
+.hero-object.ticket .sortable button{border-radius:2px;background:linear-gradient(#624c31ef,#241811ef)}
+.hero-object.passport .sortable button.selected,.hero-object.map .sortable button.selected,
+.hero-object.ticket .sortable button.selected{background:linear-gradient(#a1783c,#4c3119);box-shadow:0 0 16px #e1bc68bb}
+@media(max-width:400px){.hero-object.suitcase .wheels{bottom:4px}.hero-object .sortable button{font-size:11px}}
+
 </style>
 </head>
 <body>
 <div id="app"><div id="create" hidden></div><main id="play" hidden></main></div>
 <div id="ambient" aria-hidden="true"></div>
 <script src="/quest.js" defer></script>
-<script src="/demo-banner.js"></script>
 </body>
 </html>
