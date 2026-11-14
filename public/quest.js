@@ -44,7 +44,7 @@ function setPreset(value){
  if(story)story.textContent='A connected '+QUEST.length+'-chapter cinematic adventure. Your recipient solves the mystery before unlocking their surprise.';
 }
 setPreset('classic');
-const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null;
+const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null,finaleTimer=null;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
  const root=$('#ambient');root.replaceChildren();
@@ -238,14 +238,47 @@ function showFinal(data){
  if(data.ticketUrl && /^https:\/\//.test(data.ticketUrl)){const a=make('a','', 'View the details');a.href=data.ticketUrl;a.target='_blank';a.rel='noopener noreferrer';details.append(a);}
  container.append(details);
  const acts=make('div','actions');
- if(demoMode){acts.append(btn('Return to your editor',closeDemo,'btn'));container.append(acts);scene.append(container);play.replaceChildren(scene);return;}
- acts.append(btn('Replay the finale ✦',()=>{scene.classList.remove('played');void scene.offsetWidth;scene.classList.add('played');soundFx();},'btn'));
+ if(demoMode){acts.append(btn('Return to your editor',closeDemo,'btn'));container.append(acts);scene.append(container);play.replaceChildren(scene);runFinaleSequence(scene);return;}
+ acts.append(btn('Replay the finale ✦',()=>runFinaleSequence(scene),'btn'));
  acts.append(btn('Save keepsake image',()=>saveKeepsake(data),'btn secondary'));
  acts.append(btn('Print or save PDF',()=>printKeepsake(data),'btn secondary'));
  buildPrintKeepsake(data);
  container.append(acts);
- scene.append(container);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));
+ scene.append(container);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));runFinaleSequence(scene);
 }
+function runFinaleSequence(scene){
+ if(finaleTimer)clearTimeout(finaleTimer);
+ finaleTimer=null;
+ scene.querySelectorAll('.quest-cinematic-curtain').forEach(node=>node.remove());
+ scene.classList.remove('played');
+ void scene.offsetWidth;
+ scene.classList.add('played');
+ if(reducedMotion)return;
+ const curtain=make('div','quest-cinematic-curtain');
+ curtain.setAttribute('role','region');
+ curtain.setAttribute('aria-label','Your reveal is unfolding');
+ const detail=make('div','cinematic-prelude');
+ detail.append(make('p','eyebrow','THE FINAL DISCOVERY'));
+ const ticket=make('div','cinematic-gold-ticket');
+ ticket.setAttribute('aria-hidden','true');
+ ticket.append(make('span','cinematic-ticket-star','✦'),make('span','cinematic-ticket-mark','THE MISSING ITINERARY'));
+ detail.append(ticket,make('p','cinematic-message','Every clue has led to this moment.'));
+ const flare=make('div','cinematic-burst');flare.setAttribute('aria-hidden','true');
+ curtain.append(flare,detail);
+ const finish=()=>{
+   if(finaleTimer)clearTimeout(finaleTimer);
+   finaleTimer=null;
+   curtain.classList.add('release');
+   setTimeout(()=>curtain.remove(),900);
+ };
+ const skip=btn('Skip animation',finish,'btn secondary');
+ skip.classList.add('cinematic-skip');
+ curtain.append(skip);
+ scene.append(curtain);
+ finaleTimer=setTimeout(()=>{if(scene.isConnected)finish();else curtain.remove();},7500);
+ soundFx();
+}
+
 function buildPrintKeepsake(data){
  let card=$('#quest-print-card');
  if(!card){card=make('section','quest-print-card');card.id='quest-print-card';card.setAttribute('aria-label','Printable Reveal Quest keepsake');document.body.append(card);}
@@ -340,7 +373,7 @@ function launchDemo(){
  hintLevel=0;showIntro();
 }
 function closeDemo(){
- stopPrompt();demoMode=false;demoClues=null;stage=null;play.replaceChildren();play.hidden=true;create.hidden=false;
+ stopPrompt();if(finaleTimer)clearTimeout(finaleTimer);finaleTimer=null;demoMode=false;demoClues=null;stage=null;play.replaceChildren();play.hidden=true;create.hidden=false;
  window.scrollTo({top:0,behavior:'smooth'});
 }
 
