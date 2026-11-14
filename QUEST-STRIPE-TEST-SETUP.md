@@ -28,6 +28,26 @@ public/reveal.html replaces it with 'At checkout'. Do not reactivate fixed
   after the valid signed Stripe webhook.
 - Recipient must still complete every Quest clue before final details/images.
 
+## Current evidence from 14 November 2026 — read before enabling payment
+A read-only audit of the actual `reveal-stage4b-test` Cloudflare Worker
+confirmed ALL three bindings absent: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET,
+and STRIPE_PRICE_ID. QUEST_TEST_CHECKOUT_ENABLED is false. No credentials,
+Stripe amounts, or secret values were exposed. The temporary diagnostic and
+associated one-time workflow were removed afterward.
+
+The currently connected Stripe TEST account named Macalla Digital
+(account acct_1URWJfGu7hy9PVSn) reported **zero products, zero prices,
+zero checkout sessions and zero webhook endpoints**. Its tax settings show
+status active, default tax behaviour exclusive, and provider stripe, but the
+previous `price_1USbNbKEVPKWz2E9zmH0mabR` and
+`prod_VTYUf4muHEcajR` were not found. This is not evidence that the
+historical Stripe product was deleted; the connection may be pointing at a
+different test account or context. Resolve the account mismatch before
+creating any replacement Stripe product or enabling payment.
+
+Original Reveal used a restricted `rk_test_` key; Quest's test gate supports
+appropriately scoped `rk_test_` or `sk_test_` keys. It rejects live keys.
+
 ## Step 1 — Stripe TEST dashboard (never live)
 In the existing Macalla Digital Stripe account, switch to test mode.
 
@@ -54,13 +74,15 @@ In the existing Macalla Digital Stripe account, switch to test mode.
 6. Subscribe to checkout.session.completed,
    checkout.session.async_payment_succeeded,
    checkout.session.async_payment_failed and checkout.session.expired.
-7. Keep the TEST API secret key (sk_test_...) and TEST webhook signing secret
+7. Keep the TEST API secret key (sk_test_... or appropriately scoped rk_test_...)
+   and TEST webhook signing secret
    (whsec_...) private. No screenshots or keys should be sent in chat.
 
 ## Step 2 — Cloudflare's existing staging Worker (not production)
 Open the existing Worker reveal-stage4b-test under Workers & Pages.
 Use Settings > Variables and Secrets, adding these 3 as encrypted secrets:
-- STRIPE_SECRET_KEY — Stripe sk_test_...
+- STRIPE_SECRET_KEY — existing appropriately scoped Stripe rk_test_...
+  restricted test key (or sk_test_... if required for permitted API operations)
 - STRIPE_WEBHOOK_SECRET — Stripe whsec_... from the staging event destination
 - STRIPE_PRICE_ID — price_1USbNbKEVPKWz2E9zmH0mabR
   (existing one-time £1.99 tax-exclusive TEST price; do not create a new price)
@@ -78,7 +100,7 @@ and re-run the automated CI and live smoke check. Never alter production
 wrangler.jsonc or switch off STAGING_DISABLE_CHECKOUT.
 
 The activation flag is currently "false". Adding secrets alone does not enable
-purchases. The server additionally rejects keys not starting with sk_test_.
+purchases. The server accepts only sk_test_ or rk_test_ credentials and rejects live keys.
 
 GET /api/quest/test-payment-status must return enabled:true before testing.
 
