@@ -192,6 +192,70 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 .hero-object.ticket .sortable button.selected{background:linear-gradient(#a1783c,#4c3119);box-shadow:0 0 16px #e1bc68bb}
 @media(max-width:400px){.hero-object.suitcase .wheels{bottom:4px}.hero-object .sortable button{font-size:11px}}
 
+
+/* Object-specific cinematography: layers physically react to a solved clue. */
+.hero-object .case-lid{position:absolute;z-index:2;inset:10% 12% 48%;
+  background:url('/quest-assets/suitcase.webp') center 42%/cover no-repeat;
+  border:1px solid rgba(222,172,94,.5);border-radius:13px 13px 7px 7px;
+  box-shadow:inset 0 3px 25px #0007,0 0 32px #0009;
+  transform-origin:50% 0;opacity:0;pointer-events:none}
+.quest.chapter-clear .case-lid{animation:suitcase-lid-opening 1.18s cubic-bezier(.12,.8,.2,1) both}
+@keyframes suitcase-lid-opening{
+  0%{opacity:.95;transform:perspective(480px) rotateX(0) translateY(0)}
+  45%{opacity:1;transform:perspective(480px) rotateX(-44deg) translateY(-9px);
+    box-shadow:0 0 32px #ffd78d9c}
+  100%{opacity:0;transform:perspective(480px) rotateX(-85deg) translateY(-35px);
+    box-shadow:0 0 90px #ffe2a0}
+}
+.hero-object .seal-flare{position:absolute;z-index:2;left:48%;top:33%;width:70px;height:70px;
+  border-radius:50%;pointer-events:none;opacity:0;
+  background:radial-gradient(circle,#fff2bd 2%,#ffc269 18%,#b63d22 38%,transparent 69%);
+  box-shadow:0 0 24px #ffc26b,0 0 45px #a53215}
+.quest.chapter-clear .seal-flare{animation:wax-break 1.12s ease-out both}
+@keyframes wax-break{0%{opacity:.85;transform:scale(.5) rotate(0deg)}
+  35%{opacity:1;transform:scale(1.1) rotate(18deg)}
+  100%{opacity:0;transform:scale(5) rotate(65deg)}}
+.hero-object .passport-page-turn{position:absolute;z-index:2;inset:6% 11% 9% 46%;
+  pointer-events:none;opacity:0;transform-origin:left center;
+  background:linear-gradient(90deg,#eee0c3 0%,#c3a173 8%,#ecd5ac 40%,#fff0d5 85%,#9d7143 100%);
+  border-radius:5px 13px 13px 5px;box-shadow:0 7px 20px #0009}
+.quest.chapter-clear .passport-page-turn{animation:passport-flip 1.15s cubic-bezier(.4,.4,.6,1) both}
+@keyframes passport-flip{
+  0%{opacity:.98;transform:perspective(700px) rotateY(0)}
+  55%{opacity:1;transform:perspective(700px) rotateY(-90deg)}
+  100%{opacity:0;transform:perspective(700px) rotateY(-178deg)}}
+.map-journey{position:absolute;z-index:2;inset:0;width:100%;height:100%;pointer-events:none;overflow:visible}
+.map-journey path{fill:none;stroke:#fff6bb;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;
+  stroke-dasharray:1100;stroke-dashoffset:1100;filter:drop-shadow(0 0 12px #ffd44f);
+  opacity:0}
+.quest.chapter-clear .map-journey path{animation:draw-golden-route 1.15s ease-out forwards}
+@keyframes draw-golden-route{0%{opacity:0;stroke-dashoffset:1100}
+  15%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
+.hero-object .ticket-light{position:absolute;z-index:2;inset:6%;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at 50% 48%,#fff7d1 0%,#ffd17b9c 24%,#b37b3b38 51%,transparent 75%);
+  mix-blend-mode:screen}
+.quest.chapter-clear .ticket-light{animation:ticket-illuminated 1.2s ease-out forwards}
+@keyframes ticket-illuminated{0%{opacity:0;transform:scale(.5)}
+  38%{opacity:1;transform:scale(1)}
+  100%{opacity:.55;transform:scale(1.5)}}
+.finale-sky{position:absolute;z-index:0;inset:0;overflow:hidden;pointer-events:none}
+.finale-spark{position:absolute;left:var(--x,50%);top:var(--y,40%);
+  display:block;width:var(--diameter,4px);height:var(--diameter,4px);
+  border-radius:50%;opacity:0;background:#fff5c9;
+  box-shadow:0 0 13px 5px #ffcc7c99,0 0 45px 14px #ffc97155;
+  animation:cinematic-gold-star 4s ease-in-out var(--delay,0s) infinite}
+@keyframes cinematic-gold-star{
+  0%,100%{opacity:0;transform:translateY(25px) scale(.2)}
+  35%{opacity:1;transform:translateY(-20px) scale(1)}
+  70%{opacity:.8;transform:translateY(-57px) scale(.65)}}
+.finale-content{position:relative;z-index:1}
+@media(prefers-reduced-motion:reduce){
+ .quest.chapter-clear .case-lid,.quest.chapter-clear .seal-flare,
+ .quest.chapter-clear .passport-page-turn{opacity:0}
+ .quest.chapter-clear .map-journey path{stroke-dashoffset:0;opacity:1}
+ .finale-spark{display:none}
+}
+
 </style>
 </head>
 <body>
