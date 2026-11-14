@@ -18,7 +18,8 @@ test('staging Wrangler configuration uses isolated Worker and resources', () => 
   assert.equal(config.r2_buckets[0].bucket_name, 'reveal-images-stage4b');
   assert.equal(config.vars.STRIPE_LIVE_MODE, 'false');
   assert.equal(config.vars.STAGING_DISABLE_CHECKOUT, 'true');
-  assert.equal(config.vars.STRIPE_PRICE_ID, undefined);
+  assert.equal(config.vars.STRIPE_PRICE_ID, 'price_1USbNbKEVPKWz2E9zmH0mabR');
+  assert.equal(config.vars.QUEST_TEST_CHECKOUT_ENABLED, 'false');
 });
 
 test('staging blocks payment initiation at legacy checkout path', async () => {
