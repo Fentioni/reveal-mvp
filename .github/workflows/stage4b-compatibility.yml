@@ -4,6 +4,7 @@ on:
     branches:
       - feature/stage4b-preserve-existing-catalogue
       - feature/stage4b-cloudflare-staging
+      - feature/stage4b-reveal-quest
   workflow_dispatch:
 permissions:
   contents: read

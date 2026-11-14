@@ -146,6 +146,7 @@ async function productPage(slug) {
   const canTestTicketCreator = isStaging && p.slug === 'ticket-reveal' && !ready;
   const canTestQuizCreator = isStaging && p.slug === 'three-question-quiz' && !ready;
   const canTestGenderCreator = isStaging && p.slug === 'gender-reveal' && !ready;
+  const canTestQuestCreator = isStaging && p.slug === 'reveal-quest' && !ready;
   const mechanics = data.mechanics||[],themes=data.themes||[];
   const price = priceText(data.price);
   const parent = data.categories?.[0];
@@ -156,13 +157,14 @@ async function productPage(slug) {
     $('span',{className:'tag'+(ready?' active':''),text:ready?'Available now':'Coming soon'}),
     $('h3',{text:ready?'Make it your own':'An exciting reveal is on its way'}),
     $('p',{text:ready?(price?`Base price: ${price} before any applicable tax.`:'The price is confirmed at checkout.'):'This product is not available to purchase yet.'}),
-    ready ? $('a',{className:'button',href:'/create/ticket-reveal',text:'Create this reveal  ↗'}) :
+    ready ? $('a',{className:'button',href:p.slug==='reveal-quest'?'/create/reveal-quest':'/create/ticket-reveal',text:'Create this reveal  ↗'}) :
       canTestTicketCreator ? $('a',{className:'button',href:'/legacy-create',text:'Test creator in staging  ↗'}) :
       canTestQuizCreator ? $('a',{className:'button',href:'/quiz-create',text:'Test three-question quiz creator  ↗'}) :
       canTestGenderCreator ? $('a',{className:'button',href:'/gender-create',text:'Test group Gender Reveal creator  ↗'}) :
+      canTestQuestCreator ? $('a',{className:'button',href:'/create/reveal-quest',text:'Test the five-chapter Quest creator  ↗'}) :
       $('a',{className:'button',href:'/#browse',text:'Browse available reveals  ↗'}),
     $('p',{text:ready?'The final payable total and local currency are shown securely in Stripe Checkout. No subscription.':
-      canTestTicketCreator||canTestQuizCreator||canTestGenderCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
+      canTestTicketCreator||canTestQuizCreator||canTestGenderCreator||canTestQuestCreator?'Staging test only. You can create and review a draft, but checkout is disabled and no reveal can be purchased or shared. Please use fictional test details.':
       'There is no payment or pre-purchase access for this product.'})
   ]);
   elMain.replaceChildren($('div',{className:'page'},[
@@ -175,6 +177,7 @@ async function productPage(slug) {
         isStaging && p.slug === 'ticket-reveal' ? $('a',{className:'button',href:'/scratch-demo',text:'Try the fictional scratch-card demo  ↗'}) : null,
         isStaging && p.slug === 'three-question-quiz' ? $('a',{className:'button',href:'/quiz-demo',text:'Try the fictional recipient quiz  ↗'}) : null,
         isStaging && p.slug === 'gender-reveal' ? $('a',{className:'button',href:'/gender-demo',text:'Try the fictional group voting and reveal  ↗'}) : null,
+        isStaging && p.slug === 'reveal-quest' ? $('a',{className:'button',href:'/create/reveal-quest',text:'Play the sample travel adventure  ↗'}) : null,
         $('h2',{text:'How this reveal works'}),
         $('p',{className:'product-copy',text:ready?'Personalise the ticket information, review the details and continue to secure payment. Your recipient sees the animated experience only after payment has been confirmed.':
             p.slug==='reveal-quest'?'The purchaser selects a story theme and uses ready-made, adaptable or fully custom clues. The recipient solves each clue in sequence to unlock the final paid reveal.':
