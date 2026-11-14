@@ -13,12 +13,19 @@
 1. Back up the live D1 database in Cloudflare. The migration is additive, but must run **before** deploying this Worker.
 2. The six cinematic WebP backgrounds have been committed to `quest-assets/` in this branch. Verify all six load on mobile: letter, suitcase, passport, map, ticket and finale. Keep the separate ZIP only as an optional local asset backup.
 3. Validate the configured Cloudflare Worker name and D1/R2 bindings.
-4. Run `npm test`. The tests are designed for Node 22.
-5. Apply the D1 migration to the actual `reveal-db` database in Cloudflare D1's SQL Console or with:
-   `npx wrangler d1 execute reveal-db --remote --file=sql/01-reveal-quest.sql`
-   This changes only the new Quest tables and index.
-6. Test on a staging Worker with Stripe TEST credentials and a real test payment followed by the paid recipient URL and all five puzzle stages.
-7. After successful staging and mobile visual acceptance, deploy intentionally using your established Cloudflare workflow. Do **not** simply merge into main without confirming how the Worker is deployed.
+4. Review the GitHub Actions **Reveal Quest tests** workflow, which now covers backend rules, staging isolation, and the complete sample adventure in mobile Chromium and WebKit. Its screenshot artifacts allow a visual inspection of all five chapters and the finale.
+5. Use the opt-in **Reveal Quest isolated staging deployment** GitHub Actions workflow. Before it can run, configure GitHub environment `quest-staging` with Cloudflare credentials and the independent staging resources listed below. This workflow checks that the staging D1 database contains the legacy tables, applies `sql/01-reveal-quest.sql` **to staging only**, then deploys `reveal-quest-staging`.
+6. Set **test-mode Stripe secrets** and a dedicated staging webhook for this staging Worker. Test real Stripe test checkout, confirmed webhook, paid recipient link, all five chapters, image gating, resuming, hints, and keepsake.
+7. Only after staging and real-device visual acceptance, plan a separately approved production migration and release. **Do not run D1 migrations against `reveal-db`, deploy to `reveal-mvp`, or merge this draft pull request yet.**
+
+## Required staging setup (not yet provisioned)
+- GitHub Environment secrets: `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`.
+- GitHub Environment variables: `REVEAL_STAGING_D1_ID`, `REVEAL_STAGING_D1_NAME`, `REVEAL_STAGING_R2_BUCKET`, `REVEAL_STAGING_STRIPE_PRICE_ID`.
+- A separate staging D1 database already containing the original Reveal schema (schema only; do not copy personal/payment records).
+- A separate staging R2 bucket; production database and bucket identifiers are rejected automatically.
+- Stripe TEST secret key and distinct TEST webhook secret configured securely for the staging Worker.
+
+This assistant has not connected a Cloudflare account or deployed the staging Worker. The workflow is intentionally manual, never triggered by a code push.
 
 ## Paths
 - `/quest` / `/quest.html` – purchaser's creator.
