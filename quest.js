@@ -12,7 +12,7 @@ const QUEST = [
  {title:'The Missing Itinerary',kind:'order',question:'Reassemble the recovered ticket fragments in their proper order.',options:['Gold seal','Flight symbol','Route line'],answer:'Route line|Flight symbol|Gold seal',hint1:'The route is the beginning of this ticket.',hint2:'The flight symbol sits between the route and the gold seal.'}
 ];
 const classes=['letter','suitcase','passport','map','ticket'];
-const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0;
+const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
  const root=$('#ambient');root.replaceChildren();
@@ -31,7 +31,7 @@ async function api(path, options={}){
 }
 function top(step){
  const nav=make('div','topline');
- nav.innerHTML='<span class="brand">✦ &nbsp;REVEAL QUEST</span><button class="minibtn" id="sound" type="button" aria-label="Toggle sound">'+(sound?'♫':'♪')+'</button>';
+ nav.innerHTML='<span class="brand">✦ &nbsp;REVEAL QUEST</span><div style="display:flex;gap:8px">'+(demoMode?'<button class="minibtn" id="close-demo" type="button" aria-label="Return to editor">✕</button>':'')+'<button class="minibtn" id="sound" type="button" aria-label="Toggle sound">'+(sound?'♫':'♪')+'</button></div>';
  const dots=make('div','progress');
  dots.setAttribute('aria-label','Chapter '+Math.min(5,step+1)+' of 5');
  for(let i=0;i<5;i++){const s=make('span',i<=step?'active':'');dots.append(s);}
@@ -40,7 +40,7 @@ function top(step){
 function newScene(scene,step){
  const view=make('section','quest');
  const backdrop=make('div','scene '+scene);backdrop.setAttribute('aria-hidden','true');view.append(backdrop,top(step));
- view.addEventListener('click',e=>{if(e.target?.id==='sound'){sound=!sound;e.target.textContent=sound?'♫':'♪';e.target.setAttribute('aria-pressed',String(sound));if(sound)soundFx();}});
+ view.addEventListener('click',e=>{if(e.target?.id==='close-demo'){closeDemo();}if(e.target?.id==='sound'){sound=!sound;e.target.textContent=sound?'♫':'♪';e.target.setAttribute('aria-pressed',String(sound));if(sound)soundFx();}});
  return view;
 }
 function setError(text){let e=$('#answer-error');if(e)e.textContent=text||'';}
@@ -65,7 +65,9 @@ function showIntro(){
  const orn=make('div','ornament','✦');
  const desc=make('p','stage-copy','An extraordinary journey awaits. Your itinerary has disappeared, and five discoveries stand between you and your surprise.');
  const card=make('div','stage-card');card.innerHTML='<p>Follow the clues. Collect the evidence. Unlock the secret.</p>';
- card.append(btn('Begin the adventure →',()=>renderStep(), 'btn'));
+ card.append(btn(stage?.step>0?'Continue your adventure →':'Begin the adventure →',()=>renderStep(), 'btn'));
+ if(demoMode)card.append(make('p','eyebrow','Sample story only · No actual surprise shown'));
+
  body.append(eyebrow,h,orn,desc,card);scene.append(body);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
 function renderStep(nextData=null){
@@ -119,7 +121,7 @@ async function hint(){
  const b=$('#hint-control'),area=$('#hint-area');
  if(hintLevel<2){
    b.disabled=true;try{
-     const out=await api('/api/quest/'+encodeURIComponent(slug)+'/hint?level='+(hintLevel+1));
+     const out=demoMode?{hint:QUEST[stage.step][hintLevel===0?'hint1':'hint2']}:await api('/api/quest/'+encodeURIComponent(slug)+'/hint?level='+(hintLevel+1));
      hintLevel++;
      area.replaceChildren(make('div','hint',out.hint));
      b.textContent=hintLevel===1?'Show a stronger hint':'Use assisted solution';
@@ -133,7 +135,7 @@ async function solve(answer,assist=false){
  if(!stage||stage.completed)return;
  setError('');
  try{
-   const out=await api('/api/quest/'+encodeURIComponent(slug)+'/'+(assist?'assist':'answer'),{
+   const out=demoMode?demoAnswer(answer,assist):await api('/api/quest/'+encodeURIComponent(slug)+'/'+(assist?'assist':'answer'),{
      method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(assist?{step:stage.step,confirm:true}:{step:stage.step,answer})
    });
    if(!out.correct){setError(out.message||'Try again.');return;}
@@ -156,6 +158,7 @@ function showFinal(data){
  if(data.ticketUrl && /^https:\/\//.test(data.ticketUrl)){const a=make('a','', 'View the details');a.href=data.ticketUrl;a.target='_blank';a.rel='noopener noreferrer';details.append(a);}
  container.append(details);
  const acts=make('div','actions');
+ if(demoMode){acts.append(btn('Return to your editor',closeDemo,'btn'));container.append(acts);scene.append(container);play.replaceChildren(scene);return;}
  acts.append(btn('Replay the finale ✦',()=>{scene.classList.remove('played');void scene.offsetWidth;scene.classList.add('played');soundFx();},'btn'));
  acts.append(btn('Save keepsake image',()=>saveKeepsake(data),'btn secondary'));
  acts.append(btn('Print or save PDF',()=>window.print(),'btn secondary'));
@@ -173,6 +176,26 @@ function saveKeepsake(data){
  c.font='38px Georgia';c.fillText('For '+(data.recipient||'you'),540,1040);c.fillText('From '+(data.sender||'someone special'),540,1110);
  const a=document.createElement('a');a.download='Reveal-Quest-Keepsake.png';a.href=canvas.toDataURL('image/png');a.click();
 }
+
+function demoAnswer(answer,assist){
+ const base=QUEST[stage.step];
+ const correct=assist || String(answer??'').trim().toLowerCase()===base.answer.toLowerCase();
+ if(!correct)return {correct:false,message:'Not quite. Try again, or use a hint.'};
+ const next=stage.step+1;
+ if(next>=5)return {success:true,correct:true,completed:true,step:5,final:{recipient:'Chloe',sender:'Reveal',title:'Your personalised surprise will appear here after payment',message:'This is a sample quest. No purchaser details have been revealed.'}};
+ const nextChapter=QUEST[next];
+ return {success:true,correct:true,completed:false,step:next,total:5,chapter:nextChapter.title,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
+}
+function launchDemo(){
+ demoMode=true;create.hidden=true;play.hidden=false;
+ const base=QUEST[0];stage={step:0,total:5,chapter:base.title,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
+ hintLevel=0;showIntro();
+}
+function closeDemo(){
+ stopPrompt();demoMode=false;stage=null;play.replaceChildren();play.hidden=true;create.hidden=false;
+ window.scrollTo({top:0,behavior:'smooth'});
+}
+
 async function startRecipient(){
  create.hidden=true;play.hidden=false;slug=location.pathname.split('/').filter(Boolean)[1];
  play.replaceChildren(make('p','stage-copy','Opening your adventure…'));
@@ -204,7 +227,7 @@ function initialCreator(){
  const right=make('section','panel');right.innerHTML='<h2 class="serif">The adventure</h2><p style="line-height:1.55">Five connected cinematic chapters: letter, suitcase, passport, map and ticket. Customise clues without replacing the cinematic world.</p>';
  const mode=field('Clue creation mode','mode','select');mode.querySelector('input').replaceWith(Object.assign(make('select'),{name:'mode',innerHTML:'<option value="ready">Ready-made puzzles</option><option value="adaptable">Adaptable clues</option><option value="custom">Fully custom clues</option>'}));right.append(mode);
  const preview=make('div','preview');preview.innerHTML='<div class="eyebrow">YOUR RECIPIENT WILL SEE</div><h3>The Mysterious Letter</h3><p>The letter is waiting. Discover its secret to begin the journey.</p>';
- preview.append(btn('Preview opening scene',()=>{alert('The cinematic environment and first chapter are shown here as a sample. The final personalised surprise is only available after payment.');},'btn secondary'));
+ preview.append(btn('Play the sample adventure',launchDemo,'btn secondary'));
  right.append(preview,make('p','review-note','A fixed guided sequence, optional recipient-controlled hints and an assisted solution at every stage. No forced time limit.'));
  const editors=make('div','');editors.id='editors';QUEST.forEach((s,i)=>editors.append(buildEditor(i,s)));right.append(editors);
  const submit=btn(editing?'Save changes and review':'Save and review your quest',()=>{},'btn');submit.type='submit';submit.id='saveButton';
