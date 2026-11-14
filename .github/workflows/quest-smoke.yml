@@ -4,6 +4,11 @@ on:
     branches: [feature/stage4b-cloudflare-staging]
     paths:
       - 'tools/smoke-quest-staging.mjs'
+      - 'src/quest.js'
+      - 'public/quest.js'
+      - 'public/quest.html'
+      - 'public/reveal.html'
+      - 'public/qr.js'
       - '.github/workflows/quest-smoke.yml'
   workflow_dispatch:
 permissions:
