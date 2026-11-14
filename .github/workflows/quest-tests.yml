@@ -5,12 +5,16 @@ on:
       - 'src/**'
       - 'quest.js'
       - 'quest.html'
+      - 'quest-assets/**'
       - 'sql/**'
       - 'tests/**'
       - 'package.json'
+      - '.github/workflows/quest-tests.yml'
   push:
     branches:
       - feature/reveal-quest-travel-adventure
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -20,3 +24,21 @@ jobs:
         with:
           node-version: '22'
       - run: npm test
+  mobile-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:browser
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quest-mobile-chapter-screenshots
+          path: test-output/*.png
+          if-no-files-found: ignore
+          retention-days: 7
