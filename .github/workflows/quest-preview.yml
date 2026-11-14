@@ -31,3 +31,5 @@ jobs:
           path: preview-url.txt
           if-no-files-found: ignore
           retention-days: 1
+
+      # Preview refresh for current mobile demonstration
