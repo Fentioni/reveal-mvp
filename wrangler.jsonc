@@ -9,7 +9,8 @@
   },
   "vars": {
     "STRIPE_LIVE_MODE": "false",
-    "STAGING_DISABLE_CHECKOUT": "true"
+    "STAGING_DISABLE_CHECKOUT": "true",
+    "QUEST_TEST_CHECKOUT_ENABLED": "false"
   },
   "d1_databases": [
     {
