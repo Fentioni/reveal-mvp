@@ -46,7 +46,11 @@ test('portrait mobile Quest: every cinematic chapter is playable without overflo
     const errs=[];
     page.on('pageerror',err=>errs.push(err.message));
     await page.goto(base+'/quest.html',{waitUntil:'networkidle'});
-    await page.locator('#creatorForm').waitFor();
+    await page.waitForTimeout(300);
+    if(!await page.locator('#creatorForm').count()) {
+      throw new Error('Creator did not render. Browser errors: '+JSON.stringify(errs)+'; page text: '+(await page.locator('body').innerText()).slice(0,500));
+    }
+    await page.locator('#creatorForm').waitFor({timeout:5000});
     assert.equal(await page.locator('#create').isVisible(),true);
     assert.equal(await page.locator('h1').first().innerText(),'The Missing Itinerary');
     await page.getByRole('button',{name:'Play the sample adventure'}).click();
