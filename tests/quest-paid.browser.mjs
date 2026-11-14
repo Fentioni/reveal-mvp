@@ -142,6 +142,18 @@ test('simulated-paid recipient sees no prize until solving then can reopen and s
   const file=await download.path();
   assert.ok((await stat(file)).size>20000,'Keepsake did not include rendered artwork');
   assert.deepEqual(errors,[]);
+  // Verify the normal-motion cinematic finale, its accessible skip, and replay.
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.reload({waitUntil:'networkidle'});
+  await page.locator('.quest-cinematic-curtain').waitFor({timeout:6000});
+  await page.locator('.cinematic-gold-ticket').waitFor();
+  await page.screenshot({path:resolve(output,'cinematic-gold-ticket-prelude.png'),animations:'disabled',fullPage:true});
+  await page.getByRole('button',{name:'Skip animation'}).click();
+  await page.locator('.quest-cinematic-curtain').waitFor({state:'detached',timeout:3000});
+  await page.getByRole('button',{name:/Replay the finale/}).click();
+  await page.locator('.quest-cinematic-curtain').waitFor({timeout:3000});
+  await page.getByRole('button',{name:'Skip animation'}).click();
+  await page.locator('.quest-cinematic-curtain').waitFor({state:'detached',timeout:3000});
   await context.close();
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
