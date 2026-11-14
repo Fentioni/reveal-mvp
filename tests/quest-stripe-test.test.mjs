@@ -42,7 +42,7 @@ test('Never enable Stripe live keys, wrong account or absent test webhook secret
  for(const overrides of [
   {STRIPE_LIVE_MODE:'true'},
   {STRIPE_SECRET_KEY:'sk_live_abc123'},
-  {STRIPE_SECRET_KEY:'rk_test_abc123'},
+  {STRIPE_SECRET_KEY:'rk_live_abc123'},
   {STRIPE_WEBHOOK_SECRET:'whsec_invalid!!!'},
   {STRIPE_WEBHOOK_SECRET:undefined},
   {STRIPE_PRICE_ID:'price_missing#'},
@@ -53,6 +53,7 @@ test('Never enable Stripe live keys, wrong account or absent test webhook secret
   assert.equal(questStripeTestReady({...envBase,...overrides}),false,JSON.stringify(overrides));
  }
  assert.equal(questStripeTestReady(envBase),true);
+ assert.equal(questStripeTestReady({...envBase,STRIPE_SECRET_KEY:'rk_test_RestrictedKeyFromPriorRevealSetup123'}),true);
 });
 test('Payment capability is published safely, without credentials or tax-inclusive price',async()=>{
  const off=await questStripeTestResponse(req('/api/quest/test-payment-status'),{
