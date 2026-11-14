@@ -6,7 +6,7 @@ const make = (tag,className,text) => {const el=document.createElement(tag);if(cl
 const escapeHtml = v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const QUEST = [
  {title:'The Mysterious Letter',kind:'choice',question:'I travel without moving and always point north. Which object am I?',options:['A map','A compass','A telescope'],answer:'A compass',hint1:'Look for the object that helps travellers find north.',hint2:'It has a magnetic needle.'},
- {title:'The Locked Suitcase',kind:'lock',question:'The letter reveals the order of three symbols. Use the tags to unlock the suitcase.',options:[],answer:'427',hint1:'Inspect the luggage tags, not the travel stickers.',hint2:'The compass tag is 4, the mountain tag is 2 and the star tag is 7.'},
+ {title:'The Locked Suitcase',kind:'lock',question:'The note gives the order: compass, mountain, star. Match that order to the numbered luggage tags to open the suitcase.',options:[],answer:'427',hint1:'Inspect the luggage tags, not the travel stickers.',hint2:'The compass tag is 4, the mountain tag is 2 and the star tag is 7.'},
  {title:'The Passport Mystery',kind:'order',question:'Arrange the three stamps in chronological order, earliest first.',options:['Lisbon · 19 Apr','Barcelona · 12 Apr','Rome · 08 Apr'],answer:'Rome · 08 Apr|Barcelona · 12 Apr|Lisbon · 19 Apr',hint1:'The dates are more important than the cities.',hint2:'Start with 08 April, followed by 12 April.'},
  {title:'The Secret Map',kind:'order',question:'Follow the clues and visit the landmarks in the correct sequence.',options:['Mountain peak','Lighthouse','Forest'],answer:'Lighthouse|Forest|Mountain peak',hint1:'The sea is where your route begins.',hint2:'Start at the lighthouse, then visit the forest.'},
  {title:'The Missing Itinerary',kind:'order',question:'Reassemble the recovered ticket fragments in their proper order.',options:['Gold seal','Flight symbol','Route line'],answer:'Route line|Flight symbol|Gold seal',hint1:'The route is the beginning of this ticket.',hint2:'The flight symbol sits between the route and the gold seal.'}
@@ -92,7 +92,7 @@ function renderStep(nextData=null){
      wheel.append(up,out,down);wheels.append(wheel);
    }
    card.append(wheels);
-   const note=make('p','stage-copy','Compass = 4 &nbsp; · &nbsp; Mountain = 2 &nbsp; · &nbsp; Star = 7');
+   const note=make('p','stage-copy','Luggage tags: ★ Star 7  ·  ◇ Mountain 2  ·  ✧ Compass 4');
    note.style.fontSize='13px';card.append(note);
    card.append(btn('Unlock suitcase',()=>solve(digits.join(''))));
  }else if(stage.kind==='order'){
