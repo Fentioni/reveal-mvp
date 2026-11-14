@@ -57,7 +57,7 @@ test('portrait mobile Quest: every cinematic chapter is playable without overflo
     await page.getByRole('button',{name:/Begin the adventure/}).click();
 
     async function chapter(i,title){
-      await page.locator('.quest h2').waitFor();
+      await page.locator('.quest h2').filter({hasText:title}).waitFor({timeout:10000});
       assert.equal(await page.locator('.quest h2').innerText(),title);
       const w=await page.evaluate(()=>document.documentElement.scrollWidth);
       assert.ok(w<=393,'Chapter '+i+' has horizontal overflow: '+w+'px');
