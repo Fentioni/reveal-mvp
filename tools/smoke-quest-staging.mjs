@@ -26,3 +26,17 @@ if(!creator.ok){console.error('Quest creator route missing: HTTP '+creator.statu
 const html=await creator.text();
 if(!html.includes('Reveal Quest')&&!html.includes('REVEAL QUEST')){console.error('Quest creator content could not be verified.');process.exit(1);}
 console.log('Quest creator route: HTTP '+creator.status+' — published to existing staging Worker.');
+const paymentCheck=await fetch(origin+'/api/quest/test-payment-status',{
+ headers:{accept:'application/json'},signal:AbortSignal.timeout(10000),cache:'no-store'
+});
+if(paymentCheck.status!==200)throw Error('Quest test payment capability endpoint is not deployed.');
+const payment=await paymentCheck.json();
+if(payment.environment!=='staging'||payment.mode!=='test'||payment.enabled!==false||
+   payment.automaticTax!==true||payment.baseAmountMinor!==199||payment.currency!=='gbp'){
+ throw Error('Unexpected Quest test checkout state; staging must be disabled until approved.');
+}
+console.log('Quest Stripe TEST integration is present, tax-aware and DISABLED until explicit authorisation.');
+const blocked=await fetch(origin+'/api/reveals/not-a-quest/checkout',{method:'POST',signal:AbortSignal.timeout(10000)});
+if(blocked.status!==503)throw Error('Staging checkout safety gate was not enforced.');
+console.log('Unrelated staging products cannot start checkout.');
+
