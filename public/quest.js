@@ -182,7 +182,7 @@ async function solve(answer,assist=false){
    stopPrompt();
    const messages={letter:'The seal is broken',compass:'The compass reveals the route',suitcase:'The suitcase is unlocked',passport:'The passport reveals its secret',map:'The route is illuminated',cipher:'The final clue is solved',ticket:'The missing ticket is complete'};
    const icons={letter:'✉',compass:'✧',suitcase:'✦',passport:'✦',map:'✧',cipher:'✧',ticket:'✈'};
-   const key=QUEST[stage.step]?.key||stage.scene||'ticket';
+   const key=stage.key||QUEST[stage.step]?.key||stage.scene||'ticket';
    const active=play.querySelector('.quest');if(active)active.classList.add('chapter-clear');
    const overlay=make('div','success clear-'+stage.step);
    const animation=make('div','chapter-animation');
@@ -231,13 +231,13 @@ function demoAnswer(answer,assist){
  const next=stage.step+1;
  if(next>=QUEST.length)return {success:true,correct:true,completed:true,step:QUEST.length,total:QUEST.length,final:{recipient:'Chloe',sender:'Reveal',title:'Your personalised surprise will appear here after payment',message:'This is a sample quest. No purchaser details have been revealed.'}};
  const nextChapter=(demoClues||QUEST)[next];
- return {success:true,correct:true,completed:false,step:next,total:QUEST.length,chapter:nextChapter.title,scene:nextChapter.scene,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
+ return {success:true,correct:true,completed:false,step:next,total:QUEST.length,chapter:nextChapter.title,key:nextChapter.key,scene:nextChapter.scene,kind:nextChapter.kind,question:nextChapter.question,options:nextChapter.options,recipient:'Chloe'};
 }
 function launchDemo(){
  const snapshot=readConfig();
  demoClues=snapshot.clues.map((clue,i)=>({...QUEST[i],...clue}));
  demoMode=true;create.hidden=true;play.hidden=false;
- const base=demoClues[0];stage={step:0,total:QUEST.length,chapter:base.title,scene:base.scene,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
+ const base=demoClues[0];stage={step:0,total:QUEST.length,chapter:base.title,key:base.key,scene:base.scene,kind:base.kind,question:base.question,options:base.options,recipient:'Chloe',completed:false};
  hintLevel=0;showIntro();
 }
 function closeDemo(){
