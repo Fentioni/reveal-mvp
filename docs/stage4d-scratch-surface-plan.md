@@ -1,5 +1,40 @@
 # Stage 4D scratch-surface system (staging)
 
+## Stage 4E+ — 13-theme Scratch Ticket Reveal system (15 November 2026)
+
+Theme is a new independent visual configuration layer over the original scratch
+mechanic, not a new catalogue product. The original finish colours (Gold,
+Silver, Midnight, Rose), original ticket/concert artwork choices, custom uploaded
+cover, R2 storage and payment/preview protections remain in place.
+
+The 13 themes are Adventure, Travel, Magical, Sports, Music, Theatre,
+Festive, Romance, Birthday, Baby, Celebration, Mystery and Luxury / Elegant.
+The stable IDs are adventure, travel, magical, sports, music, theatre, festive,
+romance, birthday, baby, celebration, mystery, luxury-elegant.
+
+The creator at /legacy-create starts with theme selection, then keeps the
+existing independent surface artwork, foil, image upload and detail fields.
+Each theme tile previews its colour scheme. Picking a theme updates the
+surrounding screen and live non-scratchable foil Canvas surface without removing
+an uploaded image or changing the selected foil or artwork. Original vector
+themed motifs, palettes, heading and borders are drawn directly onto the
+existing Canvas surface. This requires no new artwork licenses or dependency.
+
+The selection is validated by the owner-authorised scratch-surface API and
+saved in existing reveal_configurations.fields_json.scratchSurface.theme.
+Older records default to luxury-elegant. Unknown theme IDs are rejected.
+The existing owner-only static /reveal review displays the selected theme
+on its background, surface summary and Canvas preview. The payment-gated
+/r/:slug/scratch-data response includes the theme only after paid + paid_at,
+and the recipient page applies the same theme to its backdrop, card and
+scratchable Canvas. Pre-payment secrecy and cover image protections are unchanged.
+
+No extra product or payment route is activated. Scratch Ticket Reveal remains
+a staging-only development product: a real paid scratch-recipient checkout
+and production activation have not been completed. Themes are not a statement
+of full product launch acceptance.
+
+
 ## Implemented (12 November 2026)
 - Original dependency-free Canvas scratch engine.
 - Premium foil artwork: Classic, Theatre Velvet and Concert Lights.
