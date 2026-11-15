@@ -5,6 +5,7 @@
  * to a browser before verified payment.
  */
 import {getScratchTheme, DEFAULT_SCRATCH_THEME, SCRATCH_THEMES} from './scratch-themes.js';
+import {drawScratchThemeArtwork} from './scratch-theme-art.js';
 const FOILS = Object.freeze({
   gold: ['#654114', '#F8E3A0', '#BD8430', '#FFF3BF', '#9A6420'],
   silver: ['#687382', '#F2F6FA', '#A3B0BE', '#FFFFFF', '#778697'],
@@ -145,8 +146,11 @@ export class ScratchCard {
       ctx.fillRect(0, 0, w, h);
     }
 
-    // Theme decoration is independent from finish/style and is always visible
-    // above the purchaser's optional photo, without changing scratch semantics.
+    // Theme is the ACTUAL scratchable surface illustration, not merely
+    // the heading or page colour. Preserve the independent foil/style/photo.
+    drawScratchThemeArtwork(ctx,w,h,getScratchTheme(this.theme),{
+      photo:Boolean(this.coverImage),landscape:w>h*1.4
+    });
     this.drawThemeDecoration();
     ctx.save();
     ctx.textAlign = 'center';
@@ -193,14 +197,10 @@ export class ScratchCard {
     ctx.textAlign='center';ctx.textBaseline='middle';
     ctx.font='700 '+clamp(w*(landscape?.034:.042),12,19)+'px Georgia,serif';
     ctx.fillText(theme.label.toUpperCase(),landscape?w*.37:w*.5,h*.04+headerHeight*.48,landscape?w*.48:w*.78);
-    ctx.font=clamp(w*(landscape?.068:.11),23,55)+'px Georgia,serif';
-    ctx.fillText(theme.motif,landscape?w*.66:w*.5,landscape?h*.23:h*.29);
-    ctx.globalAlpha=photo?.3:.43;
-    ctx.font=clamp(w*.067,15,31)+'px Georgia,serif';
-    for(let i=0;i<9;i++){
-      const x=w*(.12+(i%3)*.38),y=h*(.23+Math.floor(i/3)*.30);
-      ctx.fillText(theme.motif,x,y);
-    }
+    // Original theme scene is painted beneath this header, including a
+    // distinct illustration for all 13 themes. Avoid wallpaper symbols.
+    ctx.font=clamp(w*(landscape?.052:.067),17,32)+'px Georgia,serif';
+    ctx.fillText(theme.motif,landscape?w*.68:w*.88,h*.04+headerHeight*.48);
     ctx.globalAlpha=1;ctx.restore();
   }
 
