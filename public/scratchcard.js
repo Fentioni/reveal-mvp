@@ -183,7 +183,9 @@ export class ScratchCard {
     ctx.strokeStyle=theme.highlight;ctx.lineWidth=Math.max(3,w*.012);
     ctx.globalAlpha=.90;
     ctx.strokeRect(w*.03,h*.025,w*.94,h*.95);
-    ctx.globalAlpha=photo?.65:.84;
+    // An opaque themed banner keeps old artwork headings from ghosting
+    // through the selected theme title (e.g., Theatre Velvet + Travel).
+    ctx.globalAlpha=1;
     ctx.fillStyle=theme.bg;
     const headerHeight=landscape?h*.2:h*.15;
     ctx.fillRect(w*.045,h*.04,w*.91,headerHeight);
