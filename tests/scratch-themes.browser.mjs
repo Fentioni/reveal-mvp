@@ -53,8 +53,8 @@ test('all 13 scratch themes show creator previews and preserve foil/design choic
    const errors=[];
    page.on('pageerror',err=>errors.push(err.message));
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
-   await page.locator('[data-scratch-theme]').first().waitFor();
-   assert.equal(await page.locator('[data-scratch-theme]').count(),13);
+   await page.locator('.scratch-theme-option[data-scratch-theme]').first().waitFor();
+   assert.equal(await page.locator('.scratch-theme-option[data-scratch-theme]').count(),13);
    assert.equal(await page.locator('[data-scratch-foil]').count(),4);
    assert.equal(await page.locator('[data-scratch-style]').count(),6);
    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),'luxury-elegant');
