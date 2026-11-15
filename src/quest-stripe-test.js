@@ -42,29 +42,6 @@ function isCheckout(path){
 export async function questStripeTestResponse(request,env,ctx,originalWorker){
  const url=new URL(request.url);
  const path=url.pathname;
- // One-time read-only TEST receipt verification; no personal details, IDs, or secrets in response.
- if(path==='/api/quest/test-receipt-check-7e5c' && request.method==='GET'){
-  if(request.headers.get('x-quest-receipt-audit')!=='K9qW28Nb5tD76GzM4cE3YpL11QXr0fV' || !questStripeTestReady(env))return reply({success:false},404);
-  try{
-   const id='5749dc62-e486-43ea-92f5-17221ddf3624';
-   const pid='7fc02597-cb11-485e-b029-ddae601aa043';
-   const sid='cs_test_a0uDjQkG4hEZuDzRZBbg8RYMkgfGbr2oNtmOvW4acpGFNNLqtrt3XeQSWH';
-   const eventId='evt_1Uc1hAKEVPKWz2E9Pm4QJ7mG';
-   const [reveal,payment,event,quest]=await Promise.all([
-    env.DB.prepare('SELECT status, paid_at FROM reveals WHERE id=?').bind(id).first(),
-    env.DB.prepare('SELECT status, paid_at, checkout_session_id FROM payments WHERE id=? AND reveal_id=?').bind(pid,id).first(),
-    env.DB.prepare('SELECT id FROM stripe_events WHERE id=?').bind(eventId).first(),
-    env.DB.prepare('SELECT reveal_id FROM quest_configs WHERE reveal_id=?').bind(id).first()
-   ]);
-   return reply({success:true,environment:'staging',
-    revealPaid:reveal?.status==='paid'&&Boolean(reveal?.paid_at),
-    paymentPaid:payment?.status==='paid'&&Boolean(payment?.paid_at)&&payment?.checkout_session_id===sid,
-    webhookEventRecorded:Boolean(event),
-    questConfigured:Boolean(quest)});
-  }catch{
-   return reply({success:false,error:'Read-only staging receipt check unavailable.'},503);
-  }
- }
  if(path==='/api/quest/test-payment-status' && request.method==='GET'){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',

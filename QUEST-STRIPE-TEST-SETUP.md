@@ -68,6 +68,24 @@ published staging Quest creator; readiness is not proof of a completed
 payment. The production Worker has a separate unrelated failed Build
 check because it follows staging pushes, as previously documented.
 
+## 15 November 2026 — first genuine Quest Stripe TEST checkout succeeded
+
+Verified directly against Reveal Development sandbox, not a simulated charge:
+- Checkout TEST session status complete; payment_status paid
+- Actual GBP subtotal 199p, auto tax 40p, total 239p
+- automatic_tax.enabled=true and liability.type=stripe
+- Checkout URL returned to the existing Stage 4B staging Worker
+- The actual checkout.session.completed event was created in Stripe
+- A temporary protected read-only Cloudflare staging D1 audit confirmed:
+  revealPaid=true, paymentPaid=true, webhookEventRecorded=true,
+  questConfigured=true, staging=true
+- The audit returned booleans only and did not reveal customer data or secrets
+- The one-time receipt audit endpoint and CI workflow were removed following
+  verification; they must not remain accessible
+- Recipient UX on real devices (puzzle completion, final private details,
+  keepsake download and revisits) is the next acceptance step; database payment
+  validation alone is not a complete visual test
+
 ## Staging Cloudflare Worker
 
 - Worker: reveal-stage4b-test
