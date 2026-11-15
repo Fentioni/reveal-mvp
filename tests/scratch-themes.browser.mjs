@@ -140,7 +140,7 @@ test('paid scratch recipient screen and foil Canvas reflect saved theme while ke
    await page.locator('#card.foil-ready').waitFor();
    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),theme.id);
    assert.equal(await page.locator('#progress').getAttribute('value'),'0');
-   assert.match(await page.locator('.eyebrow').textContent(),new RegExp(theme.label.replace(/[.*+?^${}()|[\]\\]/g,'\\  await page.screenshot({path:resolve(output,'recipient-magical-foil.png'),fullPage:true});
+   assert.equal((await page.locator('.eyebrow').textContent()).trim(),theme.icon+' '+theme.label+' reveal');
   assert.deepEqual(errors,[]);')+' reveal'));
    recipientBackgrounds.add(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage));
    recipientFoils.add(await page.locator('#foilCanvas').evaluate(el=>el.toDataURL('image/png')));
