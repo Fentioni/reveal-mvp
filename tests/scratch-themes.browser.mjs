@@ -141,7 +141,6 @@ test('paid scratch recipient screen and foil Canvas reflect saved theme while ke
    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),theme.id);
    assert.equal(await page.locator('#progress').getAttribute('value'),'0');
    assert.equal((await page.locator('.eyebrow').textContent()).trim(),theme.icon+' '+theme.label+' reveal');
-  assert.deepEqual(errors,[]);')+' reveal'));
    recipientBackgrounds.add(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage));
    recipientFoils.add(await page.locator('#foilCanvas').evaluate(el=>el.toDataURL('image/png')));
    assert.equal(await page.locator('#card').isVisible(),true);
