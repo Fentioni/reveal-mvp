@@ -300,3 +300,40 @@ test('physical suitcase, bound passport leaf and accurate five-pin map route', {
   await new Promise(done=>server.close(done));
  }
 });
+
+
+test('desktop map shows landmark pins and Check sequence separation', {timeout:55000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:1440,height:900},deviceScaleFactor:1,reducedMotion:'reduce'});
+  await page.goto(base+'/quest',{waitUntil:'networkidle'});
+  await page.locator('select[name=preset]').selectOption('classic');
+  await page.getByRole('button',{name:'Play the sample adventure'}).click();
+  await page.getByRole('button',{name:/Begin the adventure/}).click();
+  await page.getByRole('button',{name:'A compass'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Locked Suitcase'}).waitFor();
+  for(const [i,num] of [[1,4],[2,2],[3,7]])
+    for(let j=0;j<num;j++)await page.getByRole('button',{name:'Increase digit '+i}).click();
+  await page.getByRole('button',{name:'Unlock suitcase'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Passport Mystery'}).waitFor();
+  await assertSequenceSpacing(page,'Passport desktop');
+  for(const place of ['Rome · 08 Apr','Barcelona · 12 Apr','Lisbon · 19 Apr'])
+    await page.getByRole('button',{name:place}).click();
+  await assertSequenceSpacing(page,'Passport selected desktop');
+  await page.getByRole('button',{name:'Check sequence'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Secret Map'}).waitFor();
+  await assertSequenceSpacing(page,'Map desktop');
+  await assertLandmarkKeys(page);
+  for(const place of ['Lighthouse','Forest','Mountain peak'])
+    await page.getByRole('button',{name:place}).click();
+  await assertSequenceSpacing(page,'Map selected desktop');
+  await page.screenshot({path:resolve(output,'desktop-map-key-options-separated.png'),fullPage:true});
+  await page.getByRole('button',{name:'Check sequence'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Missing Itinerary'}).waitFor();
+  await page.close();
+ }finally{
+  await browser.close();
+  await new Promise(resolve=>server.close(resolve));
+ }
+});
