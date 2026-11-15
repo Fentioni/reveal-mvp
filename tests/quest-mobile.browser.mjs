@@ -32,6 +32,30 @@ async function startServer(){
  await new Promise(done=>s.listen(0,'127.0.0.1',done));
  return {server:s,base:'http://127.0.0.1:'+s.address().port};
 }
+async function assertSequenceSpacing(page,name){
+ const rects=await page.locator('.stage-card .order-actions').evaluate(root=>{
+  const last=root.querySelector('.order-options button:last-child');
+  const check=root.querySelector('.check-sequence');
+  if(!last||!check)return null;
+  const a=last.getBoundingClientRect(),b=check.getBoundingClientRect();
+  return {gap:b.top-a.bottom,optionsEnd:root.querySelector('.order-options').getBoundingClientRect().bottom,checkTop:b.top};
+ });
+ assert.ok(rects,name+' needs separate option and confirmation controls');
+ assert.ok(rects.gap>=12,name+' final answer overlaps Check sequence: '+rects.gap);
+ assert.ok(rects.checkTop>=rects.optionsEnd+12,name+' sequence overlaps answer grid');
+}
+async function assertLandmarkKeys(page){
+ const list=await page.locator('.hero-object.map .map-pin-key').evaluateAll(nodes=>nodes.map(node=>{
+  const rect=node.getBoundingClientRect(),frame=node.parentElement.getBoundingClientRect();
+  return {name:node.querySelector('.map-pin-key-name')?.textContent,
+    pin:Number(node.dataset.pin),x:parseFloat(node.style.left),
+    inside:rect.left>=frame.left-2&&rect.right<=frame.right+2};
+ }));
+ assert.deepEqual(list.map(x=>x.name),['Lighthouse','Waypoint','Forest','Waypoint','Mountain peak']);
+ assert.deepEqual(list.map(x=>x.pin),[1,2,3,4,5]);
+ assert.ok(list.every((x,i)=>x.inside&&(i===0||list[i-1].x<x.x)),'Map landmark badges must attach to visible left-to-right pins');
+ assert.match(await page.locator('.stage-card .map-help').innerText(),/two connecting waypoints/);
+}
 async function playChapter(page,title,sceneName,index,preset){
  await page.locator('.quest h2').filter({hasText:title}).waitFor({timeout:12000});
  assert.equal(await page.locator('.quest h2').innerText(),title);
@@ -48,10 +72,13 @@ async function playChapter(page,title,sceneName,index,preset){
   await page.getByRole('button',{name:'Unlock suitcase'}).click();
  }
  if(title==='The Passport Mystery'){
+  await assertSequenceSpacing(page,'Passport');
   for(const place of ['Rome · 08 Apr','Barcelona · 12 Apr','Lisbon · 19 Apr'])await page.getByRole('button',{name:place}).click();
   await page.getByRole('button',{name:'Check sequence'}).click();
  }
  if(title==='The Secret Map'){
+  await assertSequenceSpacing(page,'Map');
+  await assertLandmarkKeys(page);
   for(const place of ['Lighthouse','Forest','Mountain peak'])await page.getByRole('button',{name:place}).click();
   await page.getByRole('button',{name:'Check sequence'}).click();
  }
