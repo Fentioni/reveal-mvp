@@ -207,10 +207,11 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
   await page.waitForTimeout(1550);
   const turn=await page.locator('.passport-page-turn').evaluate(el=>{
    const m=new DOMMatrixReadOnly(getComputedStyle(el).transform);
-   return {yaw:m.m11,parent:el.parentElement?.className,inside:el.parentElement?.contains(el)};
+   return {yaw:m.m11,parent:el.parentElement?.className,inside:el.parentElement?.contains(el),stampFace:getComputedStyle(el,'::before').visibility};
   });
   assert.ok(turn.yaw<0.9,'Passport page must visibly pivot 3D around the spine');
   await page.screenshot({path:resolve(output,'bound-passport-turning-mid.png'),fullPage:true});
+  assert.equal(turn.stampFace,'hidden','Do not display reversed stamp artwork on the back of the turning page');
   assert.equal(turn.parent,'passport-art');
   assert.equal(turn.inside,true);
   assert.equal(await page.locator('.success').count(),0,'Do not cover turning page');
