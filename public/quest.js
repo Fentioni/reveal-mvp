@@ -215,7 +215,37 @@ function renderStep(nextData=null){
    path.classList.add('map-route-trace');
    path.setAttribute('d',mapPathThroughPins(MAP_ROUTE_PINS));
    path.dataset.pinPoints=MAP_ROUTE_PINS.map(point=>point.join(',')).join(';');
-   route.append(path);mapArtwork.append(route);hero.append(mapArtwork);
+   route.append(path);
+   mapArtwork.append(route);
+
+   // The illustrated map has five pins, but only three are landmarks. Give
+   // the recipient clear visual identities for all five pins; otherwise the
+   // three answer options cannot be connected to anything in the picture.
+   const defaults=['Lighthouse','Forest','Mountain peak'];
+   const standard=defaults.every(name=>stage.options.some(option=>option.toLocaleLowerCase('en-GB')===name.toLocaleLowerCase('en-GB')));
+   // Use the same positions when the purchaser edits the three landmark
+   // names: the pin labels always match the available option buttons.
+   const labels=standard?defaults:[stage.options[1],stage.options[2],stage.options[0]];
+   const pins=[
+     {at:0,text:labels[0],icon:standard?'⚓':'◆',type:'landmark'},
+     {at:1,text:'Waypoint',icon:'·',type:'waypoint'},
+     {at:2,text:labels[1],icon:standard?'🌲':'◆',type:'landmark'},
+     {at:3,text:'Waypoint',icon:'·',type:'waypoint'},
+     {at:4,text:labels[2],icon:standard?'⛰️':'◆',type:'landmark'}
+   ];
+   for(const item of pins){
+     const [x,y]=MAP_ROUTE_PINS[item.at];
+     const badge=make('span','map-pin-key '+item.type);
+     badge.style.left=(x/900*100)+'%';
+     badge.style.top=(y/1500*100)+'%';
+     badge.dataset.pin=String(item.at+1);
+     const symbol=make('span','map-pin-key-icon',item.icon);
+     symbol.setAttribute('aria-hidden','true');
+     badge.append(symbol,make('span','map-pin-key-name',item.text));
+     mapArtwork.append(badge);
+   }
+   hero.setAttribute('aria-label','Illustrated map with five stops: '+labels[0]+', waypoint, '+labels[1]+', waypoint, '+labels[2]+'.');
+   hero.append(mapArtwork);
  }
  if(sceneId==='ticket'){
    const glow=make('div','ticket-light');glow.setAttribute('aria-hidden','true');hero.append(glow);
@@ -244,12 +274,21 @@ function renderStep(nextData=null){
    const sequence=make('div','sequence');sequence.id='sequence';sequence.setAttribute('aria-live','polite');card.append(sequence);
    const options=make('div','sortable');options.id='sortable';
    stage.options.forEach(opt=>{const b=btn(opt,()=>toggleOption(opt,b),'option');options.append(b);});
-   // Leave map pin tips and the passport binding unobstructed.
-   // The same choices are still available immediately under the artwork.
+   // A dedicated vertical layout keeps the final option separate from the
+   // submit button, even in mobile browsers and at increased browser zoom.
+   const orderActions=make('div','order-actions');
    if(sceneId==='ticket'){
-     hero.setAttribute('role','group');hero.setAttribute('aria-label','Interactive '+stage.chapter+' scene');hero.append(options);
-   } else card.append(options);
-   card.append(btn('Check sequence',()=>solve(selected.join('|'))));
+     hero.setAttribute('role','group');
+     hero.setAttribute('aria-label','Interactive '+stage.chapter+' scene');
+     hero.append(options);
+   }else{
+     options.classList.add('order-options');
+     orderActions.append(options);
+   }
+   const check=btn('Check sequence',()=>solve(selected.join('|')));
+   check.classList.add('check-sequence');
+   orderActions.append(check);
+   card.append(orderActions);
  }
  const helper=make('div','actions');const hintBtn=btn('✧ Need a hint?',()=>hint(),'btn secondary');hintBtn.id='hint-control';helper.append(hintBtn);
  const hintArea=make('div','');hintArea.id='hint-area';card.append(helper,hintArea);
