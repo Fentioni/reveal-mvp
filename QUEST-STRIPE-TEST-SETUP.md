@@ -27,6 +27,27 @@ No further Stripe product, price, tax-rate or webhook creation is needed.
 Stripe's webhook signing secret is not returned when reading the endpoint; it
 must be viewed in Stripe's secure Dashboard. Do not paste it into chat or GitHub.
 
+## 15 November 2026 test activation and Cloudflare binding audit
+
+Quest-only TEST checkout was temporarily enabled in the staging branch.
+Cloudflare's staging build and compatibility tests succeeded, but the deployed
+Worker returned enabled:false. A temporary read-only authenticated audit
+confirmed the flag, verified £1.99 price, staging D1/R2 and TEST mode
+were correctly configured, but both STRIPE_SECRET_KEY and
+STRIPE_WEBHOOK_SECRET were absent from the running staging Worker.
+
+The cause has not been determined: the secret bindings may have been saved to
+another Worker/environment, failed to deploy, or been lost on a subsequent
+GitHub-driven deployment. We have restored the checkout flag to false,
+removed the protected audit endpoint and deleted its temporary workflow.
+No genuine Quest checkout was attempted.
+
+Check the exact two encrypted secret names under Cloudflare Dashboard >
+Workers & Pages > reveal-stage4b-test > Settings > Variables and Secrets.
+Use credentials from the Reveal Development sandbox and the dedicated
+Quest staging webhook. Do not send any secret values in chat, source, CI logs,
+or screenshots.
+
 ## Staging Cloudflare Worker
 
 - Worker: reveal-stage4b-test
