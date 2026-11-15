@@ -130,3 +130,92 @@ test('normal-motion suitcase fully opens before the success overlay or next puzz
   await new Promise(done=>server.close(done));
  }
 });
+
+
+test('real suitcase photo opens on a back hinge and passport leaf stays attached to the book spine', {timeout:60000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({
+   viewport:{width:390,height:844},deviceScaleFactor:2,isMobile:true,
+   hasTouch:true,reducedMotion:'no-preference'
+  });
+  const errors=[];
+  page.on('pageerror',err=>errors.push(err.message));
+  await page.goto(base+'/quest',{waitUntil:'networkidle'});
+  await page.locator('select[name=preset]').selectOption('classic');
+  await page.getByRole('button',{name:'Play the sample adventure'}).click();
+  await page.getByRole('button',{name:/Begin the adventure/}).click();
+  await page.getByRole('button',{name:'A compass'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Locked Suitcase'}).waitFor();
+  const caseGeometry=await page.locator('.suitcase-photo').evaluate(photo=>{
+   const lid=photo.querySelector('.case-lid'),interior=photo.querySelector('.case-interior');
+   const a=photo.getBoundingClientRect(),b=lid.getBoundingClientRect();
+   return {
+    lidInsidePhoto:photo.contains(lid),interiorInsidePhoto:photo.contains(interior),
+    sameExtent:Math.abs(a.left-b.left)<2 && Math.abs(a.width-b.width)<2,
+    lidArtwork:getComputedStyle(lid).backgroundImage.includes('suitcase.webp'),
+    lidHinge:getComputedStyle(lid).transformOrigin,
+    interiorHiddenUnderLid:getComputedStyle(interior).filter.includes('brightness')
+   };
+  });
+  assert.equal(caseGeometry.lidInsidePhoto,true);
+  assert.equal(caseGeometry.interiorInsidePhoto,true);
+  assert.equal(caseGeometry.sameExtent,true);
+  assert.equal(caseGeometry.lidArtwork,true);
+  assert.equal(caseGeometry.interiorHiddenUnderLid,true);
+  assert.match(caseGeometry.lidHinge,/17%|px/);
+  for(const [i,num] of [[1,4],[2,2],[3,7]]){
+   for(let n=0;n<num;n++)await page.getByRole('button',{name:'Increase digit '+i}).click();
+  }
+  await page.getByRole('button',{name:'Unlock suitcase'}).click();
+  await page.locator('.quest.chapter-clear .suitcase-photo .case-lid').waitFor();
+  await page.waitForTimeout(1550);
+  const opening=await page.locator('.suitcase-photo').evaluate(photo=>{
+   const lid=photo.querySelector('.case-lid');
+   const matrix=new DOMMatrixReadOnly(getComputedStyle(lid).transform);
+   const interior=photo.querySelector('.case-interior');
+   return {tilt:matrix.m22,insideBrightness:getComputedStyle(interior).filter};
+  });
+  assert.ok(opening.tilt<0.95,'Photographic suitcase lid must visibly pivot, not simply fade or scale');
+  assert.notEqual(opening.insideBrightness,'brightness(0.5)');
+  assert.equal(await page.locator('.success').count(),0,'Do not cover suitcase during opening');
+  await page.locator('.quest h2').filter({hasText:'The Passport Mystery'}).waitFor({timeout:12000});
+  const book=await page.locator('.passport-art').evaluate(art=>{
+    const spine=art.querySelector('.passport-spine'),page=art.querySelector('.passport-page-turn');
+    const a=art.getBoundingClientRect(),p=page.getBoundingClientRect(),s=spine.getBoundingClientRect();
+    return {
+      inside:art.contains(page)&&art.contains(spine),
+      spineVsLeaf:Math.abs(p.left-(a.left+a.width/2)),
+      spineVsCentre:Math.abs((s.left+s.width/2)-(a.left+a.width/2)),
+      image:getComputedStyle(page,'::before').backgroundImage,
+      origin:getComputedStyle(page).transformOrigin
+    };
+  });
+  assert.ok(book.inside,'Turning page must be DOM child of the physical book');
+  assert.ok(book.spineVsLeaf<5,'Page hinge must coincide with book central spine');
+  assert.ok(book.spineVsCentre<5,'Spine must sit at the centre of the illustrated book');
+  assert.match(book.image,/passport.webp/);
+  assert.match(book.origin,/0px/);
+  for(const place of ['Rome · 08 Apr','Barcelona · 12 Apr','Lisbon · 19 Apr']){
+   await page.getByRole('button',{name:place}).click();
+  }
+  await page.getByRole('button',{name:'Check sequence'}).click();
+  await page.locator('.quest.chapter-clear .passport-art .passport-page-turn').waitFor();
+  await page.waitForTimeout(1550);
+  const turn=await page.locator('.passport-page-turn').evaluate(el=>{
+   const m=new DOMMatrixReadOnly(getComputedStyle(el).transform);
+   return {yaw:m.m11,parent:el.parentElement?.className,inside:el.parentElement?.contains(el)};
+  });
+  assert.ok(turn.yaw<0.9,'Passport page must visibly pivot 3D around the spine');
+  assert.equal(turn.parent,'passport-art');
+  assert.equal(turn.inside,true);
+  assert.equal(await page.locator('.success').count(),0,'Do not cover turning page');
+  await page.locator('.quest h2').filter({hasText:'The Secret Map'}).waitFor({timeout:12000});
+  assert.deepEqual(errors,[]);
+  await page.close();
+ }finally{
+  await browser.close();
+  await new Promise(done=>server.close(done));
+ }
+});
