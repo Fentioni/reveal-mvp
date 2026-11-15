@@ -48,6 +48,26 @@ Use credentials from the Reveal Development sandbox and the dedicated
 Quest staging webhook. Do not send any secret values in chat, source, CI logs,
 or screenshots.
 
+## 15 November 2026 — verification after encrypted secrets added
+
+After the user added both encrypted Stripe secrets to the **correct**
+Cloudflare staging Worker, the Quest-only feature flag was enabled in
+`feature/stage4b-cloudflare-staging`.
+
+Latest staging Cloudflare Worker build passed. Live GitHub smoke verified
+`GET /api/quest/test-payment-status` returned
+`environment:staging, mode:test, enabled:true,
+automaticTax:true, baseAmountMinor:199, currency:gbp`.
+The first eight polls observed `enabled:false` while Cloudflare was
+deploying; readiness became true on a subsequent poll. The non-Quest
+checkout endpoint returned HTTP 403, confirming isolation.
+
+The code compatibility suite passed. A genuine Stripe-hosted card checkout
+and signed webhook still require an end-to-end purchase through the
+published staging Quest creator; readiness is not proof of a completed
+payment. The production Worker has a separate unrelated failed Build
+check because it follows staging pushes, as previously documented.
+
 ## Staging Cloudflare Worker
 
 - Worker: reveal-stage4b-test
