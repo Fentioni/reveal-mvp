@@ -117,10 +117,10 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 
 /* Scene-specific payoff: the object changes state and the camera pushes in. */
 .quest.chapter-clear .stage-card{transition:opacity .65s ease,transform .65s ease;opacity:0;transform:translateY(18px)}
-.quest.chapter-clear .hero-object{animation:hero-unlock 1.15s cubic-bezier(.21,.8,.25,1) forwards}
-.quest.chapter-clear .hero-object.letter{animation:letter-open 1.15s ease-in forwards}
-.quest.chapter-clear .hero-object.suitcase{animation:case-unlock 1.15s ease-in forwards}
-.quest.chapter-clear .hero-object.map{animation:map-unfold 1.15s ease-in forwards}
+.quest.chapter-clear .hero-object{animation:hero-unlock 1.8s cubic-bezier(.21,.8,.25,1) forwards}
+.quest.chapter-clear .hero-object.letter{animation:letter-open 1.8s ease-in forwards}
+.quest.chapter-clear .hero-object.suitcase{animation:case-unlock 2.55s cubic-bezier(.22,.7,.28,1) forwards}
+.quest.chapter-clear .hero-object.map{animation:map-unfold 2s ease-in forwards}
 @keyframes hero-unlock{0%{filter:brightness(1);transform:scale(1)}
  45%{filter:brightness(1.55);transform:scale(1.035)}
  100%{filter:brightness(2.1) blur(4px);transform:scale(1.17)}}
@@ -128,8 +128,9 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  55%{transform:perspective(700px) rotateX(9deg) scale(1.06);filter:brightness(1.5)}
  100%{transform:perspective(700px) rotateX(17deg) scale(1.2);filter:brightness(2) blur(4px)}}
 @keyframes case-unlock{0%{transform:scale(1) rotateZ(0);filter:brightness(1)}
- 40%{transform:scale(1.035) rotateZ(-1deg);filter:brightness(1.2)}
- 100%{transform:scale(1.2) rotateZ(1deg);filter:brightness(2) blur(3px)}}
+ 35%{transform:scale(1.02) rotateZ(-1deg);filter:brightness(1.13)}
+ 75%{transform:scale(1.045) rotateZ(0);filter:brightness(1.18)}
+ 100%{transform:scale(1.075) rotateZ(0);filter:brightness(1.23)}}
 @keyframes map-unfold{0%{transform:perspective(700px) rotateX(0) scale(1);filter:brightness(1)}
  70%{transform:perspective(700px) rotateX(-5deg) scale(1.1);filter:brightness(1.9)}
  100%{transform:perspective(700px) rotateX(0) scale(1.18);filter:brightness(2.2) blur(3px)}}
@@ -199,19 +200,21 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
   border:1px solid rgba(222,172,94,.5);border-radius:13px 13px 7px 7px;
   box-shadow:inset 0 3px 25px #0007,0 0 32px #0009;
   transform-origin:50% 0;opacity:0;pointer-events:none}
-.quest.chapter-clear .case-lid{animation:suitcase-lid-opening 1.18s cubic-bezier(.12,.8,.2,1) both}
+.quest.chapter-clear .case-lid{animation:suitcase-lid-opening 2.55s cubic-bezier(.2,.66,.27,1) both}
 @keyframes suitcase-lid-opening{
-  0%{opacity:.95;transform:perspective(480px) rotateX(0) translateY(0)}
-  45%{opacity:1;transform:perspective(480px) rotateX(-44deg) translateY(-9px);
-    box-shadow:0 0 32px #ffd78d9c}
-  100%{opacity:0;transform:perspective(480px) rotateX(-85deg) translateY(-35px);
+  0%{opacity:.98;transform:perspective(480px) rotateX(0) translateY(0)}
+  20%{opacity:1;transform:perspective(480px) rotateX(-7deg) translateY(-3px);
+    box-shadow:0 0 28px #ffd78d9c}
+  65%{opacity:1;transform:perspective(480px) rotateX(-68deg) translateY(-20px);
+    box-shadow:0 0 52px #ffd78d9c}
+  100%{opacity:1;transform:perspective(480px) rotateX(-87deg) translateY(-35px);
     box-shadow:0 0 90px #ffe2a0}
 }
 .hero-object .seal-flare{position:absolute;z-index:2;left:48%;top:33%;width:70px;height:70px;
   border-radius:50%;pointer-events:none;opacity:0;
   background:radial-gradient(circle,#fff2bd 2%,#ffc269 18%,#b63d22 38%,transparent 69%);
   box-shadow:0 0 24px #ffc26b,0 0 45px #a53215}
-.quest.chapter-clear .seal-flare{animation:wax-break 1.12s ease-out both}
+.quest.chapter-clear .seal-flare{animation:wax-break 1.8s ease-out both}
 @keyframes wax-break{0%{opacity:.85;transform:scale(.5) rotate(0deg)}
   35%{opacity:1;transform:scale(1.1) rotate(18deg)}
   100%{opacity:0;transform:scale(5) rotate(65deg)}}
@@ -219,7 +222,7 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
   pointer-events:none;opacity:0;transform-origin:left center;
   background:linear-gradient(90deg,#eee0c3 0%,#c3a173 8%,#ecd5ac 40%,#fff0d5 85%,#9d7143 100%);
   border-radius:5px 13px 13px 5px;box-shadow:0 7px 20px #0009}
-.quest.chapter-clear .passport-page-turn{animation:passport-flip 1.15s cubic-bezier(.4,.4,.6,1) both}
+.quest.chapter-clear .passport-page-turn{animation:passport-flip 2s cubic-bezier(.4,.4,.6,1) both}
 @keyframes passport-flip{
   0%{opacity:.98;transform:perspective(700px) rotateY(0)}
   55%{opacity:1;transform:perspective(700px) rotateY(-90deg)}
@@ -228,13 +231,13 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 .map-journey path{fill:none;stroke:#fff6bb;stroke-width:8;stroke-linecap:round;stroke-linejoin:round;
   stroke-dasharray:1100;stroke-dashoffset:1100;filter:drop-shadow(0 0 12px #ffd44f);
   opacity:0}
-.quest.chapter-clear .map-journey path{animation:draw-golden-route 1.15s ease-out forwards}
+.quest.chapter-clear .map-journey path{animation:draw-golden-route 2s ease-out forwards}
 @keyframes draw-golden-route{0%{opacity:0;stroke-dashoffset:1100}
   15%{opacity:1}100%{opacity:1;stroke-dashoffset:0}}
 .hero-object .ticket-light{position:absolute;z-index:2;inset:6%;pointer-events:none;opacity:0;
   background:radial-gradient(ellipse at 50% 48%,#fff7d1 0%,#ffd17b9c 24%,#b37b3b38 51%,transparent 75%);
   mix-blend-mode:screen}
-.quest.chapter-clear .ticket-light{animation:ticket-illuminated 1.2s ease-out forwards}
+.quest.chapter-clear .ticket-light{animation:ticket-illuminated 1.8s ease-out forwards}
 @keyframes ticket-illuminated{0%{opacity:0;transform:scale(.5)}
   38%{opacity:1;transform:scale(1)}
   100%{opacity:.55;transform:scale(1.5)}}
