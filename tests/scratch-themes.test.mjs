@@ -64,7 +64,7 @@ test('ScratchCard constructor and theme setter preserve existing foil and upload
   style:{},width:0,height:0,
   getContext(){return ctx},
   getBoundingClientRect(){return {width:300,height:400}},
-  addEventListener(){},setAttribute(){}
+  addEventListener(){},removeEventListener(){},setAttribute(){}
  };
  const gradient={addColorStop(){}};
  const ctx={setTransform(){},clearRect(){},fillRect(){},strokeRect(){},beginPath(){},arc(){},
