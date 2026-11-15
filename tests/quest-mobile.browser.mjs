@@ -179,6 +179,7 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
   });
   assert.ok(opening.tilt<0.95,'Photographic suitcase lid must visibly pivot, not simply fade or scale');
   assert.notEqual(opening.insideBrightness,'brightness(0.5)');
+  await page.screenshot({path:resolve(output,'physical-suitcase-opening-mid.png'),fullPage:true});
   assert.equal(await page.locator('.success').count(),0,'Do not cover suitcase during opening');
   await page.locator('.quest h2').filter({hasText:'The Passport Mystery'}).waitFor({timeout:12000});
   const book=await page.locator('.passport-art').evaluate(art=>{
@@ -192,6 +193,7 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
       origin:getComputedStyle(page).transformOrigin
     };
   });
+  await page.screenshot({path:resolve(output,'bound-passport-before.png'),fullPage:true});
   assert.ok(book.inside,'Turning page must be DOM child of the physical book');
   assert.ok(book.spineVsLeaf<5,'Page hinge must coincide with book central spine');
   assert.ok(book.spineVsCentre<5,'Spine must sit at the centre of the illustrated book');
@@ -208,6 +210,7 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
    return {yaw:m.m11,parent:el.parentElement?.className,inside:el.parentElement?.contains(el)};
   });
   assert.ok(turn.yaw<0.9,'Passport page must visibly pivot 3D around the spine');
+  await page.screenshot({path:resolve(output,'bound-passport-turning-mid.png'),fullPage:true});
   assert.equal(turn.parent,'passport-art');
   assert.equal(turn.inside,true);
   assert.equal(await page.locator('.success').count(),0,'Do not cover turning page');
