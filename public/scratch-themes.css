@@ -1,0 +1,69 @@
+/* Shared creator / review / paid-recipient themed surfaces. */
+body.scratch-themed{
+ transition:background-color .22s ease;
+ background-color:var(--scratch-paper);
+}
+body.scratch-themed[data-scratch-theme-mode="creator"],
+body.scratch-themed[data-scratch-theme-mode="review"]{
+ background:
+ radial-gradient(ellipse at 92% 5%,color-mix(in srgb,var(--scratch-accent) 18%,transparent),transparent 48%),
+ linear-gradient(160deg,var(--scratch-paper),#fffaf2 61%,var(--scratch-paper))!important;
+}
+body.scratch-themed[data-scratch-theme-mode="recipient"]{
+ background:
+ radial-gradient(ellipse at 15% 13%,color-mix(in srgb,var(--scratch-accent) 45%,transparent),transparent 49%),
+ radial-gradient(ellipse at 91% 75%,color-mix(in srgb,var(--scratch-highlight) 13%,transparent),transparent 50%),
+ linear-gradient(150deg,var(--scratch-bg),var(--scratch-bg2) 63%,var(--scratch-bg))!important;
+ color:#fff6e9;
+}
+body.scratch-themed[data-scratch-theme-mode="recipient"] .card{
+ border-color:var(--scratch-accent);
+ box-shadow:0 25px 68px #0009,0 0 28px color-mix(in srgb,var(--scratch-accent) 20%,transparent);
+}
+body.scratch-themed[data-scratch-theme-mode="recipient"] .ticket-underlay:not(.concert-ticket .ticket-underlay){
+ background:radial-gradient(circle at 50% 14%,var(--scratch-bg2),transparent 64%),
+ linear-gradient(148deg,var(--scratch-bg),var(--scratch-bg2) 70%,var(--scratch-bg));
+}
+body.scratch-themed[data-scratch-theme-mode="recipient"] .ticket-underlay .ticket{
+ border-top:4px solid var(--scratch-accent);
+}
+body.scratch-themed[data-scratch-theme-mode="recipient"] .eyebrow,
+body.scratch-themed[data-scratch-theme-mode="recipient"] .label{color:var(--scratch-highlight)}
+body.scratch-themed .scratch-static-frame,
+body.scratch-themed .scratch-surface-thumb{
+ border-color:var(--scratch-accent)!important;
+ box-shadow:0 15px 36px #0003,0 0 0 1px var(--scratch-highlight);
+}
+.scratch-theme-grid{
+ display:grid;grid-template-columns:repeat(auto-fit,minmax(132px,1fr));gap:10px;
+ margin:13px 0 22px;
+}
+.scratch-theme-option{
+ position:relative;display:flex;flex-direction:column;align-items:flex-start;
+ text-align:left;gap:5px;min-height:123px;padding:14px 12px;
+ background:linear-gradient(140deg,var(--tile-bg),var(--tile-bg2));color:#fff8e9;
+ border:2px solid var(--tile-accent);border-radius:13px;cursor:pointer;
+ box-shadow:0 4px 14px #0002;font:inherit;transition:transform .12s ease,box-shadow .12s ease;
+}
+.scratch-theme-option strong{font-size:.91rem;line-height:1.15}
+.scratch-theme-option small{font-size:.67rem;line-height:1.35;color:#f5e9dc}
+.scratch-theme-option .scratch-theme-icon{
+ font-family:Georgia,serif;font-size:1.7rem;color:var(--tile-accent);
+}
+.scratch-theme-option[aria-pressed="true"]{
+ outline:3px solid #fff;outline-offset:-6px;
+ box-shadow:0 0 0 3px var(--tile-accent),0 6px 24px #0003;
+}
+.scratch-theme-option:focus-visible{outline:3px solid #1b4fa1;outline-offset:2px}
+.scratch-theme-title{margin:0 0 6px;font-size:1.05rem}
+.scratch-theme-caption{margin:0 0 14px;font-size:.82rem}
+.scratch-theme-selected{
+ display:flex;align-items:center;gap:10px;padding:9px 12px;
+ border:1px solid var(--scratch-accent);background:var(--scratch-paper);
+ color:#25221b;border-radius:12px;margin:8px 0 18px;font-weight:650;
+}
+@media(max-width:600px){
+ .scratch-theme-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .scratch-theme-option{min-height:110px;padding:11px}
+}
+@media(prefers-reduced-motion:reduce){.scratch-theme-option{transition:none}}
