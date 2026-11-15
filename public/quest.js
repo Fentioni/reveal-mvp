@@ -44,7 +44,7 @@ function setPreset(value){
  if(story)story.textContent='A connected '+QUEST.length+'-chapter cinematic adventure. Your recipient solves the mystery before unlocking their surprise.';
 }
 setPreset('classic');
-const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null,finaleTimer=null;
+const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null,finaleTimer=null,chapterAdvancing=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
  const root=$('#ambient');root.replaceChildren();
@@ -170,15 +170,16 @@ function renderStep(nextData=null){
  body.append(card);scene.append(body);play.replaceChildren(scene);
  schedulePrompt();$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
-function turn(i,delta){digits[i]=(digits[i]+delta+10)%10;const out=$('#digit-'+i);if(out)out.value=digits[i];}
+function turn(i,delta){if(chapterAdvancing)return;digits[i]=(digits[i]+delta+10)%10;const out=$('#digit-'+i);if(out)out.value=digits[i];}
 function toggleOption(value,b){
+ if(chapterAdvancing)return;
  const index=selected.indexOf(value);
  if(index>=0)selected.splice(index,1);else if(selected.length<stage.options.length)selected.push(value);
  for(const c of $('#sortable').children)c.classList.toggle('selected',selected.includes(c.textContent));
  const display=$('#sequence');display.replaceChildren(...selected.map((s,i)=>make('span','',(i+1)+'. '+s)));
 }
 async function hint(){
- if(!stage||stage.completed)return;
+ if(!stage||stage.completed||chapterAdvancing)return;
  const b=$('#hint-control'),area=$('#hint-area');
  if(hintLevel<2){
    b.disabled=true;try{
@@ -192,9 +193,37 @@ async function hint(){
    await solve(null,true);
  }
 }
+
+const chapterPause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
+// Wait for the entire object-specific chapter animation, including moving
+// pieces like the suitcase lid. Do not cover the animation with the success
+// screen until it has actually finished.
+async function waitForChapterPayoff(scene){
+ if(reducedMotion){await chapterPause(100);return;}
+ const hero=scene.querySelector('.hero-object');
+ await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+ const animations=hero && typeof hero.getAnimations==='function'
+   ? hero.getAnimations({subtree:true}).filter(animation=>{
+       const end=animation.effect?.getComputedTiming?.().endTime;
+       return Number.isFinite(end) && end>0 && animation.playState!=='finished';
+     })
+   : [];
+ if(animations.length){
+   await Promise.race([
+     Promise.allSettled(animations.map(animation=>animation.finished)),
+     chapterPause(6000) // Fallback, not the normal timing.
+   ]);
+ }else{
+   await chapterPause(2700); // Older browsers without CSS Animations API.
+ }
+ // A deliberate pause lets the recipient appreciate the completed scene.
+ await chapterPause(800);
+}
 async function solve(answer,assist=false){
- if(!stage||stage.completed)return;
+ if(!stage||stage.completed||chapterAdvancing)return;
+ chapterAdvancing=true;
  setError('');
+ let overlay=null;
  try{
    const out=demoMode?demoAnswer(answer,assist):await api('/api/quest/'+encodeURIComponent(slug)+'/'+(assist?'assist':'answer'),{
      method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(assist?{step:stage.step,confirm:true}:{step:stage.step,answer})
@@ -205,16 +234,29 @@ async function solve(answer,assist=false){
    const messages={letter:'The seal is broken',compass:'The compass reveals the route',suitcase:'The suitcase is unlocked',passport:'The passport reveals its secret',map:'The route is illuminated',cipher:'The final clue is solved',ticket:'The missing ticket is complete'};
    const icons={letter:'✉',compass:'✧',suitcase:'✦',passport:'✦',map:'✧',cipher:'✧',ticket:'✈'};
    const key=stage.key||QUEST[stage.step]?.key||stage.scene||'ticket';
-   const active=play.querySelector('.quest');if(active)active.classList.add('chapter-clear');
-   const overlay=make('div','success clear-'+stage.step);
+   const active=play.querySelector('.quest');
+   if(active){
+     active.setAttribute('aria-busy','true');
+     active.querySelectorAll('button').forEach(button=>{button.disabled=true;});
+     active.classList.add('chapter-clear');
+     await waitForChapterPayoff(active);
+   }
+   // Present this chapter's short celebration only AFTER the scene completes.
+   overlay=make('div','success clear-'+stage.step);
+   overlay.setAttribute('role','status');
    const animation=make('div','chapter-animation');
    animation.append(make('span','chapter-glyph',icons[key]||'✦'),make('span','chapter-message',messages[key]||'Chapter complete'));
    overlay.append(animation);
    document.body.append(overlay);
-   const wait=reducedMotion?100:1250;
-   await new Promise(resolve=>setTimeout(resolve,wait));
-   overlay.remove();stage=out;renderStep();
- }catch(e){setError(e.message);}
+   await chapterPause(reducedMotion?180:1320);
+   overlay.remove();overlay=null;
+   stage=out;renderStep();
+ }catch(e){
+   setError(e.message);
+ }finally{
+   overlay?.remove();
+   chapterAdvancing=false;
+ }
 }
 function showFinal(data){
  stopPrompt();const scene=newScene('finale',stage?.total||QUEST.length);scene.classList.add('played');
