@@ -218,6 +218,54 @@ test('physical suitcase, bound passport leaf and accurate five-pin map route', {
   assert.equal(turn.inside,true);
   assert.equal(await page.locator('.success').count(),0,'Do not cover turning page');
   await page.locator('.quest h2').filter({hasText:'The Secret Map'}).waitFor({timeout:12000});
+  const map=await page.locator('.hero-object.map').evaluate(hero=>{
+   const artwork=hero.querySelector('.map-source'),svg=artwork.querySelector('svg.map-journey');
+   const route=svg.querySelector('path.map-route-trace');
+   const pins=route.dataset.pinPoints.split(';').map(pair=>pair.split(',').map(Number));
+   const picture=artwork.getBoundingClientRect(),overlay=svg.getBoundingClientRect();
+   const totalLength=route.getTotalLength();
+   const nearestDistance=(x,y)=>{
+    let best=Infinity;
+    for(let i=0;i<=2600;i++){
+     const p=route.getPointAtLength(totalLength*i/2600);
+     best=Math.min(best,Math.hypot(p.x-x,p.y-y));
+    }
+    return best;
+   };
+   const frame=hero.getBoundingClientRect();
+   return{
+    viewBox:svg.getAttribute('viewBox'),
+    image:getComputedStyle(artwork).backgroundImage,
+    sameFrame:Math.abs(picture.left-overlay.left)<2&&Math.abs(picture.top-overlay.top)<2&&
+     Math.abs(picture.width-overlay.width)<2&&Math.abs(picture.height-overlay.height)<2,
+    pins,distances:pins.map(([x,y])=>nearestDistance(x,y)),
+    aspect:frame.width/frame.height
+   };
+  });
+  assert.equal(map.viewBox,'0 0 900 1500');
+  assert.match(map.image,/map.webp/);
+  assert.equal(map.sameFrame,true,'Image and traced path must use the same native coordinate frame');
+  assert.equal(map.pins.length,5,'All five photographed markers must anchor the route');
+  assert.ok(map.pins.every((p,i)=>i===0||map.pins[i-1][0]<p[0]),'Pins must run left to right');
+  assert.ok(map.pins[1][1]<map.pins[2][1]&&map.pins[2][1]>map.pins[3][1],
+   'Golden route must dip down from second pin to third, then climb');
+  assert.ok(map.distances.every(d=>d<3),
+   'Gold line must touch every printed pin: '+map.distances.join(','));
+  assert.ok(map.aspect>1.2&&map.aspect<1.6,'All five pins should fit the mobile viewport');
+  await page.screenshot({path:resolve(output,'map-pins-aligned-before.png'),fullPage:true});
+  for(const name of ['Lighthouse','Forest','Mountain peak'])
+   await page.getByRole('button',{name}).click();
+  await page.getByRole('button',{name:'Check sequence'}).click();
+  await page.locator('.quest.chapter-clear .map-route-trace').waitFor();
+  await page.waitForTimeout(850);
+  const trace=await page.locator('.map-route-trace').evaluate(el=>({
+   dash:parseFloat(getComputedStyle(el).strokeDashoffset),
+   animation:getComputedStyle(el).animationName
+  }));
+  assert.equal(trace.animation,'trace-pinned-route');
+  assert.ok(trace.dash>0&&trace.dash<1000,'Gold line must trace through source-image pin points');
+  await page.screenshot({path:resolve(output,'map-pins-aligned-tracing-mid.png'),fullPage:true});
+  await page.locator('.quest h2').filter({hasText:'The Missing Itinerary'}).waitFor({timeout:13000});
   assert.deepEqual(errors,[]);
   await page.close();
  }finally{
