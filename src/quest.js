@@ -94,10 +94,12 @@ function randomToken(){
  return btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(32))))
   .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
-async function getSession(req,env,reveal,create){
- const key='rq_'+reveal.public_slug;
+async function getSession(req,env,reveal,create,{replay=false,forceNew=false}={}){
+ // Keep the original, completed recipient session intact. A replay uses its
+ // own per-browser cookie and independent D1 progress row, never a reset.
+ const key='rq_'+(replay?'replay_':'')+reveal.public_slug;
  const cookie=(req.headers.get('cookie')||'').match(new RegExp('(?:^|;\\s*)'+key+'=([A-Za-z0-9_-]{30,64})'));
- if(cookie){
+ if(cookie && !forceNew){
   const hash=await sha256(cookie[1]);
   const session=await env.DB.prepare('SELECT * FROM quest_sessions WHERE reveal_id=? AND session_hash=?').bind(reveal.id,hash).first();
   if(session)return {session,cookie:null};
@@ -221,11 +223,25 @@ async function recipient(req,env,url,slug,kind,originalWorker){
   return originalWorker.fetch(req,env);
  }
  if(kind==='state'&&req.method==='GET'){
-  const {session,cookie}=await getSession(req,env,reveal,true);
+  const replay=url.searchParams.get('replay')==='1';
+  const selected=await getSession(req,env,reveal,!replay,{replay});
+  if(!selected)return error('Replay not started. Return to your completed reveal to begin again.',409);
+  const {session,cookie}=selected;
   return json(state(cfg,session,reveal),200,cookie?{'set-cookie':cookie}:{});
  }
  if(!originOK(req))return error('Cross-origin changes are not allowed.',403);
- const cookie=await getSession(req,env,reveal,false);
+ if(kind==='replay'){
+  if(req.method!=='POST')return error('Method not allowed.',405);
+  // This action is allowed only to a browser which has ALREADY completed
+  // the original paid adventure. A replay URL cannot create its own session.
+  const original=await getSession(req,env,reveal,false);
+  if(!original?.session?.completed_at || Number(original.session.step)<cfg.clues.length)
+   return error('Complete the adventure before replaying it.',403);
+  const replay=await getSession(req,env,reveal,true,{replay:true,forceNew:true});
+  return json(state(cfg,replay.session,reveal),200,{'set-cookie':replay.cookie});
+ }
+ const replayMode=url.searchParams.get('replay')==='1';
+ const cookie=await getSession(req,env,reveal,false,{replay:replayMode});
  if(!cookie)return error('Your session has expired. Refresh to resume.',401);
  const session=cookie.session,step=Number(session.step),total=cfg.clues.length;
  if(kind==='hint'&&req.method==='GET'){
@@ -266,7 +282,7 @@ export async function questResponse(req,env,ctx,originalWorker){
   if(path==='/api/quest/create')return creator(req,env,originalWorker,null);
   const owner=path.match(/^\/api\/quest\/owner\/([A-Za-z0-9_-]+)\/?$/);
   if(owner)return creator(req,env,originalWorker,owner[1]);
-  const action=path.match(/^\/api\/quest\/([A-Za-z0-9_-]+)\/(state|answer|hint|assist)\/?$/);
+  const action=path.match(/^\/api\/quest\/([A-Za-z0-9_-]+)\/(state|answer|hint|assist|replay)\/?$/);
   if(action)return recipient(req,env,url,action[1],action[2],originalWorker);
   const link=path.match(/^\/r\/([A-Za-z0-9_-]+)(\/image)?\/?$/);
   if(link && ['GET','HEAD'].includes(req.method))return recipient(req,env,url,link[1],link[2]?'image':'page',originalWorker);
