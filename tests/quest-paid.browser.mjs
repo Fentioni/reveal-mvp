@@ -162,6 +162,7 @@ test('simulated-paid recipient sees no prize until solving then can reopen and s
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.reload({waitUntil:'networkidle'});
   await page.getByRole('button',{name:'Replay the adventure'}).click();
+  await page.waitForURL(url=>url.searchParams.get('replay')==='1',{timeout:7000});
   assert.equal(new URL(page.url()).searchParams.get('replay'),'1');
   await page.getByRole('button',{name:/Begin the adventure/}).click();
   await page.locator('.quest h2').filter({hasText:'The Mysterious Letter'}).waitFor();
