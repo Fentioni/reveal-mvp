@@ -15,6 +15,7 @@ function setup(){
   "CREATE TABLE reveals (id TEXT PRIMARY KEY, edit_token TEXT, public_slug TEXT UNIQUE, status TEXT, paid_at TEXT, revision INTEGER, recipient TEXT, sender TEXT, event_name TEXT, personal_message TEXT, event_date TEXT, event_time TEXT, venue TEXT, admit TEXT, ticket_url TEXT, image_key TEXT, confirmed_at TEXT, created_at TEXT, updated_at TEXT)",
   "CREATE TABLE payments (id TEXT PRIMARY KEY, reveal_id TEXT, provider TEXT, amount_minor INTEGER, currency TEXT, status TEXT, checkout_session_id TEXT, checkout_url TEXT, expires_at TEXT, payment_intent_id TEXT, paid_at TEXT, created_at TEXT, updated_at TEXT)",
   "CREATE TABLE stripe_events (id TEXT PRIMARY KEY, event_type TEXT, livemode INTEGER, received_at TEXT, processed_at TEXT)",
+  "CREATE TABLE reveal_configurations (reveal_id TEXT PRIMARY KEY, product_id TEXT, fields_json TEXT)",
   "CREATE TABLE quest_configs (reveal_id TEXT PRIMARY KEY, config_json TEXT, created_at TEXT, updated_at TEXT)",
   "CREATE TABLE quest_sessions (session_hash TEXT PRIMARY KEY, reveal_id TEXT, step INTEGER, attempts INTEGER, last_attempt_at TEXT, created_at TEXT, updated_at TEXT, completed_at TEXT)"
  ];
