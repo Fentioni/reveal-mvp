@@ -57,7 +57,7 @@ body.scratch-themed .scratch-surface-thumb{
 .scratch-theme-option{
  position:relative;display:flex;flex-direction:column;align-items:flex-start;
  text-align:left;gap:5px;min-height:123px;padding:14px 12px;
- background:linear-gradient(140deg,var(--tile-bg),var(--tile-bg2));color:#fff8e9;
+ background:linear-gradient(140deg,var(--tile-bg),color-mix(in srgb,var(--tile-bg2) 55%,#12151d));color:#fff8e9;
  border:2px solid var(--tile-accent);border-radius:13px;cursor:pointer;
  box-shadow:0 4px 14px #0002;font:inherit;transition:transform .12s ease,box-shadow .12s ease;
 }
