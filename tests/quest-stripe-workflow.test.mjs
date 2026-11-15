@@ -156,3 +156,63 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   sql.close();
  }
 });
+
+
+test('new drafts receive unique opaque recipient slugs, but stay unavailable before payment',async()=>{
+ const {sql,env}=setup();
+ try{
+  const seen=new Set();
+  for(let index=0;index<2;index++){
+   const form=new FormData();
+   form.set('recipient','Chloe');
+   form.set('sender','Reveal');
+   form.set('eventName','Surprise test');
+   const created=await worker.fetch(makeReq('/api/reveals',{method:'POST',body:form}),env,{});
+   assert.equal(created.status,201,await created.clone().text());
+   const draft=await created.json();
+   const saved=sql.prepare('SELECT public_slug,status FROM reveals WHERE id=?').get(draft.id);
+   assert.match(saved.public_slug,/^[A-Za-z0-9_-]{32,64}$/);
+   assert.notEqual(saved.public_slug,draft.id);
+   assert.equal(seen.has(saved.public_slug),false);
+   seen.add(saved.public_slug);
+   assert.equal(saved.status,'draft');
+   const owner=await worker.fetch(makeReq('/api/reveals/'+draft.id,{
+    headers:{'X-Edit-Token':draft.editToken}
+   }),env,{});
+   assert.equal(owner.status,200);
+   assert.equal((await owner.json()).reveal.shareUrl,undefined);
+   const unpaid=await worker.fetch(makeReq('/r/'+saved.public_slug),env,{});
+   assert.equal(unpaid.status,404);
+  }
+ }finally{sql.close()}
+});
+
+test('owner-authenticated review repairs already paid Quest without a public slug and never asks for another payment',async()=>{
+ const {sql,env}=setup();
+ try{
+  const paidAt=new Date().toISOString();
+  sql.prepare('UPDATE reveals SET status=?,paid_at=?,public_slug=NULL WHERE id=?')
+    .run('paid',paidAt,revealId);
+  const forbidden=await worker.fetch(makeReq('/api/reveals/'+revealId),env,{});
+  assert.equal(forbidden.status,403);
+  assert.equal(sql.prepare('SELECT public_slug FROM reveals WHERE id=?').get(revealId).public_slug,null);
+  const ownerReq=()=>worker.fetch(makeReq('/api/reveals/'+revealId,{
+    headers:{'X-Edit-Token':token}
+  }),env,{});
+  const verified=await ownerReq();
+  assert.equal(verified.status,200,await verified.clone().text());
+  const owner=(await verified.json()).reveal;
+  assert.equal(owner.status,'paid');
+  assert.equal(owner.paidAt,paidAt);
+  assert.match(owner.shareUrl,/^\/r\/[A-Za-z0-9_-]{32,64}$/);
+  assert.equal(owner.shareUrl.includes('/null'),false);
+  const slugNow=sql.prepare('SELECT public_slug FROM reveals WHERE id=?').get(revealId).public_slug;
+  assert.equal(owner.shareUrl,'/r/'+slugNow);
+  const reopened=await ownerReq();
+  assert.equal((await reopened.json()).reveal.shareUrl,owner.shareUrl);
+  const payable=await worker.fetch(makeReq(owner.shareUrl),env,{});
+  assert.equal(payable.status,200,await payable.clone().text());
+  assert.equal((await worker.fetch(makeReq('/r/null'),env,{})).status,404);
+  assert.equal(sql.prepare('SELECT status FROM reveals WHERE id=?').get(revealId).status,'paid');
+ }finally{sql.close()}
+});

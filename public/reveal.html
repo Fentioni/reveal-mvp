@@ -1623,9 +1623,11 @@
       try {
         const url = new URL(value, window.location.origin);
 
+        const slug = /^\/r\/([A-Za-z0-9_-]+)\/?$/.exec(url.pathname)?.[1];
         if (
           url.origin !== window.location.origin ||
-          !/^\/r\/[A-Za-z0-9_-]+\/?$/.test(url.pathname)
+          !slug ||
+          /^(null|undefined)$/i.test(slug)
         ) {
           return null;
         }

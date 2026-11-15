@@ -130,6 +130,10 @@ export default {
 
         await authorise(request, row);
 
+        // Owner-authenticated repair for pre-existing paid records that were
+        // created before public slugs were stored.
+        if (isPaid(row)) await ensurePublicSlug(env, row);
+
         if (action === '' && request.method === 'GET') {
           return json({
             success: true,
@@ -220,6 +224,45 @@ export default {
 
 function isPaid(row) {
   return Boolean(row && row.status === 'paid' && row.paid_at);
+}
+
+// Recipient links must have an opaque public slug; never expose a missing
+// database value as /r/null or use the private reveal ID as a replacement.
+function usablePublicSlug(value) {
+  return typeof value === 'string' &&
+    /^[A-Za-z0-9_-]{1,128}$/.test(value) &&
+    !/^(null|undefined)$/i.test(value);
+}
+
+// Repair legacy paid reveals ONLY after the purchaser's edit token has been
+// authenticated. Existing links never change, and failed checkout never
+// unlocks recipient details. Concurrent owner requests converge to one slug.
+async function ensurePublicSlug(env, row) {
+  if (usablePublicSlug(row.public_slug)) return row.public_slug;
+  const missing = row.public_slug == null ||
+    (typeof row.public_slug === 'string' &&
+      ['', 'null', 'undefined'].includes(row.public_slug.trim().toLowerCase()));
+  if (!missing) {
+    fail(503, 'This reveal link needs support. No new payment is required.');
+  }
+  const candidate = randomToken();
+  const result = await env.DB.prepare(
+    `UPDATE reveals SET public_slug = ?, updated_at = ?
+     WHERE id = ? AND (public_slug IS NULL OR
+       LOWER(TRIM(public_slug)) IN ('', 'null', 'undefined'))`
+  ).bind(candidate, now(), row.id).run();
+  if (result.meta.changes === 1) {
+    row.public_slug = candidate;
+    return candidate;
+  }
+  const fresh = await env.DB.prepare(
+    'SELECT public_slug FROM reveals WHERE id = ?'
+  ).bind(row.id).first();
+  if (usablePublicSlug(fresh?.public_slug)) {
+    row.public_slug = fresh.public_slug;
+    return row.public_slug;
+  }
+  fail(503, 'This reveal link is temporarily unavailable. No new payment is required.');
 }
 
 function stripeLiveMode(env) {
@@ -361,7 +404,7 @@ function ownerData(row) {
     confirmedAt: row.confirmed_at,
     paidAt: row.paid_at,
     revision: row.revision,
-    ...(isPaid(row)
+    ...(isPaid(row) && usablePublicSlug(row.public_slug)
       ? {
           shareUrl: '/r/' + row.public_slug
         }
@@ -599,6 +642,7 @@ async function cleanup(env, key) {
 async function create(request, env) {
   const {values, image} = await readForm(request);
   const id = crypto.randomUUID();
+  const publicSlug = randomToken();
   const editToken = randomToken();
   const tokenHash = await hashToken(editToken);
   let imageKey = null;
@@ -615,12 +659,14 @@ async function create(request, env) {
         `INSERT INTO reveals (
           id,
           edit_token,
+          public_slug,
           ${FIELDS.map(([, database]) => database).join(',')},
           image_key,
           status,
           created_at,
           updated_at
         ) VALUES (
+          ?,
           ?,
           ?,
           ${FIELDS.map(() => '?').join(',')},
@@ -633,6 +679,7 @@ async function create(request, env) {
       .bind(
         id,
         tokenHash,
+        publicSlug,
         ...values,
         imageKey,
         timestamp,
@@ -1019,10 +1066,11 @@ async function startCheckout(
   requireStripeSettings(env);
 
   if (isPaid(row)) {
+    const publicSlug = await ensurePublicSlug(env, row);
     return json({
       success: true,
       status: 'paid',
-      shareUrl: '/r/' + row.public_slug
+      shareUrl: '/r/' + publicSlug
     });
   }
 
