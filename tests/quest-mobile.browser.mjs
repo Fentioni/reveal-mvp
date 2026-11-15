@@ -92,3 +92,41 @@ test('all 3/5/7 quests play end-to-end as premium portrait mobile samples', {tim
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+
+
+test('normal-motion suitcase fully opens before the success overlay or next puzzle', {timeout:40000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844},isMobile:true,
+   hasTouch:true,deviceScaleFactor:2,reducedMotion:'no-preference'});
+  await page.goto(base+'/quest',{waitUntil:'networkidle'});
+  await page.locator('select[name=preset]').selectOption('quick');
+  await page.getByRole('button',{name:'Play the sample adventure'}).click();
+  await page.getByRole('button',{name:/Begin the adventure/}).click();
+  await page.getByRole('button',{name:'A compass'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Locked Suitcase'}).waitFor({timeout:10000});
+  for(const [i,num] of [[1,4],[2,2],[3,7]])
+   for(let n=0;n<num;n++)await page.getByRole('button',{name:'Increase digit '+i}).click();
+  await page.getByRole('button',{name:'Unlock suitcase'}).click();
+  const lid=page.locator('.quest.chapter-clear .case-lid');
+  await lid.waitFor({timeout:2500});
+  const durations=await lid.evaluate(el=>el.getAnimations().map(a=>a.effect?.getComputedTiming()?.endTime).filter(Number.isFinite));
+  assert.ok(durations.some(ms=>ms>=2500),'The lid must have a full 2.55-second opening');
+  await page.waitForTimeout(1250);
+  assert.equal(await page.locator('.quest h2').innerText(),'The Locked Suitcase',
+   'Keep the suitcase scene while its lid is opening');
+  assert.equal(await page.locator('.success').count(),0,
+   'Do not cover a partially opened suitcase with the success screen');
+  await page.locator('.success .chapter-message').filter({hasText:'The suitcase is unlocked'})
+   .waitFor({timeout:6000});
+  assert.equal(await page.locator('.quest h2').innerText(),'The Locked Suitcase',
+   'Show chapter celebration while the finished suitcase scene is still displayed');
+  await page.locator('.quest h2').filter({hasText:'The Missing Itinerary'}).waitFor({timeout:6000});
+  assert.equal(await page.locator('.success').count(),0);
+  await page.close();
+ }finally{
+  await browser.close();
+  await new Promise(done=>server.close(done));
+ }
+});
