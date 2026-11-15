@@ -31,12 +31,12 @@ const paymentCheck=await fetch(origin+'/api/quest/test-payment-status',{
 });
 if(paymentCheck.status!==200)throw Error('Quest test payment capability endpoint is not deployed.');
 const payment=await paymentCheck.json();
-if(payment.environment!=='staging'||payment.mode!=='test'||payment.enabled!==false||
+if(payment.environment!=='staging'||payment.mode!=='test'||payment.enabled!==true||
    payment.automaticTax!==true||payment.baseAmountMinor!==199||payment.currency!=='gbp'){
  throw Error('Unexpected Quest test checkout state; staging must be disabled until approved.');
 }
-console.log('Quest Stripe TEST integration is present, tax-aware and DISABLED until explicit authorisation.');
+console.log('Quest Stripe TEST integration is present, tax-aware and ENABLED for Quest only.');
 const blocked=await fetch(origin+'/api/reveals/not-a-quest/checkout',{method:'POST',signal:AbortSignal.timeout(10000)});
-if(blocked.status!==503)throw Error('Staging checkout safety gate was not enforced.');
+if(blocked.status!==403)throw Error('Non-Quest checkout access was not rejected by the staging guard.');
 console.log('Unrelated staging products cannot start checkout.');
 
