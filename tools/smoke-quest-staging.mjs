@@ -26,15 +26,24 @@ if(!creator.ok){console.error('Quest creator route missing: HTTP '+creator.statu
 const html=await creator.text();
 if(!html.includes('Reveal Quest')&&!html.includes('REVEAL QUEST')){console.error('Quest creator content could not be verified.');process.exit(1);}
 console.log('Quest creator route: HTTP '+creator.status+' — published to existing staging Worker.');
-const paymentCheck=await fetch(origin+'/api/quest/test-payment-status',{
- headers:{accept:'application/json'},signal:AbortSignal.timeout(10000),cache:'no-store'
-});
-if(paymentCheck.status!==200)throw Error('Quest test payment capability endpoint is not deployed.');
-const payment=await paymentCheck.json();
-if(payment.environment!=='staging'||payment.mode!=='test'||payment.enabled!==true||
-   payment.automaticTax!==true||payment.baseAmountMinor!==199||payment.currency!=='gbp'){
- throw Error('Unexpected Quest test checkout state; staging must be disabled until approved.');
+let payment=null;
+for(let attempt=0;attempt<12;attempt++){
+  try{
+    const res=await fetch(origin+'/api/quest/test-payment-status',{
+      headers:{accept:'application/json'},signal:AbortSignal.timeout(10000),cache:'no-store'
+    });
+    const data=res.ok?await res.json():null;
+    if(data?.environment==='staging' && data.mode==='test' && data.enabled===true &&
+      data.automaticTax===true && data.baseAmountMinor===199 && data.currency==='gbp'){
+      payment=data;break;
+    }
+    console.log('Quest checkout readiness '+(attempt+1)+'/12: '+JSON.stringify({
+      http:res.status,staging:data?.environment==='staging',enabled:data?.enabled??null
+    }));
+  }catch(err){console.log('Quest readiness request '+(attempt+1)+'/12 failed: '+err.message);}
+  await sleep(7000);
 }
+if(!payment)throw Error('Quest TEST checkout did not become ready. Verify staging deployment, both encrypted secrets and correct test-mode keys.');
 console.log('Quest Stripe TEST integration is present, tax-aware and ENABLED for Quest only.');
 const blocked=await fetch(origin+'/api/reveals/not-a-quest/checkout',{method:'POST',signal:AbortSignal.timeout(10000)});
 if(blocked.status!==403)throw Error('Non-Quest checkout access was not rejected by the staging guard.');
