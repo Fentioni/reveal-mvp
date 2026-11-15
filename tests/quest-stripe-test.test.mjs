@@ -27,12 +27,12 @@ const legacy={
  async fetch(request,env){this.calls.push({url:request.url,method:request.method,autoTax:env.STRIPE_AUTOMATIC_TAX});
  return new Response(JSON.stringify({success:true,handledBy:'legacy'}),{headers:{'content-type':'application/json'}});}
 };
-test('Quest test checkout is disabled by default and explicitly turned off in repository',()=>{
+test('Quest staging test checkout is explicitly enabled in repository only for authorised test mode',()=>{
  const config=JSON.parse(readFileSync(new URL('../wrangler.jsonc',import.meta.url),'utf8'));
  assert.equal(config.name,'reveal-stage4b-test');
  assert.equal(config.vars.STRIPE_LIVE_MODE,'false');
  assert.equal(config.vars.STAGING_DISABLE_CHECKOUT,'true');
- assert.equal(config.vars.QUEST_TEST_CHECKOUT_ENABLED,'false');
+ assert.equal(config.vars.QUEST_TEST_CHECKOUT_ENABLED,'true');
  assert.equal(config.vars.STRIPE_PRICE_ID,'price_1USbNbKEVPKWz2E9zmH0mabR');
  assert.notEqual(config.d1_databases[0].database_name,'reveal-db');
  assert.equal(questStripeTestReady({...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false'}),false);
