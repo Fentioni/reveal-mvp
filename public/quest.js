@@ -244,7 +244,9 @@ function renderStep(nextData=null){
    const sequence=make('div','sequence');sequence.id='sequence';sequence.setAttribute('aria-live','polite');card.append(sequence);
    const options=make('div','sortable');options.id='sortable';
    stage.options.forEach(opt=>{const b=btn(opt,()=>toggleOption(opt,b),'option');options.append(b);});
-   if(['passport','map','ticket'].includes(sceneId)){
+   // Leave map pin tips and the passport binding unobstructed.
+   // The same choices are still available immediately under the artwork.
+   if(sceneId==='ticket'){
      hero.setAttribute('role','group');hero.setAttribute('aria-label','Interactive '+stage.chapter+' scene');hero.append(options);
    } else card.append(options);
    card.append(btn('Check sequence',()=>solve(selected.join('|'))));
