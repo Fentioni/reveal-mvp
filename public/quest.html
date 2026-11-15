@@ -645,6 +645,63 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  50%,100%{visibility:visible;opacity:1}
 }
 
+
+/* Landmark identification: pins and badges share the exact map-source
+   coordinate system as the five photographic checkpoints. */
+.hero-object.map .map-pin-key{
+ position:absolute;z-index:4;display:inline-flex;align-items:center;gap:5px;
+ transform:translate(-50%,-119%);
+ max-width:150px;white-space:nowrap;padding:5px 8px;
+ border:1px solid #ffdea3;border-radius:9px;
+ background:linear-gradient(130deg,#302113f5,#100d0be9);
+ box-shadow:0 3px 12px #050301bb,0 0 10px #ffd8734a;
+ color:#ffeed1;font-weight:700;line-height:1.2;font-size:clamp(10px,1.55vw,13px);
+ text-shadow:0 1px 4px black;pointer-events:none;
+}
+.hero-object.map .map-pin-key.landmark::after{
+ content:"";position:absolute;bottom:-9px;left:50%;height:9px;
+ border-left:2px solid #ffde9b;
+}
+.hero-object.map .map-pin-key .map-pin-key-icon{font-size:clamp(12px,2vw,18px);line-height:1}
+.hero-object.map .map-pin-key.waypoint{
+ background:#211a14e8;border:1px solid #c5a66a9c;
+ font-size:clamp(8px,1.2vw,10px);font-weight:500;padding:3px 5px;
+ color:#e8d6b5;
+}
+.hero-object.map .map-pin-key.waypoint .map-pin-key-icon{display:none}
+.hero-object.map .map-pin-key[data-pin="1"]{transform:translate(-28%,-119%)}
+.hero-object.map .map-pin-key[data-pin="5"]{transform:translate(-87%,-119%)}
+@media(max-width:510px){
+ .hero-object.map .map-pin-key{gap:3px;padding:4px 5px;font-size:10px;max-width:118px}
+ .hero-object.map .map-pin-key .map-pin-key-icon{font-size:12px}
+ .hero-object.map .map-pin-key.waypoint{font-size:8px}
+}
+/* The options and Check sequence button are separate grid rows. They must
+   NEVER overlap at mobile breakpoints, desktop zoom, or large text settings. */
+.stage-card .order-actions{
+ position:relative;display:flex;flex-direction:column;align-items:stretch;
+ gap:17px;margin:18px 0 8px;clear:both;width:100%;min-width:0;
+}
+.stage-card .order-actions .order-options{
+ position:static!important;inset:auto!important;transform:none!important;
+ display:grid;grid-template-columns:minmax(0,1fr);
+ gap:10px;width:100%;min-width:0;margin:0!important;padding:0;
+}
+.stage-card .order-actions .order-options button{
+ position:static;box-sizing:border-box;display:block;
+ width:100%;min-height:54px;height:auto;
+ padding:13px 16px;overflow-wrap:anywhere;
+}
+.stage-card .order-actions .check-sequence{
+ position:static;display:flex;align-self:center;flex:0 0 auto;
+ width:max-content;max-width:100%;min-height:51px;
+ margin:2px 0 0!important;
+}
+.stage-card .map-help{
+ font-size:13px;color:#f0d4a5;line-height:1.6;text-align:center;
+ margin:8px auto 0;max-width:480px;
+}
+
 </style>
 </head>
 <body>
