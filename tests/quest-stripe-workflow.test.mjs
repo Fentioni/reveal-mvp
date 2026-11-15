@@ -217,3 +217,70 @@ test('owner-authenticated review repairs already paid Quest without a public slu
   assert.equal(sql.prepare('SELECT status FROM reveals WHERE id=?').get(revealId).status,'paid');
  }finally{sql.close()}
 });
+
+
+test('paid Quest replay keeps the original completed session and starts independent resumable progress',async()=>{
+ const {sql,env}=setup();
+ try{
+  const paidAt=new Date().toISOString();
+  sql.prepare('UPDATE reveals SET status=?,paid_at=? WHERE id=?').run('paid',paidAt,revealId);
+  const stateReq=(cookie='',query='')=>worker.fetch(makeReq('/api/quest/'+slug+'/state'+query,{
+   headers:cookie?{cookie}:{}
+  }),env,{});
+  const replayReq=(cookie='',originHeader=origin)=>worker.fetch(makeReq('/api/quest/'+slug+'/replay',{
+   method:'POST',headers:{...(cookie?{cookie}:{}),origin:originHeader}
+  }),env,{});
+  const initial=await stateReq();
+  assert.equal(initial.status,200);
+  const ordinaryCookie=initial.headers.get('set-cookie').split(';')[0];
+  assert.match(ordinaryCookie,/^rq_secret-quest-e2e=/);
+  assert.equal((await replayReq()).status,403,'A different visitor cannot hijack a replay');
+  assert.equal((await replayReq(ordinaryCookie)).status,403,'An unfinished Quest cannot replay');
+  assert.equal((await stateReq('', '?replay=1')).status,409,'Replay URL alone cannot create sessions');
+  for(const [step,answer] of [[0,'A compass'],[1,'427'],[2,'Route line|Flight symbol|Gold seal']]){
+   const answerResponse=await worker.fetch(makeReq('/api/quest/'+slug+'/answer',{
+    method:'POST',headers:{cookie:ordinaryCookie,origin,'content-type':'application/json'},
+    body:JSON.stringify({step,answer})
+   }),env,{});
+   assert.equal(answerResponse.status,200,await answerResponse.clone().text());
+  }
+  const complete=await stateReq(ordinaryCookie);
+  assert.equal((await complete.json()).final.title,'Surprise: a trip to Rome!');
+  assert.equal((await replayReq(ordinaryCookie,'https://evil.example')).status,403);
+  assert.equal((await worker.fetch(makeReq('/api/quest/'+slug+'/replay',{
+   method:'GET',headers:{cookie:ordinaryCookie}
+  }),env,{})).status,405);
+  const start=await replayReq(ordinaryCookie);
+  assert.equal(start.status,200,await start.clone().text());
+  const replayPayload=await start.clone().json();
+  assert.equal(replayPayload.completed,false);
+  assert.equal(replayPayload.step,0);
+  assert.equal(JSON.stringify(replayPayload).includes('Surprise: a trip to Rome!'),false);
+  const replayCookie=start.headers.get('set-cookie').split(';')[0];
+  assert.match(replayCookie,/^rq_replay_secret-quest-e2e=/);
+  assert.notEqual(replayCookie.split('=')[1],ordinaryCookie.split('=')[1]);
+  const combined=ordinaryCookie+'; '+replayCookie;
+  const fresh=await stateReq(combined,'?replay=1');
+  assert.equal((await fresh.json()).step,0);
+  const again=await stateReq(combined);
+  assert.equal((await again.json()).completed,true,'Original completed reveal must remain directly revisitable');
+  const replayAnswer=await worker.fetch(makeReq('/api/quest/'+slug+'/answer?replay=1',{
+   method:'POST',headers:{cookie:combined,origin,'content-type':'application/json'},
+   body:JSON.stringify({step:0,answer:'A compass'})
+  }),env,{});
+  assert.equal(replayAnswer.status,200,await replayAnswer.clone().text());
+  assert.equal((await replayAnswer.json()).step,1);
+  assert.equal((await (await stateReq(combined,'?replay=1')).json()).step,1,'Replay progress survives reopening');
+  assert.equal((await (await stateReq(combined)).json()).completed,true,'Replay must not alter completed state');
+  assert.equal((await replayReq(replayCookie)).status,403,'Replay progress cookie is not original completion proof');
+  const restart=await replayReq(ordinaryCookie);
+  assert.equal(restart.status,200);
+  const newReplayCookie=restart.headers.get('set-cookie').split(';')[0];
+  assert.notEqual(newReplayCookie,replayCookie,'A new replay must have a fresh isolated session');
+  assert.equal((await (await stateReq(ordinaryCookie+'; '+newReplayCookie,'?replay=1')).json()).step,0);
+  assert.equal((await (await stateReq(combined,'?replay=1')).json()).step,1,
+   'Another existing replay session remains unaffected');
+  assert.equal((await (await stateReq(ordinaryCookie)).json()).completed,true);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS total FROM payments').get().total,0,'Replay does not create a payment');
+ }finally{sql.close()}
+});
