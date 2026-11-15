@@ -44,7 +44,7 @@ function setPreset(value){
  if(story)story.textContent='A connected '+QUEST.length+'-chapter cinematic adventure. Your recipient solves the mystery before unlocking their surprise.';
 }
 setPreset('classic');
-const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null,finaleTimer=null,chapterAdvancing=false;
+const play=$('#play'),create=$('#create');let slug=null,stage=null,hintLevel=0,selected=[],digits=[0,0,0],sound=false,promptTimer=null,editing=null,revision=0,demoMode=false,demoClues=null,finaleTimer=null,chapterAdvancing=false,replayMode=false;
 const reducedMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 function dust(){
  const root=$('#ambient');root.replaceChildren();
@@ -60,6 +60,39 @@ async function api(path, options={}){
  let data;try{data=await response.json();}catch{throw Error('The service returned an unexpected response.');}
  if(!response.ok)throw Error(data.error||'Unable to continue.');
  return data;
+}
+// Replay progress uses a separate server-managed session and query marker;
+// the paid completed reveal remains readable at the unchanged original link.
+function questApiPath(action,query=''){
+ const params=new URLSearchParams(query);
+ if(replayMode)params.set('replay','1');
+ const suffix=params.toString();
+ return '/api/quest/'+encodeURIComponent(slug)+'/'+action+(suffix?'?'+suffix:'');
+}
+function returnToCompleted(){
+ if(!slug||demoMode)return;
+ window.location.assign('/r/'+encodeURIComponent(slug));
+}
+async function replayAdventure(){
+ if(!slug||demoMode||!stage?.completed||chapterAdvancing)return;
+ const control=$('#replay-adventure'),prior=control?.textContent;
+ if(control){control.disabled=true;control.textContent='Starting your adventure…';}
+ try{
+  const fresh=await api('/api/quest/'+encodeURIComponent(slug)+'/replay',{method:'POST'});
+  if(!fresh.success||fresh.completed||fresh.step!==0)throw Error('Could not start a fresh replay.');
+  if(finaleTimer)clearTimeout(finaleTimer);
+  finaleTimer=null;
+  $('#quest-print-card')?.remove();
+  // Replace rather than push: browser Back must not show mismatched session UI.
+  history.replaceState(null,'','/r/'+encodeURIComponent(slug)+'?replay=1');
+  replayMode=true;
+  stage=fresh;
+  showIntro();
+ }catch(e){
+  if(control){control.disabled=false;control.textContent=prior;}
+  const status=$('#replay-error');
+  if(status)status.textContent=e.message;
+ }
 }
 function questHeader(step){
  const nav=make('div','topline');
@@ -99,6 +132,7 @@ function showIntro(){
  const card=make('div','stage-card');card.innerHTML='<p>Follow the clues. Collect the evidence. Unlock the secret.</p>';
  card.append(btn(stage?.step>0?'Continue your adventure →':'Begin the adventure →',()=>renderStep(), 'btn'));
  if(demoMode)card.append(make('p','eyebrow','Sample story only · No actual surprise shown'));
+ if(replayMode&&!demoMode)card.append(btn('View your completed reveal',returnToCompleted,'btn secondary'));
 
  body.append(eyebrow,h,orn,desc,card);scene.append(body);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
@@ -182,7 +216,8 @@ function renderStep(nextData=null){
  }
  const helper=make('div','actions');const hintBtn=btn('✧ Need a hint?',()=>hint(),'btn secondary');hintBtn.id='hint-control';helper.append(hintBtn);
  const hintArea=make('div','');hintArea.id='hint-area';card.append(helper,hintArea);
- footer(card,[btn('Leave and resume later',()=>{location.href='/';},'btn ghost')]);
+ footer(card,[btn('Leave and resume later',()=>{location.href='/';},'btn ghost'),
+  ...(replayMode&&!demoMode?[btn('View your completed reveal',returnToCompleted,'btn secondary')]:[])]);
  body.append(card);scene.append(body);play.replaceChildren(scene);
  schedulePrompt();$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
@@ -199,7 +234,7 @@ async function hint(){
  const b=$('#hint-control'),area=$('#hint-area');
  if(hintLevel<2){
    b.disabled=true;try{
-     const out=demoMode?{hint:(demoClues||QUEST)[stage.step][hintLevel===0?'hint1':'hint2']}:await api('/api/quest/'+encodeURIComponent(slug)+'/hint?level='+(hintLevel+1));
+     const out=demoMode?{hint:(demoClues||QUEST)[stage.step][hintLevel===0?'hint1':'hint2']}:await api(questApiPath('hint','level='+(hintLevel+1)));
      hintLevel++;
      area.replaceChildren(make('div','hint',out.hint));
      b.textContent=hintLevel===1?'Show a stronger hint':'Use assisted solution';
@@ -241,7 +276,7 @@ async function solve(answer,assist=false){
  setError('');
  let overlay=null;
  try{
-   const out=demoMode?demoAnswer(answer,assist):await api('/api/quest/'+encodeURIComponent(slug)+'/'+(assist?'assist':'answer'),{
+   const out=demoMode?demoAnswer(answer,assist):await api(questApiPath(assist?'assist':'answer'),{
      method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(assist?{step:stage.step,confirm:true}:{step:stage.step,answer})
    });
    if(!out.correct){setError(out.message||'Try again.');return;}
@@ -297,10 +332,14 @@ function showFinal(data){
  container.append(details);
  const acts=make('div','actions');
  if(demoMode){acts.append(btn('Return to your editor',closeDemo,'btn'));container.append(acts);scene.append(container);play.replaceChildren(scene);runFinaleSequence(scene);return;}
+ const replay=btn('Replay the adventure',replayAdventure,'btn secondary');replay.id='replay-adventure';
+ acts.append(replay);
+ if(replayMode)acts.append(btn('View your completed reveal',returnToCompleted,'btn secondary'));
  acts.append(btn('Replay the finale ✦',()=>runFinaleSequence(scene),'btn'));
  acts.append(btn('Save keepsake image',()=>saveKeepsake(data),'btn secondary'));
  acts.append(btn('Print or save PDF',()=>printKeepsake(data),'btn secondary'));
  buildPrintKeepsake(data);
+ acts.append(make('p','error',''));acts.lastElementChild.id='replay-error';
  container.append(acts);
  scene.append(container);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));runFinaleSequence(scene);
 }
@@ -437,9 +476,13 @@ function closeDemo(){
 
 async function startRecipient(){
  create.hidden=true;play.hidden=false;slug=location.pathname.split('/').filter(Boolean)[1];
+ replayMode=new URLSearchParams(location.search).get('replay')==='1';
  play.replaceChildren(make('p','stage-copy','Opening your adventure…'));
- try{stage=await api('/api/quest/'+encodeURIComponent(slug)+'/state');if(stage.completed)showFinal(stage.final);else showIntro();}
- catch(e){play.replaceChildren(make('section','stage-card','This adventure is not available. '+e.message));}
+ try{stage=await api(questApiPath('state'));if(stage.completed)showFinal(stage.final);else showIntro();}
+ catch(e){
+  play.replaceChildren(make('section','stage-card','This adventure is not available. '+e.message));
+  if(replayMode)play.append(btn('View your completed reveal',returnToCompleted,'btn secondary'));
+ }
 }
 function field(label,name,type='text',value='',extra=''){
  const wrap=make('label','');wrap.textContent=label;
