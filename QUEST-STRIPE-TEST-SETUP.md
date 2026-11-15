@@ -1,5 +1,37 @@
 # Reveal Quest — Stripe TEST rollout (14 November 2026)
 
+## 15 November 2026 — recipient acceptance reported complete
+
+Following genuine Stripe TEST checkout and verified webhook/D1 paid state,
+the initial share link displayed `/r/null`. This was traced to the legacy
+reveal creation code not assigning `public_slug`. Fixed in the existing
+Stage 4B staging branch by assigning unique opaque slugs on creation,
+recovering missing slugs only through owner-authenticated paid review, and
+rejecting `/r/null` in the sharing UI.
+
+A valid paid recipient link was then generated:
+`/r/MGHUFkYdvYkigoNzvnGVW7HZ16qn7G3UsxeChlMuDco`.
+The user confirmed that it displayed the opening cinematic and first puzzle.
+After being asked to complete all puzzles, check the surprise remains hidden
+until the final correct answer, test PNG/PDF keepsakes and reopen the finished
+Quest, the user replied "complete". Treat this as USER-REPORTED recipient
+acceptance completion. It is not an independently observed record of each
+individual mobile/PDF/PNG action, and no broader production release is
+authorised.
+
+Verified separately: genuine Stripe TEST payment, automatic tax, webhook,
+D1 payment and reveal paid states, updated regression tests, staging Cloudflare
+build and a recovered public link. Production remains separate.
+Quest-only staging test checkout remains enabled; other products remain blocked.
+
+Remaining launch preparation: independent visual/device checks as required,
+security/privacy/accessibility review, remove five hard-coded £2.39 production
+UI references, resolve production Cloudflare build branch mapping and obtain
+explicit release approval. The next product-specific candidate is Three-
+Question Quiz: complete its deferred themed final animation and test its own
+payment/recipient journey without loosening the Quest-only staging guard.
+
+
 Status: Stripe sandbox product and dedicated staging webhook VERIFIED. The
 staging Worker is deployed, but Quest checkout remains DISABLED. All production
 infrastructure and the existing production-bound webhook are untouched.
