@@ -13,6 +13,7 @@ const json = body => new Response(JSON.stringify(body), {
 const IMAGE_TYPES = new Set(['image/jpeg','image/png','image/webp']);
 const STYLES = new Set(['classic','theatre','concert','festival','backstage','custom']);
 const FOILS = new Set(['gold','silver','midnight','rose']);
+const THEMES = new Set(['adventure','travel','magical','sports','music','theatre','festive','romance','birthday','baby','celebration','mystery','luxury-elegant']);
 
 export async function scratchRecipientResponse(request, env, ctx) {
   const url = new URL(request.url);
@@ -52,7 +53,7 @@ export async function scratchRecipientResponse(request, env, ctx) {
       const hasCover = settings.style === 'custom' && typeof settings.coverAssetId === 'string';
       return json({
         success:true,
-        scratchSurface:{style:settings.style,foil:settings.foil,hasImage:hasCover,variant:settings.variant === 'concert' ? 'concert' : 'ticket'},
+        scratchSurface:{style:settings.style,foil:settings.foil,theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,variant:settings.variant === 'concert' ? 'concert' : 'ticket'},
         audio:audioSettings,
         reveal:{
           recipient:row.recipient,
