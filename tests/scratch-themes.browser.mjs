@@ -58,20 +58,20 @@ test('all 13 scratch themes show creator previews and preserve foil/design choic
    assert.equal(await page.locator('[data-scratch-foil]').count(),4);
    assert.equal(await page.locator('[data-scratch-style]').count(),6);
    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),'luxury-elegant');
-   assert.equal(await page.locator('[data-scratch-theme="luxury-elegant"]').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('.scratch-theme-option[data-scratch-theme="luxury-elegant"]').getAttribute('aria-pressed'),'true');
    const initial=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage);
-   await page.locator('[data-scratch-theme="magical"]').click();
+   await page.locator('.scratch-theme-option[data-scratch-theme="magical"]').click();
    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),'magical');
-   assert.equal(await page.locator('[data-scratch-theme="magical"]').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('.scratch-theme-option[data-scratch-theme="magical"]').getAttribute('aria-pressed'),'true');
    const magical=await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage);
    assert.notEqual(initial,magical,'A new theme must visibly change the screen background');
    await page.screenshot({path:resolve(output,size.name+'-creator-magical.png'),fullPage:true});
    await page.locator('[data-scratch-foil="rose"]').click();
    await page.locator('[data-scratch-style="theatre"]').click();
-   await page.locator('[data-scratch-theme="travel"]').click();
+   await page.locator('.scratch-theme-option[data-scratch-theme="travel"]').click();
    assert.equal(await page.locator('#scratchFoil').inputValue(),'rose');
    assert.equal(await page.locator('#scratchStyle').inputValue(),'theatre');
-   assert.equal(await page.locator('[data-scratch-theme="travel"]').getAttribute('aria-pressed'),'true');
+   assert.equal(await page.locator('.scratch-theme-option[data-scratch-theme="travel"]').getAttribute('aria-pressed'),'true');
    const themeBody=await page.locator('body').evaluate(el=>({
     bg:getComputedStyle(el).backgroundImage,
     theme:el.dataset.scratchTheme
