@@ -131,6 +131,7 @@
   }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
+<link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 </head>
 <body>
 <main>
@@ -178,7 +179,8 @@
   <footer id="footer"></footer>
 </main>
 <script type="module">
-  import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
+  import { ScratchCard } from '/scratchcard.js?v=themes-13-1';
+    import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
   import { recipientCardModel } from '/scratch-recipient-fields.js?v=complete-card-1';
   const $ = id => document.getElementById(id);
@@ -220,10 +222,13 @@
     const data = await response.json();
     if (!data.success) throw new Error('This surprise is not available.');
     const model = recipientCardModel(data.reveal);
+    const chosenTheme = data.scratchSurface.theme || DEFAULT_SCRATCH_THEME;
+    const visualTheme = applyScratchTheme(document,chosenTheme,'recipient');
     soundEnabled = data.audio?.enabled !== false;
     const isConcert = data.scratchSurface.variant === 'concert';
     document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
     $('card').classList.toggle('concert-ticket',isConcert);
+    document.querySelector('.eyebrow').textContent = visualTheme.icon+' '+visualTheme.label+' reveal';
     text('title','A surprise for ' + model.recipient);
     text('name',model.recipient);
     text('eventName',model.eventName);
@@ -253,6 +258,7 @@
     scratch = new ScratchCard({
       canvas:$('foilCanvas'),
       foil:data.scratchSurface.foil,
+      theme:chosenTheme,
       coverStyle:data.scratchSurface.style === 'custom' ? 'classic' : data.scratchSurface.style,
       brushSize:49,
       onScratch:() => cinematic.onFirstScratch(),
