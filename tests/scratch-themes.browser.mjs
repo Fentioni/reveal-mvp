@@ -33,7 +33,7 @@ async function startServer(){
   const file=url.pathname==='/legacy-create'?'/legacy-create.html'
    :(url.pathname==='/r/theme-test'||SCRATCH_THEMES.some(t=>url.pathname==='/r/theme-'+t.id))?'/recipient-scratch.html'
    :url.pathname;
-  if(!/^\/(legacy-create\.html|recipient-scratch\.html|scratch-themes\.css|scratch-themes\.js|scratchcard\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!/^\/(legacy-create\.html|recipient-scratch\.html|scratch-themes\.css|scratch-themes\.js|scratch-theme-art\.js|scratchcard\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
