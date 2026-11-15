@@ -253,6 +253,10 @@ function renderStep(nextData=null){
  body.append(hero);
  const card=make('div','stage-card');
  const p=make('p','',stage.question);card.append(p);
+ if(sceneId==='map'){
+   card.append(make('p','map-help',
+     'The map shows five stops: three named landmarks and two connecting waypoints. Match the landmark names to their badges, then follow the gold trail from the coast towards the mountains.'));
+ }
  if(stage.kind==='choice'){
    const choices=make('div','answer-grid');
    stage.options.forEach(opt=>choices.append(btn(opt,async()=>{setError('');await solve(opt);},'answer')));
