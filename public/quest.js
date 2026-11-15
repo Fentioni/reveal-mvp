@@ -116,13 +116,29 @@ function renderStep(nextData=null){
  // Actual layered animated overlays attach to physical scene objects.
  // They animate after the answer is validated, rather than on an arbitrary timer.
  if(sceneId==='suitcase'){
-   const lid=make('div','case-lid');lid.setAttribute('aria-hidden','true');hero.append(lid);
+   // Align the moving leather lid and exposed interior to the SAME cropped
+   // suitcase photograph. The lid pivots at the back hinge; no floating card.
+   const photograph=make('div','suitcase-photo');
+   photograph.setAttribute('aria-hidden','true');
+   const interior=make('div','case-interior');
+   interior.append(make('span','case-map','✦  THE NEXT CLUE  ✦'));
+   const lid=make('div','case-lid');
+   const hinge=make('div','case-hinge');
+   photograph.append(interior,lid,hinge);
+   hero.append(photograph);
  }
  if(sceneId==='letter'){
    const seal=make('div','seal-flare');seal.setAttribute('aria-hidden','true');hero.append(seal);
  }
  if(sceneId==='passport'){
-   const pageTurn=make('div','passport-page-turn');pageTurn.setAttribute('aria-hidden','true');hero.append(pageTurn);
+   // The turning leaf is a child of the illustrated open book; its left edge
+   // is fixed to the central spine for the entire 3D flip.
+   const book=make('div','passport-art');
+   book.setAttribute('aria-hidden','true');
+   const under=make('div','passport-underpage');
+   under.append(make('span','passport-watermark','✦  NEW STAMP  ✦'));
+   book.append(under,make('div','passport-spine'),make('div','passport-page-turn'));
+   hero.append(book);
  }
  if(sceneId==='map'){
    const route=document.createElementNS('http://www.w3.org/2000/svg','svg');
