@@ -136,6 +136,31 @@ function showIntro(){
 
  body.append(eyebrow,h,orn,desc,card);scene.append(body);play.replaceChildren(scene);$('#sound')?.setAttribute('aria-pressed',String(sound));
 }
+// Five tip positions measured on the actual 900×1500 map photo. The route
+// must follow the valley (down between the second and third pins) before rising.
+const MAP_ROUTE_PINS=Object.freeze([
+ Object.freeze([145,1142]),
+ Object.freeze([273,973]),
+ Object.freeze([459,1054]),
+ Object.freeze([578,924]),
+ Object.freeze([780,787])
+]);
+// x-monotonic cubic segments through the source-image pins; no freehand curve.
+function mapPathThroughPins(points){
+ if(!Array.isArray(points)||points.length<2)throw Error('Map needs at least two pins');
+ const slope=i=>{
+   const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)];
+   return (b[1]-a[1])/(b[0]-a[0]);
+ };
+ let d='M'+points[0][0]+','+points[0][1];
+ for(let i=0;i<points.length-1;i++){
+   const a=points[i],b=points[i+1],dx=(b[0]-a[0])/3;
+   d+=' C'+(a[0]+dx).toFixed(2)+','+(a[1]+slope(i)*dx).toFixed(2)+
+     ' '+(b[0]-dx).toFixed(2)+','+(b[1]-slope(i+1)*dx).toFixed(2)+
+     ' '+b[0]+','+b[1];
+ }
+ return d;
+}
 function renderStep(nextData=null){
  if(nextData)stage=nextData;
  if(!stage)return;
@@ -170,17 +195,27 @@ function renderStep(nextData=null){
    const book=make('div','passport-art');
    book.setAttribute('aria-hidden','true');
    const under=make('div','passport-underpage');
-   under.append(make('span','passport-watermark','✦  NEW STAMP  ✦'));
-   book.append(under,make('div','passport-spine'),make('div','passport-page-turn'));
+   under.append(make('span','passport-watermark','✦'));
+   // The leaf's binding remains fixed at the spine for every turn frame.
+   const binding=make('div','passport-page-binding');
+   binding.append(make('div','passport-page-turn'));
+   book.append(under,binding,make('div','passport-spine'));
    hero.append(book);
  }
  if(sceneId==='map'){
+   // Artwork and route share the unchanged 900×1500 image's coordinate space.
+   const mapArtwork=make('div','map-source');
+   mapArtwork.setAttribute('aria-hidden','true');
    const route=document.createElementNS('http://www.w3.org/2000/svg','svg');
-   route.classList.add('map-journey');route.setAttribute('viewBox','0 0 900 500');
+   route.classList.add('map-journey');
+   route.setAttribute('viewBox','0 0 900 1500');
+   route.setAttribute('preserveAspectRatio','none');
    route.setAttribute('aria-hidden','true');
    const path=document.createElementNS('http://www.w3.org/2000/svg','path');
-   path.setAttribute('d','M140,350 C200,290 270,370 335,255 S495,165 560,225 S710,165 775,110');
-   route.append(path);hero.append(route);
+   path.classList.add('map-route-trace');
+   path.setAttribute('d',mapPathThroughPins(MAP_ROUTE_PINS));
+   path.dataset.pinPoints=MAP_ROUTE_PINS.map(point=>point.join(',')).join(';');
+   route.append(path);mapArtwork.append(route);hero.append(mapArtwork);
  }
  if(sceneId==='ticket'){
    const glow=make('div','ticket-light');glow.setAttribute('aria-hidden','true');hero.append(glow);
