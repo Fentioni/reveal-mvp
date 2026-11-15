@@ -258,3 +258,21 @@ test('unpaid staging /r links remain gated in the Worker', async()=>{
   const response=await worker.fetch(publicReq(),env,{});
   assert.equal(response.status,404);
 });
+
+
+test('paid scratch recipient receives chosen theme but unpaid visitors receive no theme or reveal details',async()=>{
+ const themed={scratchSurface:{style:'theatre',foil:'silver',theme:'romance',variant:'ticket',coverAssetId:null},audio:{enabled:false}};
+ const {env}=recipientEnv(paid,themed);
+ const response=await scratchRecipientResponse(publicReq('/scratch-data'),env,{});
+ assert.equal(response.status,200);
+ const data=await response.json();
+ assert.deepEqual(data.scratchSurface,{style:'theatre',foil:'silver',theme:'romance',hasImage:false,variant:'ticket'});
+ assert.equal(data.reveal.recipient,'Chloe');
+ const unpaid={...paid,status:'draft',paid_at:null};
+ const privateEnv=recipientEnv(unpaid,themed).env;
+ const hidden=await scratchRecipientResponse(publicReq('/scratch-data'),privateEnv,{});
+ assert.equal(hidden.status,404);
+ assert.equal((await hidden.text()).includes('romance'),false);
+ const invalid=recipientEnv(paid,{scratchSurface:{style:'classic',foil:'gold',theme:'<script>',coverAssetId:null}}).env;
+ assert.equal((await (await scratchRecipientResponse(publicReq('/scratch-data'),invalid,{})).json()).scratchSurface.theme,'luxury-elegant');
+});
