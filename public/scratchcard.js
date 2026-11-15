@@ -4,6 +4,7 @@
  * Public demos must use fictional data; do not send purchaser reveal payloads
  * to a browser before verified payment.
  */
+import {getScratchTheme, DEFAULT_SCRATCH_THEME, SCRATCH_THEMES} from './scratch-themes.js';
 const FOILS = Object.freeze({
   gold: ['#654114', '#F8E3A0', '#BD8430', '#FFF3BF', '#9A6420'],
   silver: ['#687382', '#F2F6FA', '#A3B0BE', '#FFFFFF', '#778697'],
@@ -22,7 +23,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 };
 
 export class ScratchCard {
-  constructor({ canvas, foil = 'gold', coverStyle = 'classic', brushSize = 48,
+  constructor({ canvas, foil = 'gold', coverStyle = 'classic', theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
     coverImage = null, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -35,6 +36,7 @@ export class ScratchCard {
     this.ctx = context;
     this.foil = FOILS[foil] ? foil : 'gold';
     this.coverStyle = SURFACE_STYLES.includes(coverStyle) ? coverStyle : 'classic';
+    this.theme = getScratchTheme(theme).id;
     this.imageRequest = 0;
     this.brushSize = clamp(Number(brushSize) || 48, 12, 120);
     this.onScratch = onScratch;
@@ -143,6 +145,9 @@ export class ScratchCard {
       ctx.fillRect(0, 0, w, h);
     }
 
+    // Theme decoration is independent from finish/style and is always visible
+    // above the purchaser's optional photo, without changing scratch semantics.
+    this.drawThemeDecoration();
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
@@ -165,6 +170,36 @@ export class ScratchCard {
     ctx.font = '500 ' + clamp(w * 0.033, 10, 14) + 'px system-ui, sans-serif';
     ctx.fillText('THE SURPRISE IS UNDER HERE', labelX, labelY + (landscape ? 14 : 22), labelWidth - 28);
     ctx.restore();
+  }
+
+  drawThemeDecoration() {
+    const ctx=this.ctx,w=this.cssWidth,h=this.cssHeight;
+    const theme=getScratchTheme(this.theme),photo=Boolean(this.coverImage);
+    const landscape=w>h*1.4;
+    ctx.save();
+    // Distinct atmospheres: tinted edge bands, subtle repeated symbol detail
+    // and a prominent theme motif. Colours follow the chosen theme, NOT a
+    // replacement for the independently chosen metallic foil finish.
+    ctx.strokeStyle=theme.highlight;ctx.lineWidth=Math.max(3,w*.012);
+    ctx.globalAlpha=.90;
+    ctx.strokeRect(w*.03,h*.025,w*.94,h*.95);
+    ctx.globalAlpha=photo?.65:.84;
+    ctx.fillStyle=theme.bg;
+    const headerHeight=landscape?h*.2:h*.15;
+    ctx.fillRect(w*.045,h*.04,w*.91,headerHeight);
+    ctx.fillStyle=theme.highlight;
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.font='700 '+clamp(w*(landscape?.034:.042),12,19)+'px Georgia,serif';
+    ctx.fillText(theme.label.toUpperCase(),landscape?w*.37:w*.5,h*.04+headerHeight*.48,landscape?w*.48:w*.78);
+    ctx.font=clamp(w*(landscape?.068:.11),23,55)+'px Georgia,serif';
+    ctx.fillText(theme.motif,landscape?w*.66:w*.5,landscape?h*.23:h*.29);
+    ctx.globalAlpha=photo?.3:.43;
+    ctx.font=clamp(w*.067,15,31)+'px Georgia,serif';
+    for(let i=0;i<9;i++){
+      const x=w*(.12+(i%3)*.38),y=h*(.23+Math.floor(i/3)*.30);
+      ctx.fillText(theme.motif,x,y);
+    }
+    ctx.globalAlpha=1;ctx.restore();
   }
 
   drawArtwork() {
@@ -465,6 +500,11 @@ export class ScratchCard {
     this.activePointer = null;
     this.paintCover();
     this.onProgress(0);
+  }
+
+  setTheme(id) {
+    if(!SCRATCH_THEMES.some(item=>item.id===id))throw new RangeError('Unknown scratch theme: '+id);
+    if(this.theme!==id){this.theme=id;this.reset();}
   }
 
   setFoil(foil) {
