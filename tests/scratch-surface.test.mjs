@@ -325,3 +325,54 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(review.includes("festival:'Festival Access',backstage:'Backstage Pass'"));
   assert.ok(storefront.includes("href:'/legacy-create?variant=concert'"));
 });
+
+
+test('all 13 scratch themes persist on the same draft without changing artwork or foil',async()=>{
+ const {env,legacy,state}=makeMocks();
+ const themes=['adventure','travel','magical','sports','music','theatre','festive',
+ 'romance','birthday','baby','celebration','mystery','luxury-elegant'];
+ const unique=new Set();
+ for(const theme of themes){
+  unique.add(theme);
+  const form=new FormData();
+  form.append('style','classic');
+  form.append('foil','rose');
+  form.append('variant','ticket');
+  form.append('theme',theme);
+  const saved=await scratchSurfaceResponse(request('PUT',form),env,{},legacy);
+  assert.equal(saved.status,200,theme);
+  const response=await saved.json();
+  assert.deepEqual(response.surface,{style:'classic',foil:'rose',theme,hasImage:false,variant:'ticket'});
+  const fetched=await scratchSurfaceResponse(request('GET'),env,{},legacy);
+  assert.deepEqual((await fetched.json()).surface,response.surface);
+  const fields=JSON.parse(state.config.fields_json);
+  assert.equal(fields.scratchSurface.theme,theme);
+  assert.equal(fields.scratchSurface.foil,'rose');
+  assert.equal(fields.scratchSurface.style,'classic');
+ }
+ assert.equal(unique.size,13);
+});
+
+test('invalid scratch themes are rejected, and absent theme preserves the previous selection',async()=>{
+ const {env,legacy,state}=makeMocks();
+ const initial=new FormData();
+ initial.append('style','theatre');initial.append('foil','silver');initial.append('theme','magical');
+ const first=await scratchSurfaceResponse(request('PUT',initial),env,{},legacy);
+ assert.equal(first.status,200);
+ const previous=state.config.fields_json;
+ for(const invalid of ['something-new','Magical','<img>','', '__proto__']){
+  const bad=new FormData();
+  bad.append('style','theatre');bad.append('foil','silver');bad.append('theme',invalid);
+  const response=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);
+  assert.equal(response.status,400,invalid);
+  assert.equal(state.config.fields_json,previous);
+ }
+ const followUp=new FormData();
+ followUp.append('style','classic');followUp.append('foil','midnight');
+ const response=await scratchSurfaceResponse(request('PUT',followUp),env,{},legacy);
+ assert.equal(response.status,200);
+ const surface=(await response.json()).surface;
+ assert.equal(surface.theme,'magical');
+ assert.equal(surface.foil,'midnight');
+ assert.equal(surface.style,'classic');
+});
