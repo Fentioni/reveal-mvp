@@ -3,12 +3,28 @@ body.scratch-themed{
  transition:background-color .22s ease;
  background-color:var(--scratch-paper);
 }
-body.scratch-themed[data-scratch-theme-mode="creator"],
+/* Creator retains the original light typography on an immersive dark stage.
+   The initial pale version made its headings and field labels unreadable. */
+body.scratch-themed[data-scratch-theme-mode="creator"]{
+ background:
+ radial-gradient(ellipse at 92% 5%,color-mix(in srgb,var(--scratch-accent) 37%,transparent),transparent 48%),
+ radial-gradient(ellipse at 5% 90%,color-mix(in srgb,var(--scratch-highlight) 12%,transparent),transparent 55%),
+ linear-gradient(155deg,var(--scratch-bg),var(--scratch-bg2) 70%,var(--scratch-bg))!important;
+ color:#fff4e9;
+}
 body.scratch-themed[data-scratch-theme-mode="review"]{
  background:
  radial-gradient(ellipse at 92% 5%,color-mix(in srgb,var(--scratch-accent) 18%,transparent),transparent 48%),
  linear-gradient(160deg,var(--scratch-paper),#fffaf2 61%,var(--scratch-paper))!important;
 }
+body.scratch-themed[data-scratch-theme-mode="creator"] .scratch-theme-section .scratch-theme-title,
+body.scratch-themed[data-scratch-theme-mode="creator"] .scratch-theme-caption{
+ color:#fff3e4;
+}
+body.scratch-themed[data-scratch-theme-mode="creator"] .scratch-theme-selected{
+ color:#25221b;
+}
+
 body.scratch-themed[data-scratch-theme-mode="recipient"]{
  background:
  radial-gradient(ellipse at 15% 13%,color-mix(in srgb,var(--scratch-accent) 45%,transparent),transparent 49%),
