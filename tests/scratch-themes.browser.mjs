@@ -5,6 +5,7 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve,extname} from 'node:path';
 import {chromium,webkit} from 'playwright';
+import {SCRATCH_THEMES} from '../public/scratch-themes.js';
 
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)),'public');
 const browserType=process.env.SCRATCH_BROWSER==='webkit'?webkit:chromium;
@@ -22,12 +23,15 @@ const recipient={
 async function startServer(){
  const server=createServer(async(req,res)=>{
   const url=new URL(req.url,'http://localhost');
-  if(url.pathname==='/r/theme-test/scratch-data'){
+  const themeId=url.pathname.match(/^\/r\/theme-([a-z-]+)\/scratch-data$/)?.[1];
+  const selectedTheme=SCRATCH_THEMES.find(theme=>theme.id===themeId);
+  if(url.pathname==='/r/theme-test/scratch-data'||selectedTheme){
    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
-   res.end(JSON.stringify(recipient));return;
+   res.end(JSON.stringify({...recipient,scratchSurface:{...recipient.scratchSurface,
+    theme:selectedTheme?.id||recipient.scratchSurface.theme}}));return;
   }
   const file=url.pathname==='/legacy-create'?'/legacy-create.html'
-   :url.pathname==='/r/theme-test'?'/recipient-scratch.html'
+   :(url.pathname==='/r/theme-test'||SCRATCH_THEMES.some(t=>url.pathname==='/r/theme-'+t.id))?'/recipient-scratch.html'
    :url.pathname;
   if(!/^\/(legacy-create\.html|recipient-scratch\.html|scratch-themes\.css|scratch-themes\.js|scratchcard\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
@@ -78,6 +82,24 @@ test('all 13 scratch themes show creator previews and preserve foil/design choic
    }));
    assert.notEqual(themeBody.bg,magical);
    assert.equal(themeBody.theme,'travel');
+   // Test every theme with the SAME retained foil and artwork, not just a handful
+   // of selected screenshots. This must catch themes that repaint only the page.
+   const backgrounds=new Set();
+   const covers=new Set();
+   for(const theme of SCRATCH_THEMES){
+    await page.locator('.scratch-theme-option[data-scratch-theme="'+theme.id+'"]').click();
+    assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),theme.id);
+    assert.equal(await page.locator('.scratch-theme-option[data-scratch-theme="'+theme.id+'"]').getAttribute('aria-pressed'),'true');
+    backgrounds.add(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage));
+    covers.add(await page.locator('#scratchSurfacePreview').evaluate(el=>el.toDataURL('image/png')));
+    assert.equal(await page.locator('#scratchFoil').inputValue(),'rose');
+    assert.equal(await page.locator('#scratchStyle').inputValue(),'theatre');
+    if(size.name==='mobile')await page.screenshot({
+     path:resolve(output,'mobile-theme-'+theme.id+'.png'),fullPage:true
+    });
+   }
+   assert.equal(backgrounds.size,13,'Each theme must produce its own screen backdrop');
+   assert.equal(covers.size,13,'Each theme must repaint the scratch surface itself');
    const foil=await page.locator('#scratchSurfacePreview').evaluate(canvas=>{
     const pixel=canvas.getContext('2d').getImageData(18,18,1,1).data;
     return [...pixel];
@@ -109,6 +131,23 @@ test('paid scratch recipient screen and foil Canvas reflect saved theme while ke
   assert.ok(colors[3]>0);
   assert.equal(await page.locator('#progress').getAttribute('value'),'0');
   await page.screenshot({path:resolve(output,'recipient-magical-foil.png'),fullPage:true});
+  // Simulate each paid recipient with the selected theme returned by the API.
+  // The concealed foil must be painted and must differ across all 13 themes.
+  const recipientBackgrounds=new Set();
+  const recipientFoils=new Set();
+  for(const theme of SCRATCH_THEMES){
+   await page.goto(base+'/r/theme-'+theme.id,{waitUntil:'networkidle'});
+   await page.locator('#card.foil-ready').waitFor();
+   assert.equal(await page.locator('body').getAttribute('data-scratch-theme'),theme.id);
+   assert.equal(await page.locator('#progress').getAttribute('value'),'0');
+   assert.match(await page.locator('.eyebrow').textContent(),new RegExp(theme.label.replace(/[.*+?^${}()|[\]\\]/g,'\\  await page.screenshot({path:resolve(output,'recipient-magical-foil.png'),fullPage:true});
+  assert.deepEqual(errors,[]);')+' reveal'));
+   recipientBackgrounds.add(await page.locator('body').evaluate(el=>getComputedStyle(el).backgroundImage));
+   recipientFoils.add(await page.locator('#foilCanvas').evaluate(el=>el.toDataURL('image/png')));
+   assert.equal(await page.locator('#card').isVisible(),true);
+  }
+  assert.equal(recipientBackgrounds.size,13,'Paid recipient backgrounds must vary by saved theme');
+  assert.equal(recipientFoils.size,13,'Paid recipient scratch foils must vary by saved theme');
   assert.deepEqual(errors,[]);
   await page.close();
  }finally{await browser.close();await new Promise(done=>server.close(done));}
