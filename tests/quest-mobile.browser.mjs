@@ -37,7 +37,7 @@ async function playChapter(page,title,sceneName,index,preset){
  assert.equal(await page.locator('.quest h2').innerText(),title);
  const hero=page.locator('.hero-object.'+sceneName);
  assert.equal(await hero.count(),1);
- assert.ok(await hero.evaluate((el,scene)=>{const layer=el.querySelector(scene==='suitcase'?'.suitcase-photo':scene==='passport'?'.passport-art':'.hero-object')||el;return getComputedStyle(layer).backgroundImage.includes('/quest-assets/'+scene+'.webp');},sceneName),'Missing chapter artwork');
+ assert.ok(await hero.evaluate((el,scene)=>{const layer=el.querySelector(scene==='suitcase'?'.suitcase-photo':scene==='passport'?'.passport-art':scene==='map'?'.map-source':'.hero-object')||el;return getComputedStyle(layer).backgroundImage.includes('/quest-assets/'+scene+'.webp');},sceneName),'Missing chapter artwork');
  const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-window.innerWidth);
  assert.ok(overflow<=2,'Horizontal overflow '+overflow+'px in '+preset+' / '+title);
  await page.screenshot({path:resolve(output,preset+'-chapter-'+(index+1)+'.png'),animations:'disabled',fullPage:true});
@@ -132,7 +132,7 @@ test('normal-motion suitcase fully opens before the success overlay or next puzz
 });
 
 
-test('real suitcase photo opens on a back hinge and passport leaf stays attached to the book spine', {timeout:60000},async()=>{
+test('physical suitcase, bound passport leaf and accurate five-pin map route', {timeout:90000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
  try{
@@ -183,12 +183,13 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
   assert.equal(await page.locator('.success').count(),0,'Do not cover suitcase during opening');
   await page.locator('.quest h2').filter({hasText:'The Passport Mystery'}).waitFor({timeout:12000});
   const book=await page.locator('.passport-art').evaluate(art=>{
-    const spine=art.querySelector('.passport-spine'),page=art.querySelector('.passport-page-turn');
-    const a=art.getBoundingClientRect(),p=page.getBoundingClientRect(),s=spine.getBoundingClientRect();
+    const spine=art.querySelector('.passport-spine'),binding=art.querySelector('.passport-page-binding'),page=binding.querySelector('.passport-page-turn');
+    const a=art.getBoundingClientRect(),p=page.getBoundingClientRect(),s=spine.getBoundingClientRect(),h=binding.getBoundingClientRect();
     return {
-      inside:art.contains(page)&&art.contains(spine),
-      spineVsLeaf:Math.abs(p.left-(a.left+a.width/2)),
-      spineVsCentre:Math.abs((s.left+s.width/2)-(a.left+a.width/2)),
+      inside:art.contains(page)&&art.contains(spine)&&binding.contains(page),
+      spineVsLeaf:Math.abs(p.left-h.left),
+      spineVsCentre:Math.abs((s.left+s.width/2)-h.left),
+      bindingAtFold:Math.abs(h.left-(a.left+a.width/2)), 
       image:getComputedStyle(page,'::before').backgroundImage,
       origin:getComputedStyle(page).transformOrigin
     };
@@ -196,7 +197,8 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
   await page.screenshot({path:resolve(output,'bound-passport-before.png'),fullPage:true});
   assert.ok(book.inside,'Turning page must be DOM child of the physical book');
   assert.ok(book.spineVsLeaf<5,'Page hinge must coincide with book central spine');
-  assert.ok(book.spineVsCentre<5,'Spine must sit at the centre of the illustrated book');
+  assert.ok(book.spineVsCentre<5,'Spine must coincide with the fixed page binding');
+   assert.ok(book.bindingAtFold<5,'Page binding must originate at the central fold');
   assert.match(book.image,/passport.webp/);
   assert.match(book.origin,/0px/);
   for(const place of ['Rome · 08 Apr','Barcelona · 12 Apr','Lisbon · 19 Apr']){
@@ -212,7 +214,7 @@ test('real suitcase photo opens on a back hinge and passport leaf stays attached
   assert.ok(turn.yaw<0.9,'Passport page must visibly pivot 3D around the spine');
   await page.screenshot({path:resolve(output,'bound-passport-turning-mid.png'),fullPage:true});
   assert.equal(turn.stampFace,'hidden','Do not display reversed stamp artwork on the back of the turning page');
-  assert.equal(turn.parent,'passport-art');
+  assert.equal(turn.parent,'passport-page-binding');
   assert.equal(turn.inside,true);
   assert.equal(await page.locator('.success').count(),0,'Do not cover turning page');
   await page.locator('.quest h2').filter({hasText:'The Secret Map'}).waitFor({timeout:12000});
