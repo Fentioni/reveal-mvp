@@ -42,6 +42,25 @@ function isCheckout(path){
 export async function questStripeTestResponse(request,env,ctx,originalWorker){
  const url=new URL(request.url);
  const path=url.pathname;
+ // Temporary, protected, read-only diagnostic. Never return credential values.
+ if(path==='/api/quest/audit-activation-c3f9' && request.method==='GET'){
+   if(request.headers.get('x-quest-staging-audit')!=='V9q4aC2mt17y8HErN6dvW3Qb5Lzp0jsf' || env.STAGING_DISABLE_CHECKOUT!=='true')return reply({error:'Not found'},404);
+   const key=String(env.STRIPE_SECRET_KEY||'');
+   const webhook=String(env.STRIPE_WEBHOOK_SECRET||'');
+   return reply({
+     stagingWorker:env.STAGING_DISABLE_CHECKOUT==='true',
+     testMode:env.STRIPE_LIVE_MODE==='false',
+     enabledFlag:env.QUEST_TEST_CHECKOUT_ENABLED==='true',
+     databaseBound:Boolean(env.DB),
+     imageStorageBound:Boolean(env.IMAGES),
+     priceVerified:env.STRIPE_PRICE_ID==='price_1USbNbKEVPKWz2E9zmH0mabR',
+     keyPresent:key.length>0,
+     keyTestFormat:/^(?:sk|rk)_test_[A-Za-z0-9]+$/.test(key),
+     webhookPresent:webhook.length>0,
+     webhookFormat:/^whsec_[A-Za-z0-9]+$/.test(webhook),
+     ready:questStripeTestReady(env)
+   });
+ }
  if(path==='/api/quest/test-payment-status' && request.method==='GET'){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
