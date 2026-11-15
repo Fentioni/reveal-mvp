@@ -340,6 +340,133 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
 }
 @media(prefers-reduced-motion:reduce){.quest-cinematic-curtain{display:none!important}}
 
+
+/* PHYSICAL SUITCASE AND BOUND PASSPORT — both use one consistent artwork
+   coordinate system. Prior free-floating overlay layers are superseded. */
+.hero-object.suitcase,.hero-object.passport{
+  background-image:none;background-color:#1b100a;
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+}
+.quest.chapter-clear .hero-object.suitcase,
+.quest.chapter-clear .hero-object.passport{
+  animation:none;filter:none;transform:none;
+}
+.hero-object.suitcase .suitcase-photo{
+  position:relative;flex:none;width:100%;max-height:100%;aspect-ratio:900 / 500;
+  background:url('/quest-assets/suitcase.webp') center 54% / 100% auto no-repeat;
+  perspective:850px;transform-style:preserve-3d;isolation:isolate;
+}
+.hero-object.suitcase .case-interior{
+  position:absolute;inset:0;z-index:2;
+  clip-path:polygon(14% 20%,31% 17%,70% 17%,87% 25%,85% 47%,17% 47%);
+  background:radial-gradient(ellipse at 50% 28%,#77512e 0%,#34200e 56%,#130d08 100%);
+  box-shadow:inset 0 0 50px #0a0705;filter:brightness(.5);
+  pointer-events:none;
+}
+.hero-object.suitcase .case-map{
+  position:absolute;left:34%;top:20%;width:34%;height:25%;
+  display:flex;align-items:center;justify-content:center;text-align:center;
+  background:linear-gradient(135deg,#f4dda4,#ac834b);transform:rotate(-5deg);
+  color:#3d220b;font:bold clamp(8px,2vw,11px) Georgia,serif;
+  letter-spacing:.06em;border:1px solid #d7b87e;box-shadow:0 3px 10px #0008;
+}
+.hero-object.suitcase .case-lid{
+  position:absolute;inset:0;z-index:4;opacity:1;pointer-events:none;
+  clip-path:polygon(14% 20%,31% 17%,70% 17%,87% 25%,85% 47%,17% 47%);
+  background:url('/quest-assets/suitcase.webp') center 54% / 100% auto no-repeat;
+  transform-origin:50% 17%;
+  transform:perspective(750px) rotateX(0deg);backface-visibility:visible;
+  filter:drop-shadow(0 3px 7px #140a04);
+}
+.hero-object.suitcase .case-hinge{
+  position:absolute;left:28%;right:28%;top:17%;height:2px;z-index:5;
+  background:linear-gradient(90deg,transparent,#f6ca6e,transparent);
+  box-shadow:0 0 8px #edbd6d;opacity:.5;pointer-events:none;
+}
+.quest.chapter-clear .hero-object.suitcase .case-lid{
+  animation:case-physically-open 3s cubic-bezier(.24,.68,.23,1) both;
+}
+.quest.chapter-clear .hero-object.suitcase .case-interior{
+  animation:case-interior-reveal 3s ease-out both;
+}
+.quest.chapter-clear .hero-object.suitcase .case-hinge{opacity:1}
+.quest.chapter-clear .hero-object.suitcase .wheels{opacity:0;pointer-events:none}
+@keyframes case-physically-open{
+  0%,12%{transform:perspective(750px) rotateX(0deg)}
+  38%{transform:perspective(750px) rotateX(26deg)}
+  75%{transform:perspective(750px) rotateX(67deg)}
+  100%{transform:perspective(750px) rotateX(81deg)}
+}
+@keyframes case-interior-reveal{
+  0%,12%{filter:brightness(.45)}
+  70%,100%{filter:brightness(1.16)}
+}
+/* The book artwork crops at its actual central-spine geometry. The page is
+   positioned INSIDE this book with its hinge at precisely the 50% spine. */
+.hero-object.passport .passport-art{
+  position:relative;height:100%;max-width:100%;aspect-ratio:900 / 690;
+  background:url('/quest-assets/passport.webp') center 71% / 100% auto no-repeat;
+  perspective:900px;transform-style:preserve-3d;
+}
+.hero-object.passport .passport-underpage{
+  position:absolute;left:50%;top:9%;width:43%;height:78%;z-index:1;
+  border-radius:0 5% 8% 0;
+  background:linear-gradient(112deg,#a78b60,#ecdbb7 17%,#e8d1a5 90%,#9c7954);
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:inset 4px 0 8px #7b624b8f;
+  color:#68472d;
+}
+.hero-object.passport .passport-watermark{
+  border:2px solid #bc9b68;border-radius:50%;padding:12px 7px;
+  font:clamp(9px,1.8vw,12px) Georgia,serif;
+  transform:rotate(-12deg);
+}
+.hero-object.passport .passport-spine{
+  position:absolute;top:9%;bottom:11%;left:49.5%;width:1.5%;z-index:4;
+  background:linear-gradient(90deg,#372012,#e4bb7a66,#372012);
+  box-shadow:0 0 8px #190f06aa;
+}
+.hero-object.passport .passport-page-turn{
+  position:absolute;left:50%;top:9%;width:43%;height:78%;z-index:3;
+  opacity:1;pointer-events:none;transform-style:preserve-3d;
+  transform-origin:0 50%;transform:rotateY(0deg);
+  filter:drop-shadow(0 4px 4px #0008);
+}
+.hero-object.passport .passport-page-turn::before,
+.hero-object.passport .passport-page-turn::after{
+  content:"";position:absolute;inset:0;border-radius:0 6% 8% 0;
+  backface-visibility:hidden;
+}
+.hero-object.passport .passport-page-turn::before{
+  background:url('/quest-assets/passport.webp') 86% 65.7% / 232.558% auto no-repeat;
+  border:1px solid #d4bd97;
+}
+.hero-object.passport .passport-page-turn::after{
+  background:repeating-linear-gradient(90deg,#e6cea5 0px,#ecdbb8 3px,#f4e0ba 6px);
+  border:1px solid #d2b687;transform:rotateY(180deg);
+  box-shadow:inset 10px 0 12px #b5966f;
+}
+.quest.chapter-clear .hero-object.passport .passport-page-turn{
+  animation:passport-spine-flip 3s cubic-bezier(.32,.63,.18,1) both;
+}
+@keyframes passport-spine-flip{
+  0%,13%{transform:rotateY(0deg)}
+  46%{transform:rotateY(-80deg)}
+  80%{transform:rotateY(-156deg)}
+  100%{transform:rotateY(-176deg)}
+}
+@media(prefers-reduced-motion:reduce){
+  .quest.chapter-clear .hero-object.suitcase .case-lid{
+    animation:none;opacity:1;transform:perspective(750px) rotateX(81deg);
+  }
+  .quest.chapter-clear .hero-object.suitcase .case-interior{
+    animation:none;filter:brightness(1.16);
+  }
+  .quest.chapter-clear .hero-object.passport .passport-page-turn{
+    animation:none;opacity:1;transform:rotateY(-176deg);
+  }
+}
+
 </style>
 </head>
 <body>
