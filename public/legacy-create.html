@@ -560,6 +560,7 @@
       }
     }
   </style>
+  <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 </head>
 
 <body>
@@ -589,6 +590,12 @@
         </noscript>
 
         <form id="revealForm">
+          <section class="scratch-theme-section" aria-labelledby="scratchThemeHeading">
+            <h3 id="scratchThemeHeading" class="scratch-theme-title">1. Choose your theme</h3>
+            <p class="scratch-theme-caption">Your theme changes both the scratch-card artwork and the surrounding screen. Change your card design and foil colour independently below.</p>
+            <div id="scratchThemeChoices"></div>
+            <p id="scratchThemeSelection" class="scratch-theme-selected" aria-live="polite">Luxury / Elegant selected</p>
+          </section>
           <div class="scratch-choice">
             <h3 id="surfaceHeading">Your scratch-card surface</h3>
             <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
@@ -867,7 +874,8 @@
   </main>
 
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
+    import { ScratchCard } from '/scratchcard.js?v=themes-13-1';
+    import {SCRATCH_THEMES,DEFAULT_SCRATCH_THEME,getScratchTheme,applyScratchTheme,makeScratchThemePicker} from '/scratch-themes.js?v=themes-13-1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -896,6 +904,7 @@
     let savedScratchUrl = null;
     let existingScratchImage = false;
     let scratchSelectionSequence = 0;
+    let scratchThemeId = DEFAULT_SCRATCH_THEME;
     const concertArtworks = new Set(["concert","festival","backstage","custom"]);
     function setCreatorVariant(variant, initialiseChoice = false) {
       currentVariant = variant === "concert" ? "concert" : "ticket";
@@ -937,7 +946,22 @@
       }
     }
     setCreatorVariant(currentVariant, !id);
-    const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
+    const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic",theme:scratchThemeId});
+    function chooseScratchTheme(id){
+      if(!SCRATCH_THEMES.some(item=>item.id===id))throw new Error('Choose a valid scratch theme.');
+      scratchThemeId=id;
+      const theme=applyScratchTheme(document,id,'creator');
+      $("scratchThemeSelection").textContent=theme.icon+' '+theme.label+' selected · '+theme.description;
+      for(const tile of $("scratchThemeChoices").querySelectorAll('[data-scratch-theme]'))
+        tile.setAttribute('aria-pressed',String(tile.dataset.scratchTheme===id));
+      scratchPreview.setTheme(id);
+    }
+    $("scratchThemeChoices").append(makeScratchThemePicker(document,scratchThemeId,id=>{
+      if(!ready||busy)return;
+      chooseScratchTheme(id);
+      setScratchPreview().catch(error=>show(error.message));
+    }));
+    chooseScratchTheme(scratchThemeId);
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
       const mobile = window.matchMedia("(max-width: 900px)").matches;
@@ -1292,6 +1316,7 @@
         surfaceBody.append("variant", currentVariant);
         surfaceBody.append("style", $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
+        surfaceBody.append("theme", scratchThemeId);
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         if ($("scratchStyle").value === "custom" && selectedScratchImage) {
           surfaceBody.append("coverImage", selectedScratchImage);
@@ -1398,6 +1423,7 @@
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         $("scratchStyle").value = savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
+        chooseScratchTheme(savedSurface.surface.theme || DEFAULT_SCRATCH_THEME);
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         existingScratchImage = Boolean(savedSurface.surface.hasImage);
         if (existingScratchImage) {
