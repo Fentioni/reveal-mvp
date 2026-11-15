@@ -1,0 +1,36 @@
+name: Reveal Scratch Ticket 13-theme visual acceptance
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - 'public/legacy-create.html'
+      - 'public/reveal.html'
+      - 'public/recipient-scratch.html'
+      - 'public/scratchcard.js'
+      - 'public/scratch-themes.js'
+      - 'public/scratch-themes.css'
+      - 'tests/scratch-themes.browser.mjs'
+      - '.github/workflows/scratch-themes-visual.yml'
+permissions:
+  contents: read
+jobs:
+  scratch-themes-visual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
+      - run: node --test tests/scratch-themes.browser.mjs
+      - run: SCRATCH_BROWSER=webkit node --test tests/scratch-themes.browser.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: reveal-scratch-13-themes-visual-previews
+          path: test-output/scratch-*/*.png
+          if-no-files-found: ignore
+          retention-days: 7
