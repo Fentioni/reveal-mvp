@@ -15,7 +15,7 @@ const pixel=Uint8Array.from(atob('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAA
 const resultTitle='A surprise trip to the coast';
 
 function mockDatabase(){
- let session=null;
+ const sessions=new Map();
  const reveal={
   id:'paid-test-1',public_slug:'quest-simulated-paid',status:'paid',paid_at:'2026-11-14T10:00:00Z',
   recipient:'Chloe',sender:'Your favourite person',event_name:resultTitle,
@@ -35,18 +35,20 @@ function mockDatabase(){
     async first(){
      if(sql.includes('SELECT * FROM reveals WHERE public_slug'))return reveal;
      if(sql.includes('SELECT config_json FROM quest_configs'))return {config_json:JSON.stringify(config)};
-     if(sql.includes('SELECT * FROM quest_sessions'))return session;
+     if(sql.includes('SELECT * FROM quest_sessions'))return sessions.get(args[1])||null;
      return null;
     },
     async run(){
-     if(sql.includes('INSERT INTO quest_sessions'))session={
+     if(sql.includes('INSERT INTO quest_sessions'))sessions.set(args[0],{
       session_hash:args[0],reveal_id:args[1],step:0,attempts:0,completed_at:null,last_attempt_at:null
-     };
+     });
      if(sql.includes('UPDATE quest_sessions SET attempts=')){
-      session.attempts=args[0];session.last_attempt_at=args[1];
+      const session=sessions.get(args[3]);
+      if(session){session.attempts=args[0];session.last_attempt_at=args[1];}
      }
      if(sql.includes('UPDATE quest_sessions SET step=')){
-      if(session.step!==args.at(-1))return {meta:{changes:0}};
+      const session=sessions.get(args[3]);
+      if(!session||session.step!==args.at(-1))return {meta:{changes:0}};
       session.step=args[0];session.completed_at=args[1];session.attempts=0;
      }
      return{meta:{changes:1}};
@@ -99,7 +101,7 @@ async function startServer(){
  return {base,server};
 }
 
-test('simulated-paid recipient sees no prize until solving then can reopen and save personalised keepsake', {timeout:60000},async()=>{
+test('simulated-paid recipient sees no prize until solving then can reopen and save personalised keepsake', {timeout:90000},async()=>{
  const {base,server}=await startServer();
  const browser=await browserType.launch({headless:true});
  await mkdir(output,{recursive:true});
@@ -154,6 +156,33 @@ test('simulated-paid recipient sees no prize until solving then can reopen and s
   await page.locator('.quest-cinematic-curtain').waitFor({timeout:3000});
   await page.getByRole('button',{name:'Skip animation'}).click();
   await page.locator('.quest-cinematic-curtain').waitFor({state:'detached',timeout:3000});
+
+  // A completed recipient may revisit their original finished surprise and
+  // separately restart the puzzles, without overwriting the completed cookie.
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.reload({waitUntil:'networkidle'});
+  await page.getByRole('button',{name:'Replay the adventure'}).click();
+  assert.equal(new URL(page.url()).searchParams.get('replay'),'1');
+  await page.getByRole('button',{name:/Begin the adventure/}).click();
+  await page.locator('.quest h2').filter({hasText:'The Mysterious Letter'}).waitFor();
+  const normal=await page.evaluate(async()=>{
+   const [original,replay]=await Promise.all([
+    fetch('/api/quest/quest-simulated-paid/state',{cache:'no-store'}).then(r=>r.json()),
+    fetch('/api/quest/quest-simulated-paid/state?replay=1',{cache:'no-store'}).then(r=>r.json())
+   ]);
+   return{completed:original.completed,replayCompleted:replay.completed,step:replay.step,hasPrize:'final' in replay};
+  });
+  assert.deepEqual(normal,{completed:true,replayCompleted:false,step:0,hasPrize:false});
+  await page.getByRole('button',{name:'A compass'}).click();
+  await page.locator('.quest h2').filter({hasText:'The Locked Suitcase'}).waitFor({timeout:9000});
+  await page.reload({waitUntil:'networkidle'});
+  await page.getByRole('button',{name:/Continue your adventure/}).click();
+  await page.locator('.quest h2').filter({hasText:'The Locked Suitcase'}).waitFor();
+  assert.equal(await page.locator('.finale-content').count(),0);
+  await page.getByRole('button',{name:'View your completed reveal'}).click();
+  await page.locator('.finale-content h2').filter({hasText:resultTitle}).waitFor();
+  assert.equal(new URL(page.url()).searchParams.has('replay'),false);
+  assert.deepEqual(errors,[]);
   await context.close();
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
