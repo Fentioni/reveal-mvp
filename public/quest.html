@@ -619,6 +619,32 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
  }
 }
 
+
+/* Visual QA: the original stamped book is the entire initial photograph.
+   Paper/underpage layers appear only when the recipient solves the puzzle.
+   Do not cover the passport stamps with a blank page before the turn. */
+.hero-object.passport .passport-underpage,
+.hero-object.passport .passport-page-binding{
+ visibility:hidden;
+}
+.quest.chapter-clear .hero-object.passport .passport-underpage,
+.quest.chapter-clear .hero-object.passport .passport-page-binding{
+ visibility:visible;
+}
+.hero-object.passport .passport-page-binding .passport-page-turn::before{
+ z-index:2;visibility:visible;opacity:1;
+}
+.hero-object.passport .passport-page-binding .passport-page-turn::after{
+ z-index:1;visibility:hidden;opacity:0;
+}
+.quest.chapter-clear .hero-object.passport .passport-page-binding .passport-page-turn::after{
+ animation:passport-reverse-visible 3s steps(1,end) both;
+}
+@keyframes passport-reverse-visible{
+ 0%,49%{visibility:hidden;opacity:0}
+ 50%,100%{visibility:visible;opacity:1}
+}
+
 </style>
 </head>
 <body>
