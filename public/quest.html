@@ -477,6 +477,148 @@ h1,h2,p{margin-top:0}h1{font-size:clamp(36px,9vw,66px);letter-spacing:.02em;colo
   }
 }
 
+
+/* 2026-11-15 object-geometry correction.
+   Never render a second giant passport or map underneath the real object:
+   the duplicate implied a floating page and unrelated painted route. */
+.scene.passport,.scene.map{
+ background-image:radial-gradient(ellipse at 52% 38%,#84613c 0%,#342317 43%,#110d0a 85%)!important;
+}
+
+/* Passport: all pieces are children of one photograph-aligned frame.
+   The page is bound to its paper spine (not a floating overlay on the hero). */
+.hero-object.passport{
+ overflow:hidden;
+}
+.hero-object.passport .passport-art{
+ position:relative;
+ isolation:isolate;
+ height:100%;
+ max-width:100%;
+ aspect-ratio:900/690;
+ background-image:url('/quest-assets/passport.webp');
+ background-size:100% auto;
+ background-position:50% 71%;
+ background-repeat:no-repeat;
+ perspective:950px;
+ transform-style:preserve-3d;
+}
+.hero-object.passport .passport-underpage{
+ left:49.85%;top:9.1%;width:43.3%;height:78.1%;
+ z-index:2;
+ border-radius:0;
+ border:0;
+ clip-path:polygon(0 1%,94% 0,100% 5%,99% 94%,92% 99%,0 100%);
+ background:linear-gradient(112deg,#c1a47a 0%,#ead2a5 8%,#f1dfba 45%,#dfbb84 97%);
+ box-shadow:inset 7px 0 14px #65432244;
+}
+.hero-object.passport .passport-watermark{
+ display:grid;place-items:center;
+ border:1px solid #b59661;border-radius:50%;
+ padding:15px;min-width:60%;aspect-ratio:1;
+ font:clamp(20px,4vw,40px) Georgia,serif;
+ color:#9b7b4b;opacity:.45;
+}
+.hero-object.passport .passport-page-binding{
+ position:absolute;z-index:4;
+ left:49.85%;top:9.1%;width:43.3%;height:78.1%;
+ transform-style:preserve-3d;
+ perspective:900px;
+ pointer-events:none;
+}
+/* The 0px left edge of the leaf always occupies the spine's 49.85% x. */
+.hero-object.passport .passport-page-binding .passport-page-turn{
+ position:absolute;inset:0;left:0;top:0;width:100%;height:100%;
+ transform-origin:0 50%;transform:rotateY(0deg);
+ transform-style:preserve-3d;
+ opacity:1;
+ border:0;border-radius:0;
+ box-shadow:none;filter:none;
+ pointer-events:none;
+}
+.hero-object.passport .passport-page-binding .passport-page-turn::before,
+.hero-object.passport .passport-page-binding .passport-page-turn::after{
+ border:0;
+ border-radius:0;
+ clip-path:polygon(0 1%,94% 0,100% 5%,99% 94%,92% 99%,0 100%);
+ box-shadow:0 1px 2px #27170944;
+ backface-visibility:hidden;
+}
+.hero-object.passport .passport-page-binding .passport-page-turn::before{
+ /* Same image, scale and offset as the stationary book photograph;
+    leaf edge and printed stamps therefore coincide before turning. */
+ background-image:url('/quest-assets/passport.webp');
+ background-size:230.95% auto;
+ background-position:87.95% 66.3%;
+ background-repeat:no-repeat;
+}
+.hero-object.passport .passport-page-binding .passport-page-turn::after{
+ background:repeating-linear-gradient(105deg,#e4cda8 0,#f0ddba 12px,#e8d1a9 24px);
+ transform:rotateY(180deg);
+ box-shadow:inset 10px 0 13px #946c4960;
+}
+.hero-object.passport .passport-spine{
+ left:49.15%;top:8.8%;bottom:12.5%;width:1.4%;z-index:8;
+ border-radius:45%;
+ background:linear-gradient(90deg,#28190f,#be9c6a 42%,#50351e 95%);
+ box-shadow:0 0 5px #1b1009bb;
+ pointer-events:none;
+}
+.quest.chapter-clear .hero-object.passport .passport-page-binding .passport-page-turn{
+ animation:passport-spine-flip 3s cubic-bezier(.32,.63,.18,1) both;
+}
+/* The original artwork has enough detail that geometric accuracy is more
+   important than zooming and blurring the book during the page turn. */
+.quest.chapter-clear .hero-object.passport{
+ animation:none;transform:none;filter:none;
+}
+@media(prefers-reduced-motion:reduce){
+ .quest.chapter-clear .hero-object.passport .passport-page-binding .passport-page-turn{
+  animation:none;transform:rotateY(-176deg);
+ }
+}
+
+/* The photographed route is 900×1500 px. Show y=625..1235 in a 900×610
+   viewport. Both the image and the SVG are INSIDE one scaled map-source node,
+   so every pin stays aligned on desktop and mobile without independent curves. */
+.hero-object.map{
+ height:auto;max-height:none;aspect-ratio:900/610;
+ background-image:none;background-color:#170f09;
+ overflow:hidden;
+}
+.hero-object.map .map-source{
+ position:absolute;left:0;top:-102.459016393%;
+ width:100%;height:245.901639344%;
+ background:url('/quest-assets/map.webp') 50% 50% / 100% 100% no-repeat;
+ pointer-events:none;z-index:1;
+}
+.hero-object.map .map-source .map-journey{
+ position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+}
+.hero-object.map .map-source .map-journey path.map-route-trace{
+ fill:none;stroke:#fff1ac;stroke-width:7;
+ stroke-linejoin:round;stroke-linecap:round;
+ vector-effect:none;opacity:0;
+ stroke-dasharray:1000;stroke-dashoffset:1000;
+ filter:drop-shadow(0 0 9px #ffe055) drop-shadow(0 0 4px #ecb640);
+}
+.quest.chapter-clear .hero-object.map{
+ animation:none;filter:none;transform:none;
+}
+.quest.chapter-clear .hero-object.map .map-route-trace{
+ animation:trace-pinned-route 2.9s ease-in-out forwards;
+}
+@keyframes trace-pinned-route{
+ 0%{stroke-dashoffset:1000;opacity:0}
+ 8%{opacity:1}
+ 100%{stroke-dashoffset:0;opacity:1}
+}
+@media(prefers-reduced-motion:reduce){
+ .quest.chapter-clear .hero-object.map .map-route-trace{
+  animation:none;stroke-dashoffset:0;opacity:1;
+ }
+}
+
 </style>
 </head>
 <body>
