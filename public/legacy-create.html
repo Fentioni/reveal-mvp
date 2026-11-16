@@ -564,6 +564,8 @@
     .concert-live-image{max-width:100%;max-height:92px;object-fit:contain;margin:6px 0;border-radius:5px}
     .concert-live-image[hidden],.concert-live-stub .concert-qr-preview[hidden],
     .concert-live-stub .concert-preview-link[hidden]{display:none!important}
+    @media(min-width:901px){#concertPreviewTabsMobile{display:none!important}}
+    @media(max-width:900px){#concertPreviewTabsDesktop{display:none!important}}
     @media(max-width:600px){
       .concert-details-form{grid-template-columns:1fr 1fr}
       .concert-live-ticket{min-height:285px;grid-template-columns:minmax(0,72%) minmax(0,28%)}
@@ -1103,7 +1105,7 @@
     const concertLivePreview=createConcertLivePreview({
       getVariant:()=>currentVariant,getTemplate:()=>concertTemplateId,
       getTheme:()=>concertRevealThemeId,getImage:()=>objectUrl,
-      dateText,timeText
+      dateText,timeText,onModeChange:mode=>{if(mode==='cover')scratchPreview.resize();}
     });
     concertLivePreview.setVariant(currentVariant);
     for(const artwork of SCRATCH_ARTWORKS){
@@ -1129,6 +1131,7 @@
         if(!ready||busy)return;
         concertTemplateId=shape.id;
         selectConcertOption('concertTemplateChoices',shape.id);
+        concertLivePreview.setMode('cover');
         setScratchPreview().catch(error=>show(error.message));
         concertLivePreview.render();
       });
@@ -1402,6 +1405,7 @@
       button.addEventListener("click", () => {
         if (!ready || busy) return;
         $("scratchFoil").value = button.dataset.scratchFoil;
+        if(currentVariant==='concert')concertLivePreview.setMode('cover');
         setScratchPreview().catch(error => show(error.message));
       });
     }
@@ -1410,6 +1414,7 @@
       setScratchPreview().catch(error => show(error.message));
     });
     $("scratchFoil").addEventListener("change", () => {
+      if(currentVariant==='concert')concertLivePreview.setMode('cover');
       setScratchPreview().catch(error => show(error.message));
     });
     window.addEventListener("pagehide", () => {
