@@ -319,6 +319,53 @@ test('paid concert recipient sees four full-surface foil colours, even on narrow
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+test('amending a saved Concert Ticket never displays the 20-artwork Scratch Card editor, including old edit links',
+ {timeout:70000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  for(const suffix of ['','&variant=concert']){
+   const page=await browser.newPage({viewport:{width:1120,height:820},reducedMotion:'reduce'});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   await page.addInitScript(()=>{
+     try{localStorage.setItem('reveal_edit_saved-concert','owner-test-token')}catch{}
+   });
+   let release;
+   const gate=new Promise(resolve=>{release=resolve});
+   await page.route('**/api/reveals/saved-concert/scratch-surface',route=>route.fulfill({
+     status:200,contentType:'application/json',body:JSON.stringify({
+       success:true,surface:{variant:'concert',style:'concert',foil:'midnight',
+         hasImage:false,ticketTemplate:'side-perforations',revealTheme:'concert-lights',linkMode:'link',
+         ticketDetails:{seat:'18',row:'G'}},audio:{enabled:false}
+     })
+   }));
+   await page.route('**/api/reveals/saved-concert',async route=>{
+     await gate;
+     await route.fulfill({status:200,contentType:'application/json',body:JSON.stringify({
+       success:true,reveal:{status:'draft',revision:1,recipient:'Chloe',sender:'Michael',
+       eventName:'Live in Concert',eventDate:'2027-04-20',eventTime:'19:00',
+       venue:'Royal Hall',admit:'Two',hasImage:false,personalMessage:'Surprise!',ticketUrl:''}
+     })});
+   });
+   try{
+    await page.goto(base+'/legacy-create?edit=saved-concert'+suffix,{waitUntil:'domcontentloaded'});
+    await page.locator('#savedRevealLoadStatus:visible').waitFor();
+    assert.equal(await page.locator('.page:visible').count(),0,
+      'No generic Scratch Card creator must be visible while saved concert details load');
+    assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
+   }finally{release()}
+   await page.locator('#concertTemplateSection:visible').waitFor();
+   assert.equal(await page.locator('body').getAttribute('data-ticket-variant'),'concert');
+   assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
+   assert.equal(await page.locator('#scratchFoil').inputValue(),'midnight');
+   assert.equal(await page.locator('#concertRevealedPreviewFrame').count(),1);
+   assert.equal(await page.locator('#savedRevealLoadStatus:visible').count(),0);
+   assert.equal((await page.locator('#concertLiveEvent').textContent()).trim(),'Live in Concert');
+   assert.deepEqual(errors,[]);
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
 test('concert owner static review remains a landscape 2.15:1 ticket, not a tall poster',
  {timeout:40000},async()=>{
  const browser=await browserType.launch({headless:true});
@@ -399,6 +446,24 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
    assert.ok(layout.card.height < (size.name==='desktop'?570:230),
      'Concert owner review must not expand vertically like the former poster');
+   // Owner's static cover must use the SAVED foil. The original thumbnail's
+   // gold fallback must never paint over a selected Midnight/Silver/Rose cover.
+   assert.ok(source.includes('ownerFoilSurface.dataset.foil='),
+     'Owner review must bind the saved foil to the thumbnail');
+   const foils=new Set();
+   for(const finish of ['gold','silver','midnight','rose']){
+     const paint=await page.locator('.scratch-surface-thumb').evaluate((thumb,foil)=>{
+       thumb.dataset.foil=foil;
+       return {gradient:getComputedStyle(thumb).backgroundImage,
+         opacity:getComputedStyle(thumb.querySelector('canvas')).opacity};
+     },finish);
+     assert.match(paint.gradient,/linear-gradient/);
+     assert.equal(paint.opacity,'0','Static owner preview must show the saved full-card foil, not transparent Canvas');
+     foils.add(paint.gradient);
+     if(finish==='midnight')assert.match(paint.gradient,/7, 15, 40|7,15,40|#070F28/i,
+       'Midnight foil must not render gold');
+   }
+   assert.equal(foils.size,4,'Four saved foil choices must show four different owner-review surfaces');
    await page.screenshot({path:resolve(output,size.name+'-concert-owner-review-compact.png'),fullPage:true});
    await page.close();
   }
