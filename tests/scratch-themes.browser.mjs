@@ -121,7 +121,9 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal(await page.locator('#scratchFoilLabel:visible').count(),1);
    assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'Foil finish');
    assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
-   assert.equal(await page.locator('#scratchArtGrid').count(),0,'Concert-themed artwork choices must be removed entirely');
+   assert.equal(await page.locator('#scratchArtGrid').count(),0,'Old scratch artwork choices must stay removed');
+   assert.equal(await page.locator('.concert-template-option').count(),4);
+   assert.equal(await page.locator('.concert-theme-option').count(),4);
    const paintings=new Set();
    const centreColours=new Set();
    for(const foil of ['gold','silver','midnight','rose']){
