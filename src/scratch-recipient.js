@@ -3,6 +3,7 @@
  * status=paid + paid_at, matching the established legacy recipient gate.
  * No public or owner review can retrieve personalised scratch data pre-payment.
  */
+import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
 const hide = () => new Response('This reveal is not available.', {
   status:404,
   headers:{'cache-control':'no-store','content-type':'text/plain; charset=utf-8','x-content-type-options':'nosniff'}
@@ -53,7 +54,9 @@ export async function scratchRecipientResponse(request, env, ctx) {
       const hasCover = settings.style === 'custom' && typeof settings.coverAssetId === 'string';
       return json({
         success:true,
-        scratchSurface:{style:settings.style,foil:settings.foil,theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,variant:settings.variant === 'concert' ? 'concert' : 'ticket'},
+        scratchSurface:{style:settings.style,foil:settings.foil,
+           ...(getScratchArtwork(settings.artworkId)?{artworkId:settings.artworkId}:{}),
+           theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,variant:settings.variant === 'concert' ? 'concert' : 'ticket'},
         audio:audioSettings,
         reveal:{
           recipient:row.recipient,
