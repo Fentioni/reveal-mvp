@@ -230,7 +230,7 @@
     const isConcert = data.scratchSurface.variant === 'concert';
     document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
     $('card').classList.toggle('concert-ticket',isConcert);
-    document.querySelector('.eyebrow').textContent = artwork ? 'A special scratch reveal' : visualTheme.icon+' '+visualTheme.label+' reveal';
+    document.querySelector('.eyebrow').textContent = isConcert ? 'Concert ticket' : (artwork ? 'A special scratch reveal' : visualTheme.icon+' '+visualTheme.label+' reveal');
     text('title','A surprise for ' + model.recipient);
     text('name',model.recipient);
     text('eventName',model.eventName);
