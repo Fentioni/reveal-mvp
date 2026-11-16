@@ -597,9 +597,7 @@
             <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
           <div class="scratch-choice">
-            <h3 id="surfaceHeading" hidden>Your concert scratch-card cover</h3>
-            <p id="surfaceDescription" hidden>Choose your concert ticket cover and review the static preview below.</p>
-            <div id="scratchFoilLabel" class="scratch-option-label" hidden>Concert foil finish</div>
+            <div id="scratchFoilLabel" class="scratch-option-label" hidden>Foil finish</div>
             <div id="scratchFoilGrid" class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel" hidden>
               <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
               <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
@@ -632,8 +630,7 @@
             <div class="scratch-one-upload"><div class="field">
                 <label for="image">Add an image</label>
                 <p class="field-help">
-                  Optional. Use this single upload for your photo, poster or personalised scratch-card cover.
-                  When you upload an image, “Your own image” is selected automatically.
+                  Optional: upload a photo or poster for a custom cover.
                 </p>
 
                 <input
@@ -670,14 +667,12 @@
 
             </div>
             <input type="checkbox" id="scratchAudioEnabled" hidden aria-hidden="true" tabindex="-1">
-            <p class="field-help">Music and sound design will be added at a later stage.</p>
             <div id="scratchMobileDock" class="scratch-mobile-dock">
               <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
                 <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
               </div>
               <p class="scratch-mobile-caption">Live surface preview — not scratchable</p>
             </div>
-            <small>No scratching or personalised animation is available before payment.</small>
           </div>
 
           <h3 class="details-subhead">Personalise the surprise</h3>
@@ -922,14 +917,10 @@
       $("creatorIntro").textContent = isConcert
         ? "Choose concert, festival or backstage artwork with your preferred foil finish. The live preview updates immediately."
         : "Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.";
-      // Portrait Scratch Ticket uses only the 20 approved image designs.
-      // Keep the old concert-ticket finish controls for the separate concert
-      // product, but do not display this redundant section for Scratch Ticket.
-      for (const id of ["surfaceHeading","surfaceDescription","scratchFoilLabel","scratchFoilGrid"]) {
-        $(id).hidden = !isConcert;
-      }
-      $("surfaceHeading").textContent = "Your concert scratch-card cover";
-      $("scratchFoilLabel").textContent = "Concert foil finish";
+      // Foil swatches and the separate concert cover choices are concert-only.
+      // The portrait Scratch Ticket uses its approved 20-image dropdown.
+      $("scratchFoilLabel").hidden = !isConcert;
+      $("scratchFoilGrid").hidden = !isConcert;
       const foilLabels = isConcert
         ? {gold:"VIP Gold",silver:"Chrome Silver",midnight:"Midnight Stage",rose:"Neon Rose"}
         : {gold:"Gold",silver:"Silver",midnight:"Midnight",rose:"Rose"};
