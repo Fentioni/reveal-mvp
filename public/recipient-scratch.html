@@ -280,6 +280,7 @@
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 <script defer src="/qr.js"></script>
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
+<link rel="stylesheet" href="/concert-layout-presets.css?v=presets-1">
 </head>
 <body>
 <main>
@@ -340,7 +341,7 @@
 </dialog>
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
-  import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
+  import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
    import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
@@ -418,6 +419,8 @@
         ? data.scratchSurface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
       $('card').dataset.concertTheme=revealTheme;
       $('card').dataset.concertTemplate=shape;
+      $('card').dataset.concertLayout=concertTemplateLayout(shape);
+      $('card').dataset.hasImage=model.hasEventImage?'true':'false';
       $('card').style.clipPath=concertTicketClipPath(shape);
       concertQrMode=data.scratchSurface.linkMode==='qr' && Boolean(model.ticketUrl);
       $('bookingRow').hidden=concertQrMode || !model.ticketUrl;
@@ -519,6 +522,8 @@
     const copy=document.createElement('div');
     copy.className='card concert-ticket foil-ready';
     copy.dataset.concertTemplate=original.dataset.concertTemplate;
+    copy.dataset.concertLayout=original.dataset.concertLayout;
+    copy.dataset.hasImage=original.dataset.hasImage;
     copy.dataset.concertTheme=original.dataset.concertTheme;
     copy.style.clipPath=original.style.clipPath;
     const print=$('underlay').cloneNode(true);
