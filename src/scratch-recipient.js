@@ -4,6 +4,7 @@
  * No public or owner review can retrieve personalised scratch data pre-payment.
  */
 import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
+import {cleanConcertTicketDetails} from '../public/concert-ticket-fields.js';
 import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const hide = () => new Response('This reveal is not available.', {
   status:404,
@@ -62,7 +63,8 @@ export async function scratchRecipientResponse(request, env, ctx) {
            ...(settings.variant === 'concert' ? {
              ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
              revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
-             linkMode:settings.linkMode === 'qr' ? 'qr' : 'link'
+             linkMode:settings.linkMode === 'qr' ? 'qr' : 'link',
+             ticketDetails:cleanConcertTicketDetails(settings.ticketDetails)
            } : {})},
         audio:audioSettings,
         reveal:{
