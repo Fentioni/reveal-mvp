@@ -650,6 +650,82 @@
       body[data-ticket-variant="concert"] .builder-layout{gap:24px}
     }
 
+
+    /* Revealed preview uses the same compact 2.15:1 admission ticket format
+       as the owner review and paid recipient, not a growing poster panel. */
+    body[data-ticket-variant="concert"] .concert-live-ticket{
+      width:100%;max-width:1080px;aspect-ratio:2.15/1;min-height:0;
+      display:grid;grid-template-columns:minmax(0,77%) minmax(0,23%);
+      grid-template-rows:minmax(0,1fr);overflow:hidden;border-radius:10px
+    }
+    body[data-ticket-variant="concert"] .concert-live-main{
+      min-width:0;min-height:0;padding:clamp(8px,2vw,24px);overflow:hidden
+    }
+    body[data-ticket-variant="concert"] .concert-live-main h3{
+      font:700 clamp(.82rem,2.55vw,2.25rem)/1.08 Georgia,serif;margin:3px 0 7px
+    }
+    body[data-ticket-variant="concert"] .concert-live-fields{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:clamp(4px,.8vw,10px);margin:clamp(7px,1.5vw,16px) 0 0
+    }
+    body[data-ticket-variant="concert"] .concert-live-fields>div,
+    body[data-ticket-variant="concert"] .concert-live-stub-fields>div{
+      border:1px solid #efcf8c8c;border-radius:3px;padding:clamp(3px,.7vw,9px);
+      min-width:0
+    }
+    body[data-ticket-variant="concert"] .concert-live-fields dt,
+    body[data-ticket-variant="concert"] .concert-live-stub-fields dt{
+      font-size:clamp(.43rem,.68vw,.62rem);margin:0 0 3px;color:#f4d9a1;letter-spacing:.06em
+    }
+    body[data-ticket-variant="concert"] .concert-live-fields dd,
+    body[data-ticket-variant="concert"] .concert-live-stub-fields dd{
+      font-size:clamp(.55rem,1.05vw,.96rem);margin:0;font-weight:750;line-height:1.16
+    }
+    body[data-ticket-variant="concert"] .concert-live-stub{
+      padding:clamp(7px,1.2vw,15px);display:flex;flex-direction:column;align-items:stretch;
+      gap:clamp(5px,.85vw,10px);overflow:hidden
+    }
+    body[data-ticket-variant="concert"] .concert-live-stub>strong{
+      font-size:clamp(.65rem,1.6vw,1.15rem);text-align:center
+    }
+    body[data-ticket-variant="concert"] .concert-live-stub-fields{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:clamp(3px,.6vw,8px);margin:0
+    }
+    body[data-ticket-variant="concert"] .concert-live-stub .concert-live-ref{
+      font-size:clamp(.44rem,.77vw,.73rem);text-align:center;line-height:1.15
+    }
+    body[data-ticket-variant="concert"] .concert-live-image{
+      float:right;clear:right;max-width:28%;max-height:clamp(45px,13vw,150px);
+      object-fit:contain;border-radius:4px;margin:3px 0 5px 9px
+    }
+    body[data-ticket-variant="concert"] .concert-live-stub svg{
+      width:min(88%,120px);max-height:clamp(48px,11vw,120px)
+    }
+    body[data-ticket-variant="concert"] .concert-live-subtitle{
+      font-size:clamp(.55rem,1vw,.92rem);line-height:1.3;margin:3px 0
+    }
+    @media(max-width:600px){
+      body[data-ticket-variant="concert"] .concert-live-ticket{
+        aspect-ratio:2.15/1;min-height:0;
+        grid-template-columns:minmax(0,77%) minmax(0,23%)
+      }
+      body[data-ticket-variant="concert"] .concert-live-main{padding:5px 6px}
+      body[data-ticket-variant="concert"] .concert-live-stub{padding:5px 3px;gap:3px}
+      body[data-ticket-variant="concert"] .concert-live-fields{gap:3px;margin-top:4px}
+      body[data-ticket-variant="concert"] .concert-live-fields>div,
+      body[data-ticket-variant="concert"] .concert-live-stub-fields>div{padding:2px}
+      body[data-ticket-variant="concert"] .concert-live-fields dt,
+      body[data-ticket-variant="concert"] .concert-live-stub-fields dt{font-size:.37rem}
+      body[data-ticket-variant="concert"] .concert-live-fields dd,
+      body[data-ticket-variant="concert"] .concert-live-stub-fields dd{font-size:.5rem}
+      body[data-ticket-variant="concert"] .concert-live-main h3{font-size:clamp(.8rem,3.4vw,1.2rem)}
+      body[data-ticket-variant="concert"] .concert-live-subtitle{font-size:.49rem}
+      body[data-ticket-variant="concert"] .concert-live-image{max-height:65px}
+      body[data-ticket-variant="concert"] .concert-live-stub svg{max-height:58px}
+      body[data-ticket-variant="concert"] .concert-live-stub .concert-live-ref{font-size:.44rem}
+    }
+
     /* Landscape admission ticket: concert variant only. Existing portrait
        creator and shared form logic are intentionally unchanged. */
     body[data-ticket-variant="concert"] .scratch-static-frame{
@@ -978,6 +1054,7 @@
             <h3 id="concertLiveEvent">Your event</h3>
             <p id="concertLiveSubtitle" class="concert-live-subtitle" hidden></p>
             <p id="concertLiveSupport" class="concert-live-subtitle" hidden></p>
+            <img id="concertLiveImage" class="concert-live-image" alt="Selected event artwork" hidden>
             <dl id="concertLiveFields" class="concert-live-fields"></dl>
             <p id="concertLiveMessage" class="concert-live-subtitle" hidden></p>
           </div>
@@ -987,9 +1064,9 @@
             <span id="concertLiveRecipient" class="concert-live-ref" hidden></span>
             <span id="concertLiveSender" class="concert-live-ref" hidden></span>
             <span id="concertLiveTicketNumber" class="concert-live-ref" hidden></span>
+            <dl id="concertLiveStubFields" class="concert-live-stub-fields"></dl>
             <div id="concertLiveQr" class="concert-qr-preview" hidden></div>
             <span id="concertLiveLink" class="concert-preview-link" hidden></span>
-            <img id="concertLiveImage" class="concert-live-image" alt="Selected event artwork" hidden>
           </div>
         </section>
         <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
