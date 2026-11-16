@@ -296,7 +296,8 @@ test('concert purchaser can switch between scratch cover and a fully personalise
 
    // Also verify the reverse ticket silhouette used in the reported iPhone image.
    await page.locator('.concert-template-option[data-value="side-perforations"]').click();
-      // Realistically sized portrait photo to exercise the overlap on iPhone.
+   await page.locator('#concertPreviewTabsDesktop [data-preview-mode="revealed"]').click();
+   // Realistically sized portrait photo to exercise the overlap on iPhone.
    await page.evaluate(async()=>{
      const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;
      const context=canvas.getContext('2d');
