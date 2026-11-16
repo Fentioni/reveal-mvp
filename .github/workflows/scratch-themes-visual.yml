@@ -1,4 +1,4 @@
-name: Reveal Scratch Ticket 13-theme visual acceptance
+name: Reveal Scratch Ticket final 20-artwork visual acceptance
 on:
   push:
     branches: [feature/stage4b-cloudflare-staging]
@@ -9,6 +9,10 @@ on:
       - 'public/scratchcard.js'
       - 'public/scratch-themes.js'
       - 'public/scratch-themes.css'
+      - 'public/scratch-artwork-catalogue.js'
+      - 'public/scratch-artwork/**'
+      - 'src/scratch-surface.js'
+      - 'src/scratch-recipient.js'
       - 'tests/scratch-themes.browser.mjs'
       - '.github/workflows/scratch-themes-visual.yml'
 permissions:
@@ -30,7 +34,7 @@ jobs:
       - if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: reveal-scratch-13-themes-visual-previews
+          name: reveal-scratch-final-20-visual-previews
           path: test-output/scratch-*/*.png
           if-no-files-found: ignore
           retention-days: 7
