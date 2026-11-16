@@ -1230,7 +1230,7 @@
       elements.surfaceReview.hidden = false;
       if (staticScratchCard) staticScratchCard.destroy();
       staticScratchCard = new ScratchCard({canvas:elements.surfaceReviewCanvas,
-        foil,theme:chosenTheme,coverStyle:isConcert ? 'concert' : style === 'custom' ? 'classic' : style});
+        foil,theme:chosenTheme,concertTicket:isConcert,coverStyle:isConcert ? 'concert' : style === 'custom' ? 'classic' : style});
       staticScratchCard.artworkId = artwork?.id || null;
       staticScratchCard.canvas.style.pointerEvents = 'none';
       if (isConcert) {
