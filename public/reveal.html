@@ -814,6 +814,7 @@
   </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
+<link rel="stylesheet" href="/concert-layout-presets.css?v=presets-1">
 </head>
 
 <body>
@@ -1027,7 +1028,7 @@
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
-    import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=1';
+    import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
     'use strict';
@@ -1385,6 +1386,7 @@
         const shell=document.querySelector('.review-shell');
         shell.dataset.concertTheme=look;
         shell.dataset.concertTemplate=shape;
+        shell.dataset.concertLayout=concertTemplateLayout(shape);
         shell.style.clipPath=concertTicketClipPath(shape);
         const ownerFoilSurface=elements.surfaceReview.querySelector('.scratch-surface-thumb');
         ownerFoilSurface.style.clipPath=concertTicketClipPath(shape);
@@ -1411,6 +1413,12 @@
         const ticket = document.querySelector('.review-shell > article.ticket');
         const stub = document.querySelector('.review-shell > .review-heading');
         ticket.querySelector('#ticketTitle').after(elements.imageWrap);
+        document.querySelector('.review-shell').dataset.hasImage=elements.imageWrap.hidden?'false':'true';
+        let zone=ticket.querySelector('.ct-detail-zone');
+        if(!zone){zone=document.createElement('div');zone.className='ct-detail-zone';
+          ticket.querySelector('.details').before(zone);
+          zone.append(ticket.querySelector('.details'),document.getElementById('reviewConcertExtra'));
+        }
         // Keep the venue beside venue address and level in the second print-safe line.
         const venueRow=document.getElementById('reviewVenueRow');
         if(!venueRow.hidden){
