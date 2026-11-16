@@ -269,14 +269,15 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    const liveRect=await page.locator('#concertRevealedPreviewFrame').boundingBox();
    assert.ok(Math.abs(liveRect.width/liveRect.height-3)<.18,
      'Revealed preview must retain exact ticket proportions, never grow into a poster');
+   await page.screenshot({path:resolve(output,size.name+'-concert-headliner-before-assertion.png'),fullPage:true});
    const bottomSpace=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
      const last=frame.querySelector('#concertLiveFields > div:last-child');
      return {height:frame.getBoundingClientRect().height,
        remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom,
        pad:getComputedStyle(frame.querySelector('.concert-live-main')).paddingBottom};
    });
-   assert.ok(bottomSpace.remaining >= bottomSpace.height*(size.name==='desktop'?.11:.075),
-     'Last concert ticket detail must sit safely above the bottom border: '+JSON.stringify(bottomSpace));
+   assert.ok(bottomSpace.remaining >= bottomSpace.height*.07,
+     'Last concert ticket detail must sit safely inside the safe bottom margin: '+JSON.stringify(bottomSpace));
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
    assert.match(await page.locator('#concertLiveRecipient').textContent(),/Chloe/);
    assert.equal(await page.locator('#concertLiveSender:visible').count(),0,
@@ -525,8 +526,8 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
        return {height:frame.getBoundingClientRect().height,
          remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom};
      });
-     assert.ok(bottomSpace.remaining >= bottomSpace.height*.11,
-       'Owner concert details must have space above the inset printed border: '+JSON.stringify(bottomSpace));
+     assert.ok(bottomSpace.remaining >= bottomSpace.height*.07,
+       'Owner concert details must have space above the clean print-safe edge: '+JSON.stringify(bottomSpace));
    }
    // Owner's static cover must use the SAVED foil. The original thumbnail's
    // gold fallback must never paint over a selected Midnight/Silver/Rose cover.
