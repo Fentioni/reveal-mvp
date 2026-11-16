@@ -605,6 +605,17 @@
       margin:0;border:0;border-radius:0;background:none;
       text-align:left;padding:10px clamp(8px,2vw,20px) 18px
     }
+    body[data-ticket-variant="concert"] .review-concert-subtitle{
+      font-size:clamp(.7rem,1.35vw,.95rem);margin:3px 0 8px;overflow-wrap:anywhere
+    }
+    body[data-ticket-variant="concert"] .review-concert-extra{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:7px 12px;margin-top:10px}
+    body[data-ticket-variant="concert"] .review-concert-extra>div{min-width:0;border-top:1px dashed #9e845b88;padding-top:5px}
+    body[data-ticket-variant="concert"] .review-concert-extra>div span{display:block;overflow-wrap:anywhere}
+    body[data-ticket-variant="concert"] .review-concert-extra .detail-label{font-size:.53rem}
+    body[data-ticket-variant="concert"] .review-concert-extra .detail-value{font-size:clamp(.66rem,1.1vw,.85rem)}
+    body[data-ticket-variant="concert"] .review-concert-extra[hidden],
+    body[data-ticket-variant="concert"] .review-concert-subtitle[hidden]{display:none!important}
     body[data-ticket-variant="concert"] .review-shell .message-title{
       font-size:clamp(.75rem,1.5vw,1rem);color:#f3d79b
     }
@@ -728,6 +739,8 @@
         <article class="ticket">
           <div class="ticket-label">YOUR GIFT</div>
           <h3 id="ticketTitle" class="ticket-title"></h3>
+          <p id="reviewConcertSubtitle" class="review-concert-subtitle" hidden></p>
+          <p id="reviewConcertSupport" class="review-concert-subtitle" hidden></p>
           <div class="divider"></div>
 
           <div class="details">
@@ -761,6 +774,7 @@
               <span id="reviewSender" class="detail-value"></span>
             </div>
           </div>
+          <div id="reviewConcertExtra" class="review-concert-extra" hidden></div>
         </article>
 
         <div class="message-card" id="reviewMessageCard" hidden>
@@ -889,6 +903,7 @@
   <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-templates-4';
+    import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=1';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=1';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
@@ -1216,6 +1231,23 @@
       const isConcert = result.surface.variant === 'concert';
       document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
       if(isConcert){
+        const details=cleanConcertTicketDetails(result.surface.ticketDetails);
+        const subtitle=document.getElementById('reviewConcertSubtitle');
+        const support=document.getElementById('reviewConcertSupport');
+        subtitle.textContent=details.eventSubtitle||'';
+        subtitle.hidden=!details.eventSubtitle;
+        support.textContent=details.supportAct?'Special guest: '+details.supportAct:'';
+        support.hidden=!details.supportAct;
+        const extra=document.getElementById('reviewConcertExtra');
+        extra.replaceChildren();
+        for(const item of displayConcertTicketRows(details)){
+          if(['eventSubtitle','supportAct'].includes(item.id))continue;
+          const cell=document.createElement('div');
+          const label=document.createElement('span');label.className='detail-label';label.textContent=item.label;
+          const value=document.createElement('span');value.className='detail-value';value.textContent=item.value;
+          cell.append(label,value);extra.append(cell);
+        }
+        extra.hidden=!extra.childElementCount;
         const shape=isConcertTemplate(result.surface.ticketTemplate)
           ? result.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
         const look=isConcertRevealTheme(result.surface.revealTheme)
