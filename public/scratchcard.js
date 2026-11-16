@@ -159,36 +159,16 @@ export class ScratchCard {
       }
     }
 
-    // Theme is the ACTUAL scratchable surface illustration, not merely
-    // the heading or page colour. Preserve the independent foil/style/photo.
-    if (!this.artworkId) {
+    // Keep purchased images completely clean: no watermarks, text labels,
+    // banners, or decorative stamp over the scratchable artwork.
+    // Legacy portrait covers retain their pre-existing illustrated themes,
+    // but the separately designed landscape concert ticket does not.
+    if (!this.artworkId && w <= h*1.4) {
       drawScratchThemeArtwork(ctx,w,h,getScratchTheme(this.theme),{
-        photo:Boolean(this.coverImage),landscape:w>h*1.4
+        photo:Boolean(this.coverImage),landscape:false
       });
       this.drawThemeDecoration();
     }
-    ctx.save();
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    const dark = Boolean(this.artworkId) || this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
-    const landscape = w > h * 1.4;
-    const labelY = landscape ? h * .58 : h / 2;
-    const labelX = landscape ? w * .41 : w / 2;
-    const labelWidth = landscape ? Math.min(w * .54, 345) : Math.min(w - 36, 350);
-    const labelHeight = landscape ? Math.min(60,h*.34) : 74;
-    ctx.fillStyle = dark ? 'rgba(7,9,23,.76)' : 'rgba(255,251,236,.67)';
-    ctx.fillRect(labelX-labelWidth/2,labelY-labelHeight/2,labelWidth,labelHeight);
-    ctx.strokeStyle = dark ? 'rgba(255,221,154,.86)' : 'rgba(104,66,22,.72)';
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(labelX-labelWidth/2+5,labelY-labelHeight/2+5,labelWidth-10,labelHeight-10);
-    ctx.fillStyle = dark ? '#FFF0C8' : '#362314';
-    ctx.shadowColor = dark ? '#08061A' : '#FFFFFF';
-    ctx.shadowBlur = 7;
-    ctx.font = '800 ' + clamp(w * 0.054, 12, 22) + 'px system-ui, sans-serif';
-    ctx.fillText('✦  SCRATCH TO REVEAL  ✦', labelX, labelY - (landscape ? 7 : 5), labelWidth - 20);
-    ctx.font = '500 ' + clamp(w * 0.033, 10, 14) + 'px system-ui, sans-serif';
-    ctx.fillText('THE SURPRISE IS UNDER HERE', labelX, labelY + (landscape ? 14 : 22), labelWidth - 28);
-    ctx.restore();
   }
 
   drawThemeDecoration() {
@@ -402,28 +382,8 @@ export class ScratchCard {
       ctx.fillRect(stubX-1.5,y,3,Math.max(4,h*.029));
     }
 
-    ctx.textAlign='center';
-    ctx.textBaseline='middle';
-    ctx.fillStyle='#FFF1D4';
-    ctx.font='800 '+clamp(h*.14,15,34)+'px system-ui,sans-serif';
-    const headline=stage==='festival'?'FESTIVAL PASS'
-      :stage==='backstage'?'ALL ACCESS'
-      :'LIVE IN CONCERT';
-    ctx.fillText(headline,stubX*.5,h*.205,stubX*.87);
-    ctx.font='600 '+clamp(h*.067,9,17)+'px system-ui,sans-serif';
-    ctx.fillStyle='#F6D6AF';
-    ctx.fillText('ONE SHOW  ·  ONE UNFORGETTABLE MOMENT',stubX*.5,h*.365,stubX*.86);
-    ctx.fillStyle=FOILS[this.foil][3];
-    ctx.font='900 '+clamp(h*.15,16,36)+'px Georgia,serif';
-    ctx.fillText('✦',stubX+(w-stubX)*.5,h*.27,(w-stubX)*.45);
-    ctx.font='750 '+clamp(h*.085,10,20)+'px system-ui,sans-serif';
-    ctx.fillText('ADMISSION',stubX+(w-stubX)*.5,h*.52,(w-stubX)*.88);
-    ctx.font='700 '+clamp(h*.06,9,16)+'px system-ui,sans-serif';
-    ctx.fillText('REVEAL PASS',stubX+(w-stubX)*.5,h*.69,(w-stubX)*.86);
-    ctx.fillText('✦  ✦  ✦',stubX+(w-stubX)*.5,h*.83,(w-stubX)*.75);
-    ctx.fillStyle='rgba(255,234,185,.85)';
-    ctx.font='650 '+clamp(h*.065,10,17)+'px system-ui,sans-serif';
-    ctx.fillText('YOUR NEXT BIG NIGHT',stubX*.5,h*.84,stubX*.84);
+    // Ticket face intentionally has no pre-printed headings, slogans or
+    // watermarks; only the selected artwork, colour finish and perforation.
   }
 
   point(event) {
