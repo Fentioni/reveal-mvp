@@ -8,8 +8,10 @@ The only approved preset artwork is the set of **20 exact JPEG files** supplied 
 ## Creator
 - The Scratch Ticket creator has one native dropdown, `#scratchArtwork`, with the 20 human-readable filenames as options. No theme grid, theme titles, theme backgrounds, or occasion-specific generated vector illustrations for new selected-artwork reveals.
 - Selecting a different option updates the actual unscratchable live preview Canvas, not just the body background.
-- Existing four foil finishes and optional private photo upload remain available.
-- Concert-ticket variant retains its separate landscape creator artwork; changes apply to the portrait Scratch Ticket.
+- The four foil finish swatches (Gold, Silver, Midnight and Rose) are **Concert Ticket only**, not offered on the 20-image portrait Scratch Ticket.
+- Optional private photo upload remains available; no additional artwork upload control is added.
+- The separate Concert Ticket creator retains its own landscape artwork choices and foil swatches, but no redundant scratch-surface heading, explanatory paragraph, promotional slogans or watermark-like text.
+- Neither selected final JPEGs nor landscape concert scratch-face artwork should receive automatic text labels, stamps or watermarks. Scratch instructions belong outside the Canvas.
 - The default selection is Azure Kaleidoscope.
 
 ## Storage and recipient
