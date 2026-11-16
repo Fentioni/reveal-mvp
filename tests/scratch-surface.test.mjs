@@ -108,6 +108,27 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket'});
 });
 
+test('20-image artwork selection is validated and persisted without exposing uploads', async () => {
+ const {env,legacy,state}=makeMocks();
+ const body=new FormData();
+ body.append('style','classic');body.append('foil','silver');body.append('artworkId','sapphire-weave');
+ const saved=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+ assert.equal(saved.status,200);
+ const surface=(await saved.json()).surface;
+ assert.equal(surface.artworkId,'sapphire-weave');
+ assert.equal(surface.foil,'silver');
+ assert.equal(surface.hasImage,false);
+ assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'sapphire-weave');
+ const restored=await scratchSurfaceResponse(request(),env,{},legacy);
+ assert.equal((await restored.json()).surface.artworkId,'sapphire-weave');
+ const invalid=new FormData();
+ invalid.append('style','classic');invalid.append('foil','gold');
+ invalid.append('artworkId','../../private-file');
+ const rejected=await scratchSurfaceResponse(request('PUT',invalid),env,{},legacy);
+ assert.equal(rejected.status,400);
+ assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'sapphire-weave');
+});
+
 test('owner can store a custom scratch image privately and retrieve it with a token', async () => {
   const {env,legacy,state}=makeMocks();
   const body=new FormData();body.append('style','custom');body.append('foil','silver');
