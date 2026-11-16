@@ -281,6 +281,7 @@
 <script defer src="/qr.js"></script>
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
 <link rel="stylesheet" href="/concert-layout-presets.css?v=presets-3">
+<link rel="stylesheet" href="/concert-reference-renderer.css?v=reference-1">
 </head>
 <body>
 <main>
@@ -342,6 +343,7 @@
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=concert-professional-6';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
+  import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-1';
    import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
@@ -466,6 +468,18 @@
     } else {
       $('eventImageWrap').hidden = true;
     }
+    if(isConcert){
+      const extra=cleanConcertTicketDetails(data.scratchSurface.ticketDetails);
+      renderConcertReference($('card'),{
+        preset:data.scratchSurface.ticketTemplate,eventTitle:model.eventName,
+        subtitle:extra.eventSubtitle,recipient:model.recipient,
+        admit:model.details.find(x=>x.id==='admit')?.value,
+        date:data.reveal.eventDate,time:data.reveal.eventTime,
+        venue:data.reveal.venue,venueAddress:extra.venueAddress,
+        section:extra.section,row:extra.row,seat:extra.seat,gate:extra.gate,level:extra.level,
+        officialLink:model.ticketUrl,imageSrc: model.hasEventImage ? $('eventImage').src : ''
+      });
+    }
     $('intro').textContent = 'Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.';
     $('card').hidden = false;
 
@@ -523,12 +537,15 @@
     copy.className='card concert-ticket foil-ready';
     copy.dataset.concertTemplate=original.dataset.concertTemplate;
     copy.dataset.concertLayout=original.dataset.concertLayout;
+    copy.dataset.referenceLayout=original.dataset.referenceLayout;
     copy.dataset.hasImage=original.dataset.hasImage;
     copy.dataset.concertTheme=original.dataset.concertTheme;
     copy.style.clipPath=original.style.clipPath;
     const print=$('underlay').cloneNode(true);
     print.removeAttribute('id');
-    for(const item of print.querySelectorAll('[id]'))item.removeAttribute('id');
+    for(const item of print.querySelectorAll('[id]')){
+      if(!item.closest('.ct-reference-art'))item.removeAttribute('id');
+    }
     print.style.visibility='visible';
     copy.append(print);
     // The modal displays a 850px print-scale ticket even on a 390px phone.
