@@ -953,6 +953,7 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $("scratchArtworkSection").hidden = isConcert;
+      $("scratchArtwork").required = !isConcert;
       $("concertTemplateSection").hidden = !isConcert;
       $("concertThemeSection").hidden = !isConcert;
       $("concertLinkModeField").hidden = !isConcert;
