@@ -651,6 +651,18 @@ test('all five reference-based concert layouts keep photo and text in locked zon
         ratio:frame.getBoundingClientRect().width/frame.getBoundingClientRect().height,
         columns:getComputedStyle(panel).gridTemplateColumns.split(' ').filter(Boolean).length};
     });
+    const reference=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+      const art=frame.querySelector(':scope > svg.ct-reference-art');
+      return {preset:art?.getAttribute('data-reference-preset')||frame.dataset.referenceLayout,
+        count:frame.querySelectorAll(':scope > svg.ct-reference-art').length,
+        viewBox:art?.getAttribute('viewBox'),ratio:art?.getBoundingClientRect().width/art?.getBoundingClientRect().height,
+        caption:art?.textContent};
+    });
+    assert.equal(reference.count,1,'The source-specific SVG ticket must be visible');
+    assert.equal(reference.viewBox,'0 0 2000 647','Reference layout uses exact wide source proportions');
+    assert.equal(reference.preset,name,'The selected reference artwork must change with each preset');
+    assert.ok(Math.abs(reference.ratio-2000/647)<.02,'Artwork must scale without reflow');
+    assert.ok(reference.caption.includes('Jesus Christ Superstar'),'Artwork uses purchaser title');
     assert.equal(result.layout,name,'Selected layout must render rather than just change thumbnail');
     assert.equal(result.mode,'false','Without an upload no image lane should be reserved');
     assert.ok(Math.abs(result.ratio-3)<.18,'Every preset must be a wide 3:1 ticket');
@@ -693,12 +705,23 @@ test('all five reference-based concert layouts keep photo and text in locked zon
         photoWidth:pic.width};
     });
     await page.screenshot({path:resolve(output,size.name+'-diagnostic-'+name+'.png'),fullPage:true});
+    const refImage=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+      const image=frame.querySelector(':scope > svg.ct-reference-art image[href^="blob:"]');
+      return image?{x:Number(image.getAttribute('x')),width:Number(image.getAttribute('width'))}:null;
+    });
+    const expectedImage={ 'premium-headliner':[139,478],'rock-split':[0,948],
+      'promo-poster':[489,200],'neon-tour':[400,1600],'editorial-concert':[1314,686]};
+    assert.deepEqual(refImage,{x:expectedImage[name][0],width:expectedImage[name][1]},
+      'Uploaded image must occupy the exact dedicated photo coordinates for '+name);
     assert.equal(layout.layout,name);
     assert.equal(layout.image,'true');
     assert.equal(layout.grid,'grid');
     assert.equal(layout.posterArea,'image','Image must be in dedicated grid track');
     assert.equal(layout.photoInside,true,'Image may not cross its main panel: '+JSON.stringify(layout));
     assert.deepEqual(layout.wrong,[],'Text may not spill or overlap poster: '+JSON.stringify(layout));
+    await page.locator('#concertRevealedPreviewFrame').screenshot({
+      path:resolve(output,size.name+'-reference-ticket-only-'+name+'.png')
+    });
     await page.screenshot({path:resolve(output,size.name+'-reference-layout-'+name+'.png'),fullPage:true});
    }
    assert.deepEqual(errors,[]);
