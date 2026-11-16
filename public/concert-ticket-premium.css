@@ -866,3 +866,35 @@ body[data-ticket-variant="concert"] input#eventTime::-webkit-calendar-picker-ind
   opacity:1!important;
   cursor:pointer;
 }
+
+/* Concert ticket: two-row print-safe details (16 November 2026).
+   More bottom padding did not fix the overflow in a fixed 2.15:1 ticket:
+   the original DATE/TIME, VENUE, ADDRESS/LEVEL used three whole rows.
+   All three renderers now use DATE/TIME followed by VENUE/ADDRESS/LEVEL,
+   preserving the original font sizes, border, artwork and detachable stub. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields,
+body[data-ticket-variant="concert"] .review-shell .details,
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid{
+  grid-template-columns:minmax(0,1.8fr) minmax(0,1.3fr) minmax(0,.55fr)!important;
+  grid-auto-rows:min-content!important;
+  gap:clamp(4px,.6vw,9px) clamp(7px,1.15vw,16px)!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields,
+body[data-ticket-variant="concert"] .review-shell .details,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid{
+  /* Do not anchor the information strip to the scalloped lower edge. */
+  margin-top:clamp(3px,.6vw,9px)!important;
+}
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra{margin-top:0!important;}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields>[data-concert-field="venue"]{grid-column:1;grid-row:2;}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields>[data-concert-field="venueAddress"]{grid-column:2;grid-row:2;}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields>[data-concert-field="level"]{grid-column:3;grid-row:2;}
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra>#reviewVenueRow{grid-column:1;grid-row:1;}
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra>[data-concert-field="venueAddress"]{grid-column:2;grid-row:1;}
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra>[data-concert-field="level"]{grid-column:3;grid-row:1;}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>#dateRow{grid-column:1;grid-row:1;}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>#timeRow{grid-column:2;grid-row:1;}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>#venueRow{grid-column:1;grid-row:2;}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>[data-concert-field="venueAddress"]{grid-column:2;grid-row:2;}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>[data-concert-field="level"]{grid-column:3;grid-row:2;}
