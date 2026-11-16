@@ -191,7 +191,7 @@ test('ticket creator contains static surface preview and saves/restores owner co
     'ticket creator must have one image selector');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
-  assert.ok(creator.includes('selectedScratchImage = file;'));
+  assert.ok(creator.includes('selectedScratchImage = currentVariant === "concert" ? null : file;'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(creator.includes('$("scratchStyle").value = "custom";'));
   assert.ok(creator.includes('body.append("image", selectedImage)'));
@@ -292,7 +292,7 @@ test('the single image picker supports custom scratch cover without a second fil
   assert.ok(form.indexOf('id="image"') < form.indexOf('id="recipient"'));
   assert.ok(creator.includes('const next = await examineScratchFile(file);'));
   assert.ok(creator.includes('selectedScratchUrl = next;'));
-  assert.ok(creator.includes('selectedScratchImage = file;'));
+  assert.ok(creator.includes('selectedScratchImage = currentVariant === "concert" ? null : file;'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(creator.includes('showImage(file, file.name);'));
   assert.ok(creator.includes('surfaceBody.append("coverImage", selectedScratchImage);'));
