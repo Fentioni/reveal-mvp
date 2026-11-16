@@ -657,6 +657,127 @@
       body[data-ticket-variant="concert"] .details{grid-template-columns:1fr}
     }
 
+
+    /* Real admission-ticket dimensions: owner review matches the 2.15:1 creator
+       template, with main event panel left and occupied detachable stub right. */
+    body[data-ticket-variant="concert"] .review-shell{
+      width:100%;aspect-ratio:2.15/1;max-height:none;min-height:0;
+      display:grid;grid-template-columns:minmax(0,77%) minmax(0,23%);
+      grid-template-rows:minmax(0,1fr);gap:0;position:relative;overflow:hidden;
+      border-radius:15px
+    }
+    body[data-ticket-variant="concert"] .review-shell>.ticket{
+      grid-column:1;grid-row:1;min-height:0;height:100%;overflow:hidden;
+      border-left:0;border-radius:0;padding:clamp(9px,2vw,22px);
+      background:rgba(255,249,235,.92);display:block
+    }
+    body[data-ticket-variant="concert"] .review-shell>.review-heading{
+      grid-column:2;grid-row:1;align-self:stretch;min-width:0;min-height:0;
+      padding:clamp(8px,1.4vw,16px) clamp(6px,1vw,12px);
+      border-left:2px dashed #f1d293c2;background:rgba(15,14,30,.82);
+      display:flex;flex-direction:column;align-items:stretch;text-align:center;gap:clamp(4px,.9vw,10px)
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-heading .review-label{
+      font-size:clamp(.4rem,.8vw,.57rem);margin:0;letter-spacing:.08em
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-event{
+      font:700 clamp(.75rem,1.6vw,1.2rem)/1.12 system-ui,sans-serif;
+      overflow-wrap:anywhere
+    }
+    body[data-ticket-variant="concert"] .review-shell .ticket-label{
+      font-size:clamp(.42rem,.75vw,.6rem);margin-bottom:5px
+    }
+    body[data-ticket-variant="concert"] .review-shell .ticket-title{
+      font:700 clamp(.95rem,2.4vw,2rem)/1.08 Georgia,serif;
+      margin:0 0 5px;overflow-wrap:anywhere
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-concert-subtitle{
+      font-size:clamp(.52rem,.95vw,.82rem);margin:2px 0
+    }
+    body[data-ticket-variant="concert"] .review-shell .divider{margin:9px 0}
+    body[data-ticket-variant="concert"] .review-shell .details{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 8px
+    }
+    body[data-ticket-variant="concert"] .review-shell .details>div:not([hidden]){
+      border:1px solid #b7a178b5;border-radius:3px;padding:clamp(3px,.65vw,8px);min-width:0
+    }
+    body[data-ticket-variant="concert"] .review-shell .detail-label,
+    body[data-ticket-variant="concert"] .review-shell .review-concert-extra .detail-label{
+      font-size:clamp(.4rem,.67vw,.57rem);margin:0 0 3px;letter-spacing:.04em
+    }
+    body[data-ticket-variant="concert"] .review-shell .detail-value,
+    body[data-ticket-variant="concert"] .review-shell .review-concert-extra .detail-value{
+      font-size:clamp(.55rem,.95vw,.86rem);line-height:1.15;font-weight:700
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-concert-extra{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px 8px;margin:6px 0
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-concert-extra>div{
+      border:1px solid #b7a178b5;border-radius:3px;padding:clamp(3px,.65vw,8px)
+    }
+    body[data-ticket-variant="concert"] .review-shell .image-wrap{
+      float:right;clear:right;width:26%;max-height:clamp(54px,12vw,125px);
+      margin:0 0 5px 12px;border-radius:5px;box-shadow:none;overflow:hidden
+    }
+    body[data-ticket-variant="concert"] .review-shell .review-image{
+      width:100%;height:auto;max-height:clamp(54px,12vw,125px);object-fit:contain
+    }
+    body[data-ticket-variant="concert"] .concert-review-stub-boxes{
+      display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+      gap:5px 4px;width:100%;margin:3px 0
+    }
+    body[data-ticket-variant="concert"] .concert-review-stub-boxes[hidden]{display:none!important}
+    body[data-ticket-variant="concert"] .concert-review-stub-boxes>div{
+      min-width:0;border:1px solid #f6db9c99;border-radius:3px;padding:3px 2px
+    }
+    body[data-ticket-variant="concert"] .concert-review-stub-boxes small{
+      display:block;color:#f1d79d;font:650 clamp(.36rem,.65vw,.55rem)/1.1 system-ui
+    }
+    body[data-ticket-variant="concert"] .concert-review-stub-boxes strong{
+      display:block;color:#fff5e0;font:750 clamp(.53rem,.88vw,.76rem)/1.1 system-ui;
+      overflow-wrap:anywhere
+    }
+    body[data-ticket-variant="concert"] .review-shell #bookingCard{
+      background:none;border:0;color:#fff2dc;padding:2px;margin:auto 0 0;min-height:0;
+      box-shadow:none;overflow:hidden
+    }
+    body[data-ticket-variant="concert"] .review-shell #bookingCard .booking-label{
+      color:#f2d8a2;font-size:clamp(.4rem,.64vw,.57rem)
+    }
+    body[data-ticket-variant="concert"] .review-shell #bookingValue{
+      font-size:clamp(.44rem,.68vw,.6rem);overflow-wrap:anywhere;word-break:break-all;
+      max-height:65px;overflow:hidden
+    }
+    body[data-ticket-variant="concert"] .owner-concert-qr{margin:5px 0 0}
+    body[data-ticket-variant="concert"] .owner-concert-qr svg{width:min(85%,115px);max-height:clamp(38px,9vw,100px);height:auto}
+    body[data-ticket-variant="concert"] #reviewMessageCard{
+      margin-top:14px;border-radius:12px;background:#241d2f;color:#f7e4c8;
+      text-align:left
+    }
+    body[data-ticket-variant="concert"] .review-shell #reviewMessageCard{display:none}
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="concert-lights"]>.ticket,
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="backstage"]>.ticket{
+      background:rgba(11,13,29,.84);color:#fff1dd
+    }
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="concert-lights"]>.ticket .detail-label,
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="backstage"]>.ticket .detail-label{
+      color:#f0d5a6
+    }
+    @media(max-width:600px){
+      body[data-ticket-variant="concert"] .review-shell{aspect-ratio:2.15/1;min-height:0}
+      body[data-ticket-variant="concert"] .review-shell>.ticket{padding:6px}
+      body[data-ticket-variant="concert"] .review-shell>.review-heading{padding:5px 3px}
+      body[data-ticket-variant="concert"] .review-shell .ticket-title{font-size:clamp(.72rem,2.9vw,1rem)}
+      body[data-ticket-variant="concert"] .review-shell .review-event{font-size:clamp(.55rem,2.2vw,.85rem)}
+      body[data-ticket-variant="concert"] .review-shell .details>div:not([hidden]),
+      body[data-ticket-variant="concert"] .review-shell .review-concert-extra>div{padding:2px}
+      body[data-ticket-variant="concert"] .review-shell .detail-value,
+      body[data-ticket-variant="concert"] .review-shell .review-concert-extra .detail-value{font-size:.51rem}
+      body[data-ticket-variant="concert"] .review-shell .review-concert-extra{gap:3px}
+      body[data-ticket-variant="concert"] .review-shell .details{gap:3px}
+    }
+
     .gender-review{margin:22px 0 25px;padding:23px;border:1px solid #e1b8c7;
       border-radius:18px;background:linear-gradient(130deg,#26394c,#6b3a62);color:#fff7f4}
     .gender-review[hidden]{display:none!important}
@@ -730,6 +851,7 @@
         <div class="review-heading">
           <div class="review-label">Your gift</div>
           <h2 id="reviewEventHeading" class="review-event"></h2>
+          <div id="reviewConcertStubRows" class="concert-review-stub-boxes" hidden></div>
         </div>
 
         <div id="imageWrap" class="image-wrap" hidden>
@@ -1239,15 +1361,24 @@
         support.textContent=details.supportAct?'Special guest: '+details.supportAct:'';
         support.hidden=!details.supportAct;
         const extra=document.getElementById('reviewConcertExtra');
-        extra.replaceChildren();
+        const stub=document.getElementById('reviewConcertStubRows');
+        extra.replaceChildren();stub.replaceChildren();
         for(const item of displayConcertTicketRows(details)){
           if(['eventSubtitle','supportAct'].includes(item.id))continue;
+          const isStub=['ticketNumber','section','row','seat','gate'].includes(item.id);
           const cell=document.createElement('div');
-          const label=document.createElement('span');label.className='detail-label';label.textContent=item.label;
-          const value=document.createElement('span');value.className='detail-value';value.textContent=item.value;
-          cell.append(label,value);extra.append(cell);
+          if(isStub){
+            const label=document.createElement('small');label.textContent=item.label;
+            const value=document.createElement('strong');value.textContent=item.value;
+            cell.append(label,value);stub.append(cell);
+          }else{
+            const label=document.createElement('span');label.className='detail-label';label.textContent=item.label;
+            const value=document.createElement('span');value.className='detail-value';value.textContent=item.value;
+            cell.append(label,value);extra.append(cell);
+          }
         }
         extra.hidden=!extra.childElementCount;
+        stub.hidden=!stub.childElementCount;
         const shape=isConcertTemplate(result.surface.ticketTemplate)
           ? result.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
         const look=isConcertRevealTheme(result.surface.revealTheme)
@@ -1271,12 +1402,23 @@
         }
       }
       if (isConcert) {
-        // Reuse the existing image, link, review and save elements. Moving
-        // them inside the ticket is visual only and never changes stored data.
+        // Keep the 2.15:1 ticket fixed; QR/link and credentials go into the
+        // detachable stub rather than expanding the event panel vertically.
         const ticket = document.querySelector('.review-shell > article.ticket');
-        ticket.appendChild(elements.imageWrap);
-        ticket.appendChild(elements.bookingCard);
+        const stub = document.querySelector('.review-shell > .review-heading');
+        ticket.querySelector('#ticketTitle').after(elements.imageWrap);
+        stub.appendChild(elements.bookingCard);
+        document.querySelector('.review-shell').after(document.getElementById('reviewMessageCard'));
+        document.getElementById('reviewAdmitRow').hidden=true;
         document.getElementById('reviewEventHeading').textContent = reveal.recipient || '';
+        if(reveal.admit){
+          const box=document.createElement('div');
+          const label=document.createElement('small');label.textContent='ADMIT';
+          const value=document.createElement('strong');value.textContent=reveal.admit;
+          box.append(label,value);
+          document.getElementById('reviewConcertStubRows').prepend(box);
+          document.getElementById('reviewConcertStubRows').hidden=false;
+        }
         document.querySelector('.review-label').textContent = 'PERSONALISED FOR';
         ticket.querySelector('.ticket-label').textContent = 'SCRATCH CONCERT TICKET';
         elements.surfaceReview.querySelector('h2').textContent = 'Concert ticket scratch cover';
