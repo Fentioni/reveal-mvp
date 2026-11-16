@@ -31,8 +31,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
    ['VENUE',$('venue').value.trim()],
    ['ADDRESS',detail.venueAddress],
    ['SECTION',detail.section],['LEVEL',detail.level],
-   ['ROW',detail.row],['SEAT',detail.seat],['GATE',detail.gate],
-   ['FACE VALUE',detail.ticketPrice]
+   ['ROW',detail.row],['SEAT',detail.seat],['GATE',detail.gate]
   ];
   const list=$('concertLiveFields');list.replaceChildren();
   for(const [label,value] of rows){
