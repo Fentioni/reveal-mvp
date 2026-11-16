@@ -57,7 +57,7 @@ async function startServer(){
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  return{server,base:'http://127.0.0.1:'+server.address().port};
 }
-test('creator uses the exact 20-artwork dropdown; changing artwork does not lose foil on phone or desktop',
+test('creator shows only the 20-artwork dropdown without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -71,15 +71,20 @@ test('creator uses the exact 20-artwork dropdown; changing artwork does not lose
    await page.locator('#scratchArtwork:enabled').waitFor();
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
    assert.equal(await page.locator('.scratch-theme-option').count(),0);
-   assert.equal(await page.locator('[data-scratch-foil]').count(),4);
+   assert.equal(await page.locator('[data-scratch-foil]:visible').count(),0);
+   assert.equal(await page.locator('#surfaceHeading:visible').count(),0);
+   assert.equal(await page.locator('#surfaceDescription:visible').count(),0);
+   assert.equal(await page.locator('#scratchFoilLabel:visible').count(),0);
+   assert.equal(await page.locator('#scratchFoilGrid:visible').count(),0);
+   assert.equal(await page.locator('#image').count(),1);
    assert.equal(await page.locator('#scratchArtwork').inputValue(),DEFAULT_SCRATCH_ARTWORK);
-   await page.locator('[data-scratch-foil="rose"]').click();
+   assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
    const paintings=new Set();
    for(const art of SCRATCH_ARTWORKS){
     await page.locator('#scratchArtwork').selectOption(art.id);
     await page.waitForFunction(id=>document.querySelector('#scratchArtwork')?.value===id,art.id);
     await page.waitForTimeout(75);
-    assert.equal(await page.locator('#scratchFoil').inputValue(),'rose');
+    assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
     paintings.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
    assert.equal(paintings.size,20,'Each approved artwork must actually repaint the surface Canvas');
