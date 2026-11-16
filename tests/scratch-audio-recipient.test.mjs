@@ -224,7 +224,7 @@ test('paid concert variant reuses recipient route, ticket fields and payment gat
 
   const html=fs.readFileSync(path.join(root,'public/recipient-scratch.html'),'utf8');
   assert.ok(html.includes("data.scratchSurface.variant === 'concert'"));
-  assert.ok(html.includes("'PERSONALISED CONCERT TICKET'"));
+  assert.ok(html.includes("'LIVE IN CONCERT'"));
   assert.ok(html.includes('recipientCardModel(data.reveal)'));
 });
 
