@@ -3,7 +3,7 @@
  * Receives current unsaved form values; never fetches protected recipient data.
  */
 import {CONCERT_TICKET_FIELDS} from './concert-ticket-fields.js';
-import {concertTicketClipPath} from './concert-ticket-options.js';
+import {concertTicketClipPath,concertTemplateLayout} from './concert-ticket-options.js';
 const foilNames=['gold','silver','midnight','rose'];
 const safeUrl=raw=>{
  try{
@@ -18,6 +18,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   if(getVariant()!=='concert')return;
   const frame=$('concertRevealedPreviewFrame');
   frame.dataset.concertTemplate=getTemplate();
+  frame.dataset.concertLayout=concertTemplateLayout(getTemplate());
   frame.dataset.concertTheme=getTheme();
   frame.style.clipPath=concertTicketClipPath(getTemplate());
   frame.style.backgroundImage="url('/concert-reveal-art/"+getTheme()+".svg')";
@@ -74,6 +75,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   }
   const img=$('concertLiveImage'),src=getImage()||'';
   img.hidden=!src;
+  frame.dataset.hasImage=src?'true':'false';
   if(src)img.src=src;
   else img.removeAttribute('src');
  }
