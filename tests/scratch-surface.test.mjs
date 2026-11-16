@@ -347,7 +347,7 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(!creator.includes('data-show-for="concert"'),'Concert theme buttons must be removed');
   assert.ok(creator.includes('$("scratchArtGrid")') === false);
   assert.ok(creator.includes('$("scratchFoilGrid").hidden = !isConcert;'));
-  assert.ok(creator.includes('this') === false || creator.includes('surfaceBody.append("variant", currentVariant)'));
+  assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : $("scratchStyle").value)'));
   assert.ok(creator.includes('currentVariant === "concert" ? "concert" : "classic"'));
   assert.ok(creator.includes('id="image"'));
   assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);
