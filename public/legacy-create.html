@@ -529,6 +529,20 @@
       .preview-shell{padding:22px 15px}}
     @media(max-width:370px){.scratch-art-grid{grid-template-columns:1fr}}
     .scratch-one-upload{margin:22px 0 12px;border:1px dashed #8b7755;border-radius:13px;padding:13px}
+    .concert-build-group{margin:22px 0}
+    .concert-build-group[hidden],#concertLinkModeField[hidden],#concertEventUploadDock[hidden]{display:none!important}
+    .concert-build-group h3{font:700 1rem system-ui,sans-serif;color:#ebd3a0;margin:0 0 10px}
+    .concert-option-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:10px 0 18px}
+    .concert-template-option,.concert-theme-option{min-height:85px;padding:10px;border:1px solid #726977;border-radius:12px;
+      background:#25212e;color:#f9f0e8;cursor:pointer;text-align:left;display:flex;flex-direction:column;gap:8px}
+    .concert-template-option[aria-pressed="true"],.concert-theme-option[aria-pressed="true"]{
+      border-color:#f4d38c;box-shadow:0 0 0 2px #f4d38c55}
+    .concert-template-option:focus-visible,.concert-theme-option:focus-visible{outline:3px solid #d8bd83;outline-offset:3px}
+    .concert-template-thumb{width:100%;aspect-ratio:2.15/1;background:linear-gradient(110deg,#ba924d,#fff0b0,#af743c);
+      max-height:78px}
+    .concert-theme-thumb{width:100%;height:65px;border-radius:6px;background-size:cover;background-position:center}
+    .concert-option-grid strong{font-size:.82rem}
+    @media(max-width:430px){.concert-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     .scratch-one-upload .field{margin:0}
     .scratch-one-upload .field-help{color:#d7c9be}
     .scratch-one-upload .warning-box{margin-top:12px}
@@ -596,6 +610,12 @@
             <select id="scratchArtwork" name="scratchArtwork" required aria-describedby="scratchArtworkHelp"></select>
             <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
+
+          <section id="concertTemplateSection" class="concert-build-group" hidden aria-labelledby="concertTemplateHeading">
+            <h3 id="concertTemplateHeading">1. Ticket template</h3>
+            <p class="field-help">Choose the ticket shape.</p>
+            <div id="concertTemplateChoices" class="concert-option-grid" role="group" aria-label="Ticket shape"></div>
+          </section>
           <div class="scratch-choice">
             <div id="scratchFoilLabel" class="scratch-option-label" hidden>Foil finish</div>
             <div id="scratchFoilGrid" class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel" hidden>
@@ -610,6 +630,11 @@
               <option value="midnight">Midnight</option>
               <option value="rose">Rose</option>
             </select>
+            <section id="concertThemeSection" class="concert-build-group" hidden aria-labelledby="concertThemeHeading">
+              <h3 id="concertThemeHeading">3. Revealed ticket artwork</h3>
+              <p class="field-help">This design appears after the recipient scratches the colour away.</p>
+              <div id="concertThemeChoices" class="concert-option-grid" role="group" aria-label="Revealed ticket artwork"></div>
+            </section>
             <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
               <option value="classic">Classic foil</option>
               <option value="theatre">Theatre Velvet</option>
@@ -740,8 +765,16 @@
             ></textarea>
           </div>
 
+          <div id="concertLinkModeField" class="field" hidden>
+            <label for="concertLinkMode">4. Add a link or QR code (optional)</label>
+            <select id="concertLinkMode">
+              <option value="link">Show a clickable link</option>
+              <option value="qr">Show a scannable QR code</option>
+            </select>
+            <p class="field-help">A QR code is generated from the URL you enter below. It is never shown before payment.</p>
+          </div>
           <div class="field">
-            <label for="ticketUrl">Official ticket or booking link</label>
+            <label for="ticketUrl" id="ticketUrlLabel">Official ticket or booking link</label>
             <p class="field-help">
               Optional. If entered, this link will appear on the recipient's
               paid scratch card. Avoid links that expose private booking codes.
@@ -754,6 +787,7 @@
             >
           </div>
 
+          <div id="concertEventUploadDock" hidden></div>
           <button
             id="reviewButton"
             class="review-button"
@@ -858,7 +892,8 @@
   </main>
 
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=concert-solid-3';
+    import { ScratchCard } from '/scratchcard.js?v=concert-templates-4';
+    import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     const $ = id => document.getElementById(id);
 
@@ -919,6 +954,15 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $("scratchArtworkSection").hidden = isConcert;
+      $("concertTemplateSection").hidden = !isConcert;
+      $("concertThemeSection").hidden = !isConcert;
+      $("concertLinkModeField").hidden = !isConcert;
+      const upload=form.querySelector(".scratch-one-upload");
+      const uploadDock=$("concertEventUploadDock");
+      uploadDock.hidden=!isConcert;
+      if(isConcert) uploadDock.append(upload);
+      else form.querySelector(".scratch-choice").append(upload);
+      $("ticketUrlLabel").textContent=isConcert ? "Link or QR code destination" : "Official ticket or booking link";
       $("imageUploadLabel").textContent = isConcert ? "Optional event image" : "Add an image";
       $("imageUploadHelp").textContent = isConcert
         ? "Shown with the revealed ticket details after payment. It does not change the scratch colour."
