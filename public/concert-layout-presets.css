@@ -92,7 +92,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] .t
   position:relative!important;
   display:grid!important;
   grid-template-areas:"image kicker" "image title" "image subtitle" "image details"!important;
-  grid-template-columns:minmax(0,36%) minmax(0,64%)!important;
+  grid-template-columns:minmax(0,36fr) minmax(0,64fr)!important;
   grid-template-rows:min-content minmax(0,max-content) min-content minmax(0,1fr)!important;
   align-items:start!important;
   align-content:stretch!important;
@@ -516,7 +516,7 @@ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-la
 body[data-ticket-variant="concert"] .review-shell[data-concert-layout="neon-tour"] > article.ticket,
 body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout="neon-tour"] article.ticket{
   grid-template-areas:"kicker image" "title image" "subtitle image" "details image"!important;
-  grid-template-columns:minmax(0,70%) minmax(0,30%)!important;
+  grid-template-columns:minmax(0,70fr) minmax(0,30fr)!important;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout="neon-tour"] #concertLiveEvent,
 body[data-ticket-variant="concert"] .review-shell[data-concert-layout="neon-tour"] #ticketTitle,
@@ -528,15 +528,17 @@ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-la
 body[data-ticket-variant="concert"] .review-shell[data-concert-layout="editorial-concert"] > article.ticket,
 body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout="editorial-concert"] article.ticket{
   grid-template-areas:"kicker image" "title image" "subtitle image" "details image"!important;
-  grid-template-columns:minmax(0,66%) minmax(0,34%)!important;
+  grid-template-columns:minmax(0,66fr) minmax(0,34fr)!important;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout="promo-poster"] > .concert-live-main,
 body[data-ticket-variant="concert"] .review-shell[data-concert-layout="promo-poster"] > article.ticket,
 body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout="promo-poster"] article.ticket{
   grid-template-areas:"kicker kicker" "image title" "image subtitle" "image details"!important;
-  grid-template-columns:minmax(0,27%) minmax(0,73%)!important;
+  grid-template-columns:minmax(0,27fr) minmax(0,73fr)!important;
   column-gap:5%!important;
 }
+/* Fractional tracks consume the gap before allocating width. Percentage
+   tracks plus a percentage gap exceeded 100%, causing the prior spillage. */
 /* The uploaded portrait belongs to its own panel: no float, no z-index
    over type. Thumbnail content scales as ONE 3:1 ticket on iPhone. */
 body[data-ticket-variant="concert"] .scratch-static-frame,
