@@ -62,7 +62,7 @@ test('the creator lists exactly the 20 approved scratch images, with no thematic
  assert.match(owner,/getScratchArtwork\(artworkId\)/);
  assert.match(paid,/getScratchArtwork\(settings\.artworkId\)/);
  const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
- assert.match(engine,/if \(!this\.artworkId\)/);
+ assert.match(engine,/if \(!this\.artworkId && w <= h\*1\.4\)/);
  assert.match(engine,/destination-out/);
 });
 test('ScratchCard constructor and theme setter preserve existing foil and uploaded-image choice',()=>{
