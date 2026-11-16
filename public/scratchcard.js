@@ -24,7 +24,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 };
 
 export class ScratchCard {
-  constructor({ canvas, foil = 'gold', coverStyle = 'classic', theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
+  constructor({ canvas, foil = 'gold', coverStyle = 'classic', concertTicket = false, theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
     coverImage = null, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -37,6 +37,7 @@ export class ScratchCard {
     this.ctx = context;
     this.foil = FOILS[foil] ? foil : 'gold';
     this.coverStyle = SURFACE_STYLES.includes(coverStyle) ? coverStyle : 'classic';
+    this.concertTicket = Boolean(concertTicket);
     this.theme = getScratchTheme(theme).id;
     this.imageRequest = 0;
     this.brushSize = clamp(Number(brushSize) || 48, 12, 120);
@@ -113,7 +114,7 @@ export class ScratchCard {
     ctx.clearRect(0, 0, w, h);
     // Concert Tickets use ONLY the selected foil colour across the whole
     // scratchable surface. No themes, light beams, artwork, photos or slogans.
-    if (w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle)) {
+    if (this.concertTicket || (w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle))) {
       this.drawLandscapeConcertArtwork(ctx,w,h);
       return;
     }
