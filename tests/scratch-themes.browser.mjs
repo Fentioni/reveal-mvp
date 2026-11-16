@@ -264,7 +264,8 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
    assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
    assert.match(await page.locator('#concertLiveRecipient').textContent(),/Chloe/);
-   assert.match(await page.locator('#concertLiveSender').textContent(),/Michael/);
+   assert.equal(await page.locator('#concertLiveSender:visible').count(),0,
+     'Sender belongs with the personal message, not another vertical stub stripe');
    assert.equal((await page.locator('#concertLiveMessage').textContent()).trim(),'A night to remember!');
    assert.equal(await page.locator('#concertLiveQr svg').count(),1);
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
@@ -348,12 +349,14 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
      stub.append(document.getElementById('bookingCard'));
      const rows=document.getElementById('reviewConcertStubRows');
      rows.hidden=false;
-     for(const [label,value] of [['ADMIT','2'],['SECTION','Stalls'],['ROW','G'],['SEAT','18'],['GATE','A2'],['TICKET NUMBER','T-123']]){
+     for(const [label,value] of [['SECTION','Stalls'],['ROW','G'],['SEAT','18'],['GATE','A2']]){
        const cell=document.createElement('div');
        const small=document.createElement('small');small.textContent=label;
        const strong=document.createElement('strong');strong.textContent=value;
        cell.append(small,strong);rows.append(cell);
      }
+     document.getElementById('reviewConcertNumber').hidden=false;
+     document.getElementById('reviewConcertNumber').textContent='No. T-123';
      document.getElementById('bookingCard').hidden=false;
      document.querySelector('#bookingCard .booking-label').textContent='QR CODE';
      document.getElementById('bookingValue').textContent='Optional booking link';
@@ -368,7 +371,7 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    assert.ok(Math.abs(layout.card.width/layout.card.height-2.15)<.13,
      'Owner review must match the original ticket template ratio at any screen width');
    assert.ok(layout.main.right <= layout.stub.x+2,'Main panel must end at detachable stub');
-   assert.ok(layout.stubRows.height > 0,'Stub must contain seat/row/admit details');
+   assert.ok(layout.stubRows.height > 0,'Stub must contain four grouped seating details');
    const print=await page.evaluate(()=>{
      const shell=document.querySelector('.review-shell');
      const sample=document.querySelector('#reviewConcertStubRows>div');
@@ -382,6 +385,11 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    assert.equal(print.orientation,'vertical-rl','Stub credentials must read at 90 degrees');
    assert.notEqual(print.rotation,'none','Stub values must be rotated');
    assert.ok(print.background.includes('linear-gradient('),'Show designer event artwork, not boxed form fields');
+   const stubStyle=await page.locator('.review-shell>.review-heading').evaluate(node=>({
+     color:getComputedStyle(node).backgroundColor,barcode:getComputedStyle(node,'::after').backgroundImage
+   }));
+   assert.notEqual(stubStyle.color,'rgba(0, 0, 0, 0)','Stub should have its own contrasting printed background');
+   assert.match(stubStyle.bar,/repeating-linear-gradient/,'Ticket stub should have decorative print bars');
    assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
    assert.ok(layout.card.height < (size.name==='desktop'?570:230),
      'Concert owner review must not expand vertically like the former poster');
@@ -402,9 +410,10 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    assert.equal(await page.locator('#card').getAttribute('data-concert-theme'),'backstage');
    const card=await page.locator('#card').boundingBox();
    assert.ok(Math.abs(card.width/card.height-2.15)<.13,'Recipient ticket must remain landscape 2.15:1');
-   assert.equal(await page.locator('#concertStubFields .ticket-item').count(),6,
-     'Populate detachable stub with admit, ticket number, section, row, seat and gate');
-   assert.equal(await page.locator('#concertStubFields').textContent().then(v=>v.includes('T-123')),true);
+   assert.equal(await page.locator('#concertStubFields .ticket-item').count(),4,
+     'Use just four separated ticket credentials rather than six narrow vertical columns');
+   assert.equal((await page.locator('#recipientConcertNumber').textContent()).includes('T-123'),true,
+     'The actual ticket reference must be printed separately from the seating group');
    assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
    assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
    assert.equal(await page.locator('#bookingAction:visible').count(),0);
