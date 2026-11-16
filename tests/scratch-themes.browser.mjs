@@ -33,6 +33,13 @@ async function startServer(){
    res.end('<svg xmlns="http://www.w3.org/2000/svg" width="900" height="1200"><rect width="900" height="1200" fill="'+color+'"/></svg>');
    return;
   }
+   const foilName=path.match(/^\/r\/concert-foil-(gold|silver|midnight|rose)\/scratch-data$/)?.[1];
+   if(foilName){
+    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+    res.end(JSON.stringify({...sample,scratchSurface:{
+      style:'concert',foil:foilName,variant:'concert',hasImage:false}}));
+    return;
+   }
   const slug=path.match(/^\/r\/artwork-([a-z-]+)\/scratch-data$/)?.[1];
   const art=SCRATCH_ARTWORKS.find(item=>item.id===slug);
   if(art){
@@ -41,7 +48,7 @@ async function startServer(){
    return;
   }
   const file=path==='/legacy-create'?'/legacy-create.html'
-   :path.match(/^\/r\/artwork-[a-z-]+$/)?'/recipient-scratch.html'
+   :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose))$/)?'/recipient-scratch.html'
    :path;
   if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
@@ -108,25 +115,62 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
    await page.locator('#scratchFoilGrid:visible').waitFor();
    assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
+   assert.match(await page.locator('#imageUploadHelp').textContent(),/does not change the scratch colour/);
    assert.equal(await page.locator('#surfaceHeading').count(),0);
    assert.equal(await page.locator('#surfaceDescription').count(),0);
    assert.equal(await page.locator('#scratchFoilLabel:visible').count(),1);
    assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'Foil finish');
    assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
-   assert.equal(await page.locator('#scratchArtGrid:visible').count(),1);
+   assert.equal(await page.locator('#scratchArtGrid').count(),0,'Concert-themed artwork choices must be removed entirely');
    const paintings=new Set();
+   const centreColours=new Set();
    for(const foil of ['gold','silver','midnight','rose']){
     await page.locator('[data-scratch-foil="'+foil+'"]').click();
     await page.waitForFunction(id=>document.querySelector('#scratchFoil').value===id,foil);
+    const centre=await page.locator('#scratchSurfacePreview').evaluate(canvas=>{
+      const context=canvas.getContext('2d',{willReadFrequently:true});
+      return [...context.getImageData(Math.floor(canvas.width*.43),Math.floor(canvas.height*.54),1,1).data].slice(0,3);
+    });
+    centreColours.add(centre.join(','));
     paintings.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
+    await page.screenshot({path:resolve(output,size.name+'-concert-'+foil+'.png'),fullPage:true});
    }
-   assert.equal(paintings.size,4,'Each concert foil option must update the ticket Canvas');
+   assert.equal(paintings.size,4,'Each concert foil option must repaint the ticket');
+   assert.equal(centreColours.size,4,'The middle of the concert ticket must change colour, not just its border');
    const ratio=await page.locator('#scratchSurfacePreview').evaluate(node=>{
     const bounds=node.getBoundingClientRect();return bounds.width/bounds.height;
    });
    assert.ok(Math.abs(ratio-2.15)<.15,'Concert preview stays landscape');
    assert.deepEqual(errors,[]);
    await page.screenshot({path:resolve(output,size.name+'-concert-foil-options.png'),fullPage:true});
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+test('paid concert recipient sees four full-surface foil colours, even on narrow phones',
+ {timeout:95000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   const pixels=new Set();
+   for(const foil of ['gold','silver','midnight','rose']){
+    await page.goto(base+'/r/concert-foil-'+foil,{waitUntil:'networkidle'});
+    await page.locator('#card.foil-ready').waitFor();
+    assert.equal(await page.locator('body').getAttribute('data-ticket-variant'),'concert');
+    assert.equal((await page.locator('.eyebrow').textContent()).trim(),'Concert ticket');
+    assert.equal(await page.locator('#progress').getAttribute('value'),'0');
+    const pixel=await page.locator('#foilCanvas').evaluate(canvas=>{
+      const context=canvas.getContext('2d',{willReadFrequently:true});
+      return [...context.getImageData(Math.floor(canvas.width*.42),Math.floor(canvas.height*.55),1,1).data].slice(0,3);
+    });
+    pixels.add(pixel.join(','));
+   }
+   assert.equal(pixels.size,4,'Paid recipient ticket must change colour across whole scratch foil');
+   assert.deepEqual(errors,[]);
+   await page.screenshot({path:resolve(output,size.name+'-concert-recipient-rose.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
