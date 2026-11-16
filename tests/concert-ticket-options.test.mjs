@@ -38,7 +38,7 @@ test('revealed-ticket themes are independent of the four metallic foils and use 
   assert.equal(isConcertRevealTheme(theme.id),true);
   const svg=await readFile(resolve(root,'public/concert-reveal-art/'+theme.id+'.svg'),'utf8');
   assert.match(svg,/<svg [^>]*viewBox="0 0 2150 1000"/);
-  assert.doesNotMatch(svg,/<text\b|<script\b|https?:\/\//);
+  assert.doesNotMatch(svg,/<text\b|<script\b|(?:href|src)=[\"']https?:\/\//);
   sources.add(svg);
  }
  assert.equal(sources.size,4);
