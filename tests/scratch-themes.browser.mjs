@@ -194,6 +194,9 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#concertTemplateChoices .concert-template-option:enabled').first().waitFor();
    const tabSelector=size.name==='mobile'?'#concertPreviewTabsMobile':'#concertPreviewTabsDesktop';
    assert.equal(await page.locator(tabSelector+':visible').count(),1);
+   await page.locator('#recipient').fill('Chloe');
+   await page.locator('#sender').fill('Michael');
+   await page.locator('#personalMessage').fill('A night to remember!');
    await page.locator('#eventName').fill('Live Music at the Hall');
    await page.locator('#eventSubtitle').fill('A very special evening');
    await page.locator('#supportAct').fill('The Openers');
@@ -222,6 +225,9 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
    assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
    assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
+   assert.match(await page.locator('#concertLiveRecipient').textContent(),/Chloe/);
+   assert.match(await page.locator('#concertLiveSender').textContent(),/Michael/);
+   assert.equal((await page.locator('#concertLiveMessage').textContent()).trim(),'A night to remember!');
    assert.equal(await page.locator('#concertLiveQr svg').count(),1);
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
    assert.ok(background.includes('concert-lights.svg'));
