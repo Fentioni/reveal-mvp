@@ -677,12 +677,22 @@ test('all five reference-based concert layouts keep photo and text in locked zon
       const overlap=(a,b)=>a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1;
       const inside=r=>r.left>=rect.left-1&&r.right<=rect.right+1&&r.top>=rect.top-1&&r.bottom<=rect.bottom+1;
       const wrong=nodes.filter(el=>!inside(el.getBoundingClientRect())||overlap(el.getBoundingClientRect(),pic))
-        .map(el=>el.id||el.textContent.slice(0,22));
+        .map(el=>{const r=el.getBoundingClientRect(),st=getComputedStyle(el);
+          return {text:(el.id||el.textContent.slice(0,22)),
+           left:Math.round(r.left-rect.left),right:Math.round(r.right-rect.left),
+           top:Math.round(r.top-rect.top),bottom:Math.round(r.bottom-rect.top),
+           fontSize:st.fontSize};});
       return {layout:frame.dataset.concertLayout,image:frame.dataset.hasImage,
         grid:getComputedStyle(panel).display,
         posterArea:getComputedStyle(photo).gridArea,photoInside:inside(pic),wrong,
-        mainWidth:rect.width,photoWidth:pic.width};
+        mainWidth:rect.width,mainHeight:rect.height,
+        columns:getComputedStyle(panel).gridTemplateColumns,
+        rows:getComputedStyle(panel).gridTemplateRows,
+        photoRect:{left:Math.round(pic.left-rect.left),top:Math.round(pic.top-rect.top),
+          right:Math.round(pic.right-rect.left),bottom:Math.round(pic.bottom-rect.top)},
+        photoWidth:pic.width};
     });
+    await page.screenshot({path:resolve(output,size.name+'-diagnostic-'+name+'.png'),fullPage:true});
     assert.equal(layout.layout,name);
     assert.equal(layout.image,'true');
     assert.equal(layout.grid,'grid');
