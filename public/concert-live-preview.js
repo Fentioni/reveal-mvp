@@ -11,7 +11,7 @@ const safeUrl=raw=>{
   return ['http:','https:'].includes(u.protocol) && !u.username&&!u.password?u.href:'';
  }catch{return '';}
 };
-export function createConcertLivePreview({getVariant,getTemplate,getTheme,getImage,dateText,timeText}){
+export function createConcertLivePreview({getVariant,getTemplate,getTheme,getImage,dateText,timeText,onModeChange=()=>{}}){
  const $=id=>document.getElementById(id);
  let mode='cover';
  function render(){
@@ -70,6 +70,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
    tab.setAttribute('aria-selected',String(tab.dataset.previewMode===mode));
   }
   render();
+  onModeChange(mode);
  }
  function setVariant(variant){
   const show=variant==='concert';
