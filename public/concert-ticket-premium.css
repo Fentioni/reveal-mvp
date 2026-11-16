@@ -430,3 +430,14 @@ body[data-ticket-variant="concert"] .scratch-static-frame[data-concert-template=
 body[data-ticket-variant="concert"] .scratch-static-frame[data-concert-template="stamp-edge"]::before{
   inset:6.2% 6.1%;
 }
+
+
+/* Reveal tab control must hide the inactive preview, even when the ticket's
+   professional grid style would otherwise win the CSS specificity cascade. */
+body[data-ticket-variant="concert"]:not([data-concert-preview="revealed"]) #concertRevealedPreviewFrame,
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[hidden]{
+  display:none!important;
+}
+body[data-ticket-variant="concert"][data-concert-preview="revealed"] #concertRevealedPreviewFrame:not([hidden]){
+  display:grid!important;
+}
