@@ -290,6 +290,24 @@ test('concert artwork draws natively at a true wide-ticket aspect ratio',()=>{
   assert.ok(src.includes('const stubX=w*.78'));
 });
 
+test('landscape concert scratch art contains no automatic watermark, slogan or printed text', () => {
+  const canvas=fakeCanvas();
+  canvas.getBoundingClientRect=()=>({left:0,top:0,width:550,height:255.814});
+  const calls=[];
+  canvas.context.fillText=(...args)=>calls.push(args);
+  for(const foil of Object.keys(FOILS)){
+    for(const coverStyle of ['concert','festival','backstage']){
+      const scratch=new ScratchCard({canvas,coverStyle,foil});
+      assert.deepEqual(calls,[],coverStyle+' / '+foil+' should not print text over artwork');
+      assert.equal(scratch.coverStyle,coverStyle);
+      scratch.destroy();
+    }
+  }
+  const source=fs.readFileSync(path.join(root,'public/scratchcard.js'),'utf8');
+  const paint=source.slice(source.indexOf('  paintCover() {'),source.indexOf('  drawThemeDecoration() {'));
+  assert.doesNotMatch(paint,/fillText\(/,'Scratch Ticket image overlays must be text-free');
+});
+
 test('landscape ticket is confined to concert variant in creator, review and paid page',()=>{
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   const review=fs.readFileSync(path.join(root,'public/reveal.html'),'utf8');
