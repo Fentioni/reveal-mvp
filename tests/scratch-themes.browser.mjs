@@ -130,7 +130,12 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
    await page.locator('#scratchFoilGrid:visible').waitFor();
    assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
-   assert.match(await page.locator('#imageUploadHelp').textContent(),/appears after scratching/);
+   const uploadHelp=await page.locator('#imageUploadHelp').textContent();
+   for(const hint of ['JPEG','PNG','WebP','10 MB','400 × 240','1200 × 1600','cropped']){
+     assert.ok(uploadHelp.includes(hint),'Upload guidance must include '+hint);
+   }
+   assert.equal(await page.locator('#eventDate').evaluate(e=>getComputedStyle(e).colorScheme),'dark');
+   assert.equal(await page.locator('#eventTime').evaluate(e=>getComputedStyle(e).colorScheme),'dark');
    assert.equal(await page.locator('#surfaceHeading').count(),0);
    assert.equal(await page.locator('#surfaceDescription').count(),0);
    assert.equal(await page.locator('#scratchFoilLabel:visible').count(),1);
@@ -231,6 +236,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#supportAct').fill('The Openers');
    await page.locator('#venue').fill('The Grand Hall');
    await page.locator('#venueAddress').fill('London, England');
+   await page.locator('#level').fill('3');
    await page.locator('#section').fill('Balcony');
    await page.locator('#row').fill('G');
    await page.locator('#seat').fill('18');
@@ -260,6 +266,14 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    const liveRect=await page.locator('#concertRevealedPreviewFrame').boundingBox();
    assert.ok(Math.abs(liveRect.width/liveRect.height-2.15)<.13,
      'Revealed preview must retain exact ticket proportions, never grow into a poster');
+   const bottomSpace=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+     const last=frame.querySelector('#concertLiveFields > div:last-child');
+     return {height:frame.getBoundingClientRect().height,
+       remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom,
+       pad:getComputedStyle(frame.querySelector('.concert-live-main')).paddingBottom};
+   });
+   assert.ok(bottomSpace.remaining >= bottomSpace.height*.075,
+     'Last concert ticket detail must sit safely above the bottom border: '+JSON.stringify(bottomSpace));
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
    assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
    assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
@@ -392,6 +406,14 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
      document.getElementById('reviewDate').textContent='Saturday, 21 November 2026';
      document.getElementById('reviewTimeRow').hidden=false;
      document.getElementById('reviewTime').textContent='21:12';
+     const extra=document.getElementById('reviewConcertExtra');
+     extra.hidden=false;
+     for(const [label,value] of [['VENUE ADDRESS','Example Street, London'],['LEVEL','3']]){
+       const cell=document.createElement('div');
+       const name=document.createElement('span');name.className='detail-label';name.textContent=label;
+       const text=document.createElement('span');text.className='detail-value';text.textContent=value;
+       cell.append(name,text);extra.append(cell);
+     }
      const shell=document.querySelector('.review-shell');
      shell.dataset.concertTheme='backstage';
      const ticket=shell.querySelector('.ticket');
@@ -446,6 +468,15 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
    assert.ok(layout.card.height < (size.name==='desktop'?570:230),
      'Concert owner review must not expand vertically like the former poster');
+   if(size.name==='desktop'){
+     const bottomSpace=await page.locator('.review-shell').evaluate(frame=>{
+       const last=frame.querySelector('#reviewConcertExtra > div:last-child');
+       return {height:frame.getBoundingClientRect().height,
+         remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom};
+     });
+     assert.ok(bottomSpace.remaining >= bottomSpace.height*.075,
+       'Owner concert details must have space above the inset printed border: '+JSON.stringify(bottomSpace));
+   }
    // Owner's static cover must use the SAVED foil. The original thumbnail's
    // gold fallback must never paint over a selected Midnight/Silver/Rose cover.
    assert.ok(source.includes('ownerFoilSurface.dataset.foil='),
