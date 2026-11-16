@@ -203,7 +203,7 @@ test('paid concert variant reuses recipient route, ticket fields and payment gat
   const {scratchSurface,reveal}=await data.json();
   assert.deepEqual(scratchSurface,{
     variant:'concert',style:'festival',foil:'midnight',theme:'luxury-elegant',hasImage:false,
-    ticketTemplate:'classic-notches',revealTheme:'classic',linkMode:'link'
+    ticketTemplate:'classic-notches',revealTheme:'classic',linkMode:'link',ticketDetails:{}
   });
   assert.equal(reveal.eventName,'Night at the Theatre');
   assert.equal(reveal.recipient,'Chloe');
