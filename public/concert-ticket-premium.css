@@ -536,3 +536,58 @@ body[data-ticket-variant="concert"] #concertZoomButton{
   display:block;
   margin:13px 0 0 auto;
 }
+
+
+/* Print-safe headline gutter: title must start INSIDE the inset trim line. */
+@media(min-width:681px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-left:clamp(58px,5.5vw,82px)!important;
+  }
+}
+@media(max-width:680px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-left:clamp(18px,6vw,32px)!important;
+  }
+}
+/* At mobile full-size inspection, the ticket has grown to print width.
+   Typography and gutters must grow too, not remain at thumbnail sizes. */
+@media(max-width:700px){
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket{
+    padding:35px 42px 35px 51px!important;
+    gap:7px!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame #concertLiveEvent,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket #eventName{
+    font-size:2.25rem!important;
+    margin:4px 0 9px!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-subtitle,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .concert-subtitle{
+    font-size:.77rem!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-fields dt,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket-item dt{
+    font-size:.6rem!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-fields dd,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket-item dd{
+    font-size:.9rem!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-stub,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket-identity{
+    padding:17px 7px!important;
+    gap:5px!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame #concertLiveStubFields :is(dt,dd),
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .concert-stub-fields :is(dt,dd){
+    font-size:.73rem!important;
+  }
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .recipient{
+    font-size:.88rem!important;
+  }
+}
