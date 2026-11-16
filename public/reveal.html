@@ -882,7 +882,8 @@
 
   <script defer src="/qr.js"></script>
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=theme-scenes-1';
+    import { ScratchCard } from '/scratchcard.js?v=final-20-1';
+    import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
     'use strict';
 
@@ -1203,7 +1204,8 @@
       const result = await readJson(response);
       const {style,foil,hasImage} = result.surface;
       const chosenTheme = result.surface.theme || DEFAULT_SCRATCH_THEME;
-      applyScratchTheme(document,chosenTheme,'review');
+      const artwork = getScratchArtwork(result.surface.artworkId);
+      if (!artwork) applyScratchTheme(document,chosenTheme,'review');
       const isConcert = result.surface.variant === 'concert';
       document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
       if (isConcert) {
@@ -1219,7 +1221,9 @@
       }
       const {audio} = result;
       const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',festival:'Festival Access',backstage:'Backstage Pass',custom:'Your uploaded scratch image'};
-      elements.surfaceReviewDescription.textContent = (result.surface.variant === 'concert' ? 'Scratch Concert Ticket Reveal · ' : '') + getScratchTheme(chosenTheme).label + ' theme · ' + (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
+      elements.surfaceReviewDescription.textContent = artwork
+        ? artwork.label + ' · ' + foil + ' finish'
+        : (result.surface.variant === 'concert' ? 'Scratch Concert Ticket Reveal · ' : '') + (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
       elements.surfaceAudioDescription.textContent = audio?.enabled !== false
         ? 'Sound: cinematic orchestral drum roll begins approximately 3 seconds after the first scratch.'
         : 'Sound: disabled for the recipient.';
@@ -1227,8 +1231,11 @@
       if (staticScratchCard) staticScratchCard.destroy();
       staticScratchCard = new ScratchCard({canvas:elements.surfaceReviewCanvas,
         foil,theme:chosenTheme,coverStyle:style === 'custom' ? 'classic' : style});
+      staticScratchCard.artworkId = artwork?.id || null;
       staticScratchCard.canvas.style.pointerEvents = 'none';
-      if (hasImage) {
+      if (artwork && !hasImage) {
+        await staticScratchCard.setCoverImage(artwork.src);
+      } else if (hasImage) {
         const imageResponse = await fetch(
           '/api/reveals/' + encodeURIComponent(revealId) + '/scratch-surface/image',
           {headers:ownerHeaders(),cache:'no-store'}
