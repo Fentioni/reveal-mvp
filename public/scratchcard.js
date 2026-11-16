@@ -6,6 +6,7 @@
  */
 import {getScratchTheme, DEFAULT_SCRATCH_THEME, SCRATCH_THEMES} from './scratch-themes.js';
 import {drawScratchThemeArtwork} from './scratch-theme-art.js';
+import {DEFAULT_CONCERT_TEMPLATE,isConcertTemplate,drawConcertTicketPath} from './concert-ticket-options.js';
 const FOILS = Object.freeze({
   gold: ['#654114', '#F8E3A0', '#BD8430', '#FFF3BF', '#9A6420'],
   silver: ['#687382', '#F2F6FA', '#A3B0BE', '#FFFFFF', '#778697'],
@@ -24,7 +25,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 };
 
 export class ScratchCard {
-  constructor({ canvas, foil = 'gold', coverStyle = 'classic', concertTicket = false, theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
+  constructor({ canvas, foil = 'gold', coverStyle = 'classic', concertTicket = false, ticketTemplate = DEFAULT_CONCERT_TEMPLATE, theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
     coverImage = null, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
@@ -38,6 +39,7 @@ export class ScratchCard {
     this.foil = FOILS[foil] ? foil : 'gold';
     this.coverStyle = SURFACE_STYLES.includes(coverStyle) ? coverStyle : 'classic';
     this.concertTicket = Boolean(concertTicket);
+    this.ticketTemplate = isConcertTemplate(ticketTemplate) ? ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
     this.theme = getScratchTheme(theme).id;
     this.imageRequest = 0;
     this.brushSize = clamp(Number(brushSize) || 48, 12, 120);
@@ -366,11 +368,18 @@ export class ScratchCard {
     ctx.fillStyle=sheen;
     ctx.fillRect(0,0,w,h);
 
-    // Only a neutral ticket outline and the tear-off perforation remain.
-    const stubX=w*.78;
-    ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.7)':'rgba(40,34,46,.42)';
+    // The chosen template determines the whole outer silhouette, with real
+    // cut-out corners/scallops; no shared rectangle painted underneath it.
+    ctx.save();
+    ctx.globalCompositeOperation='destination-in';
+    drawConcertTicketPath(ctx,w,h,this.ticketTemplate);
+    ctx.fill();
+    ctx.restore();
+    const stubX=w*.72;
+    ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.58)':'rgba(40,34,46,.34)';
     ctx.lineWidth=Math.max(1,w*.0025);
-    ctx.strokeRect(w*.019,h*.045,w*.962,h*.91);
+    drawConcertTicketPath(ctx,w,h,this.ticketTemplate);
+    ctx.stroke();
     ctx.fillStyle=this.foil==='midnight'?'rgba(240,246,255,.72)':'rgba(45,40,54,.48)';
     for(let y=h*.055;y<h*.95;y+=Math.max(7,h*.055)){
       ctx.fillRect(stubX-1,y,2,Math.max(3,h*.027));
