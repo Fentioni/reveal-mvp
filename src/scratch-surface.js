@@ -3,6 +3,7 @@
  * Only available in staging; entry-point explicitly gates this endpoint.
  * Every request must first pass the existing legacy owner-token authorisation.
  */
+import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
 const MAX_IMAGE = 10 * 1024 * 1024;
 const IMAGE_TYPES = Object.freeze({
   'image/jpeg': '.jpg',
@@ -61,6 +62,7 @@ async function details(env, id) {
     style: STYLES.has(saved.style) ? saved.style : 'classic',
     foil: FOILS.has(saved.foil) ? saved.foil : 'gold',
     theme: THEMES.has(saved.theme) ? saved.theme : DEFAULT_THEME,
+    ...(getScratchArtwork(saved.artworkId) ? {artworkId:saved.artworkId} : {}),
     coverAssetId: asset ? asset.id : null,
     variant: saved.variant === 'concert' ? 'concert' : 'ticket'
   };
@@ -184,6 +186,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           style:current.surface.style,
           foil:current.surface.foil,
           theme:current.surface.theme,
+          ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
           variant:current.surface.variant
         },
@@ -201,6 +204,12 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     const style = body.get('style');
     const foil = body.get('foil');
     const requestedTheme=body.get('theme');
+    const requestedArtwork=body.get('artworkId');
+    // Missing artworkId preserves legacy card semantics. An empty ID clears it.
+    const artworkId=requestedArtwork === null ? current.surface.artworkId :
+      requestedArtwork === '' ? null : requestedArtwork;
+    if (artworkId != null && (typeof artworkId !== 'string' || !getScratchArtwork(artworkId)))
+      return error('Choose an artwork from the approved scratch-card collection.');
     // Existing drafts saved before themes existed retain the elegant default.
     const theme=requestedTheme === null ? current.surface.theme : requestedTheme;
     const variant = body.get('variant') ?? current.surface.variant;
@@ -252,6 +261,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           style,
           foil,
           theme,
+          ...(artworkId ? {artworkId} : {}),
           variant,
           coverAssetId:style==='custom' ? newAssetId : null
         },
@@ -280,7 +290,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
-      return json({success:true,surface:{style,foil,theme,hasImage:style==='custom',variant},audio});
+      return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;
