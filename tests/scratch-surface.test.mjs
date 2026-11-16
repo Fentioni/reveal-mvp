@@ -335,6 +335,41 @@ test('concert creator stores template, independent reveal art and URL/QR mode wi
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.ticketTemplate,'stamp-edge',
     'Invalid settings must not overwrite a valid saved template');
 });
+test('concert ticket fields are saved and restored, validated, and unrelated checkout data remains untouched',async()=>{
+ const {env,legacy,state}=makeMocks();
+ const values={eventSubtitle:'A special evening',supportAct:'Support Group',venueAddress:'1 Music Lane, London',
+  ticketNumber:'TICKET-123',section:'Standing',level:'Ground',row:'F',seat:'18',gate:'A2',ticketPrice:'£25'};
+ const form=new FormData();
+ form.append('variant','concert');form.append('style','concert');form.append('foil','silver');
+ form.append('ticketDetails',JSON.stringify(values));
+ const resp=await scratchSurfaceResponse(request('PUT',form),env,{},legacy);
+ assert.equal(resp.status,200);
+ const saved=(await resp.json()).surface;
+ assert.deepEqual(saved.ticketDetails,values);
+ const stored=JSON.parse(state.config.fields_json);
+ assert.deepEqual(stored.scratchSurface.ticketDetails,values);
+ const read=await scratchSurfaceResponse(request(),env,{},legacy);
+ assert.deepEqual((await read.json()).surface.ticketDetails,values);
+ for(const invalid of [{seat:'x'.repeat(41)},{ticketPrice:200},{row:'R',eventSubtitle:'y'.repeat(121)}]){
+  const bad=new FormData();bad.append('variant','concert');bad.append('style','concert');
+  bad.append('foil','silver');bad.append('ticketDetails',JSON.stringify(invalid));
+  const res=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);
+  assert.equal(res.status,400);
+  assert.deepEqual(JSON.parse(state.config.fields_json).scratchSurface.ticketDetails,values,
+   'An invalid field must not overwrite the saved ticket');
+ }
+ const creator=await fs.promises.readFile(path.join(root,'public/legacy-create.html'),'utf8');
+ assert.ok(creator.includes('concertLiveTicketNumber'));
+ assert.ok(creator.includes('concertLiveFields'));
+ assert.ok(creator.includes('concertPreviewTabsDesktop'));
+ assert.ok(creator.includes('concertPreviewTabsMobile'));
+ assert.ok(creator.includes("surfaceBody.append('ticketDetails'"));
+ const review=await fs.promises.readFile(path.join(root,'public/reveal.html'),'utf8');
+ assert.ok(review.includes('reviewConcertExtra'));
+ const paid=await fs.promises.readFile(path.join(root,'public/recipient-scratch.html'),'utf8');
+ assert.ok(paid.includes('applyConcertTicketFields(data.scratchSurface.ticketDetails)'));
+});
+
 test('concert scratch variant reuses ticket surface persistence without adding a new product or changing payment', async () => {
   const {env,legacy,state}=makeMocks();
   const body=new FormData();
