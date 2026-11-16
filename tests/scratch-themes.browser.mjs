@@ -285,7 +285,9 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal((await page.locator('#concertLiveMessage').textContent()).trim(),'A night to remember!');
    assert.equal(await page.locator('#concertLiveQr svg').count(),1);
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
-   assert.ok(background.includes('concert-lights.svg'));
+   assert.ok(background==='none'||background.includes('concert-lights.svg'));
+   assert.equal(await page.locator('#concertRevealedPreviewFrame svg.ct-reference-art').count(),1,
+     'Reference-specific drawing replaces the old background-only design');
    if(size.name==='mobile'){
      await page.locator('#concertZoomButton').click();
      assert.equal(await page.locator('body').getAttribute('data-concert-zoom'),'open');
@@ -656,13 +658,13 @@ test('all five reference-based concert layouts keep photo and text in locked zon
       return {preset:art?.getAttribute('data-reference-preset')||frame.dataset.referenceLayout,
         count:frame.querySelectorAll(':scope > svg.ct-reference-art').length,
         viewBox:art?.getAttribute('viewBox'),ratio:art?.getBoundingClientRect().width/art?.getBoundingClientRect().height,
-        caption:art?.textContent};
+        caption:art?.textContent,eventTitle:art?.getAttribute('data-event-title')};
     });
     assert.equal(reference.count,1,'The source-specific SVG ticket must be visible');
     assert.equal(reference.viewBox,'0 0 2000 647','Reference layout uses exact wide source proportions');
     assert.equal(reference.preset,name,'The selected reference artwork must change with each preset');
     assert.ok(Math.abs(reference.ratio-2000/647)<.02,'Artwork must scale without reflow');
-    assert.ok(reference.caption.includes('Jesus Christ Superstar'),'Artwork uses purchaser title');
+    assert.equal(reference.eventTitle,'Jesus Christ Superstar','Artwork uses purchaser title, not example text');
     assert.equal(result.layout,name,'Selected layout must render rather than just change thumbnail');
     assert.equal(result.mode,'false','Without an upload no image lane should be reserved');
     assert.ok(Math.abs(result.ratio-3)<.18,'Every preset must be a wide 3:1 ticket');
