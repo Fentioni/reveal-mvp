@@ -52,10 +52,12 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $('concertLiveAdmit').textContent=$('admit').value.trim();
   $('concertLiveAdmit').hidden=!$('admit').value.trim();
   const recipient=$('recipient').value.trim(),sender=$('sender').value.trim();
-  $('concertLiveRecipient').textContent=recipient?'For: '+recipient:'';
-  $('concertLiveRecipient').hidden=!recipient;
-  $('concertLiveSender').textContent=sender?'From: '+sender:'';
-  $('concertLiveSender').hidden=!sender;
+  // The ticket stub gets ONE holder line, not recipient, sender and admission
+  // repeated as seven narrow vertical columns. Sender stays in the message.
+  const admission=$('admit').value.trim();
+  $('concertLiveRecipient').textContent=recipient?'For '+recipient:'';
+  $('concertLiveRecipient').hidden=!!admission || !recipient;
+  $('concertLiveSender').hidden=true;
   $('concertLiveMessage').textContent=$('personalMessage').value.trim();
   $('concertLiveMessage').hidden=!$('personalMessage').value.trim();
   $('concertLiveTicketNumber').textContent=detail.ticketNumber?'No. '+detail.ticketNumber:'';
