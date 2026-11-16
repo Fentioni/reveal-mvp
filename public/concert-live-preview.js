@@ -17,6 +17,8 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
  function render(){
   if(getVariant()!=='concert')return;
   const frame=$('concertRevealedPreviewFrame');
+  frame.dataset.concertTemplate=getTemplate();
+  frame.dataset.concertTheme=getTheme();
   frame.style.clipPath=concertTicketClipPath(getTemplate());
   frame.style.backgroundImage="url('/concert-reveal-art/"+getTheme()+".svg')";
   $('concertLiveEvent').textContent=$('eventName').value.trim() || 'Enter an event name';
