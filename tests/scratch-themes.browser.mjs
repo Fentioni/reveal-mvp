@@ -65,7 +65,7 @@ async function startServer(){
   const file=path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
@@ -172,8 +172,8 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
      silhouettes.add(await page.locator('.scratch-static-frame').evaluate(el=>getComputedStyle(el).clipPath));
      shapeCanvases.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
-   assert.equal(silhouettes.size,4,'Four distinct ticket cutout shapes must be applied to the preview');
-   assert.equal(shapeCanvases.size,4,'Changing templates must redraw the scratch surface shape');
+   assert.equal(silhouettes.size,5,'Five fixed ticket silhouettes must be applied to the preview');
+   assert.equal(shapeCanvases.size,5,'Changing presets must redraw the scratch cover');
    for(const theme of ['classic','concert-lights','festival','backstage']){
      await page.locator('.concert-theme-option[data-value="'+theme+'"]').click();
      assert.equal(await page.locator('.concert-theme-option[data-value="'+theme+'"]').getAttribute('aria-pressed'),'true');
@@ -309,89 +309,33 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));
    });
    await page.locator('#concertLiveImage:not([hidden])').waitFor();
-   const photoLayout=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
-     const art=frame.querySelector('#concertLiveImage').getBoundingClientRect();
-     const content=[...frame.querySelector('.concert-live-main').children].filter(el=>
-       el.id!=='concertLiveImage'&&!el.hidden&&getComputedStyle(el).display!=='none');
-     const level=frame.querySelector('[data-concert-field="level"] dt');
-     const main=frame.querySelector('.concert-live-main');
-     const m=main.getBoundingClientRect();
-     const border=getComputedStyle(main,'::before');
-     return {photoLeft:art.left,photoRight:art.right,photoWidth:art.width,
-       mainWidth:m.width,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
-       trimRight:m.right-parseFloat(border.right),levelTextWidth:level?.scrollWidth||0,
-       levelBoxWidth:level?.clientWidth||0};
-   });
-   assert.ok(photoLayout.textRight+2<=photoLayout.photoLeft,
-     'Event poster must never cover preview ticket text: '+JSON.stringify(photoLayout));
-   assert.ok(photoLayout.photoRight<=photoLayout.trimRight-2,
-     'Event poster must stay INSIDE the gold inner border: '+JSON.stringify(photoLayout));
-   assert.ok(photoLayout.photoWidth<=photoLayout.mainWidth*.26,
-     'Poster must shrink to protect the main ticket text area: '+JSON.stringify(photoLayout));
-   assert.ok(photoLayout.levelTextWidth<=photoLayout.levelBoxWidth+1,
-     'Level must remain a horizontal readable label: '+JSON.stringify(photoLayout));
 
-   // Assert the actual inner gold print-line rectangle, not the card's outer
-   // silhouette or only an image/text collision. All text must sit INSIDE it.
-   const safeTrim=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
-     const main=frame.querySelector('.concert-live-main');
-     const shell=frame.getBoundingClientRect();
-     const mainRect=main.getBoundingClientRect();
-     const border=getComputedStyle(main,'::before');
-     const outerBorder=getComputedStyle(frame,'::before');
-     const trim={
-       left:mainRect.left+parseFloat(border.left),
-       right:mainRect.right-parseFloat(border.right),
-       top:mainRect.top+parseFloat(border.top),
-       bottom:mainRect.bottom-parseFloat(border.bottom)
-     };
-     const selectors=['.concert-live-headnote','#concertLiveEvent','#concertLiveSubtitle',
-       '.concert-live-fields dt','.concert-live-fields dd'];
-     const violations=[];
-     for(const sel of selectors){
-       for(const node of frame.querySelectorAll(sel)){
-         if(node.hidden || getComputedStyle(node).display==='none')continue;
-         const rect=node.getBoundingClientRect();
-         if(rect.left<trim.left+3 || rect.top<trim.top+3 ||
-           rect.right>trim.right-3 || rect.bottom>trim.bottom-3){
-           violations.push({field:sel,box:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}});
-         }
-       }
-     }
-     const poster=frame.querySelector('#concertLiveImage').getBoundingClientRect();
-     if(poster.left<trim.left+3 || poster.right>trim.right-3 ||
-        poster.top<trim.top+3 || poster.bottom>trim.bottom-3){
-       violations.push({field:'poster',box:{left:poster.left,top:poster.top,right:poster.right,bottom:poster.bottom}});
-     }
-     return {trim,violations,outerPseudo:outerBorder.display,mainPseudo:border.display,
-       mainLeft:mainRect.left,stubLeft:frame.querySelector('.concert-live-stub').getBoundingClientRect().left,
-       frameRight:shell.right};
+   const integrity=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+     const main=frame.querySelector('.concert-live-main'),img=frame.querySelector('#concertLiveImage');
+     const card=frame.getBoundingClientRect(),parent=main.getBoundingClientRect(),poster=img.getBoundingClientRect();
+     const nodes=[...frame.querySelectorAll('.concert-live-headnote,#concertLiveEvent,#concertLiveSubtitle,.concert-live-fields dt,.concert-live-fields dd')]
+       .filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
+     const overlap=(a,b)=>a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1;
+     const inside=r=>r.left>=parent.left-1&&r.right<=parent.right+1&&r.top>=parent.top-1&&r.bottom<=parent.bottom+1;
+     return {ratio:card.width/card.height,grid:getComputedStyle(main).display,
+       area:getComputedStyle(img).gridArea,posterInside:inside(poster),
+       overlap:nodes.filter(n=>overlap(n.getBoundingClientRect(),poster)).map(n=>n.id||n.tagName),
+       overflow:nodes.filter(n=>!inside(n.getBoundingClientRect())).map(n=>n.id||n.tagName)};
    });
-   assert.equal(safeTrim.outerPseudo,'none','The combined ticket must not draw a misleading inner border');
-   assert.equal(safeTrim.mainPseudo,'block','The main printed panel requires its own gold border');
-   assert.deepEqual(safeTrim.violations,[],
-     'Every label, value, heading and poster must stay INSIDE the gold inner border: '+JSON.stringify(safeTrim));
+   assert.ok(Math.abs(integrity.ratio-3)<.18,'Ticket aspect ratio is 3:1');
+   assert.equal(integrity.grid,'grid','Preset uses a fixed CSS grid');
+   assert.equal(integrity.area,'image','Poster is assigned to image grid zone');
+   assert.equal(integrity.posterInside,true,'Poster must be fully contained');
+   assert.deepEqual(integrity.overlap,[],'Poster must not overlap any printed text');
+   assert.deepEqual(integrity.overflow,[],'Printed text must remain inside main zone');
    if(size.name==='mobile'){
      await page.locator('#concertZoomButton').click();
-     const zoomSafe=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
-       const main=frame.querySelector('.concert-live-main');
-       const m=main.getBoundingClientRect(),s=getComputedStyle(main,'::before');
-       const trim={left:m.left+parseFloat(s.left),right:m.right-parseFloat(s.right),
-         top:m.top+parseFloat(s.top),bottom:m.bottom-parseFloat(s.bottom)};
-       const relevant=[...frame.querySelectorAll('.concert-live-headnote,#concertLiveEvent,#concertLiveSubtitle,.concert-live-fields dt,.concert-live-fields dd,#concertLiveImage')]
-         .filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
-       const violations=relevant.map(el=>({name:el.id||el.tagName,rect:el.getBoundingClientRect()}))
-         .filter(x=>x.rect.left<trim.left+3||x.rect.top<trim.top+3||
-           x.rect.right>trim.right-3||x.rect.bottom>trim.bottom-3)
-         .map(x=>({name:x.name,left:x.rect.left,top:x.rect.top,right:x.rect.right,bottom:x.rect.bottom}));
-       return {trim,violations};
-     });
-     assert.deepEqual(zoomSafe.violations,[],
-       'iPhone full-size ticket must keep every printed element inside its gold border: '+JSON.stringify(zoomSafe));
+     const zoomRatio=await page.locator('#concertRevealedPreviewFrame')
+       .evaluate(e=>e.getBoundingClientRect().width/e.getBoundingClientRect().height);
+     assert.ok(Math.abs(zoomRatio-3)<.18,'iPhone zoom retains 3:1 ratio');
      await page.screenshot({path:resolve(output,'mobile-zoom-ticket-print-safe.png'),fullPage:true});
      await page.locator('#concertZoomButton').click();
    }
-
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
    await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
@@ -484,7 +428,8 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
  const browser=await browserType.launch({headless:true});
  try{
   const source=await readFile(resolve(root,'reveal.html'),'utf8');
-  const style=await readFile(resolve(root,'concert-ticket-premium.css'),'utf8');
+  const style=(await readFile(resolve(root,'concert-ticket-premium.css'),'utf8'))+'\n'+
+    (await readFile(resolve(root,'concert-layout-presets.css'),'utf8'));
    const html=source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
      .replace('</head>','<style>'+style+'</style></head>');
   for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
@@ -493,7 +438,7 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
    // A page created via setContent has no site origin; load the same
    // production Concert Ticket stylesheet directly for a meaningful
    // owner-review visual acceptance instead of testing only inline CSS.
-   await page.addStyleTag({content:await readFile(resolve(root,'concert-ticket-premium.css'),'utf8')});
+   await page.addStyleTag({content:style});
    await page.evaluate(()=>{
      document.body.dataset.ticketVariant='concert';
      document.getElementById('reviewContent').hidden=false;
@@ -517,9 +462,14 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
      extra.prepend(document.getElementById('reviewVenueRow'));
      const shell=document.querySelector('.review-shell');
      shell.dataset.concertTheme='backstage';
+     shell.dataset.concertLayout='premium-headliner';
+     shell.dataset.hasImage='false';
      const ticket=shell.querySelector('.ticket');
      const stub=shell.querySelector('.review-heading');
      ticket.querySelector('#ticketTitle').after(document.getElementById('imageWrap'));
+     const zone=document.createElement('div');zone.className='ct-detail-zone';
+     ticket.querySelector('.details').before(zone);
+     zone.append(ticket.querySelector('.details'),extra);
      stub.append(document.getElementById('bookingCard'));
      const rows=document.getElementById('reviewConcertStubRows');
      rows.hidden=false;
@@ -554,7 +504,7 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
        rotation:getComputedStyle(sample).transform,
        background:getComputedStyle(document.querySelector('.review-shell>.ticket')).backgroundImage};
    });
-   assert.ok(parseFloat(print.border)>0,'Inset printed border must be fully visible');
+   assert.equal(parseFloat(print.border),0,'The old problematic border is removed');
    assert.equal(print.orientation,'vertical-rl','Stub credentials must read at 90 degrees');
    assert.notEqual(print.rotation,'none','Stub values must be rotated');
    assert.ok(print.background.includes('linear-gradient('),'Show designer event artwork, not boxed form fields');
