@@ -234,7 +234,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#row').fill('G');
    await page.locator('#seat').fill('18');
    await page.locator('#gate').fill('A');
-   await page.locator('#ticketPrice').fill('£25');
+   assert.equal(await page.locator('#ticketPrice').count(),0,'No ticket price or face-value field');
    await page.locator('#ticketNumber').fill('T-123');
    await page.locator('#eventDate').fill('2027-03-20');
    await page.locator('#eventTime').fill('19:30');
@@ -247,7 +247,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),0);
    assert.equal((await page.locator('#concertLiveEvent').textContent()).trim(),'Live Music at the Hall');
    const details=await page.locator('#concertLiveFields').textContent();
-   for(const value of ['The Grand Hall','London, England','Balcony','G','18','A','£25']){
+   for(const value of ['The Grand Hall','London, England','Balcony','G','18','A']){
     assert.ok(details.includes(value),'Revealed ticket must include '+value);
    }
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
