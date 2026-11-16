@@ -314,11 +314,13 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      const content=[...frame.querySelector('.concert-live-main').children].filter(el=>
        el.id!=='concertLiveImage'&&!el.hidden&&getComputedStyle(el).display!=='none');
      const level=frame.querySelector('[data-concert-field="level"] dt');
-     const paper=frame.getBoundingClientRect();
+     const main=frame.querySelector('.concert-live-main');
+     const m=main.getBoundingClientRect();
+     const border=getComputedStyle(main,'::before');
      return {photoLeft:art.left,photoRight:art.right,photoWidth:art.width,
-       mainWidth:frame.querySelector('.concert-live-main').getBoundingClientRect().width,
-       textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
-       trimRight:paper.right-paper.width*.076,levelTextWidth:level?.scrollWidth||0,levelBoxWidth:level?.clientWidth||0};
+       mainWidth:m.width,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
+       trimRight:m.right-parseFloat(border.right),levelTextWidth:level?.scrollWidth||0,
+       levelBoxWidth:level?.clientWidth||0};
    });
    assert.ok(photoLayout.textRight+2<=photoLayout.photoLeft,
      'Event poster must never cover preview ticket text: '+JSON.stringify(photoLayout));
@@ -545,8 +547,9 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    const print=await page.evaluate(()=>{
      const shell=document.querySelector('.review-shell');
      const sample=document.querySelector('#reviewConcertStubRows>div');
-     return {border:getComputedStyle(shell,'::before').borderTopWidth,
-       inset:getComputedStyle(shell,'::before').top,
+     const printedMain=shell.querySelector('article.ticket');
+     return {border:getComputedStyle(printedMain,'::before').borderTopWidth,
+       inset:getComputedStyle(printedMain,'::before').top,
        orientation:getComputedStyle(sample).writingMode,
        rotation:getComputedStyle(sample).transform,
        background:getComputedStyle(document.querySelector('.review-shell>.ticket')).backgroundImage};
