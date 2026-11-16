@@ -321,8 +321,8 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    assert.equal(await page.locator('#card').getAttribute('data-concert-theme'),'backstage');
    const card=await page.locator('#card').boundingBox();
    assert.ok(Math.abs(card.width/card.height-2.15)<.13,'Recipient ticket must remain landscape 2.15:1');
-   assert.equal(await page.locator('#concertStubFields .ticket-item').count(),5,
-     'Populate detachable stub with ticket number, section, row, seat and gate');
+   assert.equal(await page.locator('#concertStubFields .ticket-item').count(),6,
+     'Populate detachable stub with admit, ticket number, section, row, seat and gate');
    assert.equal(await page.locator('#concertStubFields').textContent().then(v=>v.includes('T-123')),true);
    assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
    assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
