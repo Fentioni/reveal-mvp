@@ -325,6 +325,7 @@
   </div>
   <p class="status" id="status" aria-live="polite"></p>
   <progress id="progress" value="0" max="100" aria-label="Scratch progress" hidden></progress>
+  <button id="concertFullTicketButton" type="button" hidden>View full-size ticket</button>
   <a id="bookingAction" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer"
     target="_blank" hidden>Open your booking link</a>
   <div id="controls" class="buttons" hidden>
@@ -333,6 +334,10 @@
   </div>
   <footer id="footer"></footer>
 </main>
+<dialog id="concertFullTicketDialog" aria-label="Enlarged concert ticket">
+  <div id="concertFullTicketScroll" class="concert-full-ticket-scroll"></div>
+  <button id="concertCloseZoom" type="button">Close</button>
+</dialog>
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
@@ -486,7 +491,10 @@
         // has substantially scratched it; Canvas overlays otherwise block taps.
         if (bookingLink && !concertQrMode && p >= 0.7) $('bookingAction').hidden = false;
         if(concertQrMode && p >= 0.7) $('concertQrRow').style.visibility='visible';
-        if(isConcert && p>=0.7) $('closingDetails').style.visibility='visible';
+        if(isConcert && p>=0.7){
+          $('closingDetails').style.visibility='visible';
+          $('concertFullTicketButton').hidden=false;
+        }
       },
       onComplete:() => { status.textContent = 'You uncovered your surprise!'; }
     });
@@ -508,6 +516,26 @@
     status.textContent = 'Scratch the card to discover your surprise.';
   }
 
+  $('concertFullTicketButton').addEventListener('click',()=>{
+    // This action appears only after paid recipient has physically uncovered
+    // most of the foil. The enlarged version is a read-only ticket, no canvas.
+    if(!scratch || $('concertFullTicketButton').hidden)return;
+    const original=$('card');
+    const copy=document.createElement('div');
+    copy.className='card concert-ticket foil-ready';
+    copy.dataset.concertTemplate=original.dataset.concertTemplate;
+    copy.dataset.concertTheme=original.dataset.concertTheme;
+    copy.style.clipPath=original.style.clipPath;
+    const print=$('underlay').cloneNode(true);
+    print.removeAttribute('id');
+    for(const item of print.querySelectorAll('[id]'))item.removeAttribute('id');
+    print.style.visibility='visible';
+    copy.append(print);
+    $('concertFullTicketScroll').replaceChildren(copy);
+    $('concertFullTicketDialog').showModal();
+  });
+  $('concertCloseZoom').addEventListener('click',()=>$('concertFullTicketDialog').close());
+  $('concertFullTicketDialog').addEventListener('close',()=>$('concertFullTicketScroll').replaceChildren());
   $('replayButton').addEventListener('click',() => {
     if (!scratch) return;
     cinematic.reset();
@@ -515,6 +543,9 @@
     $('bookingAction').hidden = true;
     if(concertQrMode) $('concertQrRow').style.visibility='hidden';
     if(document.body.dataset.ticketVariant==='concert')$('closingDetails').style.visibility='hidden';
+    $('concertFullTicketButton').hidden=true;
+    if($('concertFullTicketDialog').open)$('concertFullTicketDialog').close();
+    $('concertFullTicketScroll').replaceChildren();
     status.textContent = 'Scratch to begin again.';
   });
   $('soundButton').addEventListener('click',() => {
