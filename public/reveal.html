@@ -813,7 +813,7 @@
 
   </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
-<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-7">
+<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-8">
 </head>
 
 <body>
@@ -1383,6 +1383,7 @@
           }else{
             const label=document.createElement('span');label.className='detail-label';label.textContent=item.label;
             const value=document.createElement('span');value.className='detail-value';value.textContent=item.value;
+            cell.dataset.concertField=item.id;
             cell.append(label,value);extra.append(cell);
           }
         }
@@ -1421,6 +1422,13 @@
         const ticket = document.querySelector('.review-shell > article.ticket');
         const stub = document.querySelector('.review-shell > .review-heading');
         ticket.querySelector('#ticketTitle').after(elements.imageWrap);
+        // Keep the venue beside venue address and level in the second print-safe line.
+        const venueRow=document.getElementById('reviewVenueRow');
+        if(!venueRow.hidden){
+          const secondLine=document.getElementById('reviewConcertExtra');
+          secondLine.prepend(venueRow);
+          secondLine.hidden=false;
+        }
         stub.appendChild(elements.bookingCard);
         document.querySelector('.review-shell').after(document.getElementById('reviewMessageCard'));
         document.getElementById('reviewAdmitRow').hidden=true;
