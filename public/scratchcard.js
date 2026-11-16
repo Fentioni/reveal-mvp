@@ -6,7 +6,7 @@
  */
 import {getScratchTheme, DEFAULT_SCRATCH_THEME, SCRATCH_THEMES} from './scratch-themes.js';
 import {drawScratchThemeArtwork} from './scratch-theme-art.js';
-import {DEFAULT_CONCERT_TEMPLATE,isConcertTemplate,drawConcertTicketPath} from './concert-ticket-options.js';
+import {DEFAULT_CONCERT_TEMPLATE,isConcertTemplate,drawConcertTicketPath,isConcertStubLeft} from './concert-ticket-options.js';
 const FOILS = Object.freeze({
   gold: ['#654114', '#F8E3A0', '#BD8430', '#FFF3BF', '#9A6420'],
   silver: ['#687382', '#F2F6FA', '#A3B0BE', '#FFFFFF', '#778697'],
@@ -377,7 +377,7 @@ export class ScratchCard {
     ctx.restore();
     // The printed trim border must sit within the deepest scallops/notches:
     // never stroke the clipped outside edge and lose half the border.
-    const stubLeft=this.ticketTemplate==='side-perforations';
+    const stubLeft=isConcertStubLeft(this.ticketTemplate);
     const stubX=w*(stubLeft?.24:.76);
     ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.65)':'rgba(40,34,46,.44)';
     ctx.lineWidth=Math.max(1,w*.0022);
