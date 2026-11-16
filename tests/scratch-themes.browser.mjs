@@ -65,7 +65,7 @@ async function startServer(){
   const file=path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
@@ -314,7 +314,9 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
  const browser=await browserType.launch({headless:true});
  try{
   const source=await readFile(resolve(root,'reveal.html'),'utf8');
-  const html=source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+  const style=await readFile(resolve(root,'concert-ticket-premium.css'),'utf8');
+   const html=source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'')
+     .replace('</head>','<style>'+style+'</style></head>');
   for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
    const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
    await page.setContent(html,{waitUntil:'domcontentloaded'});
@@ -358,6 +360,19 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
      'Owner review must match the original ticket template ratio at any screen width');
    assert.ok(layout.main.right <= layout.stub.x+2,'Main panel must end at detachable stub');
    assert.ok(layout.stubRows.height > 0,'Stub must contain seat/row/admit details');
+   const print=await page.evaluate(()=>{
+     const shell=document.querySelector('.review-shell');
+     const sample=document.querySelector('#reviewConcertStubRows>div');
+     return {border:getComputedStyle(shell,'::before').borderTopWidth,
+       inset:getComputedStyle(shell,'::before').top,
+       orientation:getComputedStyle(sample).writingMode,
+       rotation:getComputedStyle(sample).transform,
+       background:getComputedStyle(document.querySelector('.review-shell>.ticket')).backgroundImage};
+   });
+   assert.ok(parseFloat(print.border)>0,'Inset printed border must be fully visible');
+   assert.equal(print.orientation,'vertical-rl','Stub credentials must read at 90 degrees');
+   assert.notEqual(print.rotation,'none','Stub values must be rotated');
+   assert.ok(print.background.includes('linear-gradient('),'Show designer event artwork, not boxed form fields');
    assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
    assert.ok(layout.card.height < (size.name==='desktop'?570:230),
      'Concert owner review must not expand vertically like the former poster');
