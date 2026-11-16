@@ -26,8 +26,7 @@ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-she
   box-shadow:0 15px 44px #0005;
   isolation:isolate;
 }
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"],
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"]{
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"]{
   --ct-stub-col:1;--ct-main-col:2;
   grid-template-columns:minmax(0,var(--ct-stub)) minmax(0,var(--ct-main));
 }
@@ -191,11 +190,9 @@ body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap{
   box-shadow:0 10px 25px #0004!important;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="side-perforations"] #concertLiveImage,
-body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="rounded-stub"] #concertLiveImage,
 body[data-ticket-variant="concert"] .review-shell[data-concert-template="side-perforations"] .image-wrap,
-body[data-ticket-variant="concert"] .review-shell[data-concert-template="rounded-stub"] .image-wrap,
 body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap,
-body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="rounded-stub"] .event-image-wrap{
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap{
   right:4.5%;
 }
 body[data-ticket-variant="concert"] #concertLiveImage,
@@ -238,8 +235,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity::befor
   top:5%;bottom:5%;left:0;
   border-left:3px dashed #e3c995d4;pointer-events:none;
 }
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::before,
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"] :is(.concert-live-stub,.review-heading,.ticket-identity)::before{
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::before{
   left:auto;right:0;border-left:0;border-right:3px dashed #e3c995d4;
 }
 /* Decorative ticket printing, not a machine-readable entry barcode. */
@@ -249,8 +245,7 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
   top:18%;right:4px;
   background:repeating-linear-gradient(to right,#f4deb3 0 1px,transparent 1px 3px,#f4deb3 3px 5px,transparent 5px 8px,#f4deb3 8px 9px,transparent 9px 11px);
 }
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after,
-body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after{
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after{
   right:auto;left:4px;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>strong,
