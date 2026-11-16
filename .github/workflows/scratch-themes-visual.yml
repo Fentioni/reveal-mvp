@@ -4,6 +4,10 @@ on:
     branches: [feature/stage4b-cloudflare-staging]
     paths:
       - 'public/legacy-create.html'
+      - 'public/concert-layout-presets.css'
+      - 'public/concert-ticket-premium.css'
+      - 'public/concert-ticket-options.js'
+      - 'public/concert-live-preview.js'
       - 'public/reveal.html'
       - 'public/recipient-scratch.html'
       - 'public/scratchcard.js'
