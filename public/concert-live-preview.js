@@ -42,6 +42,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
    for(const [label,value] of rows){
     if(!value)continue;
     const item=document.createElement('div');
+    item.dataset.concertField=label==='ADDRESS'?'venueAddress':label.toLowerCase();
     const dt=document.createElement('dt');dt.textContent=label;
     const dd=document.createElement('dd');dd.textContent=value;
     item.append(dt,dd);list.append(item);
