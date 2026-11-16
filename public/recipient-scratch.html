@@ -179,7 +179,8 @@
   <footer id="footer"></footer>
 </main>
 <script type="module">
-  import { ScratchCard } from '/scratchcard.js?v=theme-scenes-1';
+  import { ScratchCard } from '/scratchcard.js?v=final-20-1';
+   import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
   import { recipientCardModel } from '/scratch-recipient-fields.js?v=complete-card-1';
@@ -223,12 +224,13 @@
     if (!data.success) throw new Error('This surprise is not available.');
     const model = recipientCardModel(data.reveal);
     const chosenTheme = data.scratchSurface.theme || DEFAULT_SCRATCH_THEME;
-    const visualTheme = applyScratchTheme(document,chosenTheme,'recipient');
+    const artwork = getScratchArtwork(data.scratchSurface.artworkId);
+    const visualTheme = artwork ? null : applyScratchTheme(document,chosenTheme,'recipient');
     soundEnabled = data.audio?.enabled !== false;
     const isConcert = data.scratchSurface.variant === 'concert';
     document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
     $('card').classList.toggle('concert-ticket',isConcert);
-    document.querySelector('.eyebrow').textContent = visualTheme.icon+' '+visualTheme.label+' reveal';
+    document.querySelector('.eyebrow').textContent = artwork ? 'A special scratch reveal' : visualTheme.icon+' '+visualTheme.label+' reveal';
     text('title','A surprise for ' + model.recipient);
     text('name',model.recipient);
     text('eventName',model.eventName);
@@ -271,7 +273,11 @@
       onComplete:() => { status.textContent = 'You uncovered your surprise!'; }
     });
 
-    if (data.scratchSurface.hasImage) {
+    scratch.artworkId = artwork?.id || null;
+    if (artwork && !data.scratchSurface.hasImage) {
+      const applied = await scratch.setCoverImage(artwork.src);
+      if (!applied) throw new Error('The selected scratch artwork could not be opened.');
+    } else if (data.scratchSurface.hasImage) {
       const applied = await scratch.setCoverImage('/r/' + encodeURIComponent(slug) + '/scratch-cover');
       if (!applied) throw new Error('Your custom scratch image could not be loaded.');
     }
