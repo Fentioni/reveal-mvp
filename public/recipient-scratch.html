@@ -229,7 +229,7 @@
     $('closingDetails').hidden = !model.sender && !model.message;
     text('sender',model.sender ? 'With love, from ' + model.sender : '');
     bookingLink = model.ticketUrl;
-    $('bookingRow').hidden = !bookingLink;
+    $('bookingRow').hidden = !bookingLink || concertQrMode;
     if (bookingLink) {
       $('bookingUrl').textContent = bookingLink;
       $('bookingUrl').href = bookingLink;
