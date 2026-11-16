@@ -307,7 +307,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
-      return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant},audio});
+      return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant,
+        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode}:{})},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;
