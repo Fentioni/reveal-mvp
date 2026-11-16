@@ -781,3 +781,22 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
   body[data-ticket-variant="concert"] .review-shell #reviewConcertNumber,
   body[data-ticket-variant="concert"] .card.concert-ticket #recipientConcertNumber{font-size:.35rem!important}
 }
+
+
+/* Stable DOM-based decorative print stripe. A real QR replaces it when one
+   has been supplied; never imply that this visual stripe is an entry code. */
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after{
+  display:none!important;
+}
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity)>.ct-barcode-art{
+  position:absolute!important;z-index:2!important;
+  top:19%;right:4.5%;height:61%;width:7%;display:block;
+  background:repeating-linear-gradient(90deg,
+    var(--ct-stub-ink) 0 2px,transparent 2px 4px,
+    var(--ct-stub-ink) 4px 6px,transparent 6px 9px,
+    var(--ct-stub-ink) 9px 10px,transparent 10px 13px);
+  opacity:.85;pointer-events:none;
+}
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity):has(svg)>.ct-barcode-art{
+  display:none!important;
+}
