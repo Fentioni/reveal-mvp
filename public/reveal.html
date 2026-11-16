@@ -1386,6 +1386,7 @@
           ? result.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
         const shell=document.querySelector('.review-shell');
         shell.dataset.concertTheme=look;
+        shell.dataset.concertTemplate=shape;
         shell.style.clipPath=concertTicketClipPath(shape);
         elements.surfaceReview.querySelector('.scratch-surface-thumb').style.clipPath=concertTicketClipPath(shape);
         if(result.surface.linkMode==='qr' && reveal.ticketUrl){
@@ -1421,7 +1422,7 @@
           document.getElementById('reviewConcertStubRows').hidden=false;
         }
         document.querySelector('.review-label').textContent = 'PERSONALISED FOR';
-        ticket.querySelector('.ticket-label').textContent = 'SCRATCH CONCERT TICKET';
+        ticket.querySelector('.ticket-label').textContent = 'LIVE IN CONCERT';
         elements.surfaceReview.querySelector('h2').textContent = 'Concert ticket scratch cover';
       }
       const {audio} = result;
