@@ -618,3 +618,81 @@ test('paid recipient uses selected artwork as scratch foil while hiding surprise
   await page.close();
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+
+
+test('all five reference-based concert layouts keep photo and text in locked zones at phone and desktop widths',
+ {timeout:120000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ const names=['premium-headliner','rock-split','promo-poster','neon-tour','editorial-concert'];
+ try{
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   const page=await browser.newPage({viewport:size,reducedMotion:'reduce'});
+   const errors=[];page.on('pageerror',error=>errors.push(error.message));
+   await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
+   await page.locator('#concertTemplateChoices .concert-template-option:enabled').first().waitFor();
+   await page.locator('#recipient').fill('Chloe');
+   await page.locator('#eventName').fill('Jesus Christ Superstar');
+   await page.locator('#eventSubtitle').fill('A musical spectacular');
+   await page.locator('#venue').fill('Theatre Royal, Drury Lane');
+   await page.locator('#venueAddress').fill('London, England');
+   await page.locator('#level').fill('Royal Circle');
+   await page.locator('#section').fill('Stalls');
+   await page.locator('#row').fill('G');
+   await page.locator('#seat').fill('18');
+   await page.locator('#gate').fill('A');
+   await page.locator('#eventDate').fill('2027-04-10');
+   await page.locator('#eventTime').fill('19:30');
+   for(const name of names){
+    await page.locator('.concert-template-option[data-value="'+name+'"]').click();
+    const result=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+      const panel=frame.querySelector('.concert-live-main');
+      return {layout:frame.dataset.concertLayout,mode:frame.dataset.hasImage,
+        ratio:frame.getBoundingClientRect().width/frame.getBoundingClientRect().height,
+        columns:getComputedStyle(panel).gridTemplateColumns.split(' ').filter(Boolean).length};
+    });
+    assert.equal(result.layout,name,'Selected layout must render rather than just change thumbnail');
+    assert.equal(result.mode,'false','Without an upload no image lane should be reserved');
+    assert.ok(Math.abs(result.ratio-3)<.18,'Every preset must be a wide 3:1 ticket');
+    assert.equal(result.columns,1,'No-image ticket should expand its text area');
+   }
+   await page.evaluate(async()=>{
+     const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;
+     const ctx=canvas.getContext('2d');ctx.fillStyle='#5a3d8f';ctx.fillRect(0,0,600,800);
+     const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+     const transfer=new DataTransfer();
+     transfer.items.add(new File([blob],'concert-poster.png',{type:'image/png'}));
+     const upload=document.getElementById('image');
+     upload.files=transfer.files;upload.dispatchEvent(new Event('change',{bubbles:true}));
+   });
+   await page.locator('#concertLiveImage:not([hidden])').waitFor();
+   for(const name of names){
+    await page.locator('.concert-template-option[data-value="'+name+'"]').click();
+    const layout=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+      const panel=frame.querySelector('.concert-live-main');
+      const photo=frame.querySelector('#concertLiveImage');
+      const rect=panel.getBoundingClientRect(),pic=photo.getBoundingClientRect();
+      const nodes=[...frame.querySelectorAll('.concert-live-headnote,#concertLiveEvent,#concertLiveSubtitle,.concert-live-fields dt,.concert-live-fields dd')]
+        .filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
+      const overlap=(a,b)=>a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1;
+      const inside=r=>r.left>=rect.left-1&&r.right<=rect.right+1&&r.top>=rect.top-1&&r.bottom<=rect.bottom+1;
+      const wrong=nodes.filter(el=>!inside(el.getBoundingClientRect())||overlap(el.getBoundingClientRect(),pic))
+        .map(el=>el.id||el.textContent.slice(0,22));
+      return {layout:frame.dataset.concertLayout,image:frame.dataset.hasImage,
+        grid:getComputedStyle(panel).display,
+        posterArea:getComputedStyle(photo).gridArea,photoInside:inside(pic),wrong,
+        mainWidth:rect.width,photoWidth:pic.width};
+    });
+    assert.equal(layout.layout,name);
+    assert.equal(layout.image,'true');
+    assert.equal(layout.grid,'grid');
+    assert.equal(layout.posterArea,'image','Image must be in dedicated grid track');
+    assert.equal(layout.photoInside,true,'Image may not cross its main panel: '+JSON.stringify(layout));
+    assert.deepEqual(layout.wrong,[],'Text may not spill or overlap poster: '+JSON.stringify(layout));
+    await page.screenshot({path:resolve(output,size.name+'-reference-layout-'+name+'.png'),fullPage:true});
+   }
+   assert.deepEqual(errors,[]);
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
