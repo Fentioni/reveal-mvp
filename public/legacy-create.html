@@ -657,7 +657,16 @@
       border-radius:11px;box-shadow:0 20px 60px #0009;
       clip-path:polygon(0 0,76% 0,78% 5%,80% 0,100% 0,100% 100%,80% 100%,78% 95%,76% 100%,0 100%);
     }
-    body[data-ticket-variant="concert"] .scratch-static-frame::after{display:none}
+    /* Solid static creator cover: avoids the dark underlying canvas showing
+       in place of selected foil, while the paid recipient retains real Canvas scratching. */
+    body[data-ticket-variant="concert"] .scratch-static-frame{
+      background-image:linear-gradient(105deg,#654114,#F8E3A0 30%,#BD8430 60%,#FFF3BF 84%,#9A6420)
+    }
+    body[data-ticket-variant="concert"] .scratch-static-frame canvas{opacity:0!important}
+    body[data-ticket-variant="concert"] .scratch-static-frame::after{
+      display:block;content:"";position:absolute;left:73%;top:5%;bottom:5%;width:0;z-index:2;
+      border-left:2px dashed rgba(31,29,48,.36);pointer-events:none
+    }
     body[data-ticket-variant="concert"] .scratch-desktop-dock{width:100%}
     body[data-ticket-variant="concert"] .scratch-mobile-dock .scratch-static-frame{
       width:100%;max-width:550px;border-radius:10px
@@ -1225,7 +1234,7 @@
     });
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
-      const mobile = window.matchMedia("(max-width: 900px)").matches;
+      const mobile = currentVariant !== 'concert' && window.matchMedia("(max-width: 900px)").matches;
       const dock = $(mobile ? "scratchMobileDock" : "scratchDesktopDock");
       const frame = scratchPreview.canvas.closest(".scratch-static-frame");
       if (frame && frame.parentElement !== dock) dock.appendChild(frame);
@@ -1392,6 +1401,12 @@
       return data;
     }
 
+    const concertFoilGradients=Object.freeze({
+      gold:'linear-gradient(105deg,#654114 0%,#F8E3A0 30%,#BD8430 60%,#FFF3BF 84%,#9A6420 100%)',
+      silver:'linear-gradient(105deg,#687382 0%,#F2F6FA 30%,#A3B0BE 60%,#FFFFFF 84%,#778697 100%)',
+      midnight:'linear-gradient(105deg,#070F28 0%,#3555A4 30%,#101B41 60%,#667FD9 84%,#111933 100%)',
+      rose:'linear-gradient(105deg,#835465 0%,#FAD5D4 30%,#BE8398 60%,#FFE8DD 84%,#9C5A70 100%)'
+    });
     function refreshScratchChoices() {
       for (const button of form.querySelectorAll("[data-scratch-foil]")) {
         button.setAttribute("aria-pressed", String(button.dataset.scratchFoil === $("scratchFoil").value));
@@ -1407,8 +1422,15 @@
       scratchPreview.concertTicket = currentVariant === "concert";
       scratchPreview.ticketTemplate = concertTemplateId;
       const previewFrame=scratchPreview.canvas.closest('.scratch-static-frame');
-      if(previewFrame) previewFrame.style.clipPath=currentVariant==='concert'
-        ? concertTicketClipPath(concertTemplateId) : '';
+      if(previewFrame){
+        previewFrame.style.clipPath=currentVariant==='concert'
+          ? concertTicketClipPath(concertTemplateId) : '';
+        // Creator preview is an un-scratchable static foil. CSS gives a
+        // reliable full-card fill regardless of Canvas resize or tab visibility.
+        previewFrame.style.backgroundImage=currentVariant==='concert'
+          ? concertFoilGradients[foil] : '';
+        previewFrame.dataset.foil=currentVariant==='concert'?foil:'';
+      }
       if (currentVariant === "concert") document.body.style.setProperty("--concert-foil-edge",
         {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[foil]);
       const useImage = currentVariant !== "concert" && style === "custom";
