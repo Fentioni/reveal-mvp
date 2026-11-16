@@ -328,6 +328,68 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      'Poster must shrink to protect the main ticket text area: '+JSON.stringify(photoLayout));
    assert.ok(photoLayout.levelTextWidth<=photoLayout.levelBoxWidth+1,
      'Level must remain a horizontal readable label: '+JSON.stringify(photoLayout));
+
+   // Assert the actual inner gold print-line rectangle, not the card's outer
+   // silhouette or only an image/text collision. All text must sit INSIDE it.
+   const safeTrim=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+     const main=frame.querySelector('.concert-live-main');
+     const shell=frame.getBoundingClientRect();
+     const mainRect=main.getBoundingClientRect();
+     const border=getComputedStyle(main,'::before');
+     const outerBorder=getComputedStyle(frame,'::before');
+     const trim={
+       left:mainRect.left+parseFloat(border.left),
+       right:mainRect.right-parseFloat(border.right),
+       top:mainRect.top+parseFloat(border.top),
+       bottom:mainRect.bottom-parseFloat(border.bottom)
+     };
+     const selectors=['.concert-live-headnote','#concertLiveEvent','#concertLiveSubtitle',
+       '.concert-live-fields dt','.concert-live-fields dd'];
+     const violations=[];
+     for(const sel of selectors){
+       for(const node of frame.querySelectorAll(sel)){
+         if(node.hidden || getComputedStyle(node).display==='none')continue;
+         const rect=node.getBoundingClientRect();
+         if(rect.left<trim.left+3 || rect.top<trim.top+3 ||
+           rect.right>trim.right-3 || rect.bottom>trim.bottom-3){
+           violations.push({field:sel,box:{left:rect.left,top:rect.top,right:rect.right,bottom:rect.bottom}});
+         }
+       }
+     }
+     const poster=frame.querySelector('#concertLiveImage').getBoundingClientRect();
+     if(poster.left<trim.left+3 || poster.right>trim.right-3 ||
+        poster.top<trim.top+3 || poster.bottom>trim.bottom-3){
+       violations.push({field:'poster',box:{left:poster.left,top:poster.top,right:poster.right,bottom:poster.bottom}});
+     }
+     return {trim,violations,outerPseudo:outerBorder.display,mainPseudo:border.display,
+       mainLeft:mainRect.left,stubLeft:frame.querySelector('.concert-live-stub').getBoundingClientRect().left,
+       frameRight:shell.right};
+   });
+   assert.equal(safeTrim.outerPseudo,'none','The combined ticket must not draw a misleading inner border');
+   assert.equal(safeTrim.mainPseudo,'block','The main printed panel requires its own gold border');
+   assert.deepEqual(safeTrim.violations,[],
+     'Every label, value, heading and poster must stay INSIDE the gold inner border: '+JSON.stringify(safeTrim));
+   if(size.name==='mobile'){
+     await page.locator('#concertZoomButton').click();
+     const zoomSafe=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+       const main=frame.querySelector('.concert-live-main');
+       const m=main.getBoundingClientRect(),s=getComputedStyle(main,'::before');
+       const trim={left:m.left+parseFloat(s.left),right:m.right-parseFloat(s.right),
+         top:m.top+parseFloat(s.top),bottom:m.bottom-parseFloat(s.bottom)};
+       const relevant=[...frame.querySelectorAll('.concert-live-headnote,#concertLiveEvent,#concertLiveSubtitle,.concert-live-fields dt,.concert-live-fields dd,#concertLiveImage')]
+         .filter(el=>!el.hidden&&getComputedStyle(el).display!=='none');
+       const violations=relevant.map(el=>({name:el.id||el.tagName,rect:el.getBoundingClientRect()}))
+         .filter(x=>x.rect.left<trim.left+3||x.rect.top<trim.top+3||
+           x.rect.right>trim.right-3||x.rect.bottom>trim.bottom-3)
+         .map(x=>({name:x.name,left:x.rect.left,top:x.rect.top,right:x.rect.right,bottom:x.rect.bottom}));
+       return {trim,violations};
+     });
+     assert.deepEqual(zoomSafe.violations,[],
+       'iPhone full-size ticket must keep every printed element inside its gold border: '+JSON.stringify(zoomSafe));
+     await page.screenshot({path:resolve(output,'mobile-zoom-ticket-print-safe.png'),fullPage:true});
+     await page.locator('#concertZoomButton').click();
+   }
+
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
    await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
