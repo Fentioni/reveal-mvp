@@ -17,7 +17,7 @@ function fakeCanvas() {
       this.context = {
         createLinearGradient: () => gradient,
         setTransform() {}, clearRect() {}, fillRect() {},
-        beginPath() {}, moveTo() {}, lineTo() {}, arc() {}, strokeRect() {},
+        beginPath() {}, closePath() {}, moveTo() {}, lineTo() {}, arc() {}, strokeRect() {},
         stroke() {}, fill() {}, save() {}, restore() {}, fillText() {}, drawImage() {}
       };
     }
