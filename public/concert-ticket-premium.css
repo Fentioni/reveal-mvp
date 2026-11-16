@@ -19,6 +19,7 @@ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-she
   max-height:none;
   position:relative;
   border:0!important; /* never paint a border *under* a cut-out silhouette */
+  padding:0!important;
   border-radius:0!important;
   overflow:hidden!important;
   color:var(--ct-ink);
@@ -191,7 +192,6 @@ body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap{
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="side-perforations"] #concertLiveImage,
 body[data-ticket-variant="concert"] .review-shell[data-concert-template="side-perforations"] .image-wrap,
-body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap,
 body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap{
   right:4.5%;
 }
