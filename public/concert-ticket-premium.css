@@ -405,3 +405,28 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
   }
   body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow){width:38px}
 }
+
+
+/* Static metallic scratch cover gets the SAME safe print trim as the
+   revealed ticket. The original gradient, rather than Canvas opacity,
+   shows the colour selected by the purchaser. */
+body[data-ticket-variant="concert"] .scratch-static-frame{
+  border:0!important;border-radius:0!important;
+  box-shadow:0 15px 40px #0007;
+}
+body[data-ticket-variant="concert"] .scratch-static-frame::before{
+  content:"";display:block;position:absolute;z-index:3;
+  inset:6.2% 5.4%;border:1.5px solid #f9e3b0b5;border-radius:2px;
+  pointer-events:none;
+}
+body[data-ticket-variant="concert"] .scratch-static-frame::after{
+  display:block!important;content:"";position:absolute;z-index:3;
+  top:5%;bottom:5%;left:76%;width:0;
+  border:0;border-left:3px dashed #261b345e;pointer-events:none;
+}
+body[data-ticket-variant="concert"] .scratch-static-frame[data-concert-template="side-perforations"]::after{
+  left:24%;
+}
+body[data-ticket-variant="concert"] .scratch-static-frame[data-concert-template="stamp-edge"]::before{
+  inset:6.2% 6.1%;
+}
