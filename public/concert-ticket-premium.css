@@ -441,3 +441,98 @@ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[hidden]{
 body[data-ticket-variant="concert"][data-concert-preview="revealed"] #concertRevealedPreviewFrame:not([hidden]){
   display:grid!important;
 }
+
+
+/* Final ticket art direction: strong show title above a low event-information
+   strip, akin to concert admission tickets rather than a survey form. */
+@media(min-width:681px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding:clamp(42px,4.5vw,64px)!important;
+    gap:clamp(4px,.75vw,10px)!important;
+  }
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields,
+body[data-ticket-variant="concert"] .review-shell .details,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid{
+  margin-top:auto!important;
+}
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra{
+  margin-top:0!important;
+  border-top:0!important;
+  padding-top:0!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+  background:linear-gradient(100deg,#0b091ce3 0%,#0c0a1a9c 58%,#10091f38 100%)!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-theme="classic"] .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell[data-concert-theme="classic"] > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-theme="classic"] .ticket{
+  background:linear-gradient(90deg,#fff9eef7 0%,#f5e6cabf 75%,#ebd4a84a 100%)!important;
+}
+/* Owner preview only: reveal the original design at an inspectable size on
+   narrow screens without changing the paid scratch card's 2.15:1 geometry. */
+body[data-ticket-variant="concert"] #concertZoomButton{
+  display:none;
+  margin:5px auto 13px;
+  border:1px solid #d8b775;
+  padding:9px 16px;
+  border-radius:9px;
+  color:#f9e9c8;
+  background:#272334;
+  font:700 .8rem system-ui,sans-serif;
+  cursor:pointer;
+}
+@media(max-width:700px){
+  body[data-ticket-variant="concert"] #concertZoomButton{display:block}
+  body[data-ticket-variant="concert"] #scratchDesktopDock{
+    overflow-x:auto!important;
+    overflow-y:hidden!important;
+    max-width:100%;
+    -webkit-overflow-scrolling:touch;
+    scrollbar-width:thin;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #scratchDesktopDock :is(.scratch-static-frame,#concertRevealedPreviewFrame){
+    width:780px!important;
+    min-width:780px!important;
+    max-width:none!important;
+    aspect-ratio:2.15/1!important;
+  }
+}
+/* Full-size paid ticket, opened only after sufficient scratching. */
+#concertFullTicketDialog{
+  padding:16px;
+  border:1px solid #cfae75;
+  border-radius:13px;
+  max-width:min(98vw,1060px);
+  width:min(98vw,1060px);
+  background:#151323;color:#fff0d7;
+  box-shadow:0 25px 70px #000c;
+}
+#concertFullTicketDialog::backdrop{background:rgba(0,0,0,.88)}
+#concertFullTicketDialog .concert-full-ticket-scroll{
+  overflow:auto;
+  width:100%;
+  max-height:70vh;
+  scrollbar-width:thin;
+  -webkit-overflow-scrolling:touch;
+}
+#concertFullTicketDialog .concert-full-ticket-scroll>.card{
+  width:850px!important;
+  max-width:none!important;
+  min-width:850px!important;
+  aspect-ratio:2.15/1!important;
+  min-height:0!important;
+  margin:auto;
+  display:block!important;
+}
+#concertFullTicketDialog .concert-full-ticket-scroll>.card .ticket-underlay{
+  visibility:visible!important;
+}
+#concertFullTicketDialog #concertCloseZoom{
+  display:block;
+  margin:13px 0 0 auto;
+}
