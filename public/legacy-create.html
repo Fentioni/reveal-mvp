@@ -1251,8 +1251,12 @@
           image.onerror = () => reject(new Error("This image cannot be opened."));
           image.src = url;
         });
-        if (image.naturalWidth < 640 || image.naturalHeight < 640) {
-          throw new Error("Choose a scratch image at least 640 × 640 pixels.");
+        const minWidth=currentVariant==='concert'?400:640;
+        const minHeight=currentVariant==='concert'?240:640;
+        if (image.naturalWidth < minWidth || image.naturalHeight < minHeight) {
+          throw new Error(currentVariant==='concert'
+            ? "Choose event artwork at least 400 × 240 pixels."
+            : "Choose a scratch image at least 640 × 640 pixels.");
         }
         return url;
       } catch(error) {
@@ -1305,7 +1309,7 @@
         hide();
       } catch (error) {
         $("image").value = "";
-        show(error.message || "Choose a JPEG, PNG or WebP image at least 640 × 640 pixels, up to 10 MB.");
+        show(error.message || "Choose JPEG, PNG or WebP artwork no larger than 10 MB.");
       }
     });
 
