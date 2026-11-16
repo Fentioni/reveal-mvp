@@ -294,7 +294,9 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      await page.locator('#concertZoomButton').click();
    }
 
-   // Realistically sized portrait photo to exercise the overlap on iPhone.
+   // Also verify the reverse ticket silhouette used in the reported iPhone image.
+   await page.locator('.concert-template-option[data-value="side-perforations"]').click();
+      // Realistically sized portrait photo to exercise the overlap on iPhone.
    await page.evaluate(async()=>{
      const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;
      const context=canvas.getContext('2d');
@@ -310,10 +312,17 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      const art=frame.querySelector('#concertLiveImage').getBoundingClientRect();
      const content=[...frame.querySelector('.concert-live-main').children].filter(el=>
        el.id!=='concertLiveImage'&&!el.hidden&&getComputedStyle(el).display!=='none');
-     return {photoLeft:art.left,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right))};
+     const level=frame.querySelector('[data-concert-field="level"] dt');
+     const paper=frame.getBoundingClientRect();
+     return {photoLeft:art.left,photoRight:art.right,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
+       trimRight:paper.right-paper.width*.076,levelTextWidth:level?.scrollWidth||0,levelBoxWidth:level?.clientWidth||0};
    });
    assert.ok(photoLayout.textRight+2<=photoLayout.photoLeft,
      'Event poster must never cover preview ticket text: '+JSON.stringify(photoLayout));
+   assert.ok(photoLayout.photoRight<=photoLayout.trimRight-2,
+     'Event poster must stay INSIDE the gold inner border: '+JSON.stringify(photoLayout));
+   assert.ok(photoLayout.levelTextWidth<=photoLayout.levelBoxWidth+1,
+     'Level must remain a horizontal readable label: '+JSON.stringify(photoLayout));
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
    await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
