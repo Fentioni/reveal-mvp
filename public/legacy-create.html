@@ -597,10 +597,10 @@
             <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
           <div class="scratch-choice">
-            <h3 id="surfaceHeading">Your scratch-card surface</h3>
-            <p>Choose the image they will physically scratch away. This is a static design preview, not the paid recipient experience.</p>
-            <div id="scratchFoilLabel" class="scratch-option-label">Foil finish</div>
-            <div class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel">
+            <h3 id="surfaceHeading" hidden>Your concert scratch-card cover</h3>
+            <p id="surfaceDescription" hidden>Choose your concert ticket cover and review the static preview below.</p>
+            <div id="scratchFoilLabel" class="scratch-option-label" hidden>Concert foil finish</div>
+            <div id="scratchFoilGrid" class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel" hidden>
               <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
               <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
               <button type="button" class="scratch-foil-option midnight" data-scratch-foil="midnight" aria-label="Midnight foil" aria-pressed="false"></button>
@@ -921,10 +921,15 @@
         : "Make the moment <em>unforgettable.</em>";
       $("creatorIntro").textContent = isConcert
         ? "Choose concert, festival or backstage artwork with your preferred foil finish. The live preview updates immediately."
-        : "Choose one of our 20 final scratch-card images, select a foil finish and personalise the surprise. Checkout is disabled in this staging test.";
-      $("surfaceHeading").textContent = isConcert
-        ? "Your concert scratch-card cover" : "Your scratch-card surface";
-      $("scratchFoilLabel").textContent = isConcert ? "Concert foil finish" : "Foil finish";
+        : "Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.";
+      // Portrait Scratch Ticket uses only the 20 approved image designs.
+      // Keep the old concert-ticket finish controls for the separate concert
+      // product, but do not display this redundant section for Scratch Ticket.
+      for (const id of ["surfaceHeading","surfaceDescription","scratchFoilLabel","scratchFoilGrid"]) {
+        $(id).hidden = !isConcert;
+      }
+      $("surfaceHeading").textContent = "Your concert scratch-card cover";
+      $("scratchFoilLabel").textContent = "Concert foil finish";
       const foilLabels = isConcert
         ? {gold:"VIP Gold",silver:"Chrome Silver",midnight:"Midnight Stage",rose:"Neon Rose"}
         : {gold:"Gold",silver:"Silver",midnight:"Midnight",rose:"Rose"};
