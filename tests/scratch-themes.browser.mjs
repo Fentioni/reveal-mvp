@@ -40,6 +40,20 @@ async function startServer(){
       style:'concert',foil:foilName,variant:'concert',hasImage:false}}));
     return;
    }
+   if(path==='/r/concert-qr/scratch-data'){
+     res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
+     res.end(JSON.stringify({...sample,scratchSurface:{
+       style:'concert',foil:'rose',variant:'concert',hasImage:false,
+       ticketTemplate:'rounded-stub',revealTheme:'backstage',linkMode:'qr'
+     },reveal:{...sample.reveal,ticketUrl:'https://example.org/concert?t=42'}}));
+     return;
+   }
+   const design=path.match(/^\/concert-reveal-art\/(classic|concert-lights|festival|backstage)\.svg$/)?.[1];
+   if(design){
+     res.writeHead(200,{'content-type':'image/svg+xml'});
+     res.end(await readFile(resolve(root,'concert-reveal-art',design+'.svg')));
+     return;
+   }
   const slug=path.match(/^\/r\/artwork-([a-z-]+)\/scratch-data$/)?.[1];
   const art=SCRATCH_ARTWORKS.find(item=>item.id===slug);
   if(art){
@@ -48,7 +62,7 @@ async function startServer(){
    return;
   }
   const file=path==='/legacy-create'?'/legacy-create.html'
-   :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose))$/)?'/recipient-scratch.html'
+    :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
   if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
@@ -115,15 +129,34 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
    await page.locator('#scratchFoilGrid:visible').waitFor();
    assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
-   assert.match(await page.locator('#imageUploadHelp').textContent(),/does not change the scratch colour/);
+   assert.match(await page.locator('#imageUploadHelp').textContent(),/appears after scratching/);
    assert.equal(await page.locator('#surfaceHeading').count(),0);
    assert.equal(await page.locator('#surfaceDescription').count(),0);
    assert.equal(await page.locator('#scratchFoilLabel:visible').count(),1);
-   assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'Foil finish');
+   assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'2. Scratch colour');
    assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
    assert.equal(await page.locator('#scratchArtGrid').count(),0,'Old scratch artwork choices must stay removed');
    assert.equal(await page.locator('.concert-template-option').count(),4);
    assert.equal(await page.locator('.concert-theme-option').count(),4);
+   assert.equal(await page.locator('#concertLinkModeField:visible').count(),1);
+   assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
+   assert.equal(await page.locator('#image').count(),1);
+   assert.equal(await page.locator('#scratchArtwork').getAttribute('required'),null);
+   const silhouettes=new Set(),shapeCanvases=new Set();
+   for(const template of ['side-perforations','stamp-edge','classic-notches','rounded-stub']){
+     await page.locator('.concert-template-option[data-value="'+template+'"]').click();
+     assert.equal(await page.locator('.concert-template-option[data-value="'+template+'"]').getAttribute('aria-pressed'),'true');
+     silhouettes.add(await page.locator('.scratch-static-frame').evaluate(el=>getComputedStyle(el).clipPath));
+     shapeCanvases.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
+   }
+   assert.equal(silhouettes.size,4,'Four distinct ticket cutout shapes must be applied to the preview');
+   assert.equal(shapeCanvases.size,4,'Changing templates must redraw the scratch surface shape');
+   for(const theme of ['classic','concert-lights','festival','backstage']){
+     await page.locator('.concert-theme-option[data-value="'+theme+'"]').click();
+     assert.equal(await page.locator('.concert-theme-option[data-value="'+theme+'"]').getAttribute('aria-pressed'),'true');
+   }
+   await page.locator('#concertLinkMode').selectOption('qr');
+   assert.equal(await page.locator('#concertLinkMode').inputValue(),'qr');
    const paintings=new Set();
    const centreColours=new Set();
    for(const foil of ['gold','silver','midnight','rose']){
@@ -175,6 +208,26 @@ test('paid concert recipient sees four full-surface foil colours, even on narrow
    await page.screenshot({path:resolve(output,size.name+'-concert-recipient-rose.png'),fullPage:true});
    await page.close();
   }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+test('paid concert QR is generated from the chosen URL but is hidden until scratching',
+ {timeout:90000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+   const page=await browser.newPage({viewport:{width:390,height:844},reducedMotion:'reduce'});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   await page.goto(base+'/r/concert-qr',{waitUntil:'networkidle'});
+   await page.locator('#card.foil-ready').waitFor();
+   assert.equal(await page.locator('#card').getAttribute('data-concert-theme'),'backstage');
+   assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
+   assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
+   assert.equal(await page.locator('#bookingAction:visible').count(),0);
+   assert.equal(await page.locator('#concertQrRow').evaluate(e=>getComputedStyle(e).visibility),'hidden');
+   assert.equal(await page.locator('body').getAttribute('data-ticket-variant'),'concert');
+   assert.deepEqual(errors,[]);
+   await page.screenshot({path:resolve(output,'mobile-concert-qr-covered.png'),fullPage:true});
+   await page.close();
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 test('paid recipient uses selected artwork as scratch foil while hiding surprise until scratched',
