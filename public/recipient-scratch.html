@@ -413,6 +413,7 @@
       const revealTheme=isConcertRevealTheme(data.scratchSurface.revealTheme)
         ? data.scratchSurface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
       $('card').dataset.concertTheme=revealTheme;
+      $('card').dataset.concertTemplate=shape;
       $('card').style.clipPath=concertTicketClipPath(shape);
       concertQrMode=data.scratchSurface.linkMode==='qr' && Boolean(model.ticketUrl);
       $('bookingRow').hidden=concertQrMode || !model.ticketUrl;
@@ -431,7 +432,7 @@
     text('name',model.recipient);
     text('eventName',model.eventName);
     text('headline', data.scratchSurface.variant === 'concert' ? 'The big night awaits!' : 'Your special surprise');
-    text('ticketKicker', data.scratchSurface.variant === 'concert' ? 'PERSONALISED CONCERT TICKET' : 'PERSONALISED EVENT TICKET');
+    text('ticketKicker', data.scratchSurface.variant === 'concert' ? 'LIVE IN CONCERT' : 'PERSONALISED EVENT TICKET');
     applyDetails(model);
     if(isConcert){
       applyConcertTicketFields(data.scratchSurface.ticketDetails);
