@@ -303,6 +303,38 @@ test('the single image picker supports custom scratch cover without a second fil
 });
 
 
+test('concert creator stores template, independent reveal art and URL/QR mode with strict allowlists',async()=>{
+  const {env,legacy,state}=makeMocks();
+  const body=new FormData();
+  body.append('variant','concert');
+  body.append('style','concert');
+  body.append('foil','rose');
+  body.append('ticketTemplate','stamp-edge');
+  body.append('revealTheme','festival');
+  body.append('linkMode','qr');
+  const saved=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+  assert.equal(saved.status,200);
+  const result=(await saved.json()).surface;
+  assert.equal(result.ticketTemplate,'stamp-edge');
+  assert.equal(result.revealTheme,'festival');
+  assert.equal(result.linkMode,'qr');
+  assert.equal(result.foil,'rose');
+  const fields=JSON.parse(state.config.fields_json).scratchSurface;
+  assert.equal(fields.ticketTemplate,'stamp-edge');
+  assert.equal(fields.revealTheme,'festival');
+  assert.equal(fields.linkMode,'qr');
+  const restored=await scratchSurfaceResponse(request(),env,{},legacy);
+  assert.equal((await restored.json()).surface.ticketTemplate,'stamp-edge');
+  for(const [field,value] of [['ticketTemplate','../../secret'],['revealTheme','music'],['linkMode','script']]){
+    const invalid=new FormData();
+    invalid.append('variant','concert');invalid.append('style','concert');invalid.append('foil','gold');
+    invalid.append(field,value);
+    const rejected=await scratchSurfaceResponse(request('PUT',invalid),env,{},legacy);
+    assert.equal(rejected.status,400,field+' must reject unknown choices');
+  }
+  assert.equal(JSON.parse(state.config.fields_json).scratchSurface.ticketTemplate,'stamp-edge',
+    'Invalid settings must not overwrite a valid saved template');
+});
 test('concert scratch variant reuses ticket surface persistence without adding a new product or changing payment', async () => {
   const {env,legacy,state}=makeMocks();
   const body=new FormData();
