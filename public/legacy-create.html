@@ -1124,6 +1124,8 @@
       const sequence = ++scratchSelectionSequence;
       const style = $("scratchStyle").value;
       const foil = $("scratchFoil").value;
+      // Width may shrink on phones; still paint the concert foil, not a theme.
+      scratchPreview.concertTicket = currentVariant === "concert";
       if (currentVariant === "concert") document.body.style.setProperty("--concert-foil-edge",
         {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[foil]);
       const useImage = currentVariant !== "concert" && style === "custom";
