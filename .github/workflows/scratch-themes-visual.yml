@@ -31,6 +31,8 @@ jobs:
       - run: npm install --no-save playwright@1.56.0
       - run: node --test tests/scratch-themes.browser.mjs
       - run: SCRATCH_BROWSER=webkit node --test tests/scratch-themes.browser.mjs
+      - name: Verify the 20 real user-supplied JPEG assets are present
+        run: node tests/scratch-artwork-files.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
