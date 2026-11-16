@@ -142,6 +142,23 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
    assert.equal(await page.locator('#image').count(),1);
    assert.equal(await page.locator('#scratchArtwork').getAttribute('required'),null);
+   assert.equal(await page.locator('#concertPreviewTabsDesktop:visible').count(),1);
+   assert.equal(await page.locator('#concertPreviewTabsMobile:visible').count(),0);
+   const layout=await page.evaluate(()=>{
+     const rect=id=>{const x=document.querySelector(id).getBoundingClientRect();return {top:x.top,left:x.left,right:x.right,bottom:x.bottom,width:x.width};};
+     return {preview:rect('.preview-column'),template:rect('#concertTemplateSection'),
+       foil:rect('#scratchFoilGrid'),theme:rect('#concertThemeSection'),
+       frame:rect('.scratch-static-frame')};
+   });
+   assert.ok(layout.preview.bottom <= layout.template.top+4,'Full-width ticket preview must appear above ticket selectors');
+   assert.ok(layout.frame.width > (size.name==='desktop'?740:310),'Ticket must use substantially more width than before');
+   if(size.name==='desktop'){
+     assert.ok(layout.theme.left > layout.template.right,'Revealed artwork belongs in right column');
+     assert.ok(Math.abs(layout.theme.top-layout.template.top)<40,'Template and theme choices start together');
+     assert.ok(layout.foil.top > layout.template.top,'Scratch colours belong below templates on the left');
+   }else{
+     assert.ok(layout.theme.top > layout.foil.bottom,'Phone layout stacks theme after template and foil');
+   }
    const silhouettes=new Set(),shapeCanvases=new Set();
    for(const template of ['side-perforations','stamp-edge','classic-notches','rounded-stub']){
      await page.locator('.concert-template-option[data-value="'+template+'"]').click();
@@ -159,6 +176,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal(await page.locator('#concertLinkMode').inputValue(),'qr');
    const paintings=new Set();
    const centreColours=new Set();
+   const visibleGradients=new Set();
    for(const foil of ['gold','silver','midnight','rose']){
     await page.locator('[data-scratch-foil="'+foil+'"]').click();
     await page.waitForFunction(id=>document.querySelector('#scratchFoil').value===id,foil);
@@ -168,10 +186,20 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
     });
     centreColours.add(centre.join(','));
     paintings.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
+    const surface=await page.locator('.scratch-static-frame').evaluate(el=>({
+      foil:el.dataset.foil,
+      gradient:getComputedStyle(el).backgroundImage,
+      canvasOpacity:getComputedStyle(el.querySelector('canvas')).opacity
+    }));
+    assert.equal(surface.foil,foil,'The visible ticket, not just its border, must reflect selected foil');
+    assert.equal(surface.canvasOpacity,'0','Creator must display the static foil, not an unpainted Canvas');
+    assert.ok(surface.gradient.startsWith('linear-gradient('),'Visible foil must fill the whole ticket');
+    visibleGradients.add(surface.gradient);
     await page.screenshot({path:resolve(output,size.name+'-concert-'+foil+'.png'),fullPage:true});
    }
    assert.equal(paintings.size,4,'Each concert foil option must repaint the ticket');
-   assert.equal(centreColours.size,4,'The middle of the concert ticket must change colour, not just its border');
+   assert.equal(centreColours.size,4,'The underlying recipient Canvas must retain four genuine foil paints');
+   assert.equal(visibleGradients.size,4,'The visible creator ticket must show four different full-size metallic colour gradients');
    const ratio=await page.locator('#scratchSurfacePreview').evaluate(node=>{
     const bounds=node.getBoundingClientRect();return bounds.width/bounds.height;
    });
@@ -192,7 +220,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
    await page.locator('#concertTemplateChoices .concert-template-option:enabled').first().waitFor();
-   const tabSelector=size.name==='mobile'?'#concertPreviewTabsMobile':'#concertPreviewTabsDesktop';
+   const tabSelector='#concertPreviewTabsDesktop';
    assert.equal(await page.locator(tabSelector+':visible').count(),1);
    await page.locator('#recipient').fill('Chloe');
    await page.locator('#sender').fill('Michael');
