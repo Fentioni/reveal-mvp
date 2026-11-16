@@ -195,7 +195,7 @@ test('even a real image or booking link cannot be retrieved before paid_at is se
 test('paid concert variant reuses recipient route, ticket fields and payment gate',async()=>{
   const concertSettings={
     scratchSurface:{variant:'concert',style:'festival',foil:'midnight',coverAssetId:null,
-      ticketDetails:{supportAct:'The Openers',venueAddress:'123 Example Street',row:'G',seat:'18'}},
+      ticketDetails:{venueAddress:'123 Example Street',row:'G',seat:'18'}},
     audio:{enabled:false,cue:'cinematic-drum-roll',trigger:'first-scratch',delayMs:3000}
   };
   const {env,counters}=recipientEnv(paid,concertSettings);
@@ -205,7 +205,7 @@ test('paid concert variant reuses recipient route, ticket fields and payment gat
   assert.deepEqual(scratchSurface,{
     variant:'concert',style:'festival',foil:'midnight',theme:'luxury-elegant',hasImage:false,
     ticketTemplate:'classic-notches',revealTheme:'classic',linkMode:'link',
-    ticketDetails:{supportAct:'The Openers',venueAddress:'123 Example Street',row:'G',seat:'18'}
+    ticketDetails:{venueAddress:'123 Example Street',row:'G',seat:'18'}
   });
   assert.equal(reveal.eventName,'Night at the Theatre');
   assert.equal(reveal.recipient,'Chloe');
