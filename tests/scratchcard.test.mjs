@@ -285,9 +285,14 @@ test('concert artwork draws natively at a true wide-ticket aspect ratio',()=>{
   }
   card.destroy();
   const src=fs.readFileSync(path.join(root,'public/scratchcard.js'),'utf8');
-  assert.ok(src.includes("w > h * 1.4 && ['concert','festival','backstage'].includes(stage)"));
-  assert.ok(src.includes('drawLandscapeConcertArtwork(ctx,w,h,stage)'));
+  assert.ok(src.includes("w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle)"));
+  assert.ok(src.includes('drawLandscapeConcertArtwork(ctx,w,h)'));
   assert.ok(src.includes('const stubX=w*.78'));
+  const concertCode=src.slice(src.indexOf('  drawLandscapeConcertArtwork('),src.indexOf('  point(event)'));
+  assert.doesNotMatch(concertCode,/Fan out concert beams|moveTo\(w\*\(\.06/);
+  assert.doesNotMatch(concertCode,/fillText\(/);
+  assert.ok(concertCode.includes('const palette = FOILS[this.foil]'));
+  assert.ok(concertCode.includes('ctx.fillRect(0,0,w,h)'));
 });
 
 test('landscape concert scratch art contains no automatic watermark, slogan or printed text', () => {
