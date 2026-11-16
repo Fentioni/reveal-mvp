@@ -899,19 +899,69 @@ body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>#venueRow{
 body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>[data-concert-field="venueAddress"]{grid-column:2;grid-row:2;}
 body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>[data-concert-field="level"]{grid-column:3;grid-row:2;}
 
-/* Concert Ticket artwork exclusion lane — mobile/desktop, both stub positions.
-   Only tickets WITH an uploaded image reserve a separate poster column;
-   prevents photo overlaying date, time, venue, address or event title. */
+/* Concert ticket image-within-print-area layout (mobile + desktop).
+   Artwork belongs to its own reserved column INSIDE the main ticket panel,
+   never positioned against the outer card perimeter or the perforated stub.
+   The two-column information strip avoids illegibly thin LEVEL labels. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+  position:relative!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap{
+  position:absolute!important;
+  top:20%!important;
+  right:5%!important;
+  width:28%!important;
+  height:51%!important;
+  max-width:none!important;
+  max-height:none!important;
+  object-fit:contain!important;
+  background:#150f20c9!important;
+  border-radius:4px!important;
+  overflow:hidden!important;
+  z-index:1;
+}
+/* When the detachable stub is on the LEFT, leave the decorative right
+   print trim completely clear (7.6% of the full card = ~10% of main panel). */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="side-perforations"] #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell[data-concert-template="side-perforations"] .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap{
+  right:11.5%!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell .review-image,
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap img{
+  object-fit:contain!important;
+  object-position:center!important;
+}
+/* Reserve a readable text rail; do not globally narrow the ticket copy when
+   no artwork has been uploaded. The poster is placed further right instead. */
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame:has(#concertLiveImage:not([hidden])) .concert-live-main > :not(#concertLiveImage),
 body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden])) > article.ticket > :not(.image-wrap),
 body[data-ticket-variant="concert"] .card.concert-ticket:has(.event-image-wrap:not([hidden])) .ticket > :not(.event-image-wrap){
-  width:52%!important;
-  max-width:52%!important;
+  width:60%!important;
+  max-width:60%!important;
   min-width:0!important;
 }
-body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields[hidden]{display:none!important;}
+/* DATE/TIME, VENUE/ADDRESS and a full-width LEVEL when present. Unlike a
+   three-column row, neither heading nor its value can become vertical text. */
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame:has(#concertLiveImage:not([hidden])) .concert-live-fields,
 body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden])) :is(.details,.review-concert-extra),
 body[data-ticket-variant="concert"] .card.concert-ticket:has(.event-image-wrap:not([hidden])) .ticket-grid{
- column-gap:clamp(4px,.6vw,8px)!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  column-gap:clamp(6px,.8vw,11px)!important;
+  row-gap:clamp(3px,.5vw,7px)!important;
 }
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame:has(#concertLiveImage:not([hidden])) .concert-live-fields>[data-concert-field="level"],
+body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden])) .review-concert-extra>[data-concert-field="level"],
+body[data-ticket-variant="concert"] .card.concert-ticket:has(.event-image-wrap:not([hidden])) .ticket-grid>[data-concert-field="level"]{
+  grid-column:1 / -1!important;
+  grid-row:3!important;
+}
+body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden])) .review-concert-extra>[data-concert-field="level"]{
+  grid-row:2!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields[hidden]{display:none!important;}
