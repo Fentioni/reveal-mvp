@@ -3,9 +3,7 @@
  */
 export const CONCERT_TICKET_FIELDS = Object.freeze([
  Object.freeze({id:'eventSubtitle',label:'Event subtitle',max:120}),
- Object.freeze({id:'supportAct',label:'Special guest / support act',max:120}),
  Object.freeze({id:'venueAddress',label:'Venue address',max:220}),
- Object.freeze({id:'ticketNumber',label:'Ticket number / reference',max:80}),
  Object.freeze({id:'section',label:'Section',max:50}),
  Object.freeze({id:'level',label:'Level',max:50}),
  Object.freeze({id:'row',label:'Row',max:40}),
