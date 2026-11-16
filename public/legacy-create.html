@@ -491,6 +491,7 @@
     .scratch-foil-option{border:3px solid #20202b;box-shadow:0 0 0 1px #665c52;width:42px;height:42px}
     .scratch-foil-option[aria-pressed="true"]{box-shadow:0 0 0 2px #f4d89b}
     .scratch-art-grid{gap:10px;margin-top:10px}
+    #scratchArtGrid,#scratchArtLabel{display:none!important}
     .scratch-art-option{min-height:76px;border:1px solid #6c6062;color:#f5f0e5;background:#221e28;padding:9px 11px}
     .scratch-art-option[aria-pressed="true"]{border-color:#efcf86;box-shadow:0 0 0 2px #efcf8633}
     .scratch-art-icon{flex:0 0 53px;height:54px;border:1px solid #ffffff44;border-radius:7px}
@@ -538,7 +539,7 @@
     /* Landscape admission ticket: concert variant only. Existing portrait
        creator and shared form logic are intentionally unchanged. */
     body[data-ticket-variant="concert"] .scratch-static-frame{
-      aspect-ratio:2.15/1;width:100%;max-width:550px;border:3px solid #d3aa6a;
+      aspect-ratio:2.15/1;width:100%;max-width:550px;border:3px solid var(--concert-foil-edge,#d3aa6a);
       border-radius:11px;box-shadow:0 20px 60px #0009;
       clip-path:polygon(0 0,76% 0,78% 5%,80% 0,100% 0,100% 100%,80% 100%,78% 95%,76% 100%,0 100%);
     }
@@ -671,7 +672,7 @@
               <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
                 <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
               </div>
-              <p class="scratch-mobile-caption">Live surface preview — not scratchable</p>
+              <p class="scratch-mobile-caption">Static preview</p>
             </div>
           </div>
 
@@ -782,9 +783,9 @@
       </section>
 
       <aside class="preview-column" aria-label="Static scratch-card preview">
-        <div class="preview-label">Your live scratch-card cover</div>
+        <div class="preview-label">Live preview</div>
         <div id="scratchDesktopDock" class="scratch-desktop-dock"></div>
-        <p class="preview-static-note">The chosen surface updates instantly. This is a static design preview and cannot be scratched.</p>
+        <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
         <details class="preview-details-toggle">
           <summary>View your personalised ticket details</summary>
         <div class="preview-shell">
@@ -915,12 +916,14 @@
         ? "Reveal the <em>big gig.</em>"
         : "Make the moment <em>unforgettable.</em>";
       $("creatorIntro").textContent = isConcert
-        ? "Choose concert, festival or backstage artwork with your preferred foil finish. The live preview updates immediately."
+        ? "Choose Gold, Silver, Midnight or Rose. The entire ticket changes colour."
         : "Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.";
       // Foil swatches and the separate concert cover choices are concert-only.
       // The portrait Scratch Ticket uses its approved 20-image dropdown.
       $("scratchFoilLabel").hidden = !isConcert;
       $("scratchFoilGrid").hidden = !isConcert;
+      document.body.style.setProperty("--concert-foil-edge",
+        {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[$("scratchFoil").value] || "#d3a752");
       const foilLabels = isConcert
         ? {gold:"VIP Gold",silver:"Chrome Silver",midnight:"Midnight Stage",rose:"Neon Rose"}
         : {gold:"Gold",silver:"Silver",midnight:"Midnight",rose:"Rose"};
@@ -929,8 +932,8 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $("scratchArtworkSection").hidden = isConcert;
-      $("scratchArtGrid").hidden = !isConcert;
-      $("scratchArtLabel").hidden = !isConcert;
+      $("scratchArtGrid").hidden = true;
+      $("scratchArtLabel").hidden = true;
       for (const button of form.querySelectorAll("[data-scratch-style]")) {
         button.hidden = button.dataset.showFor !== "both" &&
           button.dataset.showFor !== currentVariant;
@@ -940,9 +943,8 @@
         $("scratchFoil").value = isConcert ? "midnight" : "gold";
       }
       // Historic drafts outside the concert palette stay in the classic creator.
-      if (isConcert && !concertArtworks.has($("scratchStyle").value)) {
-        $("scratchStyle").value = "concert";
-      }
+      // New and amended concert tickets have a single unthemed colour surface.
+      if (isConcert) $("scratchStyle").value = "concert";
     }
     setCreatorVariant(currentVariant, !id);
     const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
@@ -1138,12 +1140,17 @@
       const sequence = ++scratchSelectionSequence;
       const style = $("scratchStyle").value;
       const foil = $("scratchFoil").value;
-      const useImage = style === "custom";
+      if (currentVariant === "concert") document.body.style.setProperty("--concert-foil-edge",
+        {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[foil]);
+      const useImage = currentVariant !== "concert" && style === "custom";
       const artwork = currentVariant === "ticket" && !useImage
         ? getScratchArtwork(scratchArtworkId) : null;
       scratchPreview.artworkId = artwork?.id || null;
       scratchPreview.setFoil(foil);
-      if (useImage && (selectedScratchUrl || savedScratchUrl)) {
+      if (currentVariant === "concert") {
+        await scratchPreview.setCoverImage(null);
+        scratchPreview.setCoverStyle("concert");
+      } else if (useImage && (selectedScratchUrl || savedScratchUrl)) {
         await scratchPreview.setCoverImage(selectedScratchUrl || savedScratchUrl);
       } else if (artwork) {
         scratchPreview.setCoverStyle("classic");
@@ -1232,7 +1239,7 @@
         selectedScratchImage = file;
         selectedImage = file;
         removeImage = false;
-        $("scratchStyle").value = "custom";
+        if (currentVariant !== "concert") $("scratchStyle").value = "custom";
         await setScratchPreview();
         showImage(file, file.name);
         hide();
@@ -1322,7 +1329,7 @@
 
         const surfaceBody = new FormData();
         surfaceBody.append("variant", currentVariant);
-        surfaceBody.append("style", $("scratchStyle").value);
+        surfaceBody.append("style", currentVariant === "concert" ? "concert" : $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
         surfaceBody.append("artworkId", currentVariant === "ticket" && $("scratchStyle").value !== "custom" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
@@ -1429,7 +1436,7 @@
           {headers: {"X-Edit-Token": token}}
         );
         setCreatorVariant(savedSurface.surface.variant || "ticket");
-        $("scratchStyle").value = savedSurface.surface.style;
+        $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
         scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
         $("scratchArtwork").value = scratchArtworkId;
