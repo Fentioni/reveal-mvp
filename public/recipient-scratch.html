@@ -279,7 +279,7 @@
 </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 <script defer src="/qr.js"></script>
-<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-7">
+<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-8">
 </head>
 <body>
 <main>
@@ -374,6 +374,7 @@
       }
       const stub=['section','row','seat','gate'].includes(field.id);
       const row=document.createElement('div');row.className='ticket-item concert-extra-row';
+      row.dataset.concertField=field.id;
       const dt=document.createElement('dt');dt.textContent=field.label;
       const dd=document.createElement('dd');dd.textContent=field.value;
       row.append(dt,dd);
