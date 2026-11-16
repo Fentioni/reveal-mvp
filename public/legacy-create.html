@@ -560,7 +560,7 @@
       }
     }
   </style>
-  <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
+  
 </head>
 
 <body>
@@ -569,7 +569,7 @@
       <a class="creator-brand" href="/" aria-label="Reveal home">✦ REVEAL<span>.</span></a>
       <div id="creatorEyebrow" class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
       <h1 id="creatorTitle">Make the moment <em>unforgettable.</em></h1>
-      <p class="intro" id="creatorIntro">Choose a theme, then choose your card artwork and foil finish. The screen and card update together. Personalise the ticket details when you are happy with the design.</p>
+      <p class="intro" id="creatorIntro">Choose from our final 20 scratch-card artworks and select a foil finish. Your chosen image appears in the live preview.</p>
     </header>
 
     <div class="builder-layout">
@@ -590,11 +590,11 @@
         </noscript>
 
         <form id="revealForm">
-          <section class="scratch-theme-section" aria-labelledby="scratchThemeHeading">
-            <h3 id="scratchThemeHeading" class="scratch-theme-title">1. Choose your theme</h3>
-            <p class="scratch-theme-caption">Your theme changes both the scratch-card artwork and the surrounding screen. Change your card design and foil colour independently below.</p>
-            <div id="scratchThemeChoices"></div>
-            <p id="scratchThemeSelection" class="scratch-theme-selected" aria-live="polite">Luxury / Elegant selected</p>
+          <section id="scratchArtworkSection" class="field" aria-labelledby="scratchArtworkLabel">
+            <label id="scratchArtworkLabel" for="scratchArtwork">Choose your scratch-card artwork</label>
+            <p class="field-help">Select one of the 20 final Reveal designs. Your chosen image will be the surface the recipient scratches away.</p>
+            <select id="scratchArtwork" name="scratchArtwork" required aria-describedby="scratchArtworkHelp"></select>
+            <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
           <div class="scratch-choice">
             <h3 id="surfaceHeading">Your scratch-card surface</h3>
@@ -612,8 +612,8 @@
               <option value="midnight">Midnight</option>
               <option value="rose">Rose</option>
             </select>
-            <div id="scratchArtLabel" class="scratch-option-label">Surface artwork</div>
-            <div class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel">
+            <div id="scratchArtLabel" class="scratch-option-label" hidden>Surface artwork</div>
+            <div id="scratchArtGrid" class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel" hidden>
               <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
               <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
               <button type="button" class="scratch-art-option" data-show-for="both" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
@@ -874,8 +874,8 @@
   </main>
 
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=theme-scenes-1';
-    import {SCRATCH_THEMES,DEFAULT_SCRATCH_THEME,getScratchTheme,applyScratchTheme,makeScratchThemePicker} from '/scratch-themes.js?v=themes-13-1';
+    import { ScratchCard } from '/scratchcard.js?v=final-20-1';
+    import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -904,7 +904,7 @@
     let savedScratchUrl = null;
     let existingScratchImage = false;
     let scratchSelectionSequence = 0;
-    let scratchThemeId = DEFAULT_SCRATCH_THEME;
+    let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
     const concertArtworks = new Set(["concert","festival","backstage","custom"]);
     function setCreatorVariant(variant, initialiseChoice = false) {
       currentVariant = variant === "concert" ? "concert" : "ticket";
@@ -920,8 +920,8 @@
         ? "Reveal the <em>big gig.</em>"
         : "Make the moment <em>unforgettable.</em>";
       $("creatorIntro").textContent = isConcert
-        ? "Choose a theme, then concert, festival or backstage artwork and your preferred foil finish. The live preview updates together with the screen background."
-        : "Choose your scratch-card finish and artwork, then personalise the ticket details. Your chosen design updates live. Checkout is disabled in this staging test.";
+        ? "Choose concert, festival or backstage artwork with your preferred foil finish. The live preview updates immediately."
+        : "Choose one of our 20 final scratch-card images, select a foil finish and personalise the surprise. Checkout is disabled in this staging test.";
       $("surfaceHeading").textContent = isConcert
         ? "Your concert scratch-card cover" : "Your scratch-card surface";
       $("scratchFoilLabel").textContent = isConcert ? "Concert foil finish" : "Foil finish";
@@ -932,6 +932,9 @@
         button.setAttribute("aria-label", foilLabels[button.dataset.scratchFoil] + " foil");
         button.title = foilLabels[button.dataset.scratchFoil];
       }
+      $("scratchArtworkSection").hidden = isConcert;
+      $("scratchArtGrid").hidden = !isConcert;
+      $("scratchArtLabel").hidden = !isConcert;
       for (const button of form.querySelectorAll("[data-scratch-style]")) {
         button.hidden = button.dataset.showFor !== "both" &&
           button.dataset.showFor !== currentVariant;
@@ -946,22 +949,21 @@
       }
     }
     setCreatorVariant(currentVariant, !id);
-    const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic",theme:scratchThemeId});
-    function chooseScratchTheme(id){
-      if(!SCRATCH_THEMES.some(item=>item.id===id))throw new Error('Choose a valid scratch theme.');
-      scratchThemeId=id;
-      const theme=applyScratchTheme(document,id,'creator');
-      $("scratchThemeSelection").textContent=theme.icon+' '+theme.label+' selected · '+theme.description;
-      for(const tile of $("scratchThemeChoices").querySelectorAll('[data-scratch-theme]'))
-        tile.setAttribute('aria-pressed',String(tile.dataset.scratchTheme===id));
-      scratchPreview.setTheme(id);
+    const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
+    for(const artwork of SCRATCH_ARTWORKS){
+      const option=document.createElement("option");
+      option.value=artwork.id;
+      option.textContent=artwork.label;
+      $("scratchArtwork").append(option);
     }
-    $("scratchThemeChoices").append(makeScratchThemePicker(document,scratchThemeId,id=>{
+    $("scratchArtwork").value=scratchArtworkId;
+    $("scratchArtwork").addEventListener("change",()=>{
       if(!ready||busy)return;
-      chooseScratchTheme(id);
-      setScratchPreview().catch(error=>show(error.message));
-    }));
-    chooseScratchTheme(scratchThemeId);
+      if(!getScratchArtwork($("scratchArtwork").value))return show("Choose an approved scratch-card image.");
+      scratchArtworkId=$("scratchArtwork").value;
+      if(currentVariant === "ticket") $("scratchStyle").value="classic";
+      setScratchPreview().then(hide).catch(error=>show(error.message));
+    });
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
       const mobile = window.matchMedia("(max-width: 900px)").matches;
@@ -1141,9 +1143,19 @@
       const style = $("scratchStyle").value;
       const foil = $("scratchFoil").value;
       const useImage = style === "custom";
+      const artwork = currentVariant === "ticket" && !useImage
+        ? getScratchArtwork(scratchArtworkId) : null;
+      scratchPreview.artworkId = artwork?.id || null;
       scratchPreview.setFoil(foil);
       if (useImage && (selectedScratchUrl || savedScratchUrl)) {
         await scratchPreview.setCoverImage(selectedScratchUrl || savedScratchUrl);
+      } else if (artwork) {
+        scratchPreview.setCoverStyle("classic");
+        try {
+          await scratchPreview.setCoverImage(artwork.src);
+        } catch {
+          throw new Error('The selected artwork image is not yet installed on Cloudflare: ' + artwork.label + '.');
+        }
       } else {
         await scratchPreview.setCoverImage(null);
         scratchPreview.setCoverStyle(useImage ? "classic" : style);
@@ -1316,7 +1328,7 @@
         surfaceBody.append("variant", currentVariant);
         surfaceBody.append("style", $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
-        surfaceBody.append("theme", scratchThemeId);
+        surfaceBody.append("artworkId", currentVariant === "ticket" && $("scratchStyle").value !== "custom" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         if ($("scratchStyle").value === "custom" && selectedScratchImage) {
           surfaceBody.append("coverImage", selectedScratchImage);
@@ -1373,10 +1385,10 @@
     async function initialise() {
       lock(true);
       preview();
-      await setScratchPreview();
 
       try {
         storageCheck();
+        await setScratchPreview();
 
         if (!id) {
           ready = true;
@@ -1423,7 +1435,8 @@
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         $("scratchStyle").value = savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
-        chooseScratchTheme(savedSurface.surface.theme || DEFAULT_SCRATCH_THEME);
+        scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
+        $("scratchArtwork").value = scratchArtworkId;
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         existingScratchImage = Boolean(savedSurface.surface.hasImage);
         if (existingScratchImage) {
