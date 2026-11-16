@@ -673,3 +673,63 @@ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-she
    font-size:clamp(8px,2.9cqw,58px)!important;
  }
 }
+
+/* FINAL PRINT DETAIL: seating on the detachable stub is a spacious 2×2
+   rotated cluster, not four unreadable 20px-wide lanes. The barcode gets
+   its own column, and admission/holder never occupy the seat field cells. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveStubFields,
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #reviewConcertStubRows,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] .ticket-underlay #concertStubFields{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-template-rows:repeat(2,minmax(0,1fr))!important;
+  grid-auto-flow:row!important;
+  gap:2.1%!important;
+  align-items:stretch!important;
+  justify-items:stretch!important;
+  min-width:0!important;min-height:0!important;
+  overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveStubFields > div,
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #reviewConcertStubRows > div,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #concertStubFields > div{
+  width:100%!important;height:100%!important;
+  min-width:0!important;min-height:0!important;
+  padding:1px!important;margin:0!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  display:flex!important;
+  justify-content:center!important;
+  align-items:center!important;
+  flex-direction:column!important;
+  writing-mode:vertical-rl!important;
+  text-orientation:mixed!important;
+  transform:rotate(180deg)!important;
+  overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveStubFields :is(dt,dd),
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #reviewConcertStubRows :is(small,strong),
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #concertStubFields :is(dt,dd){
+  font-size:clamp(7px,.74cqw,15px)!important;
+  color:var(--cp-stub-ink)!important;
+  opacity:1!important;
+  max-height:90%!important;
+  white-space:nowrap!important;
+  overflow:hidden!important;
+  margin:0!important;
+  line-height:1.1!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveStubFields dt,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #concertStubFields dt,
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #reviewConcertStubRows small{
+  opacity:.72!important;
+  font-weight:600!important;
+}
+/* The pale Promo Poster reference uses dark plum text, not white type
+   over the lavender panel. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout="promo-poster"] :is(#concertLiveEvent,#concertLiveSubtitle,#concertLiveFields dt,#concertLiveFields dd),
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout="promo-poster"] :is(#ticketTitle,#reviewConcertSubtitle,.ct-detail-zone .detail-value,.ct-detail-zone .detail-label),
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout="promo-poster"] :is(#eventName,#concertEventSubtitle,#ticketGrid dt,#ticketGrid dd){
+  color:#371452!important;
+}
