@@ -226,9 +226,10 @@ test('customer static review displays the chosen scratch cover but disables scra
 
 test('legacy foil controls remain available only for the concert ticket variant, not the 20-image Scratch Ticket', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
-  for (const id of ['classic','theatre','concert','custom']) {
-    assert.ok(creator.includes('data-scratch-style="'+id+'"'), 'missing artwork '+id);
-  }
+  assert.ok(!creator.includes('id="scratchArtGrid"'),'No theme tiles in either creator');
+  assert.ok(!creator.includes('data-scratch-style='));
+  assert.ok(creator.includes('id="scratchArtwork"'),'Portrait Scratch Ticket must retain the 20-image dropdown');
+  assert.ok(creator.includes('if (isConcert) $("scratchStyle").value = "concert";'));
   for (const foil of ['gold','silver','midnight','rose']) {
     assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);
   }
@@ -246,7 +247,7 @@ test('legacy foil controls remain available only for the concert ticket variant,
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
   assert.ok(creator.includes('class="preview-details-toggle"'));
   assert.ok(creator.indexOf('class="scratch-choice"') < creator.indexOf('id="recipient"'),
-    'artwork and foil choices must appear before ticket details');
+    'selected foil finish must appear before ticket details');
   assert.ok(creator.includes('surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked))'));
   assert.ok(creator.includes('$("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false'));
 });
@@ -287,7 +288,7 @@ test('the single image picker supports custom scratch cover without a second fil
   assert.equal((form.match(/type="file"/g)||[]).length,1);
   assert.ok(form.includes('id="image"'));
   assert.ok(!form.includes('scratchCoverImage'));
-  assert.ok(form.indexOf('id="scratchArtLabel"') < form.indexOf('id="image"'));
+  assert.ok(form.indexOf('id="scratchArtwork"') < form.indexOf('id="image"'));
   assert.ok(form.indexOf('id="image"') < form.indexOf('id="recipient"'));
   assert.ok(creator.includes('const next = await examineScratchFile(file);'));
   assert.ok(creator.includes('selectedScratchUrl = next;'));
@@ -343,14 +344,15 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(creator.includes('urlParams.get("variant") === "concert"'));
   assert.ok(creator.includes('setCreatorVariant(savedSurface.surface.variant || "ticket")'));
   assert.ok(creator.includes('surfaceBody.append("variant", currentVariant)'));
-  assert.ok(creator.includes('data-show-for="concert" data-scratch-style="festival"'));
-  assert.ok(creator.includes('data-show-for="concert" data-scratch-style="backstage"'));
-  assert.ok(creator.includes('data-show-for="ticket" data-scratch-style="theatre"'));
+  assert.ok(!creator.includes('data-show-for="concert"'),'Concert theme buttons must be removed');
+  assert.ok(creator.includes('$("scratchArtGrid")') === false);
+  assert.ok(creator.includes('$("scratchFoilGrid").hidden = !isConcert;'));
+  assert.ok(creator.includes('this') === false || creator.includes('surfaceBody.append("variant", currentVariant)'));
   assert.ok(creator.includes('currentVariant === "concert" ? "concert" : "classic"'));
   assert.ok(creator.includes('id="image"'));
   assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);
   assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
-  assert.ok(review.includes("festival:'Festival Access',backstage:'Backstage Pass'"));
+  assert.ok(review.includes("isConcert ? 'concert'"),'Concert review must render the colour-only cover');
   assert.ok(storefront.includes("href:'/legacy-create?variant=concert'"));
 });
 
