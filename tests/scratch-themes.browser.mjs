@@ -142,7 +142,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'2. Scratch colour');
    assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
    assert.equal(await page.locator('#scratchArtGrid').count(),0,'Old scratch artwork choices must stay removed');
-   assert.equal(await page.locator('.concert-template-option').count(),4);
+   assert.equal(await page.locator('.concert-template-option').count(),5);
    assert.equal(await page.locator('.concert-theme-option').count(),4);
    assert.equal(await page.locator('#concertLinkModeField:visible').count(),1);
    assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
@@ -166,7 +166,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
      assert.ok(layout.theme.top > layout.foil.bottom,'Phone layout stacks theme after template and foil');
    }
    const silhouettes=new Set(),shapeCanvases=new Set();
-   for(const template of ['side-perforations','stamp-edge','classic-notches','rounded-stub']){
+   for(const template of ['premium-headliner','rock-split','promo-poster','neon-tour','editorial-concert']){
      await page.locator('.concert-template-option[data-value="'+template+'"]').click();
      assert.equal(await page.locator('.concert-template-option[data-value="'+template+'"]').getAttribute('aria-pressed'),'true');
      silhouettes.add(await page.locator('.scratch-static-frame').evaluate(el=>getComputedStyle(el).clipPath));
@@ -209,7 +209,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    const ratio=await page.locator('#scratchSurfacePreview').evaluate(node=>{
     const bounds=node.getBoundingClientRect();return bounds.width/bounds.height;
    });
-   assert.ok(Math.abs(ratio-2.15)<.15,'Concert preview stays landscape');
+   assert.ok(Math.abs(ratio-3)<.18,'Concert preview stays landscape');
    assert.deepEqual(errors,[]);
    await page.screenshot({path:resolve(output,size.name+'-concert-foil-options.png'),fullPage:true});
    await page.close();
@@ -249,7 +249,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#eventTime').fill('19:30');
    await page.locator('#ticketUrl').fill('https://example.org/tickets/123');
    await page.locator('#concertLinkMode').selectOption('qr');
-   await page.locator('.concert-template-option[data-value="stamp-edge"]').click();
+   await page.locator('.concert-template-option[data-value="premium-headliner"]').click();
    await page.locator('.concert-theme-option[data-value="concert-lights"]').click();
    assert.equal(await page.locator('body').getAttribute('data-concert-preview'),'revealed');
    assert.equal(await page.locator('#concertRevealedPreviewFrame:visible').count(),1);
@@ -266,7 +266,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(await page.locator('#ticketPrice').count(),0);
    assert.equal(await page.locator('#concertLiveFields [value*="£"]').count(),0);
    const liveRect=await page.locator('#concertRevealedPreviewFrame').boundingBox();
-   assert.ok(Math.abs(liveRect.width/liveRect.height-2.15)<.13,
+   assert.ok(Math.abs(liveRect.width/liveRect.height-3)<.18,
      'Revealed preview must retain exact ticket proportions, never grow into a poster');
    const bottomSpace=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
      const last=frame.querySelector('#concertLiveFields > div:last-child');
@@ -295,7 +295,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    }
 
    // Also verify the reverse ticket silhouette used in the reported iPhone image.
-   await page.locator('.concert-template-option[data-value="side-perforations"]').click();
+   await page.locator('.concert-template-option[data-value="editorial-concert"]').click();
    await page.locator('#concertPreviewTabsDesktop [data-preview-mode="revealed"]').click();
    // Realistically sized portrait photo to exercise the overlap on iPhone.
    await page.evaluate(async()=>{
@@ -479,7 +479,7 @@ test('amending a saved Concert Ticket never displays the 20-artwork Scratch Card
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
-test('concert owner static review remains a landscape 2.15:1 ticket, not a tall poster',
+test('concert owner static review remains a landscape 3:1 ticket, not a tall poster',
  {timeout:40000},async()=>{
  const browser=await browserType.launch({headless:true});
  try{
@@ -540,7 +540,7 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
        stub:rect('.review-shell>.review-heading'),
        booking:rect('.review-shell #bookingCard'),stubRows:rect('#reviewConcertStubRows')};
    });
-   assert.ok(Math.abs(layout.card.width/layout.card.height-2.15)<.13,
+   assert.ok(Math.abs(layout.card.width/layout.card.height-3)<.18,
      'Owner review must match the original ticket template ratio at any screen width');
    assert.ok(layout.main.right <= layout.stub.x+2,'Main panel must end at detachable stub');
    assert.ok(layout.stubRows.height > 0,'Stub must contain four grouped seating details');
@@ -611,7 +611,7 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    await page.locator('#card.foil-ready').waitFor();
    assert.equal(await page.locator('#card').getAttribute('data-concert-theme'),'backstage');
    const card=await page.locator('#card').boundingBox();
-   assert.ok(Math.abs(card.width/card.height-2.15)<.13,'Recipient ticket must remain landscape 2.15:1');
+   assert.ok(Math.abs(card.width/card.height-3)<.18,'Recipient ticket must remain landscape 3:1');
    assert.equal(await page.locator('#concertStubFields .ticket-item').count(),4,
      'Use just four separated ticket credentials rather than six narrow vertical columns');
    assert.equal(await page.locator('#recipientConcertNumber').count(),0,
