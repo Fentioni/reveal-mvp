@@ -813,7 +813,7 @@
 
   </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
-<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-8">
+<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-9">
 </head>
 
 <body>
@@ -852,7 +852,6 @@
         <div class="review-heading">
           <div class="review-label">Your gift</div>
           <h2 id="reviewEventHeading" class="review-event"></h2>
-          <span id="reviewConcertNumber" class="ct-reference" hidden></span>
           <span class="ct-barcode-art" aria-hidden="true"></span>
           <div id="reviewConcertStubRows" class="concert-review-stub-boxes" hidden></div>
         </div>
@@ -865,7 +864,6 @@
           <div class="ticket-label">YOUR GIFT</div>
           <h3 id="ticketTitle" class="ticket-title"></h3>
           <p id="reviewConcertSubtitle" class="review-concert-subtitle" hidden></p>
-          <p id="reviewConcertSupport" class="review-concert-subtitle" hidden></p>
           <div class="divider"></div>
 
           <div class="details">
@@ -1028,7 +1026,7 @@
   <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
-    import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=1';
+    import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=1';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
@@ -1358,22 +1356,13 @@
       if(isConcert){
         const details=cleanConcertTicketDetails(result.surface.ticketDetails);
         const subtitle=document.getElementById('reviewConcertSubtitle');
-        const support=document.getElementById('reviewConcertSupport');
         subtitle.textContent=details.eventSubtitle||'';
         subtitle.hidden=!details.eventSubtitle;
-        support.textContent=details.supportAct?'Special guest: '+details.supportAct:'';
-        support.hidden=!details.supportAct;
         const extra=document.getElementById('reviewConcertExtra');
         const stub=document.getElementById('reviewConcertStubRows');
         extra.replaceChildren();stub.replaceChildren();
         for(const item of displayConcertTicketRows(details)){
-          if(['eventSubtitle','supportAct'].includes(item.id))continue;
-          if(item.id==='ticketNumber'){
-            const number=document.getElementById('reviewConcertNumber');
-            number.textContent='No. '+item.value;
-            number.hidden=false;
-            continue;
-          }
+          if(item.id==='eventSubtitle')continue;
           const isStub=['section','row','seat','gate'].includes(item.id);
           const cell=document.createElement('div');
           if(isStub){
