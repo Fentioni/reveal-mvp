@@ -528,6 +528,52 @@
       .form-card{padding:0}.scratch-static-frame{border-radius:23px}
       .preview-shell{padding:22px 15px}}
     @media(max-width:370px){.scratch-art-grid{grid-template-columns:1fr}}
+
+    /* Owner-only Concert Ticket live review. Never exposed as an unpaid recipient URL. */
+    .concert-details-form{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 15px}
+    .concert-details-form .field{margin:0}
+    .concert-preview-tabs{display:flex;gap:8px;margin:8px 0 14px}
+    .concert-preview-tabs[hidden]{display:none!important}
+    .concert-preview-tab{flex:1;border:1px solid #a48b69;background:#272331;color:#ead9bf;border-radius:10px;
+      font:700 .88rem system-ui,sans-serif;padding:12px;cursor:pointer;min-height:44px}
+    .concert-preview-tab[aria-selected="true"]{background:#f1d89d;color:#211b19;border-color:#f1d89d}
+    .concert-preview-tab:focus-visible{outline:3px solid #fff;outline-offset:2px}
+    #concertRevealedPreviewFrame{display:none}
+    body[data-ticket-variant="concert"][data-concert-preview="revealed"] .scratch-static-frame{display:none!important}
+    body[data-ticket-variant="concert"][data-concert-preview="revealed"] #concertRevealedPreviewFrame{display:grid}
+    body[data-ticket-variant="concert"] .preview-details-toggle{display:none!important}
+    .concert-live-ticket{width:100%;min-height:clamp(235px,29vw,380px);aspect-ratio:auto;
+      grid-template-columns:minmax(0,74%) minmax(0,26%);overflow:hidden;position:relative;
+      background-size:cover;background-position:center;border:2px solid #cfaa68;color:#fbf2dc;
+      box-shadow:0 12px 35px #0008}
+    .concert-live-ticket[hidden]{display:none!important}
+    .concert-live-main{min-width:0;padding:clamp(12px,2vw,22px);background:rgba(12,14,31,.67)}
+    .concert-live-main h3{font:700 clamp(1.03rem,2vw,1.7rem)/1.15 Georgia,serif;margin:4px 0;overflow-wrap:anywhere}
+    .concert-live-subtitle{margin:4px 0;font-size:.8rem;overflow-wrap:anywhere}
+    .concert-live-headnote{font:750 .57rem system-ui;letter-spacing:.14em;color:#edce8e}
+    .concert-live-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px 12px;margin:12px 0 0}
+    .concert-live-fields>div{min-width:0;border-top:1px solid #efcf8c66;padding-top:5px}
+    .concert-live-fields dt{font:750 .58rem system-ui;letter-spacing:.09em;color:#f4d9a1}
+    .concert-live-fields dd{margin:4px 0 0;font:650 .8rem system-ui;overflow-wrap:anywhere}
+    .concert-live-stub{min-width:0;border-left:2px dashed #f6e3be92;padding:12px 8px;display:flex;
+      flex-direction:column;align-items:center;gap:9px;background:rgba(10,10,22,.78);text-align:center}
+    .concert-live-stub strong{font:800 clamp(.7rem,1.8vw,1rem) system-ui;letter-spacing:.08em;overflow-wrap:anywhere}
+    .concert-live-stub .concert-live-ref{font-size:.66rem;overflow-wrap:anywhere}
+    .concert-live-stub svg{width:min(108px,90%);height:auto;border-radius:5px;background:white;padding:5px}
+    .concert-live-stub .concert-preview-link{font-size:.65rem;color:#f4dda9;overflow-wrap:anywhere}
+    .concert-live-image{max-width:100%;max-height:92px;object-fit:contain;margin:6px 0;border-radius:5px}
+    .concert-live-image[hidden],.concert-live-stub .concert-qr-preview[hidden],
+    .concert-live-stub .concert-preview-link[hidden]{display:none!important}
+    @media(max-width:600px){
+      .concert-details-form{grid-template-columns:1fr 1fr}
+      .concert-live-ticket{min-height:285px;grid-template-columns:minmax(0,72%) minmax(0,28%)}
+      .concert-live-main{padding:10px 8px}
+      .concert-live-main h3{font-size:1.15rem}
+      .concert-live-fields{gap:6px 7px}
+      .concert-live-fields dt{font-size:.5rem}
+      .concert-live-fields dd{font-size:.66rem}
+      .concert-live-stub{padding:9px 4px}
+    }
     .scratch-one-upload{margin:22px 0 12px;border:1px dashed #8b7755;border-radius:13px;padding:13px}
     .concert-build-group{margin:22px 0}
     .concert-build-group[hidden],#concertLinkModeField[hidden],#concertEventUploadDock[hidden]{display:none!important}
@@ -678,6 +724,10 @@
 
             </div>
             <input type="checkbox" id="scratchAudioEnabled" hidden aria-hidden="true" tabindex="-1">
+<div id="concertPreviewTabsMobile" class="concert-preview-tabs" role="tablist" aria-label="Concert ticket preview" hidden>
+            <button type="button" class="concert-preview-tab" data-preview-mode="cover" role="tab" aria-selected="true">Scratch cover</button>
+            <button type="button" class="concert-preview-tab" data-preview-mode="revealed" role="tab" aria-selected="false">Revealed ticket</button>
+          </div>
             <div id="scratchMobileDock" class="scratch-mobile-dock">
               <div class="scratch-static-frame" aria-label="Static preview of selected scratch surface">
                 <canvas id="scratchSurfacePreview" aria-hidden="true"></canvas>
@@ -753,6 +803,52 @@
             >
           </div>
 
+          <section id="concertTicketDetailsSection" class="concert-build-group" hidden aria-labelledby="concertTicketDetailsHeading">
+            <h3 id="concertTicketDetailsHeading">4. Ticket information</h3>
+            <p class="field-help">These fields appear on the revealed ticket. Leave anything that doesn't apply blank.</p>
+            <div class="concert-details-form">
+              <div class="field">
+                <label for="eventSubtitle">Event subtitle / tagline</label>
+                <input id="eventSubtitle" type="text" maxlength="120" placeholder="An unforgettable night of live music">
+              </div>
+              <div class="field">
+                <label for="supportAct">Special guest / support act</label>
+                <input id="supportAct" type="text" maxlength="120" placeholder="With special guests">
+              </div>
+              <div class="field">
+                <label for="venueAddress">Venue address</label>
+                <input id="venueAddress" type="text" maxlength="220" placeholder="Street, town or city">
+              </div>
+              <div class="field">
+                <label for="ticketNumber">Ticket number / reference</label>
+                <input id="ticketNumber" type="text" maxlength="80" placeholder="Optional reference">
+              </div>
+              <div class="field">
+                <label for="section">Section</label>
+                <input id="section" type="text" maxlength="50" placeholder="e.g. Standing">
+              </div>
+              <div class="field">
+                <label for="level">Level</label>
+                <input id="level" type="text" maxlength="50" placeholder="e.g. Lower tier">
+              </div>
+              <div class="field">
+                <label for="row">Row</label>
+                <input id="row" type="text" maxlength="40" placeholder="e.g. G">
+              </div>
+              <div class="field">
+                <label for="seat">Seat</label>
+                <input id="seat" type="text" maxlength="40" placeholder="e.g. 18">
+              </div>
+              <div class="field">
+                <label for="gate">Gate</label>
+                <input id="gate" type="text" maxlength="40" placeholder="e.g. 3A">
+              </div>
+              <div class="field">
+                <label for="ticketPrice">Ticket face value (not checkout price)</label>
+                <input id="ticketPrice" type="text" maxlength="50" placeholder="e.g. £25">
+              </div>
+            </div>
+          </section>
           <div class="field">
             <label for="personalMessage">Your message</label>
             <textarea
@@ -763,7 +859,7 @@
           </div>
 
           <div id="concertLinkModeField" class="field" hidden>
-            <label for="concertLinkMode">4. Add a link or QR code (optional)</label>
+            <label for="concertLinkMode">5. Add a link or QR code (optional)</label>
             <select id="concertLinkMode">
               <option value="link">Show a clickable link</option>
               <option value="qr">Show a scannable QR code</option>
@@ -803,7 +899,28 @@
 
       <aside class="preview-column" aria-label="Static scratch-card preview">
         <div class="preview-label">Live preview</div>
+<div id="concertPreviewTabsDesktop" class="concert-preview-tabs" role="tablist" aria-label="Concert ticket preview" hidden>
+            <button type="button" class="concert-preview-tab" data-preview-mode="cover" role="tab" aria-selected="true">Scratch cover</button>
+            <button type="button" class="concert-preview-tab" data-preview-mode="revealed" role="tab" aria-selected="false">Revealed ticket</button>
+          </div>
         <div id="scratchDesktopDock" class="scratch-desktop-dock"></div>
+        <section id="concertRevealedPreviewFrame" class="concert-live-ticket" aria-label="Static revealed concert ticket preview" hidden>
+          <div class="concert-live-main">
+            <div class="concert-live-headnote">CONCERT TICKET</div>
+            <h3 id="concertLiveEvent">Your event</h3>
+            <p id="concertLiveSubtitle" class="concert-live-subtitle" hidden></p>
+            <p id="concertLiveSupport" class="concert-live-subtitle" hidden></p>
+            <dl id="concertLiveFields" class="concert-live-fields"></dl>
+          </div>
+          <div class="concert-live-stub">
+            <strong>ADMIT</strong>
+            <span id="concertLiveAdmit" class="concert-live-ref" hidden></span>
+            <span id="concertLiveTicketNumber" class="concert-live-ref" hidden></span>
+            <div id="concertLiveQr" class="concert-qr-preview" hidden></div>
+            <span id="concertLiveLink" class="concert-preview-link" hidden></span>
+            <img id="concertLiveImage" class="concert-live-image" alt="Selected event artwork" hidden>
+          </div>
+        </section>
         <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
         <details class="preview-details-toggle">
           <summary>View your personalised ticket details</summary>
@@ -888,10 +1005,12 @@
     </div>
   </main>
 
+  <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-templates-4';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
+    import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -957,13 +1076,14 @@
       $("concertTemplateSection").hidden = !isConcert;
       $("concertThemeSection").hidden = !isConcert;
       $("concertLinkModeField").hidden = !isConcert;
+      $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
       const uploadDock=$("concertEventUploadDock");
       uploadDock.hidden=!isConcert;
       if(isConcert) uploadDock.append(upload);
       else form.querySelector(".scratch-choice").append(upload);
       $("ticketUrlLabel").textContent=isConcert ? "Link or QR code destination" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add an image";
+      $("imageUploadLabel").textContent = isConcert ? "6. Event artwork (optional)" : "Add an image";
       $("imageUploadHelp").textContent = isConcert
         ? "Upload an event poster, photo or ticket image. It appears after scratching, never on the scratchable surface."
         : "Optional: upload an image for a custom scratch-card cover.";
