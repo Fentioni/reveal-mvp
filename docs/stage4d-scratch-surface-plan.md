@@ -1,3 +1,9 @@
+# SUPERSEDED — 16 November 2026
+
+The user has withdrawn the 13-theme artwork proposal and approved exactly 20 final JPEG designs for a creator dropdown. The current authoritative plan is [stage4j-final-20-artwork.md](./stage4j-final-20-artwork.md). Keep this document for implementation history only. Do not reinstate the theme chooser.
+
+---
+
 # Stage 4D scratch-surface system (staging)
 
 ## Stage 4E+ — 13-theme Scratch Ticket Reveal system (15 November 2026)
