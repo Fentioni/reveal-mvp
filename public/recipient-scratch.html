@@ -262,6 +262,7 @@
     scratch = new ScratchCard({
       canvas:$('foilCanvas'),
       foil:data.scratchSurface.foil,
+      concertTicket:isConcert,
       theme:chosenTheme,
       coverStyle:isConcert ? 'concert' : data.scratchSurface.style === 'custom' ? 'classic' : data.scratchSurface.style,
       brushSize:49,
