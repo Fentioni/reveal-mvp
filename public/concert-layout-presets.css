@@ -13,7 +13,7 @@ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-she
   --cp-stub-ink:#122047;
   --cp-edge:rgba(255,255,255,.5);
   --cp-pad-x:4.7%;
-  --cp-pad-y:8.5%;
+  --cp-pad-y:2.5cqw;
   container-type:inline-size;
   box-sizing:border-box!important;
   aspect-ratio:3 / 1!important;
