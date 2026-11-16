@@ -44,7 +44,8 @@ async function startServer(){
      res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
      res.end(JSON.stringify({...sample,scratchSurface:{
        style:'concert',foil:'rose',variant:'concert',hasImage:false,
-       ticketTemplate:'rounded-stub',revealTheme:'backstage',linkMode:'qr'
+       ticketTemplate:'rounded-stub',revealTheme:'backstage',linkMode:'qr',
+       ticketDetails:{ticketNumber:'T-123',section:'Balcony',row:'G',seat:'18',gate:'A2',venueAddress:'London, England'}
      },reveal:{...sample.reveal,ticketUrl:'https://example.org/concert?t=42'}}));
      return;
    }
@@ -247,9 +248,18 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),0);
    assert.equal((await page.locator('#concertLiveEvent').textContent()).trim(),'Live Music at the Hall');
    const details=await page.locator('#concertLiveFields').textContent();
-   for(const value of ['The Grand Hall','London, England','Balcony','G','18','A']){
-    assert.ok(details.includes(value),'Revealed ticket must include '+value);
+   for(const value of ['The Grand Hall','London, England']){
+    assert.ok(details.includes(value),'Main ticket must include '+value);
    }
+   const stubDetails=await page.locator('#concertLiveStubFields').textContent();
+   for(const value of ['Balcony','G','18','A']){
+    assert.ok(stubDetails.includes(value),'Detachable ticket stub must include '+value);
+   }
+   assert.equal(await page.locator('#ticketPrice').count(),0);
+   assert.equal(await page.locator('#concertLiveFields [value*="£"]').count(),0);
+   const liveRect=await page.locator('#concertRevealedPreviewFrame').boundingBox();
+   assert.ok(Math.abs(liveRect.width/liveRect.height-2.15)<.13,
+     'Revealed preview must retain exact ticket proportions, never grow into a poster');
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
    assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
    assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
@@ -309,11 +319,17 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    await page.goto(base+'/r/concert-qr',{waitUntil:'networkidle'});
    await page.locator('#card.foil-ready').waitFor();
    assert.equal(await page.locator('#card').getAttribute('data-concert-theme'),'backstage');
+   const card=await page.locator('#card').boundingBox();
+   assert.ok(Math.abs(card.width/card.height-2.15)<.13,'Recipient ticket must remain landscape 2.15:1');
+   assert.equal(await page.locator('#concertStubFields .ticket-item').count(),5,
+     'Populate detachable stub with ticket number, section, row, seat and gate');
+   assert.equal(await page.locator('#concertStubFields').textContent().then(v=>v.includes('T-123')),true);
    assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
    assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
    assert.equal(await page.locator('#bookingAction:visible').count(),0);
    assert.equal(await page.locator('#concertQrRow').evaluate(e=>getComputedStyle(e).visibility),'hidden');
    assert.equal(await page.locator('body').getAttribute('data-ticket-variant'),'concert');
+   assert.equal(await page.locator('#ticketGrid').textContent().then(v=>v.includes('London, England')),true);
    assert.deepEqual(errors,[]);
    await page.screenshot({path:resolve(output,'mobile-concert-qr-covered.png'),fullPage:true});
    await page.close();
