@@ -1,0 +1,412 @@
+/* Reveal — Professional Concert Ticket: original ticket design system.
+   Applies ONLY to the Concert Ticket variant. Scratch Ticket is unaffected.
+   Template silhouettes and text are supplied from authorised saved draft data.
+*/
+body[data-ticket-variant="concert"]{
+  --ct-gold:#e8c482;--ct-light:#fff4e0;--ct-muted:#dcc19c;--ct-dark:#161021;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket){
+  --ct-stub:24%;--ct-main:76%;--ct-main-col:1;--ct-stub-col:2;
+  --ct-ink:var(--ct-light);
+  box-sizing:border-box;
+  display:grid;
+  grid-template-columns:minmax(0,var(--ct-main)) minmax(0,var(--ct-stub));
+  grid-template-rows:minmax(0,1fr);
+  width:100%;
+  height:auto;
+  aspect-ratio:2.15/1;
+  min-height:0;
+  max-height:none;
+  position:relative;
+  border:0!important; /* never paint a border *under* a cut-out silhouette */
+  border-radius:0!important;
+  overflow:hidden!important;
+  color:var(--ct-ink);
+  background-color:#171023;
+  box-shadow:0 15px 44px #0005;
+  isolation:isolate;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"],
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"]{
+  --ct-stub-col:1;--ct-main-col:2;
+  grid-template-columns:minmax(0,var(--ct-stub)) minmax(0,var(--ct-main));
+}
+/* Inset print trim line stays completely inside all 4 cut-out outlines. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)::before{
+  content:"";
+  position:absolute;
+  z-index:4;
+  inset:6.2% 5.4%;
+  border:1.5px solid var(--ct-gold);
+  border-radius:3px;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px #20122633;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="stamp-edge"]::before{
+  inset:6.2% 6.1%;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"]::before{
+  inset:5.5% 4.7%;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"]::before{
+  inset:5.4% 6%;
+}
+/* Three matching renderers: live preview, private owner static review,
+   and the paid recipient's ticket behind the scratchable canvas. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+  grid-column:var(--ct-main-col)!important;
+  grid-row:1!important;
+  order:0;
+  min-width:0;min-height:0;
+  width:100%;height:100%;
+  padding:clamp(12px,3.1vw,38px)!important;
+  display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;
+  gap:clamp(4px,.68vw,10px);
+  overflow:hidden;
+  color:var(--ct-light)!important;
+  background:linear-gradient(90deg,#0c0b1de6,#160e23a1 83%,#130d2444)!important;
+  border:0!important;border-radius:0!important;
+  box-shadow:none!important;backdrop-filter:none!important;
+  text-align:left;
+}
+/* Use the theme artwork as the ticket background, not boxed wallpaper. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-theme="classic"]{
+  --ct-gold:#a87937;--ct-ink:#3e2b24;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-theme="classic"] .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell[data-concert-theme="classic"] > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-theme="classic"] .ticket{
+  background:linear-gradient(90deg,#fff9ecf5,#f5e6c9ad 87%,#ebd4a84d)!important;
+  color:#35251e!important;
+}
+/* Main heading is the show artwork, not a form header. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-headnote,
+body[data-ticket-variant="concert"] .review-shell .ticket-label,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket .kicker{
+  font:700 clamp(.5rem,.92vw,.78rem)/1.1 system-ui,sans-serif!important;
+  letter-spacing:.25em!important;
+  text-transform:uppercase;
+  color:var(--ct-gold)!important;
+  margin:0!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveEvent,
+body[data-ticket-variant="concert"] .review-shell #ticketTitle,
+body[data-ticket-variant="concert"] .card.concert-ticket #eventName{
+  font:italic 600 clamp(1.25rem,4.1vw,3.7rem)/.96 Georgia,Times New Roman,serif!important;
+  letter-spacing:-.045em!important;
+  color:inherit!important;
+  margin:clamp(2px,.5vw,8px) 0!important;
+  overflow-wrap:anywhere;
+  max-height:2.05em;overflow:hidden;
+  flex-shrink:0;
+  text-wrap:balance;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-subtitle,
+body[data-ticket-variant="concert"] .review-shell .review-concert-subtitle,
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-subtitle{
+  color:inherit!important;
+  opacity:.86;
+  font:500 clamp(.5rem,1.12vw,.91rem)/1.2 system-ui,sans-serif!important;
+  margin:0!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-subtitle[hidden],
+body[data-ticket-variant="concert"] .review-shell .review-concert-subtitle[hidden],
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-subtitle[hidden]{display:none!important;}
+/* No repeated empty form boxes. A clean fine-rule ticket information strip. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields,
+body[data-ticket-variant="concert"] .review-shell .details,
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid{
+  width:100%;
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  grid-auto-rows:min-content;
+  align-items:stretch;
+  gap:clamp(5px,.9vw,13px) clamp(11px,1.9vw,28px)!important;
+  min-width:0;
+  border:0!important;
+  border-top:1px solid #dfbb798b!important;
+  margin:clamp(6px,1vw,15px) 0 0!important;
+  padding:clamp(7px,1.1vw,16px) 0 0!important;
+  background:none!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields>div,
+body[data-ticket-variant="concert"] .review-shell .details>div:not([hidden]),
+body[data-ticket-variant="concert"] .review-shell .review-concert-extra>div,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid .ticket-item{
+  border:0!important;border-left:1px solid #eac37b91!important;
+  border-radius:0!important;
+  background:transparent!important;
+  padding:0 0 0 clamp(6px,.8vw,13px)!important;
+  min-width:0;
+  box-shadow:none!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame :is(.concert-live-fields dt,.concert-live-stub-fields dt),
+body[data-ticket-variant="concert"] .review-shell :is(.detail-label,.concert-review-stub-boxes small),
+body[data-ticket-variant="concert"] .card.concert-ticket :is(.ticket-item dt,.concert-stub-fields dt){
+  display:block;
+  color:var(--ct-gold)!important;
+  font:750 clamp(.46rem,.78vw,.7rem)/1.1 system-ui,sans-serif!important;
+  letter-spacing:.1em!important;
+  text-transform:uppercase;
+  margin:0 0 clamp(2px,.35vw,4px)!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields dd,
+body[data-ticket-variant="concert"] .review-shell .detail-value,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-item dd{
+  display:block;
+  color:inherit!important;
+  font:700 clamp(.59rem,1.22vw,1.12rem)/1.16 system-ui,sans-serif!important;
+  margin:0!important;
+  overflow-wrap:anywhere;
+  max-height:2.3em;overflow:hidden;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveMessage{
+  display:none!important; /* personal message is part of the keepsake, outside ticket */
+}
+body[data-ticket-variant="concert"] .review-shell .details>div:nth-child(4),
+body[data-ticket-variant="concert"] .review-shell .details>div:nth-child(5),
+body[data-ticket-variant="concert"] .review-shell .details>div:nth-child(6){
+  display:none!important; /* admit/for/from move to stub or personal message */
+}
+body[data-ticket-variant="concert"] .review-shell .divider{display:none!important;}
+/* Main artwork is a contained printed image, not a giant image block. */
+body[data-ticket-variant="concert"] #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap{
+  display:block;
+  position:absolute!important;
+  z-index:1;
+  right:calc(var(--ct-stub) + 4.5%);
+  top:15%;
+  width:min(27%,240px)!important;
+  height:58%;
+  max-height:none!important;
+  margin:0!important;
+  padding:0!important;
+  overflow:hidden;
+  border:0!important;border-radius:4px!important;
+  box-shadow:0 10px 25px #0004!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="side-perforations"] #concertLiveImage,
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="rounded-stub"] #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell[data-concert-template="side-perforations"] .image-wrap,
+body[data-ticket-variant="concert"] .review-shell[data-concert-template="rounded-stub"] .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="rounded-stub"] .event-image-wrap{
+  right:4.5%;
+}
+body[data-ticket-variant="concert"] #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell .review-image,
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap img{
+  width:100%!important;height:100%!important;max-height:none!important;
+  object-fit:cover!important;
+}
+body[data-ticket-variant="concert"] #concertLiveImage[hidden],
+body[data-ticket-variant="concert"] .review-shell .image-wrap[hidden],
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap[hidden]{display:none!important;}
+/* Detachable stub: rotated 90° ticket metadata, not horizontal form boxes. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub,
+body[data-ticket-variant="concert"] .review-shell>.review-heading,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity{
+  grid-column:var(--ct-stub-col)!important;
+  grid-row:1!important;
+  position:relative;
+  min-width:0;min-height:0;
+  width:100%;height:100%;
+  padding:clamp(11px,2.1vw,29px) clamp(7px,.95vw,14px)!important;
+  border:0!important;
+  border-left:0!important;
+  border-right:0!important;
+  border-radius:0!important;
+  display:flex!important;
+  flex-direction:row!important;
+  justify-content:flex-start!important;
+  align-items:stretch!important;
+  gap:clamp(3px,.55vw,8px)!important;
+  background:linear-gradient(100deg,#160e27f2,#140c26ed)!important;
+  color:var(--ct-light)!important;
+  text-align:center;
+  overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub::before,
+body[data-ticket-variant="concert"] .review-shell>.review-heading::before,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity::before{
+  content:"";position:absolute;z-index:2;
+  top:5%;bottom:5%;left:0;
+  border-left:3px dashed #e3c995d4;pointer-events:none;
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::before,
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"] :is(.concert-live-stub,.review-heading,.ticket-identity)::before{
+  left:auto;right:0;border-left:0;border-right:3px dashed #e3c995d4;
+}
+/* Decorative ticket printing, not a machine-readable entry barcode. */
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after{
+  content:"";position:absolute;pointer-events:none;opacity:.65;
+  height:64%;width:clamp(5px,1.1vw,14px);
+  top:18%;right:4px;
+  background:repeating-linear-gradient(to right,#f4deb3 0 1px,transparent 1px 3px,#f4deb3 3px 5px,transparent 5px 8px,#f4deb3 8px 9px,transparent 9px 11px);
+}
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="side-perforations"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after,
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-template="rounded-stub"] :is(.concert-live-stub,.review-heading,.ticket-identity)::after{
+  right:auto;left:4px;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>strong,
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>.concert-live-ref,
+body[data-ticket-variant="concert"] .review-shell :is(.review-event,.review-label),
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity :is(.recipient,.label){
+  writing-mode:vertical-rl!important;
+  text-orientation:mixed;
+  transform:rotate(180deg);
+  white-space:nowrap!important;
+  flex:0 1 auto;
+  min-width:0;
+  max-height:100%;
+  margin:0!important;
+  font:700 clamp(.54rem,1.05vw,.98rem)/1.15 system-ui,sans-serif!important;
+  color:var(--ct-light)!important;
+  text-align:center;
+  overflow:hidden;
+  letter-spacing:.05em;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>strong,
+body[data-ticket-variant="concert"] .review-shell .review-label,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity>.label{
+  font-size:clamp(.5rem,.9vw,.85rem)!important;
+  color:var(--ct-gold)!important;
+}
+body[data-ticket-variant="concert"] .review-shell .review-label{margin:0!important;}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields,
+body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows,
+body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields{
+  display:flex!important;
+  flex:1 1 auto;
+  flex-direction:row!important;
+  justify-content:space-evenly;
+  align-items:stretch!important;
+  min-width:0;min-height:0;
+  gap:0!important;
+  border:0!important;margin:0!important;padding:0!important;
+  overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields>div,
+body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows>div,
+body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields>div{
+  display:flex!important;
+  flex-direction:column;
+  justify-content:center;
+  align-items:center;
+  writing-mode:vertical-rl!important;
+  text-orientation:mixed;
+  transform:rotate(180deg);
+  min-width:0;
+  flex:1 1 0!important;
+  max-height:100%;
+  overflow:hidden;
+  border:0!important;
+  border-left:1px solid #d8b97a6d!important;
+  border-radius:0!important;
+  background:none!important;
+  padding:1px clamp(2px,.25vw,5px)!important;
+  margin:0!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields :is(dt,dd),
+body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows :is(small,strong),
+body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields :is(dt,dd){
+  color:var(--ct-light)!important;
+  font:700 clamp(.46rem,.85vw,.75rem)/1 system-ui,sans-serif!important;
+  letter-spacing:.06em!important;
+  margin:0!important;
+  text-transform:uppercase;
+  white-space:nowrap;max-height:100%;overflow:hidden;
+}
+body[data-ticket-variant="concert"] :is(#concertLiveStubFields,#reviewConcertStubRows,#concertStubFields) :is(dt,small){
+  color:var(--ct-gold)!important;
+  font-size:clamp(.42rem,.7vw,.65rem)!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>.concert-live-ref[hidden],
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>#concertLiveQr[hidden],
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>#concertLiveLink[hidden],
+body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows[hidden],
+body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow){
+  position:absolute;
+  z-index:3;
+  right:5%;bottom:10%;
+  width:clamp(35px,9vw,100px);
+  height:auto!important;
+  max-height:62%;
+  margin:0!important;padding:0!important;
+  min-height:0!important;
+  background:transparent!important;
+  overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow) svg{
+  max-width:100%;max-height:100%;width:100%!important;
+  height:auto!important;padding:3px!important;background:#fff!important;
+  border-radius:3px;
+}
+body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow){
+  position:absolute;
+  z-index:3;
+  left:6%;right:6%;bottom:7%;
+  max-height:23%;
+  min-height:0!important;
+  margin:0!important;
+  padding:2px!important;
+  background:transparent!important;
+  overflow:hidden;
+  text-align:center;
+  font-size:clamp(.44rem,.75vw,.66rem)!important;
+  color:var(--ct-light)!important;
+  border:0!important;
+}
+body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow)[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] .review-shell #bookingValue{
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:clamp(.42rem,.7vw,.62rem)!important;
+}
+body[data-ticket-variant="concert"] .card.concert-ticket .booking-row a{color:var(--ct-light)!important;}
+/* QR/link need space, without covering the printed stub fields. */
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity):has(svg) :is(#concertLiveStubFields,#reviewConcertStubRows,#concertStubFields){
+  padding-bottom:24%!important;
+}
+@media(max-width:680px){
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket){
+    aspect-ratio:2.15/1!important;
+    min-height:0!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-main,.review-shell>.ticket,.card.concert-ticket .ticket){
+    padding:6px 8px!important;gap:2px!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveEvent,.review-shell #ticketTitle,.card.concert-ticket #eventName){
+    font-size:clamp(.87rem,3.6vw,1.25rem)!important;max-height:2em
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-fields,.review-shell .details,.review-shell .review-concert-extra,.card.concert-ticket .ticket-grid){
+    gap:2px 6px!important;margin:3px 0 0!important;padding:4px 0 0!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-fields dt,.review-shell .detail-label,.card.concert-ticket .ticket-item dt){
+    font-size:.38rem!important;letter-spacing:0!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-fields dd,.review-shell .detail-value,.card.concert-ticket .ticket-item dd){
+    font-size:.5rem!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-subtitle,.review-shell .review-concert-subtitle,.card.concert-ticket .concert-subtitle){
+    font-size:.44rem!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-stub,.review-shell>.review-heading,.card.concert-ticket .ticket-identity){
+    padding:7px 3px!important;gap:1px!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-stub>strong,.review-shell .review-label,.card.concert-ticket .ticket-identity>.label){
+    font-size:.42rem!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields>div,.review-shell #reviewConcertStubRows>div,.card.concert-ticket #concertStubFields>div){
+    padding:0 1px!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields dt,#concertRevealedPreviewFrame #concertLiveStubFields dd,.review-shell #reviewConcertStubRows small,.review-shell #reviewConcertStubRows strong,.card.concert-ticket #concertStubFields dt,.card.concert-ticket #concertStubFields dd){
+    font-size:.4rem!important;
+  }
+  body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow){width:38px}
+}
