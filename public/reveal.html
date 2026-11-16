@@ -815,6 +815,7 @@
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
 <link rel="stylesheet" href="/concert-layout-presets.css?v=presets-3">
+<link rel="stylesheet" href="/concert-reference-renderer.css?v=reference-1">
 </head>
 
 <body>
@@ -1029,6 +1030,7 @@
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
+    import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-1';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
     'use strict';
@@ -1432,6 +1434,17 @@
         document.getElementById('reviewEventHeading').textContent = reveal.admit || reveal.recipient || '';
         document.querySelector('.review-label').textContent = 'ADMIT';
         ticket.querySelector('.ticket-label').textContent = 'LIVE IN CONCERT';
+        const referenceDetails=cleanConcertTicketDetails(result.surface.ticketDetails);
+        renderConcertReference(document.querySelector('.review-shell'),{
+          preset:result.surface.ticketTemplate,eventTitle:reveal.eventName,
+          subtitle:referenceDetails.eventSubtitle,recipient:reveal.recipient,admit:reveal.admit,
+          date:reveal.eventDate,time:reveal.eventTime,venue:reveal.venue,
+          venueAddress:referenceDetails.venueAddress,level:referenceDetails.level,
+          section:referenceDetails.section,row:referenceDetails.row,
+          seat:referenceDetails.seat,gate:referenceDetails.gate,
+          officialLink:reveal.ticketUrl,
+          imageSrc:elements.imageWrap.hidden?'':elements.reviewImage.src
+        });
         elements.surfaceReview.querySelector('h2').textContent = 'Concert ticket scratch cover';
       }
       const {audio} = result;
