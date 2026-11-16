@@ -292,6 +292,7 @@
       <div class="ticket-identity">
         <div class="label" id="concertStubHeading">ADMIT ONE</div>
         <h2 class="recipient" id="name"></h2>
+        <span id="recipientConcertNumber" class="ct-reference" hidden></span>
         <dl id="concertStubFields" class="concert-stub-fields"></dl>
       </div>
       <h3 class="headline" id="headline">A special surprise</h3>
@@ -365,7 +366,12 @@
     $('concertStubFields').replaceChildren();
     for(const field of displayConcertTicketRows(details)){
       if(['eventSubtitle','supportAct'].includes(field.id))continue;
-      const stub=['ticketNumber','section','row','seat','gate'].includes(field.id);
+      if(field.id==='ticketNumber'){
+        $('recipientConcertNumber').textContent='No. '+field.value;
+        $('recipientConcertNumber').hidden=false;
+        continue;
+      }
+      const stub=['section','row','seat','gate'].includes(field.id);
       const row=document.createElement('div');row.className='ticket-item concert-extra-row';
       const dt=document.createElement('dt');dt.textContent=field.label;
       const dd=document.createElement('dd');dd.textContent=field.value;
@@ -441,14 +447,10 @@
     applyDetails(model);
     if(isConcert){
       applyConcertTicketFields(data.scratchSurface.ticketDetails);
-      if(model.details.some(d=>d.id==='admit')){
-        const admit=model.details.find(d=>d.id==='admit');
-        $('admitRow').hidden=true;
-        const cell=document.createElement('div');cell.className='ticket-item';
-        const dt=document.createElement('dt');dt.textContent='ADMIT';
-        const dd=document.createElement('dd');dd.textContent=admit.value;
-        cell.append(dt,dd);$('concertStubFields').prepend(cell);
-      }
+      const admit=model.details.find(d=>d.id==='admit');
+      $('admitRow').hidden=true;
+      $('name').textContent=admit?.value || model.recipient;
+      $('concertStubHeading').textContent='ADMIT';
       // Keep QR and link inside the stub and personal message beneath the
       // fixed-size ticket; neither should enlarge the scratchable Canvas.
       $('card').after($('closingDetails'));
