@@ -595,3 +595,24 @@ body[data-ticket-variant="concert"] input#eventDate,
 body[data-ticket-variant="concert"] input#eventTime{color-scheme:dark}
 body[data-ticket-variant="concert"] input#eventDate::-webkit-calendar-picker-indicator,
 body[data-ticket-variant="concert"] input#eventTime::-webkit-calendar-picker-indicator{filter:brightness(0) invert(1)!important}
+
+/* LAST-WINS mandatory no-image layout: all five presets collapse the poster
+   track instead of leaving unused space. More specific than preset selectors. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout][data-has-image="false"] > .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell[data-concert-layout][data-has-image="false"] > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout][data-has-image="false"] .ticket-underlay > article.ticket{
+  grid-template-areas:"kicker" "title" "subtitle" "details"!important;
+  grid-template-columns:minmax(0,1fr)!important;
+}
+/* Legacy SVG artwork remains a background for no-image tickets. Fields never
+   disappear simply because the selected optional photo was removed. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-layout] :is(#concertLiveFields,.ct-detail-zone,#ticketGrid)[hidden]{
+  display:none!important;
+}
+/* The printed stub and the owner link are both subordinate to admission.
+   They are not permitted to increase ticket height or invade the main panel. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-layout] :is(.concert-live-stub,.review-heading,.ticket-identity) :is(#concertLiveLink,#concertLiveQr,#bookingCard,#bookingRow,#concertQrRow){
+  align-self:stretch!important;
+  min-height:0!important;
+  max-width:100%!important;
+}
