@@ -3,6 +3,7 @@
  * Receives current unsaved form values; never fetches protected recipient data.
  */
 import {CONCERT_TICKET_FIELDS} from './concert-ticket-fields.js';
+import {renderConcertReference} from './concert-reference-renderer.js';
 import {concertTicketClipPath,concertTemplateLayout} from './concert-ticket-options.js';
 const foilNames=['gold','silver','midnight','rose'];
 const safeUrl=raw=>{
@@ -78,6 +79,14 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   frame.dataset.hasImage=src?'true':'false';
   if(src)img.src=src;
   else img.removeAttribute('src');
+  renderConcertReference(frame,{
+   preset:getTemplate(), eventTitle:$('eventName').value.trim(),
+   subtitle:detail.eventSubtitle,recipient,admit:admission,
+   date:$('eventDate').value,time:$('eventTime').value,venue:$('venue').value.trim(),
+   venueAddress:detail.venueAddress,level:detail.level,
+   section:detail.section,row:detail.row,seat:detail.seat,gate:detail.gate,
+   officialLink:url,imageSrc:src
+  });
  }
  function setMode(next){
   mode=next==='revealed'?'revealed':'cover';
