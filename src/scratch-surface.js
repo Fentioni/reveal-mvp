@@ -4,6 +4,7 @@
  * Every request must first pass the existing legacy owner-token authorisation.
  */
 import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
+import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const MAX_IMAGE = 10 * 1024 * 1024;
 const IMAGE_TYPES = Object.freeze({
   'image/jpeg': '.jpg',
@@ -64,7 +65,12 @@ async function details(env, id) {
     theme: THEMES.has(saved.theme) ? saved.theme : DEFAULT_THEME,
     ...(getScratchArtwork(saved.artworkId) ? {artworkId:saved.artworkId} : {}),
     coverAssetId: asset ? asset.id : null,
-    variant: saved.variant === 'concert' ? 'concert' : 'ticket'
+    variant: saved.variant === 'concert' ? 'concert' : 'ticket',
+    ...(saved.variant === 'concert' ? {
+      ticketTemplate:isConcertTemplate(saved.ticketTemplate) ? saved.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
+      revealTheme:isConcertRevealTheme(saved.revealTheme) ? saved.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
+      linkMode:saved.linkMode === 'qr' ? 'qr' : 'link'
+    } : {})
   };
   const audio = {...DEFAULT_AUDIO,enabled:fields.audio?.enabled !== false};
   return {fields, surface, asset, audio};
@@ -188,7 +194,12 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme:current.surface.theme,
           ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
-          variant:current.surface.variant
+          variant:current.surface.variant,
+          ...(current.surface.variant === 'concert' ? {
+            ticketTemplate:current.surface.ticketTemplate,
+            revealTheme:current.surface.revealTheme,
+            linkMode:current.surface.linkMode
+          } : {})
         },
         audio:current.audio
       });
@@ -213,6 +224,9 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     // Existing drafts saved before themes existed retain the elegant default.
     const theme=requestedTheme === null ? current.surface.theme : requestedTheme;
     const variant = body.get('variant') ?? current.surface.variant;
+    const ticketTemplate = body.get('ticketTemplate') ?? current.surface.ticketTemplate ?? DEFAULT_CONCERT_TEMPLATE;
+    const revealTheme = body.get('revealTheme') ?? current.surface.revealTheme ?? DEFAULT_CONCERT_REVEAL_THEME;
+    const linkMode = body.get('linkMode') ?? current.surface.linkMode ?? 'link';
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
@@ -222,7 +236,9 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     if (typeof style !== 'string' || !STYLES.has(style) || typeof foil !== 'string' || !FOILS.has(foil) ||
         typeof theme !== 'string' || !THEMES.has(theme) ||
         typeof variant !== 'string' || !VARIANTS.has(variant) ||
-        (variant === 'concert' && !CONCERT_STYLES.has(style))) {
+        (variant === 'concert' && (!CONCERT_STYLES.has(style) ||
+          !isConcertTemplate(ticketTemplate) || !isConcertRevealTheme(revealTheme) ||
+          !['link','qr'].includes(linkMode)))) {
       return error('Choose a valid scratch surface and foil finish for this product.');
     }
     if (uploaded !== null && (typeof uploaded === 'string' || typeof uploaded.size !== 'number')) {
@@ -263,6 +279,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme,
           ...(artworkId ? {artworkId} : {}),
           variant,
+          ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode} : {}),
           coverAssetId:style==='custom' ? newAssetId : null
         },
         audio
