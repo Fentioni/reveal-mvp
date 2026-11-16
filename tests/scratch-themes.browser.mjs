@@ -330,6 +330,10 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
   for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
    const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
    await page.setContent(html,{waitUntil:'domcontentloaded'});
+   // A page created via setContent has no site origin; load the same
+   // production Concert Ticket stylesheet directly for a meaningful
+   // owner-review visual acceptance instead of testing only inline CSS.
+   await page.addStyleTag({content:await readFile(resolve(root,'concert-ticket-premium.css'),'utf8')});
    await page.evaluate(()=>{
      document.body.dataset.ticketVariant='concert';
      document.getElementById('reviewContent').hidden=false;
