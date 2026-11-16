@@ -597,6 +597,59 @@
     .preview-details > [hidden],.live-message[hidden]{display:none!important}
     #liveBookingUrl{overflow-wrap:anywhere;word-break:break-word}
 
+
+    /* Concert Ticket: full-width landscape preview FIRST, controls below it.
+       The portrait Scratch Ticket creator retains its existing two-column layout. */
+    .concert-pickers,.concert-pickers-left,.concert-pickers-right{display:contents}
+    body[data-ticket-variant="concert"] .page{width:min(1480px,100%)}
+    body[data-ticket-variant="concert"] .builder-layout{display:flex;flex-direction:column;align-items:stretch;gap:36px}
+    body[data-ticket-variant="concert"] .preview-column{
+      order:-1;position:static;width:100%;max-width:none;margin:0 auto;align-self:stretch
+    }
+    body[data-ticket-variant="concert"] .preview-column>.preview-label{
+      display:block;text-align:center;font-size:.85rem;letter-spacing:.15em;margin:0 auto 12px
+    }
+    body[data-ticket-variant="concert"] .form-card{order:1;width:100%;max-width:none;margin:0 auto}
+    body[data-ticket-variant="concert"] .concert-pickers{
+      display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+      gap:clamp(20px,5vw,70px);align-items:start;margin:0 0 28px
+    }
+    body[data-ticket-variant="concert"] .concert-pickers-left,
+    body[data-ticket-variant="concert"] .concert-pickers-right{display:block;min-width:0}
+    body[data-ticket-variant="concert"] #concertTemplateSection{margin:0 0 22px}
+    body[data-ticket-variant="concert"] #concertThemeSection{margin:0}
+    body[data-ticket-variant="concert"] .concert-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    body[data-ticket-variant="concert"] .concert-template-thumb{
+      max-height:none;height:auto;aspect-ratio:2.15/1
+    }
+    body[data-ticket-variant="concert"] .concert-theme-thumb{height:auto;aspect-ratio:2.15/1}
+    body[data-ticket-variant="concert"] .concert-template-option,
+    body[data-ticket-variant="concert"] .concert-theme-option{min-height:0}
+    body[data-ticket-variant="concert"] #concertPreviewTabsDesktop{
+      display:flex!important;max-width:1080px;margin:0 auto 14px
+    }
+    body[data-ticket-variant="concert"] #concertPreviewTabsDesktop[hidden]{display:none!important}
+    body[data-ticket-variant="concert"] #concertPreviewTabsMobile,
+    body[data-ticket-variant="concert"] #scratchMobileDock{display:none!important}
+    body[data-ticket-variant="concert"] #scratchDesktopDock{
+      display:block!important;width:100%;max-width:1080px;margin:0 auto
+    }
+    body[data-ticket-variant="concert"] .scratch-static-frame{
+      max-width:1080px!important;width:100%!important;aspect-ratio:2.15/1!important;
+      height:auto;min-height:0;margin:0 auto;
+    }
+    body[data-ticket-variant="concert"] #concertRevealedPreviewFrame{
+      max-width:1080px;width:100%;aspect-ratio:2.15/1;
+      min-height:0;margin:0 auto
+    }
+    body[data-ticket-variant="concert"] #concertPreviewNote{display:none}
+    @media(max-width:700px){
+      body[data-ticket-variant="concert"] .page{padding:20px 16px 60px}
+      body[data-ticket-variant="concert"] .concert-pickers{grid-template-columns:1fr;gap:24px}
+      body[data-ticket-variant="concert"] .concert-option-grid{gap:9px}
+      body[data-ticket-variant="concert"] .builder-layout{gap:24px}
+    }
+
     /* Landscape admission ticket: concert variant only. Existing portrait
        creator and shared form logic are intentionally unchanged. */
     body[data-ticket-variant="concert"] .scratch-static-frame{
@@ -656,6 +709,8 @@
             <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
 
+          <div id="concertPickers" class="concert-pickers">
+            <div class="concert-pickers-left">
           <section id="concertTemplateSection" class="concert-build-group" hidden aria-labelledby="concertTemplateHeading">
             <h3 id="concertTemplateHeading">1. Ticket template</h3>
             <p class="field-help">Choose the ticket shape.</p>
@@ -675,11 +730,6 @@
               <option value="midnight">Midnight</option>
               <option value="rose">Rose</option>
             </select>
-            <section id="concertThemeSection" class="concert-build-group" hidden aria-labelledby="concertThemeHeading">
-              <h3 id="concertThemeHeading">3. Revealed ticket artwork</h3>
-              <p class="field-help">This design appears after the recipient scratches the colour away.</p>
-              <div id="concertThemeChoices" class="concert-option-grid" role="group" aria-label="Revealed ticket artwork"></div>
-            </section>
             <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
               <option value="classic">Classic foil</option>
               <option value="theatre">Theatre Velvet</option>
@@ -738,6 +788,16 @@
             </div>
           </div>
 
+            </div>
+            <div class="concert-pickers-right">
+            <section id="concertThemeSection" class="concert-build-group" hidden aria-labelledby="concertThemeHeading">
+              <h3 id="concertThemeHeading">3. Revealed ticket artwork</h3>
+              <p class="field-help">This design appears after the recipient scratches the colour away.</p>
+              <div id="concertThemeChoices" class="concert-option-grid" role="group" aria-label="Revealed ticket artwork"></div>
+            </section>
+
+            </div>
+          </div>
           <h3 class="details-subhead">Personalise the surprise</h3>
           <div class="field">
             <label for="recipient">Who is it for?</label>
