@@ -52,6 +52,9 @@ export class ScratchCard {
     this.gridRows = 52;
     this.cells = new Uint8Array(this.gridColumns * this.gridRows);
     this.coverImage = null;
+    // Set when one of the 20 commissioned artwork images is selected. Legacy
+    // reveals with no artwork ID retain their historical illustrated surface.
+    this.artworkId = null;
     this.events = {
       pointerdown: event => this.pointerDown(event),
       pointermove: event => this.pointerMove(event),
@@ -136,26 +139,38 @@ export class ScratchCard {
     }
     ctx.restore();
 
-    if (!this.coverImage) this.drawArtwork();
+    if (!this.coverImage && !this.artworkId) this.drawArtwork();
 
     if (this.coverImage?.complete && this.coverImage.naturalWidth) {
       const image = this.coverImage, scale = Math.max(w / image.naturalWidth, h / image.naturalHeight);
       const iw = image.naturalWidth * scale, ih = image.naturalHeight * scale;
       ctx.drawImage(image, (w - iw) / 2, (h - ih) / 2, iw, ih);
-      ctx.fillStyle = 'rgba(12, 11, 25, 0.19)';
-      ctx.fillRect(0, 0, w, h);
+      if (this.artworkId) {
+        // Show the approved image essentially unchanged; a minimal foil sheen
+        // still gives the four existing finishes a role without masking art.
+        ctx.save();
+        ctx.globalAlpha = .055;
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0,0,w,h);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = 'rgba(12, 11, 25, 0.19)';
+        ctx.fillRect(0, 0, w, h);
+      }
     }
 
     // Theme is the ACTUAL scratchable surface illustration, not merely
     // the heading or page colour. Preserve the independent foil/style/photo.
-    drawScratchThemeArtwork(ctx,w,h,getScratchTheme(this.theme),{
-      photo:Boolean(this.coverImage),landscape:w>h*1.4
-    });
-    this.drawThemeDecoration();
+    if (!this.artworkId) {
+      drawScratchThemeArtwork(ctx,w,h,getScratchTheme(this.theme),{
+        photo:Boolean(this.coverImage),landscape:w>h*1.4
+      });
+      this.drawThemeDecoration();
+    }
     ctx.save();
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    const dark = this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
+    const dark = Boolean(this.artworkId) || this.foil === 'midnight' || ['concert','festival','backstage'].includes(this.coverStyle) || Boolean(this.coverImage);
     const landscape = w > h * 1.4;
     const labelY = landscape ? h * .58 : h / 2;
     const labelX = landscape ? w * .41 : w / 2;
