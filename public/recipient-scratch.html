@@ -531,6 +531,15 @@
     for(const item of print.querySelectorAll('[id]'))item.removeAttribute('id');
     print.style.visibility='visible';
     copy.append(print);
+    // The modal displays a 850px print-scale ticket even on a 390px phone.
+    // Apply print-size typography directly to the CLONE because the layout
+    // viewport stays mobile and responsive rules would otherwise keep
+    // thumbnail-sized letters despite the enlarged ticket canvas.
+    const zoomTitle=copy.querySelector('.ticket h2');
+    if(zoomTitle)zoomTitle.style.setProperty('font-size','2.25rem','important');
+    for(const node of copy.querySelectorAll('.ticket-item dd')){
+      node.style.setProperty('font-size','.9rem','important');
+    }
     $('concertFullTicketScroll').replaceChildren(copy);
     $('concertFullTicketDialog').showModal();
   });
