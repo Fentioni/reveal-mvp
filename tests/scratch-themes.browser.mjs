@@ -416,9 +416,13 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    assert.equal(await page.locator('#concertFullTicketDialog[open]').count(),1);
    const large=await page.locator('#concertFullTicketScroll>.card').boundingBox();
    assert.ok(large.width>=800,'Once unlocked, full-size recipient ticket should be readable on mobile');
-   const zoomFont=await page.locator('#concertFullTicketDialog .card.concert-ticket .ticket h2')
-     .evaluate(el=>parseFloat(getComputedStyle(el).fontSize));
-   assert.ok(zoomFont>=24,'Full-size paid ticket must enlarge text, not just the background');
+   const zoomState=await page.locator('#concertFullTicketDialog .card.concert-ticket .ticket h2')
+     .evaluate(el=>({font:parseFloat(getComputedStyle(el).fontSize),
+       ticketVariant:document.body.dataset.ticketVariant,
+       media:matchMedia('(max-width:700px)').matches,
+       html:el.outerHTML.slice(0,220),
+       sheets:[...document.styleSheets].map(sheet=>sheet.href).filter(Boolean)}));
+   assert.ok(zoomState.font>=24,'Full-size paid ticket must enlarge text, not just the background: '+JSON.stringify(zoomState));
    assert.equal(await page.locator('#concertFullTicketScroll .ticket-underlay').count(),1);
    await page.locator('#concertCloseZoom').click();
    assert.equal(await page.locator('#concertFullTicketDialog[open]').count(),0);
