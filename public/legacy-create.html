@@ -1011,6 +1011,7 @@
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=1';
+    import {createConcertLivePreview} from '/concert-live-preview.js?v=1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1099,6 +1100,12 @@
     }
     setCreatorVariant(currentVariant, !id);
     const scratchPreview = new ScratchCard({canvas: $("scratchSurfacePreview"), foil:"gold", coverStyle:"classic"});
+    const concertLivePreview=createConcertLivePreview({
+      getVariant:()=>currentVariant,getTemplate:()=>concertTemplateId,
+      getTheme:()=>concertRevealThemeId,getImage:()=>objectUrl,
+      dateText,timeText
+    });
+    concertLivePreview.setVariant(currentVariant);
     for(const artwork of SCRATCH_ARTWORKS){
       const option=document.createElement("option");
       option.value=artwork.id;
@@ -1123,6 +1130,7 @@
         concertTemplateId=shape.id;
         selectConcertOption('concertTemplateChoices',shape.id);
         setScratchPreview().catch(error=>show(error.message));
+        concertLivePreview.render();
       });
       $('concertTemplateChoices').append(button);
     }
@@ -1138,6 +1146,7 @@
         if(!ready||busy)return;
         concertRevealThemeId=theme.id;
         selectConcertOption('concertThemeChoices',theme.id);
+        concertLivePreview.setMode('revealed');
       });
       $('concertThemeChoices').append(button);
     }
@@ -1154,6 +1163,7 @@
       const dock = $(mobile ? "scratchMobileDock" : "scratchDesktopDock");
       const frame = scratchPreview.canvas.closest(".scratch-static-frame");
       if (frame && frame.parentElement !== dock) dock.appendChild(frame);
+      concertLivePreview.position(dock);
       if (frame) frame.style.clipPath = currentVariant === 'concert'
         ? concertTicketClipPath(concertTemplateId) : '';
       scratchPreview.canvas.style.pointerEvents = "none";
@@ -1266,6 +1276,7 @@
       $("liveImage").removeAttribute("src");
       $("imagePreviewWrap").classList.remove("visible");
       $("liveImageWrap").classList.remove("visible");
+      $('concertLiveImage').hidden=true;
 
       if (objectUrl) {
         URL.revokeObjectURL(objectUrl);
@@ -1284,6 +1295,7 @@
 
       $("imagePreviewWrap").classList.add("visible");
       $("liveImageWrap").classList.add("visible");
+      concertLivePreview.render();
     }
 
     async function api(path, options = {}) {
@@ -1338,6 +1350,7 @@
         ? getScratchArtwork(scratchArtworkId) : null;
       scratchPreview.artworkId = artwork?.id || null;
       scratchPreview.setFoil(foil);
+      concertLivePreview.render();
       if (currentVariant === "concert") {
         await scratchPreview.setCoverImage(null);
         scratchPreview.setCoverStyle("concert");
@@ -1523,6 +1536,9 @@
           surfaceBody.append('ticketTemplate',concertTemplateId);
           surfaceBody.append('revealTheme',concertRevealThemeId);
           surfaceBody.append('linkMode',$('concertLinkMode').value);
+          surfaceBody.append('ticketDetails',JSON.stringify(
+            Object.fromEntries(CONCERT_TICKET_FIELDS.map(field=>[field.id,$(field.id).value.trim()]))
+          ));
         }
         surfaceBody.append("artworkId", currentVariant === "ticket" && $("scratchStyle").value !== "custom" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
@@ -1629,6 +1645,7 @@
           {headers: {"X-Edit-Token": token}}
         );
         setCreatorVariant(savedSurface.surface.variant || "ticket");
+        concertLivePreview.setVariant(currentVariant);
         $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
         if(savedSurface.surface.variant==='concert'){
@@ -1637,6 +1654,9 @@
           concertRevealThemeId=CONCERT_REVEAL_THEMES.some(t=>t.id===savedSurface.surface.revealTheme)
             ? savedSurface.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
           $('concertLinkMode').value=savedSurface.surface.linkMode==='qr'?'qr':'link';
+          for(const field of CONCERT_TICKET_FIELDS){
+            $(field.id).value=savedSurface.surface.ticketDetails?.[field.id] || '';
+          }
           selectConcertOption('concertTemplateChoices',concertTemplateId);
           selectConcertOption('concertThemeChoices',concertRevealThemeId);
         }
@@ -1669,6 +1689,7 @@
         button.textContent = "Save changes and review";
 
         preview();
+        concertLivePreview.render();
         hide();
 
         if (existingImage) {
