@@ -173,8 +173,8 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
      await page.locator('#concertPreviewTabsDesktop [data-preview-mode="cover"]').click();
      shapeCanvases.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
-   assert.equal(silhouettes.size,5,'Five fixed ticket silhouettes must be applied to the preview');
-   assert.equal(shapeCanvases.size,5,'Changing presets must redraw the scratch cover');
+   assert.equal(silhouettes.size,1,'Five source references have a common clean rectangular outer edge');
+   assert.equal(shapeCanvases.size,1,'Ticket covers retain the same simple rectangular outer silhouette');
    for(const theme of ['classic','concert-lights','festival','backstage']){
      await page.locator('.concert-theme-option[data-value="'+theme+'"]').click();
      assert.equal(await page.locator('.concert-theme-option[data-value="'+theme+'"]').getAttribute('aria-pressed'),'true');
