@@ -233,10 +233,12 @@ test('legacy foil controls remain available only for the concert ticket variant,
     assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);
   }
   assert.ok(creator.includes('id="scratchAudioEnabled" hidden'));
-  for (const id of ['surfaceHeading','surfaceDescription','scratchFoilLabel','scratchFoilGrid']) {
+  assert.ok(!creator.includes('id="surfaceHeading"'));
+  assert.ok(!creator.includes('id="surfaceDescription"'));
+  for (const id of ['scratchFoilLabel','scratchFoilGrid']) {
     assert.ok(creator.includes('id="'+id+'"'),id+' needed for concert variant');
-    assert.ok(creator.includes('"surfaceHeading","surfaceDescription","scratchFoilLabel","scratchFoilGrid"'),
-      'Scratch Ticket must hide the retired surface and foil UI');
+    assert.ok(creator.includes('$("'+id+'").hidden = !isConcert;'),
+      'Foil controls must be visible only for Concert Ticket');
   }
   assert.ok(creator.includes('id="scratchMobileDock"'));
   assert.ok(creator.includes('id="scratchDesktopDock"'));
