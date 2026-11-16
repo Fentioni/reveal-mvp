@@ -772,7 +772,7 @@
     }
   </style>
   
-<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-8">
+<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-9">
 </head>
 
 <body>
@@ -972,23 +972,15 @@
 
           <section id="concertTicketDetailsSection" class="concert-build-group" hidden aria-labelledby="concertTicketDetailsHeading">
             <h3 id="concertTicketDetailsHeading">4. Ticket information</h3>
-            <p class="field-help">These fields appear on the revealed ticket. Leave anything that doesn't apply blank.</p>
+            <p class="field-help">Every field in this section is optional. Leave any or all of them blank if they don't apply.</p>
             <div class="concert-details-form">
               <div class="field">
                 <label for="eventSubtitle">Event subtitle / tagline</label>
                 <input id="eventSubtitle" type="text" maxlength="120" placeholder="An unforgettable night of live music">
               </div>
               <div class="field">
-                <label for="supportAct">Special guest / support act</label>
-                <input id="supportAct" type="text" maxlength="120" placeholder="With special guests">
-              </div>
-              <div class="field">
                 <label for="venueAddress">Venue address</label>
                 <input id="venueAddress" type="text" maxlength="220" placeholder="Street, town or city">
-              </div>
-              <div class="field">
-                <label for="ticketNumber">Ticket number / reference</label>
-                <input id="ticketNumber" type="text" maxlength="80" placeholder="Optional reference">
               </div>
               <div class="field">
                 <label for="section">Section</label>
@@ -1074,7 +1066,6 @@
             <div class="concert-live-headnote">LIVE IN CONCERT</div>
             <h3 id="concertLiveEvent">Your event</h3>
             <p id="concertLiveSubtitle" class="concert-live-subtitle" hidden></p>
-            <p id="concertLiveSupport" class="concert-live-subtitle" hidden></p>
             <img id="concertLiveImage" class="concert-live-image" alt="Selected event artwork" hidden>
             <dl id="concertLiveFields" class="concert-live-fields"></dl>
             <p id="concertLiveMessage" class="concert-live-subtitle" hidden></p>
@@ -1084,7 +1075,6 @@
             <span id="concertLiveAdmit" class="concert-live-ref" hidden></span>
             <span id="concertLiveRecipient" class="concert-live-ref" hidden></span>
             <span id="concertLiveSender" class="concert-live-ref" hidden></span>
-            <span id="concertLiveTicketNumber" class="concert-live-ref ct-reference" hidden></span>
             <dl id="concertLiveStubFields" class="concert-live-stub-fields"></dl>
             <span class="ct-barcode-art" aria-hidden="true"></span>
             <div id="concertLiveQr" class="concert-qr-preview" hidden></div>
@@ -1180,8 +1170,8 @@
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
-    import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=1';
-    import {createConcertLivePreview} from '/concert-live-preview.js?v=1';
+    import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
+    import {createConcertLivePreview} from '/concert-live-preview.js?v=2';
     const $ = id => document.getElementById(id);
 
     const fields = [
