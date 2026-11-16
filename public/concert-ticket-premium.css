@@ -965,3 +965,71 @@ body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden]))
   grid-row:2!important;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields[hidden]{display:none!important;}
+
+/* Stage 4L — print trim must belong to the MAIN panel, not the combined
+   main+stub ticket. The previous frame pseudo-element ran behind labels on
+   both the normal and left-stub silhouette, especially zoomed on iPhones. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)::before{
+  content:none!important;
+  display:none!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main::before,
+body[data-ticket-variant="concert"] .review-shell > article.ticket::before,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket::before{
+  content:""!important;
+  display:block!important;
+  position:absolute!important;
+  inset:5.4% 4.1%!important;
+  border:1px solid color-mix(in srgb,var(--ct-stub-paper,#e7b36a),transparent 40%)!important;
+  border-radius:2px!important;
+  box-shadow:none!important;
+  pointer-events:none!important;
+  z-index:5!important;
+}
+/* Every print face uses the same coordinate origin and the text starts
+   at least 10px INSIDE the vertical printed border. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+body[data-ticket-variant="concert"] .review-shell > article.ticket,
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+  position:relative!important;
+  padding-left:max(22px,calc(4.1% + 12px))!important;
+  padding-right:max(22px,calc(4.1% + 12px))!important;
+}
+@media(min-width:681px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-left:max(58px,calc(4.1% + 12px))!important;
+    padding-right:max(52px,calc(4.1% + 12px))!important;
+  }
+}
+@media(max-width:680px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-top:14px!important;
+    padding-bottom:clamp(17px,4.7vw,25px)!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket{
+    padding-top:35px!important;
+    padding-bottom:48px!important;
+    padding-left:max(51px,calc(4.1% + 12px))!important;
+    padding-right:max(42px,calc(4.1% + 12px))!important;
+  }
+}
+/* Poster is anchored to the main panel, inset from the matching gold border.
+   Prior right:5% on a combined ticket overran the print-safe edge. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket .event-image-wrap{
+  right:9%!important;
+  top:20%!important;
+  width:21%!important;
+  height:51%!important;
+}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-template="side-perforations"] #concertLiveImage,
+body[data-ticket-variant="concert"] .review-shell[data-concert-template="side-perforations"] .image-wrap,
+body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-template="side-perforations"] .event-image-wrap{
+  right:9%!important;
+}
