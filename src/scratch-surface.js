@@ -4,6 +4,7 @@
  * Every request must first pass the existing legacy owner-token authorisation.
  */
 import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
+import {checkConcertTicketDetails,cleanConcertTicketDetails} from '../public/concert-ticket-fields.js';
 import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const MAX_IMAGE = 10 * 1024 * 1024;
 const IMAGE_TYPES = Object.freeze({
@@ -69,7 +70,8 @@ async function details(env, id) {
     ...(saved.variant === 'concert' ? {
       ticketTemplate:isConcertTemplate(saved.ticketTemplate) ? saved.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
       revealTheme:isConcertRevealTheme(saved.revealTheme) ? saved.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
-      linkMode:saved.linkMode === 'qr' ? 'qr' : 'link'
+      linkMode:saved.linkMode === 'qr' ? 'qr' : 'link',
+      ticketDetails:cleanConcertTicketDetails(saved.ticketDetails)
     } : {})
   };
   const audio = {...DEFAULT_AUDIO,enabled:fields.audio?.enabled !== false};
@@ -198,7 +200,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           ...(current.surface.variant === 'concert' ? {
             ticketTemplate:current.surface.ticketTemplate,
             revealTheme:current.surface.revealTheme,
-            linkMode:current.surface.linkMode
+            linkMode:current.surface.linkMode,
+            ticketDetails:current.surface.ticketDetails
           } : {})
         },
         audio:current.audio
@@ -227,6 +230,14 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     const ticketTemplate = body.get('ticketTemplate') ?? current.surface.ticketTemplate ?? DEFAULT_CONCERT_TEMPLATE;
     const revealTheme = body.get('revealTheme') ?? current.surface.revealTheme ?? DEFAULT_CONCERT_REVEAL_THEME;
     const linkMode = body.get('linkMode') ?? current.surface.linkMode ?? 'link';
+    const detailsText=body.get('ticketDetails');
+    let ticketDetails=current.surface.ticketDetails || {};
+    if(detailsText!==null){
+      if(typeof detailsText!=='string'||detailsText.length>5000)return error('Concert ticket details are too long.');
+      try {ticketDetails=checkConcertTicketDetails(JSON.parse(detailsText));}
+      catch {return error('Invalid concert ticket details.');}
+      if(!ticketDetails)return error('Invalid concert ticket details.');
+    }
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
@@ -279,7 +290,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme,
           ...(artworkId ? {artworkId} : {}),
           variant,
-          ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode} : {}),
+          ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode,ticketDetails} : {}),
           coverAssetId:style==='custom' ? newAssetId : null
         },
         audio
@@ -308,7 +319,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
       return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant,
-        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode}:{})},audio});
+        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{})},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;
