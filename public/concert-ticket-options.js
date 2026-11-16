@@ -44,8 +44,8 @@ export function concertTicketPolygon(id=DEFAULT_CONCERT_TEMPLATE){
  // The five supplied modern ticket references are RECTANGULAR overall.
  // Their notch/perforation shapes are INSIDE the printed stub, not an
  // exterior postage-stamp cut-out. Older saved four-shape drafts remain.
- if(PRESET_SHAPES[id])return [[0,0],[1,0],[1,1],[0,1]];
  const t=PRESET_SHAPES[id]|| (LEGACY_CONCERT_SHAPES.includes(id)?id:DEFAULT_CONCERT_TEMPLATE),p=[];
+ if(PRESET_SHAPES[t])return [[0,0],[1,0],[1,1],[0,1]];
  if(t==='side-perforations'){
   pt(p,0,0);pt(p,1,0);
   for(const y of [.13,.27,.41,.55,.69,.83]){
