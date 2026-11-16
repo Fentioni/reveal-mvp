@@ -390,10 +390,12 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
    assert.notEqual(print.rotation,'none','Stub values must be rotated');
    assert.ok(print.background.includes('linear-gradient('),'Show designer event artwork, not boxed form fields');
    const stubStyle=await page.locator('.review-shell>.review-heading').evaluate(node=>({
-     color:getComputedStyle(node).backgroundColor,barcode:getComputedStyle(node,'::after').backgroundImage
+     color:getComputedStyle(node).backgroundColor,
+     printedBarcode:getComputedStyle(node.querySelector('.ct-barcode-art')).backgroundImage
    }));
    assert.notEqual(stubStyle.color,'rgba(0, 0, 0, 0)','Stub should have its own contrasting printed background');
-   assert.match(stubStyle.bar,/repeating-linear-gradient/,'Ticket stub should have decorative print bars');
+   assert.match(stubStyle.printedBarcode,/repeating-linear-gradient/,
+     'The reference-style printed barcode strip must exist as an actual decorative element');
    assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
    assert.ok(layout.card.height < (size.name==='desktop'?570:230),
      'Concert owner review must not expand vertically like the former poster');
