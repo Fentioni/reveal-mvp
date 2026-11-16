@@ -614,7 +614,7 @@
             <div id="concertTemplateChoices" class="concert-option-grid" role="group" aria-label="Ticket shape"></div>
           </section>
           <div class="scratch-choice">
-            <div id="scratchFoilLabel" class="scratch-option-label" hidden>Foil finish</div>
+            <div id="scratchFoilLabel" class="scratch-option-label" hidden>2. Scratch colour</div>
             <div id="scratchFoilGrid" class="scratch-foil-grid" role="group" aria-labelledby="scratchFoilLabel" hidden>
               <button type="button" class="scratch-foil-option gold" data-scratch-foil="gold" aria-label="Gold foil" aria-pressed="true"></button>
               <button type="button" class="scratch-foil-option silver" data-scratch-foil="silver" aria-label="Silver foil" aria-pressed="false"></button>
@@ -963,9 +963,9 @@
       if(isConcert) uploadDock.append(upload);
       else form.querySelector(".scratch-choice").append(upload);
       $("ticketUrlLabel").textContent=isConcert ? "Link or QR code destination" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "Optional event image" : "Add an image";
+      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add an image";
       $("imageUploadHelp").textContent = isConcert
-        ? "Shown with the revealed ticket details after payment. It does not change the scratch colour."
+        ? "Upload an event poster, photo or ticket image. It appears after scratching, never on the scratchable surface."
         : "Optional: upload an image for a custom scratch-card cover.";
       $("concertPreviewNote").hidden = isConcert;
       document.querySelector(".scratch-mobile-caption").hidden = isConcert;
