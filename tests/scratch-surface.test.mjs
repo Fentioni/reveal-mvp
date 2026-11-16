@@ -224,7 +224,7 @@ test('customer static review displays the chosen scratch cover but disables scra
 });
 
 
-test('ticket creator shows all four visual artwork choices and four foil swatches', () => {
+test('legacy foil controls remain available only for the concert ticket variant, not the 20-image Scratch Ticket', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   for (const id of ['classic','theatre','concert','custom']) {
     assert.ok(creator.includes('data-scratch-style="'+id+'"'), 'missing artwork '+id);
@@ -233,6 +233,11 @@ test('ticket creator shows all four visual artwork choices and four foil swatche
     assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);
   }
   assert.ok(creator.includes('id="scratchAudioEnabled" hidden'));
+  for (const id of ['surfaceHeading','surfaceDescription','scratchFoilLabel','scratchFoilGrid']) {
+    assert.ok(creator.includes('id="'+id+'"'),id+' needed for concert variant');
+    assert.ok(creator.includes('"surfaceHeading","surfaceDescription","scratchFoilLabel","scratchFoilGrid"'),
+      'Scratch Ticket must hide the retired surface and foil UI');
+  }
   assert.ok(creator.includes('id="scratchMobileDock"'));
   assert.ok(creator.includes('id="scratchDesktopDock"'));
   assert.ok(creator.includes('positionScratchSurface()'));
