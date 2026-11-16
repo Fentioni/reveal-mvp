@@ -25,22 +25,28 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $('concertLiveSubtitle').hidden=!detail.eventSubtitle;
   $('concertLiveSupport').textContent=detail.supportAct?'Special guest: '+detail.supportAct:'';
   $('concertLiveSupport').hidden=!detail.supportAct;
-  const rows=[
+  const mainRows=[
    ['DATE',$('eventDate').value?dateText($('eventDate').value):''],
    ['TIME',$('eventTime').value?timeText($('eventTime').value):''],
    ['VENUE',$('venue').value.trim()],
-   ['ADDRESS',detail.venueAddress],
-   ['SECTION',detail.section],['LEVEL',detail.level],
-   ['ROW',detail.row],['SEAT',detail.seat],['GATE',detail.gate]
+   ['ADDRESS',detail.venueAddress],['LEVEL',detail.level]
   ];
-  const list=$('concertLiveFields');list.replaceChildren();
-  for(const [label,value] of rows){
-   if(!value)continue;
-   const item=document.createElement('div');
-   const dt=document.createElement('dt');dt.textContent=label;
-   const dd=document.createElement('dd');dd.textContent=value;
-   item.append(dt,dd);list.append(item);
+  const stubRows=[
+   ['SECTION',detail.section],['ROW',detail.row],
+   ['SEAT',detail.seat],['GATE',detail.gate]
+  ];
+  function paintRows(list,rows){
+   list.replaceChildren();
+   for(const [label,value] of rows){
+    if(!value)continue;
+    const item=document.createElement('div');
+    const dt=document.createElement('dt');dt.textContent=label;
+    const dd=document.createElement('dd');dd.textContent=value;
+    item.append(dt,dd);list.append(item);
+   }
   }
+  paintRows($('concertLiveFields'),mainRows);
+  paintRows($('concertLiveStubFields'),stubRows);
   $('concertLiveAdmit').textContent=$('admit').value.trim();
   $('concertLiveAdmit').hidden=!$('admit').value.trim();
   const recipient=$('recipient').value.trim(),sender=$('sender').value.trim();
