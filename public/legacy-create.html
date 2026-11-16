@@ -491,7 +491,6 @@
     .scratch-foil-option{border:3px solid #20202b;box-shadow:0 0 0 1px #665c52;width:42px;height:42px}
     .scratch-foil-option[aria-pressed="true"]{box-shadow:0 0 0 2px #f4d89b}
     .scratch-art-grid{gap:10px;margin-top:10px}
-    #scratchArtGrid,#scratchArtLabel{display:none!important}
     .scratch-art-option{min-height:76px;border:1px solid #6c6062;color:#f5f0e5;background:#221e28;padding:9px 11px}
     .scratch-art-option[aria-pressed="true"]{border-color:#efcf86;box-shadow:0 0 0 2px #efcf8633}
     .scratch-art-icon{flex:0 0 53px;height:54px;border:1px solid #ffffff44;border-radius:7px}
@@ -611,15 +610,6 @@
               <option value="midnight">Midnight</option>
               <option value="rose">Rose</option>
             </select>
-            <div id="scratchArtLabel" class="scratch-option-label" hidden>Surface artwork</div>
-            <div id="scratchArtGrid" class="scratch-art-grid" role="group" aria-labelledby="scratchArtLabel" hidden>
-              <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="classic" aria-pressed="true"><span class="scratch-art-icon classic" aria-hidden="true">✦</span><span><strong>Classic foil</strong><small>Premium scratch ticket</small></span></button>
-              <button type="button" class="scratch-art-option" data-show-for="ticket" data-scratch-style="theatre" aria-pressed="false"><span class="scratch-art-icon theatre" aria-hidden="true">✧</span><span><strong>Theatre Velvet</strong><small>Curtains and gold print</small></span></button>
-              <button type="button" class="scratch-art-option" data-show-for="both" data-scratch-style="concert" aria-pressed="false"><span class="scratch-art-icon concert" aria-hidden="true">♫</span><span><strong>Concert Lights</strong><small>VIP-style neon artwork</small></span></button>
-              <button type="button" class="scratch-art-option" data-show-for="concert" data-scratch-style="festival" aria-pressed="false" hidden><span class="scratch-art-icon festival" aria-hidden="true">☀</span><span><strong>Festival Access</strong><small>Sunset stages and festival lights</small></span></button>
-              <button type="button" class="scratch-art-option" data-show-for="concert" data-scratch-style="backstage" aria-pressed="false" hidden><span class="scratch-art-icon backstage" aria-hidden="true">★</span><span><strong>Backstage Pass</strong><small>All-access lanyard artwork</small></span></button>
-              <button type="button" class="scratch-art-option" data-show-for="both" data-scratch-style="custom" aria-pressed="false"><span class="scratch-art-icon custom" aria-hidden="true">▧</span><span><strong>Your own image</strong><small>Scratch off your photo</small></span></button>
-            </div>
             <select id="scratchStyle" hidden aria-hidden="true" tabindex="-1">
               <option value="classic">Classic foil</option>
               <option value="theatre">Theatre Velvet</option>
@@ -629,10 +619,8 @@
               <option value="custom">Your own image</option>
             </select>
             <div class="scratch-one-upload"><div class="field">
-                <label for="image">Add an image</label>
-                <p class="field-help">
-                  Optional: upload a photo or poster for a custom cover.
-                </p>
+                <label id="imageUploadLabel" for="image">Add an image</label>
+                <p id="imageUploadHelp" class="field-help">Optional: upload a picture for your scratch card.</p>
 
                 <input
                   id="image"
@@ -901,7 +889,6 @@
     let existingScratchImage = false;
     let scratchSelectionSequence = 0;
     let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
-    const concertArtworks = new Set(["concert","festival","backstage","custom"]);
     function setCreatorVariant(variant, initialiseChoice = false) {
       currentVariant = variant === "concert" ? "concert" : "ticket";
       document.body.dataset.ticketVariant = currentVariant;
@@ -932,12 +919,12 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $("scratchArtworkSection").hidden = isConcert;
-      $("scratchArtGrid").hidden = true;
-      $("scratchArtLabel").hidden = true;
-      for (const button of form.querySelectorAll("[data-scratch-style]")) {
-        button.hidden = button.dataset.showFor !== "both" &&
-          button.dataset.showFor !== currentVariant;
-      }
+      $("imageUploadLabel").textContent = isConcert ? "Optional event image" : "Add an image";
+      $("imageUploadHelp").textContent = isConcert
+        ? "Shown with the revealed ticket details after payment. It does not change the scratch colour."
+        : "Optional: upload an image for a custom scratch-card cover.";
+      $("concertPreviewNote").hidden = isConcert;
+      document.querySelector(".scratch-mobile-caption").hidden = isConcert;
       if (initialiseChoice) {
         $("scratchStyle").value = isConcert ? "concert" : "classic";
         $("scratchFoil").value = isConcert ? "midnight" : "gold";
@@ -1127,9 +1114,6 @@
     }
 
     function refreshScratchChoices() {
-      for (const button of form.querySelectorAll("[data-scratch-style]")) {
-        button.setAttribute("aria-pressed", String(button.dataset.scratchStyle === $("scratchStyle").value));
-      }
       for (const button of form.querySelectorAll("[data-scratch-foil]")) {
         button.setAttribute("aria-pressed", String(button.dataset.scratchFoil === $("scratchFoil").value));
       }
@@ -1190,17 +1174,6 @@
       }
     }
 
-    for (const button of form.querySelectorAll("[data-scratch-style]")) {
-      button.addEventListener("click", () => {
-        if (!ready || busy) return;
-        $("scratchStyle").value = button.dataset.scratchStyle;
-        if (button.dataset.scratchStyle === "custom" &&
-            !selectedScratchImage && !existingScratchImage && !selectedImage && !existingImage) {
-          $("image").focus();
-        }
-        setScratchPreview().catch(error => show(error.message));
-      });
-    }
     for (const button of form.querySelectorAll("[data-scratch-foil]")) {
       button.addEventListener("click", () => {
         if (!ready || busy) return;
@@ -1236,7 +1209,7 @@
         const next = await examineScratchFile(file);
         if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
         selectedScratchUrl = next;
-        selectedScratchImage = file;
+        selectedScratchImage = currentVariant === "concert" ? null : file;
         selectedImage = file;
         removeImage = false;
         if (currentVariant !== "concert") $("scratchStyle").value = "custom";
