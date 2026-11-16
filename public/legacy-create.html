@@ -5,6 +5,12 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#11131b">
   <meta name="referrer" content="no-referrer">
+  <script>
+    // Don't show the wrong product editor while retrieving a saved draft.
+    if(new URLSearchParams(location.search).has('edit')){
+      document.documentElement.dataset.savedRevealLoading='true';
+    }
+  </script>
 
   <title>Create Ticket &amp; Concert Reveal | Reveal</title>
 
@@ -26,6 +32,14 @@
     }
 
     [hidden] { display: none !important; }
+    #savedRevealLoadStatus{display:none;max-width:610px;margin:10vh auto 0;
+      padding:25px 30px;background:#27212f;border:1px solid #c9a776;
+      border-radius:16px;color:#f8e9d5;font:600 1rem/1.5 Arial,sans-serif}
+    #savedRevealLoadStatus strong{display:block;font:500 1.5rem/1.2 Georgia,serif;margin-bottom:10px}
+    #retrySavedReveal{margin-top:16px;border:1px solid #e7c587;border-radius:9px;
+      background:#e7c587;color:#1c1a1e;font-weight:700;padding:12px 16px;cursor:pointer}
+    html[data-saved-reveal-loading="true"] .page{display:none!important}
+    html[data-saved-reveal-loading="true"] #savedRevealLoadStatus{display:block}
 
     .page {
       width: min(1220px, 100%);
@@ -762,6 +776,11 @@
 </head>
 
 <body>
+  <div id="savedRevealLoadStatus" role="status" aria-live="polite">
+    <strong>Loading your saved reveal</strong>
+    <span id="savedRevealLoadCopy">Retrieving your saved design and personalisation…</span>
+    <button id="retrySavedReveal" type="button" hidden>Retry loading</button>
+  </div>
   <main class="page">
     <header class="page-header">
       <a class="creator-brand" href="/" aria-label="Reveal home">✦ REVEAL<span>.</span></a>
@@ -1170,13 +1189,14 @@
       "venue", "admit", "personalMessage", "ticketUrl"
     ];
 
+    $("retrySavedReveal").addEventListener("click",()=>location.reload());
     const form = $("revealForm");
     const button = $("reviewButton");
     const message = $("messageBox");
 
     const urlParams = new URLSearchParams(location.search);
     let id = urlParams.get("edit");
-    let currentVariant = !id && urlParams.get("variant") === "concert" ? "concert" : "ticket";
+    let currentVariant = urlParams.get("variant") === "concert" ? "concert" : "ticket";
     let token = null;
     let revision = null;
     let ready = false;
@@ -1910,6 +1930,14 @@
 
         ready = true;
         lock(false);
+        // Display the correct product only AFTER the saved configuration
+        // and all fields have been restored. Repaint after becoming visible.
+        delete document.documentElement.dataset.savedRevealLoading;
+        positionScratchSurface();
+        requestAnimationFrame(()=>{
+          scratchPreview.resize();
+          concertLivePreview.render();
+        });
 
       } catch (error) {
         show(
@@ -1919,6 +1947,12 @@
 
         ready = false;
         lock(true);
+        if(id){
+          $("savedRevealLoadCopy").textContent=
+            "The saved reveal could not be loaded. "+
+            (error.message || "Please retry or check your private editing link.");
+          $("retrySavedReveal").hidden=false;
+        }
       }
     }
 
