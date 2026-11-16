@@ -852,6 +852,7 @@
         <div class="review-heading">
           <div class="review-label">Your gift</div>
           <h2 id="reviewEventHeading" class="review-event"></h2>
+          <span id="reviewConcertNumber" class="ct-reference" hidden></span>
           <div id="reviewConcertStubRows" class="concert-review-stub-boxes" hidden></div>
         </div>
 
@@ -1366,7 +1367,13 @@
         extra.replaceChildren();stub.replaceChildren();
         for(const item of displayConcertTicketRows(details)){
           if(['eventSubtitle','supportAct'].includes(item.id))continue;
-          const isStub=['ticketNumber','section','row','seat','gate'].includes(item.id);
+          if(item.id==='ticketNumber'){
+            const number=document.getElementById('reviewConcertNumber');
+            number.textContent='No. '+item.value;
+            number.hidden=false;
+            continue;
+          }
+          const isStub=['section','row','seat','gate'].includes(item.id);
           const cell=document.createElement('div');
           if(isStub){
             const label=document.createElement('small');label.textContent=item.label;
@@ -1412,16 +1419,8 @@
         stub.appendChild(elements.bookingCard);
         document.querySelector('.review-shell').after(document.getElementById('reviewMessageCard'));
         document.getElementById('reviewAdmitRow').hidden=true;
-        document.getElementById('reviewEventHeading').textContent = reveal.recipient || '';
-        if(reveal.admit){
-          const box=document.createElement('div');
-          const label=document.createElement('small');label.textContent='ADMIT';
-          const value=document.createElement('strong');value.textContent=reveal.admit;
-          box.append(label,value);
-          document.getElementById('reviewConcertStubRows').prepend(box);
-          document.getElementById('reviewConcertStubRows').hidden=false;
-        }
-        document.querySelector('.review-label').textContent = 'PERSONALISED FOR';
+        document.getElementById('reviewEventHeading').textContent = reveal.admit || reveal.recipient || '';
+        document.querySelector('.review-label').textContent = 'ADMIT';
         ticket.querySelector('.ticket-label').textContent = 'LIVE IN CONCERT';
         elements.surfaceReview.querySelector('h2').textContent = 'Concert ticket scratch cover';
       }
