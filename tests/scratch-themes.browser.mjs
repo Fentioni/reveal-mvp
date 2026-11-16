@@ -170,6 +170,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
      await page.locator('.concert-template-option[data-value="'+template+'"]').click();
      assert.equal(await page.locator('.concert-template-option[data-value="'+template+'"]').getAttribute('aria-pressed'),'true');
      silhouettes.add(await page.locator('.scratch-static-frame').evaluate(el=>getComputedStyle(el).clipPath));
+     await page.locator('#concertPreviewTabsDesktop [data-preview-mode="cover"]').click();
      shapeCanvases.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
    assert.equal(silhouettes.size,5,'Five fixed ticket silhouettes must be applied to the preview');
@@ -498,13 +499,13 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
      const shell=document.querySelector('.review-shell');
      const sample=document.querySelector('#reviewConcertStubRows>div');
      const printedMain=shell.querySelector('article.ticket');
-     return {border:getComputedStyle(printedMain,'::before').borderTopWidth,
+     return {border:getComputedStyle(printedMain,'::before').display,
        inset:getComputedStyle(printedMain,'::before').top,
        orientation:getComputedStyle(sample).writingMode,
        rotation:getComputedStyle(sample).transform,
        background:getComputedStyle(document.querySelector('.review-shell>.ticket')).backgroundImage};
    });
-   assert.equal(parseFloat(print.border),0,'The old problematic border is removed');
+   assert.equal(print.border,'none','The old problematic inner border is not rendered');
    assert.equal(print.orientation,'vertical-rl','Stub credentials must read at 90 degrees');
    assert.notEqual(print.rotation,'none','Stub values must be rotated');
    assert.ok(print.background.includes('linear-gradient('),'Show designer event artwork, not boxed form fields');
