@@ -1,0 +1,72 @@
+/* Ticket compositions traced from the five supplied layout references.
+   This SVG layer replaces legacy floating CSS content (the old DOM remains
+   accessible and keeps existing form/payment logic). ViewBox 2000 × 647
+   preserves the original image proportions on desktop and iPhone. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-reference-layout]{
+ aspect-ratio:2000/647!important;
+ clip-path:none!important;
+ border:0!important;
+ border-radius:0!important;
+ box-shadow:0 14px 34px #0004!important;
+ background:#070816!important;
+ position:relative!important;
+ overflow:hidden!important;
+ isolation:isolate!important;
+ height:auto!important;
+ min-height:0!important;
+ max-height:none!important;
+}
+/* Do not let older template CSS relocate the saved, noninteractive
+   rendering. All drawing is in ticket coordinates, not browser pixels. */
+body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket) .ct-reference-art{
+ position:absolute!important;
+ inset:0!important;
+ z-index:40!important;
+ display:block!important;
+ height:100%!important;
+ width:100%!important;
+ max-height:100%!important;
+ max-width:100%!important;
+ padding:0!important;
+ margin:0!important;
+ border:0!important;
+ border-radius:0!important;
+ transform:none!important;
+ box-shadow:none!important;
+ object-fit:fill!important;
+ pointer-events:none!important;
+ user-select:none!important;
+ background:transparent!important;
+ overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket-underlay{
+ position:absolute!important;
+ inset:0!important;
+ height:100%!important;
+ width:100%!important;
+ padding:0!important;
+ min-height:0!important;
+ overflow:hidden!important;
+}
+body[data-ticket-variant="concert"] .card.concert-ticket > #foilCanvas{
+ z-index:90!important;
+ position:absolute!important;
+ inset:0!important;
+ width:100%!important;
+ height:100%!important;
+}
+body[data-ticket-variant="concert"] .card.concert-ticket.foil-ready .ticket-underlay{
+ visibility:visible!important;
+}
+/* Never show the saved ticket details through an unscratched foil layer.
+   On the owner page only the static preview is rendered. */
+body[data-ticket-variant="concert"] .ct-reference-art[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket[data-reference-layout]{
+ aspect-ratio:2000/647!important;
+}
+/* The ticket controls and surrounding creator form remain mobile-friendly;
+   the print itself scales as one image, never reflows into a portrait card. */
+body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-reference-layout]{
+ container-type:normal!important;
+}
