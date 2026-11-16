@@ -905,8 +905,8 @@ body[data-ticket-variant="concert"] .card.concert-ticket .ticket-grid>[data-conc
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame:has(#concertLiveImage:not([hidden])) .concert-live-main > :not(#concertLiveImage),
 body[data-ticket-variant="concert"] .review-shell:has(.image-wrap:not([hidden])) > article.ticket > :not(.image-wrap),
 body[data-ticket-variant="concert"] .card.concert-ticket:has(.event-image-wrap:not([hidden])) .ticket > :not(.event-image-wrap){
-  width:57%!important;
-  max-width:57%!important;
+  width:52%!important;
+  max-width:52%!important;
   min-width:0!important;
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-fields[hidden]{display:none!important;}
