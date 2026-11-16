@@ -233,7 +233,6 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#personalMessage').fill('A night to remember!');
    await page.locator('#eventName').fill('Live Music at the Hall');
    await page.locator('#eventSubtitle').fill('A very special evening');
-   await page.locator('#supportAct').fill('The Openers');
    await page.locator('#venue').fill('The Grand Hall');
    await page.locator('#venueAddress').fill('London, England');
    await page.locator('#level').fill('3');
@@ -242,7 +241,10 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#seat').fill('18');
    await page.locator('#gate').fill('A');
    assert.equal(await page.locator('#ticketPrice').count(),0,'No ticket price or face-value field');
-   await page.locator('#ticketNumber').fill('T-123');
+   assert.equal(await page.locator('#ticketNumber').count(),0,'Ticket number field is removed');
+   assert.equal(await page.locator('#supportAct').count(),0,'Special guest field is removed');
+   assert.equal(await page.locator('#concertTicketDetailsSection [required]').count(),0,
+     'All ticket information fields remain optional');
    await page.locator('#eventDate').fill('2027-03-20');
    await page.locator('#eventTime').fill('19:30');
    await page.locator('#ticketUrl').fill('https://example.org/tickets/123');
@@ -275,8 +277,6 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.ok(bottomSpace.remaining >= bottomSpace.height*(size.name==='desktop'?.11:.075),
      'Last concert ticket detail must sit safely above the bottom border: '+JSON.stringify(bottomSpace));
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
-   assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
-   assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
    assert.match(await page.locator('#concertLiveRecipient').textContent(),/Chloe/);
    assert.equal(await page.locator('#concertLiveSender:visible').count(),0,
      'Sender belongs with the personal message, not another vertical stub stripe');
@@ -293,6 +293,27 @@ test('concert purchaser can switch between scratch cover and a fully personalise
      assert.ok(pan.scroll>pan.client+250,'Full-size ticket preview must be horizontally inspectable on phones');
      await page.locator('#concertZoomButton').click();
    }
+
+   // Realistically sized portrait photo to exercise the overlap on iPhone.
+   await page.evaluate(async()=>{
+     const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;
+     const context=canvas.getContext('2d');
+     context.fillStyle='#3c3355';context.fillRect(0,0,600,800);
+     const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+     const transfer=new DataTransfer();
+     transfer.items.add(new File([blob],'concert-poster.png',{type:'image/png'}));
+     const input=document.getElementById('image');
+     input.files=transfer.files;input.dispatchEvent(new Event('change',{bubbles:true}));
+   });
+   await page.locator('#concertLiveImage:not([hidden])').waitFor();
+   const photoLayout=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+     const art=frame.querySelector('#concertLiveImage').getBoundingClientRect();
+     const content=[...frame.querySelector('.concert-live-main').children].filter(el=>
+       el.id!=='concertLiveImage'&&!el.hidden&&getComputedStyle(el).display!=='none');
+     return {photoLeft:art.left,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right))};
+   });
+   assert.ok(photoLayout.textRight+2<=photoLayout.photoLeft,
+     'Event poster must never cover preview ticket text: '+JSON.stringify(photoLayout));
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
    await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
@@ -516,8 +537,8 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    assert.ok(Math.abs(card.width/card.height-2.15)<.13,'Recipient ticket must remain landscape 2.15:1');
    assert.equal(await page.locator('#concertStubFields .ticket-item').count(),4,
      'Use just four separated ticket credentials rather than six narrow vertical columns');
-   assert.equal((await page.locator('#recipientConcertNumber').textContent()).includes('T-123'),true,
-     'The actual ticket reference must be printed separately from the seating group');
+   assert.equal(await page.locator('#recipientConcertNumber').count(),0,
+     'Legacy reference must not appear on recipient ticket');
    assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
    assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
    assert.equal(await page.locator('#bookingAction:visible').count(),0);
