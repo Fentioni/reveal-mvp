@@ -309,6 +309,63 @@ test('paid concert recipient sees four full-surface foil colours, even on narrow
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+test('concert owner static review remains a landscape 2.15:1 ticket, not a tall poster',
+ {timeout:40000},async()=>{
+ const browser=await browserType.launch({headless:true});
+ try{
+  const source=await readFile(resolve(root,'reveal.html'),'utf8');
+  const html=source.replace(/<script\b[^>]*>[\s\S]*?<\/script>/gi,'');
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+   await page.setContent(html,{waitUntil:'domcontentloaded'});
+   await page.evaluate(()=>{
+     document.body.dataset.ticketVariant='concert';
+     document.getElementById('reviewContent').hidden=false;
+     document.getElementById('reviewEventHeading').textContent='Chloe';
+     document.getElementById('ticketTitle').textContent='Jesus Christ Superstar';
+     document.getElementById('reviewVenueRow').hidden=false;
+     document.getElementById('reviewVenue').textContent='Theatre Royal, Drury Lane';
+     document.getElementById('reviewDateRow').hidden=false;
+     document.getElementById('reviewDate').textContent='Saturday, 21 November 2026';
+     document.getElementById('reviewTimeRow').hidden=false;
+     document.getElementById('reviewTime').textContent='21:12';
+     const shell=document.querySelector('.review-shell');
+     shell.dataset.concertTheme='backstage';
+     const ticket=shell.querySelector('.ticket');
+     const stub=shell.querySelector('.review-heading');
+     ticket.querySelector('#ticketTitle').after(document.getElementById('imageWrap'));
+     stub.append(document.getElementById('bookingCard'));
+     const rows=document.getElementById('reviewConcertStubRows');
+     rows.hidden=false;
+     for(const [label,value] of [['ADMIT','2'],['SECTION','Stalls'],['ROW','G'],['SEAT','18'],['GATE','A2'],['TICKET NUMBER','T-123']]){
+       const cell=document.createElement('div');
+       const small=document.createElement('small');small.textContent=label;
+       const strong=document.createElement('strong');strong.textContent=value;
+       cell.append(small,strong);rows.append(cell);
+     }
+     document.getElementById('bookingCard').hidden=false;
+     document.querySelector('#bookingCard .booking-label').textContent='QR CODE';
+     document.getElementById('bookingValue').textContent='Optional booking link';
+   });
+   const layout=await page.evaluate(()=>{
+     const rect=selector=>{const r=document.querySelector(selector).getBoundingClientRect();
+       return {x:r.x,y:r.y,width:r.width,height:r.height,right:r.right,bottom:r.bottom};};
+     return {card:rect('.review-shell'),main:rect('.review-shell>.ticket'),
+       stub:rect('.review-shell>.review-heading'),
+       booking:rect('.review-shell #bookingCard'),stubRows:rect('#reviewConcertStubRows')};
+   });
+   assert.ok(Math.abs(layout.card.width/layout.card.height-2.15)<.13,
+     'Owner review must match the original ticket template ratio at any screen width');
+   assert.ok(layout.main.right <= layout.stub.x+2,'Main panel must end at detachable stub');
+   assert.ok(layout.stubRows.height > 0,'Stub must contain seat/row/admit details');
+   assert.ok(layout.booking.bottom <= layout.card.bottom+1,'QR/link must not expand the ticket');
+   assert.ok(layout.card.height < (size.name==='desktop'?570:230),
+     'Concert owner review must not expand vertically like the former poster');
+   await page.screenshot({path:resolve(output,size.name+'-concert-owner-review-compact.png'),fullPage:true});
+   await page.close();
+  }
+ }finally{await browser.close();}
+});
 test('paid concert QR is generated from the chosen URL but is hidden until scratching',
  {timeout:90000},async()=>{
  const {server,base}=await startServer();
