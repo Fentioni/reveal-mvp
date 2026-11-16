@@ -556,10 +556,7 @@
       border-radius:11px;box-shadow:0 20px 60px #0009;
       clip-path:polygon(0 0,76% 0,78% 5%,80% 0,100% 0,100% 100%,80% 100%,78% 95%,76% 100%,0 100%);
     }
-    body[data-ticket-variant="concert"] .scratch-static-frame::after{
-      content:"";position:absolute;left:78%;top:0;bottom:0;border-left:2px dashed #f1d59d91;
-      pointer-events:none;z-index:3
-    }
+    body[data-ticket-variant="concert"] .scratch-static-frame::after{display:none}
     body[data-ticket-variant="concert"] .scratch-desktop-dock{width:100%}
     body[data-ticket-variant="concert"] .scratch-mobile-dock .scratch-static-frame{
       width:100%;max-width:550px;border-radius:10px
@@ -924,6 +921,8 @@
     let existingScratchImage = false;
     let scratchSelectionSequence = 0;
     let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
+    let concertTemplateId = DEFAULT_CONCERT_TEMPLATE;
+    let concertRevealThemeId = DEFAULT_CONCERT_REVEAL_THEME;
     function setCreatorVariant(variant, initialiseChoice = false) {
       currentVariant = variant === "concert" ? "concert" : "ticket";
       document.body.dataset.ticketVariant = currentVariant;
@@ -986,6 +985,41 @@
       $("scratchArtwork").append(option);
     }
     $("scratchArtwork").value=scratchArtworkId;
+    function selectConcertOption(group,selected){
+      for(const button of $(group).querySelectorAll('button'))
+        button.setAttribute('aria-pressed',String(button.dataset.value===selected));
+    }
+    for(const shape of CONCERT_TICKET_TEMPLATES){
+      const button=document.createElement('button');
+      button.type='button';button.className='concert-template-option';
+      button.dataset.value=shape.id;button.setAttribute('aria-pressed',String(shape.id===concertTemplateId));
+      const thumb=document.createElement('span');thumb.className='concert-template-thumb';
+      thumb.style.clipPath=concertTicketClipPath(shape.id);
+      const label=document.createElement('strong');label.textContent=shape.label;
+      button.append(thumb,label);
+      button.addEventListener('click',()=>{
+        if(!ready||busy)return;
+        concertTemplateId=shape.id;
+        selectConcertOption('concertTemplateChoices',shape.id);
+        setScratchPreview().catch(error=>show(error.message));
+      });
+      $('concertTemplateChoices').append(button);
+    }
+    for(const theme of CONCERT_REVEAL_THEMES){
+      const button=document.createElement('button');
+      button.type='button';button.className='concert-theme-option';
+      button.dataset.value=theme.id;button.setAttribute('aria-pressed',String(theme.id===concertRevealThemeId));
+      const thumb=document.createElement('span');thumb.className='concert-theme-thumb';
+      thumb.style.backgroundImage="url('/concert-reveal-art/"+theme.id+".svg')";
+      const label=document.createElement('strong');label.textContent=theme.label;
+      button.append(thumb,label);
+      button.addEventListener('click',()=>{
+        if(!ready||busy)return;
+        concertRevealThemeId=theme.id;
+        selectConcertOption('concertThemeChoices',theme.id);
+      });
+      $('concertThemeChoices').append(button);
+    }
     $("scratchArtwork").addEventListener("change",()=>{
       if(!ready||busy)return;
       if(!getScratchArtwork($("scratchArtwork").value))return show("Choose an approved scratch-card image.");
@@ -999,6 +1033,8 @@
       const dock = $(mobile ? "scratchMobileDock" : "scratchDesktopDock");
       const frame = scratchPreview.canvas.closest(".scratch-static-frame");
       if (frame && frame.parentElement !== dock) dock.appendChild(frame);
+      if (frame) frame.style.clipPath = currentVariant === 'concert'
+        ? concertTicketClipPath(concertTemplateId) : '';
       scratchPreview.canvas.style.pointerEvents = "none";
       scratchPreview.resize();
     }
@@ -1170,6 +1206,10 @@
       const foil = $("scratchFoil").value;
       // Width may shrink on phones; still paint the concert foil, not a theme.
       scratchPreview.concertTicket = currentVariant === "concert";
+      scratchPreview.ticketTemplate = concertTemplateId;
+      const previewFrame=scratchPreview.canvas.closest('.scratch-static-frame');
+      if(previewFrame) previewFrame.style.clipPath=currentVariant==='concert'
+        ? concertTicketClipPath(concertTemplateId) : '';
       if (currentVariant === "concert") document.body.style.setProperty("--concert-foil-edge",
         {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[foil]);
       const useImage = currentVariant !== "concert" && style === "custom";
@@ -1290,6 +1330,10 @@
       event.preventDefault();
 
       if (!ready || busy || !form.reportValidity()) return;
+      if(currentVariant==='concert' && $('concertLinkMode').value==='qr' && !$('ticketUrl').value.trim()){
+        show('Enter a URL to generate the QR code. Or choose a clickable link.');
+        $('ticketUrl').focus();return;
+      }
       if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage) {
         show("Choose an image using Add an image to create your custom scratch-card cover.");
         $("image").focus();
@@ -1350,6 +1394,11 @@
         surfaceBody.append("variant", currentVariant);
         surfaceBody.append("style", currentVariant === "concert" ? "concert" : $("scratchStyle").value);
         surfaceBody.append("foil", $("scratchFoil").value);
+        if(currentVariant==='concert'){
+          surfaceBody.append('ticketTemplate',concertTemplateId);
+          surfaceBody.append('revealTheme',concertRevealThemeId);
+          surfaceBody.append('linkMode',$('concertLinkMode').value);
+        }
         surfaceBody.append("artworkId", currentVariant === "ticket" && $("scratchStyle").value !== "custom" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         if ($("scratchStyle").value === "custom" && selectedScratchImage) {
@@ -1457,6 +1506,15 @@
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
+        if(savedSurface.surface.variant==='concert'){
+          concertTemplateId=CONCERT_TICKET_TEMPLATES.some(t=>t.id===savedSurface.surface.ticketTemplate)
+            ? savedSurface.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
+          concertRevealThemeId=CONCERT_REVEAL_THEMES.some(t=>t.id===savedSurface.surface.revealTheme)
+            ? savedSurface.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
+          $('concertLinkMode').value=savedSurface.surface.linkMode==='qr'?'qr':'link';
+          selectConcertOption('concertTemplateChoices',concertTemplateId);
+          selectConcertOption('concertThemeChoices',concertRevealThemeId);
+        }
         scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
         $("scratchArtwork").value = scratchArtworkId;
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
