@@ -1500,6 +1500,7 @@
       if(previewFrame){
         previewFrame.style.clipPath=currentVariant==='concert'
           ? concertTicketClipPath(concertTemplateId) : '';
+        previewFrame.dataset.concertTemplate=currentVariant==='concert' ? concertTemplateId : '';
         // Creator preview is an un-scratchable static foil. CSS gives a
         // reliable full-card fill regardless of Canvas resize or tab visibility.
         previewFrame.style.backgroundImage=currentVariant==='concert'
