@@ -21,3 +21,12 @@
 ## Acceptance
 
 Run `npm test` for static, backend and payment-gate assertions; the scratch browser workflow runs Chromium and WebKit mobile and desktop tests. Check the four visibly distinct shapes and four full-surface scratch colours, independent post-scratch theme selection, optional QR and existing photo upload; verify full purchaser save → protected owner review → recipient interaction with payment test-only configuration before release.
+
+## Refinement — real ticket proportion and populated stub (16 November 2026)
+
+- The user explicitly removed **Ticket face value / ticket price** from the Concert Ticket product. Do not expose it in the creator, reveal, recipient, or legacy restored drafts. The allowlist omits `ticketPrice`; unrelated Stripe checkout pricing remains untouched.
+- The revealed ticket in the creator preview, private owner review and paid recipient must all retain the original **2.15:1 landscape ticket aspect ratio**, not expand vertically into a poster or receipt when QR/event artwork/personal message is present.
+- Present venue, date, time, and event address as compact bordered ticket boxes on the **main left section**. The optional event artwork is a contained thumbnail, not an oversized full-width image.
+- Fill the **right-hand detachable stub** with admission/attendee details, ticket number/reference, section, row, seat and gate, plus optional QR or link. Avoid empty stubs. Do not invent real ticket identifiers or prices; display only user-entered fields.
+- The recipient's personal message can be shown below the landscape ticket after sufficient scratch progress rather than changing the scratch mask's dimensions.
+- This refinement is staging-only, and must preserve the 20 portrait Scratch Ticket artworks, existing payment gate and checkout behaviour.
