@@ -231,7 +231,7 @@ export function renderConcertReference(root,raw){
  const target=root.classList.contains('concert-ticket')?root.querySelector('.ticket-underlay'):root;
  if(!target)return;
  target.querySelector(':scope > .ct-reference-art')?.remove();
- const svg=el('svg',{class:'ct-reference-art',viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'xMidYMid meet',role:'img','aria-label':'Concert ticket: '+data.eventTitle});
+ const svg=el('svg',{class:'ct-reference-art',viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'xMidYMid meet',role:'img','aria-label':'Concert ticket: '+data.eventTitle,'data-event-title':data.eventTitle,'data-reference-preset':data.preset});
  defs(svg);
  renderers[data.preset](svg,data);
  target.append(svg);
