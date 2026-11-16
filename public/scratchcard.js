@@ -111,6 +111,12 @@ export class ScratchCard {
     const ctx = this.ctx, w = this.cssWidth, h = this.cssHeight;
     ctx.globalCompositeOperation = 'source-over';
     ctx.clearRect(0, 0, w, h);
+    // Concert Tickets use ONLY the selected foil colour across the whole
+    // scratchable surface. No themes, light beams, artwork, photos or slogans.
+    if (w > h * 1.4 && ['concert','festival','backstage'].includes(this.coverStyle)) {
+      this.drawLandscapeConcertArtwork(ctx,w,h);
+      return;
+    }
     const colors = FOILS[this.foil];
     const gradient = ctx.createLinearGradient(0, 0, w, h);
     colors.forEach((color, i) => gradient.addColorStop(i / (colors.length - 1), color));
@@ -338,52 +344,36 @@ export class ScratchCard {
     ctx.restore();
   }
 
-  drawLandscapeConcertArtwork(ctx,w,h,stage) {
-    // A traditional concert admission pass: artwork, central reveal panel,
-    // a 22% detachable stub and perforation. Original vector Canvas drawing.
-    const base=ctx.createLinearGradient(0,0,w,h);
-    if (stage === 'festival') {
-      base.addColorStop(0,'#172F52');
-      base.addColorStop(.48,'#724A9A');
-      base.addColorStop(1,'#F6A15E');
-    } else if (stage === 'backstage') {
-      base.addColorStop(0,'#161326');
-      base.addColorStop(.52,'#602442');
-      base.addColorStop(1,'#1A1426');
-    } else {
-      base.addColorStop(0,'#101C42');
-      base.addColorStop(.52,'#6E246B');
-      base.addColorStop(1,'#131A40');
+  drawLandscapeConcertArtwork(ctx,w,h) {
+    // One uninterrupted metallic foil surface. The four options are genuine
+    // alternative full-card colours, not borders over shared themed artwork.
+    const palette = FOILS[this.foil];
+    const metal = ctx.createLinearGradient(0,0,w,h*.35);
+    for(let i=0;i<palette.length;i++){
+      metal.addColorStop(i/(palette.length-1),palette[i]);
     }
-    ctx.fillStyle=base;
+    ctx.fillStyle=metal;
     ctx.fillRect(0,0,w,h);
 
-    // Fan out concert beams from the left, behind the reveal panel.
-    for (let i=0;i<6;i++) {
-      ctx.beginPath();
-      ctx.strokeStyle=i%2
-        ? 'rgba(251,189,112,.28)' : 'rgba(93,214,251,.24)';
-      ctx.lineWidth=Math.max(8,w*.021);
-      ctx.moveTo(w*(.06+i*.046),0);
-      ctx.lineTo(w*(.04+i*.13),h);
-      ctx.stroke();
-    }
+    // Gentle reflection is a lighting treatment, not an illustrated pattern.
+    const sheen=ctx.createLinearGradient(0,0,w,0);
+    sheen.addColorStop(0,'rgba(255,255,255,.04)');
+    sheen.addColorStop(.32,'rgba(255,255,255,.16)');
+    sheen.addColorStop(.55,'rgba(255,255,255,0)');
+    sheen.addColorStop(.83,'rgba(255,255,255,.10)');
+    sheen.addColorStop(1,'rgba(255,255,255,.02)');
+    ctx.fillStyle=sheen;
+    ctx.fillRect(0,0,w,h);
 
+    // Only a neutral ticket outline and the tear-off perforation remain.
     const stubX=w*.78;
-    ctx.fillStyle=stage==='backstage' ? 'rgba(11,8,20,.72)' : 'rgba(8,15,36,.67)';
-    ctx.fillRect(stubX,0,w-stubX,h);
-    // Gold inner rule around the traditional landscape ticket.
-    ctx.strokeStyle=FOILS[this.foil][3];
-    ctx.lineWidth=Math.max(1,w*.004);
+    ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.7)':'rgba(40,34,46,.42)';
+    ctx.lineWidth=Math.max(1,w*.0025);
     ctx.strokeRect(w*.019,h*.045,w*.962,h*.91);
-    // Tear-off perforation.
-    ctx.fillStyle=FOILS[this.foil][3];
-    for(let y=h*.055;y<h*.95;y+=Math.max(7,h*.055)) {
-      ctx.fillRect(stubX-1.5,y,3,Math.max(4,h*.029));
+    ctx.fillStyle=this.foil==='midnight'?'rgba(240,246,255,.72)':'rgba(45,40,54,.48)';
+    for(let y=h*.055;y<h*.95;y+=Math.max(7,h*.055)){
+      ctx.fillRect(stubX-1,y,2,Math.max(3,h*.027));
     }
-
-    // Ticket face intentionally has no pre-printed headings, slogans or
-    // watermarks; only the selected artwork, colour finish and perforation.
   }
 
   point(event) {
