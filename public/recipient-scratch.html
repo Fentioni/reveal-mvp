@@ -153,6 +153,128 @@
   @media(max-width:370px){
     .concert-ticket .ticket-grid{grid-template-columns:1fr}
   }
+
+  /* Concert reveal mirrors the exact landscape template. Extra prose is
+     outside the fixed ticket so the scratch mask never becomes a tall poster. */
+  .card.concert-ticket{
+    display:block;width:100%;height:auto;aspect-ratio:2.15/1;
+    min-height:0;max-height:none;overflow:hidden;border-radius:10px
+  }
+  .card.concert-ticket .ticket-underlay{
+    position:absolute;inset:0;width:100%;height:100%;min-height:0;
+    display:grid;grid-template-columns:minmax(0,77%) minmax(0,23%);
+    grid-template-rows:minmax(0,1fr);padding:0;gap:0;overflow:hidden
+  }
+  .card.concert-ticket .ticket{
+    grid-column:1;grid-row:1;width:100%;height:100%;min-height:0;
+    padding:clamp(7px,1.9vw,19px);overflow:hidden;border-radius:0;
+    box-shadow:none
+  }
+  .card.concert-ticket .ticket-identity{
+    grid-column:2;grid-row:1;min-height:0;padding:clamp(5px,1.2vw,14px);
+    border-left:2px dashed #f1d293bf;background:rgba(13,12,27,.86);
+    display:flex;flex-direction:column;align-items:stretch;text-align:center;
+    gap:clamp(3px,.9vw,9px);overflow:hidden
+  }
+  .card.concert-ticket::after{display:none}
+  .card.concert-ticket .recipient{
+    font:700 clamp(.65rem,1.6vw,1.18rem)/1.1 system-ui,sans-serif;
+    margin:0;overflow-wrap:anywhere
+  }
+  .card.concert-ticket .ticket .kicker{
+    font-size:clamp(.42rem,.72vw,.61rem);line-height:1.15
+  }
+  .card.concert-ticket .ticket h2{
+    font:700 clamp(.78rem,2.5vw,2rem)/1.05 Georgia,serif;
+    margin:4px 0 6px
+  }
+  .card.concert-ticket .concert-subtitle{
+    font-size:clamp(.48rem,.98vw,.8rem);margin:2px 0 5px;line-height:1.24
+  }
+  .card.concert-ticket .ticket-grid{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(4px,.8vw,9px);margin:clamp(5px,1vw,12px) 0 0;
+    padding:0;border:0
+  }
+  .card.concert-ticket .ticket-grid .ticket-item{
+    border:1px solid #a78d69a9;padding:clamp(3px,.65vw,8px);border-radius:3px;
+    min-width:0
+  }
+  .card.concert-ticket .ticket-item dt{
+    font-size:clamp(.39rem,.65vw,.56rem);line-height:1.1;letter-spacing:.06em;
+    margin:0 0 3px
+  }
+  .card.concert-ticket .ticket-item dd{
+    font-size:clamp(.51rem,1vw,.85rem);line-height:1.17;font-weight:750
+  }
+  .card.concert-ticket .event-image-wrap{
+    float:right;width:26%;max-height:clamp(40px,12vw,125px);
+    margin:3px 0 5px 10px;border-radius:5px;overflow:hidden
+  }
+  .card.concert-ticket .event-image-wrap img{
+    width:100%;max-height:clamp(40px,12vw,125px);object-fit:contain;
+    border-radius:4px
+  }
+  .card.concert-ticket .concert-stub-fields{
+    display:grid;grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:clamp(3px,.5vw,7px);margin:3px 0;padding:0
+  }
+  .card.concert-ticket .concert-stub-fields .ticket-item{
+    min-width:0;border:1px solid #f4d79d9c;border-radius:3px;
+    padding:clamp(2px,.4vw,6px)
+  }
+  .card.concert-ticket .concert-stub-fields dt{
+    color:#f1d293;font-size:clamp(.37rem,.6vw,.56rem);letter-spacing:.04em;
+    margin:0
+  }
+  .card.concert-ticket .concert-stub-fields dd{
+    color:#fff5df;font-size:clamp(.49rem,.83vw,.75rem);
+    line-height:1.15;overflow-wrap:anywhere
+  }
+  .card.concert-ticket .booking-row{
+    margin:auto 0 0;padding:3px 0;border:0;text-align:center
+  }
+  .card.concert-ticket .booking-row dt{
+    color:#f4d99e;font-size:clamp(.35rem,.65vw,.55rem)
+  }
+  .card.concert-ticket .booking-row dd{
+    font-size:clamp(.44rem,.75vw,.65rem);white-space:nowrap;
+    overflow:hidden;text-overflow:ellipsis
+  }
+  .card.concert-ticket .booking-row a{color:#f8dfad}
+  .card.concert-ticket .qr-row{
+    min-height:0;margin:auto 0 0;display:flex;justify-content:center;
+    align-items:center;overflow:hidden
+  }
+  .card.concert-ticket .qr-row svg{
+    width:min(92%,116px);max-height:clamp(42px,12vw,115px);
+    height:auto;background:#fff;padding:4px;border-radius:5px
+  }
+  .concert-after-card{
+    margin:14px auto 0;text-align:center;max-width:760px;
+    padding:14px 18px;border:1px solid #f3d28c75;border-radius:12px;
+    background:#221d32;color:#f9e1bf
+  }
+  .concert-after-card .message{color:#f4ddc1}
+  .concert-after-card[hidden]{display:none!important}
+  @media(max-width:620px){
+    .card.concert-ticket{min-height:0;height:auto;aspect-ratio:2.15/1}
+    .card.concert-ticket .ticket-underlay{
+      min-height:0;height:100%;grid-template-columns:minmax(0,77%) minmax(0,23%)
+    }
+    .card.concert-ticket .ticket{padding:4px 5px}
+    .card.concert-ticket .ticket-identity{padding:4px 3px;gap:2px}
+    .card.concert-ticket .ticket h2{font-size:clamp(.7rem,3vw,1.1rem);margin:3px 0}
+    .card.concert-ticket .concert-subtitle{font-size:.45rem;margin:1px 0}
+    .card.concert-ticket .ticket-grid{gap:3px;margin-top:3px}
+    .card.concert-ticket .ticket-grid .ticket-item{padding:2px}
+    .card.concert-ticket .ticket-item dt,.card.concert-ticket .concert-stub-fields dt{font-size:.36rem}
+    .card.concert-ticket .ticket-item dd,.card.concert-ticket .concert-stub-fields dd{font-size:.48rem}
+    .card.concert-ticket .concert-stub-fields{gap:2px}
+    .card.concert-ticket .recipient{font-size:.65rem}
+    .card.concert-ticket .qr-row svg{max-height:58px}
+    .card.concert-ticket .event-image-wrap,.card.concert-ticket .event-image-wrap img{max-height:57px}
+  }
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
@@ -166,7 +288,11 @@
   <div id="error" class="error" hidden role="alert"></div>
   <div id="card" class="card" hidden>
     <div id="underlay" class="ticket-underlay">
-      <div class="ticket-identity"><div class="label">A SURPRISE FOR</div><h2 class="recipient" id="name"></h2><div class="label">YOU ARE INVITED TO…</div></div>
+      <div class="ticket-identity">
+        <div class="label" id="concertStubHeading">ADMIT ONE</div>
+        <h2 class="recipient" id="name"></h2>
+        <dl id="concertStubFields" class="concert-stub-fields"></dl>
+      </div>
       <h3 class="headline" id="headline">A special surprise</h3>
       <article class="ticket">
         <div class="kicker" id="ticketKicker">PERSONALISED EVENT TICKET</div>
@@ -230,12 +356,15 @@
     $('concertEventSubtitle').hidden=!details.eventSubtitle;
     $('concertSupportAct').hidden=!details.supportAct;
     for(const old of $('ticketGrid').querySelectorAll('.concert-extra-row'))old.remove();
+    $('concertStubFields').replaceChildren();
     for(const field of displayConcertTicketRows(details)){
       if(['eventSubtitle','supportAct'].includes(field.id))continue;
+      const stub=['ticketNumber','section','row','seat','gate'].includes(field.id);
       const row=document.createElement('div');row.className='ticket-item concert-extra-row';
       const dt=document.createElement('dt');dt.textContent=field.label;
       const dd=document.createElement('dd');dd.textContent=field.value;
-      row.append(dt,dd);$('ticketGrid').append(row);
+      row.append(dt,dd);
+      (stub ? $('concertStubFields') : $('ticketGrid')).append(row);
     }
     if($('ticketGrid').querySelector('.concert-extra-row'))$('ticketGrid').hidden=false;
   }
@@ -303,7 +432,23 @@
     text('headline', data.scratchSurface.variant === 'concert' ? 'The big night awaits!' : 'Your special surprise');
     text('ticketKicker', data.scratchSurface.variant === 'concert' ? 'PERSONALISED CONCERT TICKET' : 'PERSONALISED EVENT TICKET');
     applyDetails(model);
-    if(isConcert)applyConcertTicketFields(data.scratchSurface.ticketDetails);
+    if(isConcert){
+      applyConcertTicketFields(data.scratchSurface.ticketDetails);
+      if(model.details.some(d=>d.id==='admit')){
+        const admit=model.details.find(d=>d.id==='admit');
+        $('admitRow').hidden=true;
+        const cell=document.createElement('div');cell.className='ticket-item';
+        const dt=document.createElement('dt');dt.textContent='ADMIT';
+        const dd=document.createElement('dd');dd.textContent=admit.value;
+        cell.append(dt,dd);$('concertStubFields').prepend(cell);
+      }
+      // Keep QR and link inside the stub and personal message beneath the
+      // fixed-size ticket; neither should enlarge the scratchable Canvas.
+      $('card').after($('closingDetails'));
+      $('closingDetails').classList.add('concert-after-card');
+      $('closingDetails').style.visibility='hidden';
+      $('card').querySelector('.ticket-identity').append($('bookingRow'),$('concertQrRow'));
+    }
     if (model.hasEventImage) {
       const image = $('eventImage');
       const src = '/r/' + encodeURIComponent(slug) + '/scratch-image';
@@ -339,6 +484,7 @@
         // has substantially scratched it; Canvas overlays otherwise block taps.
         if (bookingLink && !concertQrMode && p >= 0.7) $('bookingAction').hidden = false;
         if(concertQrMode && p >= 0.7) $('concertQrRow').style.visibility='visible';
+        if(isConcert && p>=0.7) $('closingDetails').style.visibility='visible';
       },
       onComplete:() => { status.textContent = 'You uncovered your surprise!'; }
     });
@@ -366,6 +512,7 @@
     scratch.reset();
     $('bookingAction').hidden = true;
     if(concertQrMode) $('concertQrRow').style.visibility='hidden';
+    if(document.body.dataset.ticketVariant==='concert')$('closingDetails').style.visibility='hidden';
     status.textContent = 'Scratch to begin again.';
   });
   $('soundButton').addEventListener('click',() => {
