@@ -338,7 +338,7 @@ test('concert creator stores template, independent reveal art and URL/QR mode wi
 test('concert ticket fields are saved and restored, validated, and unrelated checkout data remains untouched',async()=>{
  const {env,legacy,state}=makeMocks();
  const values={eventSubtitle:'A special evening',supportAct:'Support Group',venueAddress:'1 Music Lane, London',
-  ticketNumber:'TICKET-123',section:'Standing',level:'Ground',row:'F',seat:'18',gate:'A2',ticketPrice:'£25'};
+  ticketNumber:'TICKET-123',section:'Standing',level:'Ground',row:'F',seat:'18',gate:'A2'};
  const form=new FormData();
  form.append('variant','concert');form.append('style','concert');form.append('foil','silver');
  form.append('ticketDetails',JSON.stringify(values));
@@ -350,7 +350,7 @@ test('concert ticket fields are saved and restored, validated, and unrelated che
  assert.deepEqual(stored.scratchSurface.ticketDetails,values);
  const read=await scratchSurfaceResponse(request(),env,{},legacy);
  assert.deepEqual((await read.json()).surface.ticketDetails,values);
- for(const invalid of [{seat:'x'.repeat(41)},{ticketPrice:200},{row:'R',eventSubtitle:'y'.repeat(121)}]){
+ for(const invalid of [{seat:'x'.repeat(41)},{gate:200},{row:'R',eventSubtitle:'y'.repeat(121)}]){
   const bad=new FormData();bad.append('variant','concert');bad.append('style','concert');
   bad.append('foil','silver');bad.append('ticketDetails',JSON.stringify(invalid));
   const res=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);
