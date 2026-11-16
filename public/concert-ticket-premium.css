@@ -829,3 +829,40 @@ body[data-ticket-variant="concert"] .scratch-surface-thumb canvas{
   /* Review is static, never scratchable; match the static creator's fill. */
   opacity:0!important;pointer-events:none!important;
 }
+
+
+/* Concert Ticket print-safe bottom gutter (16 Nov 2026).
+   The earlier "low info strip" used up the entire available height, letting
+   the last row cross the inset printed border. Keep all ticket detail rows
+   above the lower trim without changing the silhouette or the 2.15:1 ratio. */
+@media(min-width:681px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-bottom:clamp(52px,5.4vw,100px)!important;
+  }
+}
+@media(max-width:680px){
+  body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] .review-shell > article.ticket,
+  body[data-ticket-variant="concert"] .card.concert-ticket .ticket{
+    padding-bottom:clamp(17px,4.7vw,25px)!important;
+  }
+  body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame .concert-live-main,
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket{
+    padding-bottom:48px!important;
+  }
+}
+/* On the dark Concert Ticket creator the native date/time picker indicators
+   were rendered black and nearly invisible. Paint only these two icons white
+   and use a dark native picker palette; the 20-artwork Scratch Card is intact. */
+body[data-ticket-variant="concert"] input#eventDate,
+body[data-ticket-variant="concert"] input#eventTime{
+  color-scheme:dark;
+}
+body[data-ticket-variant="concert"] input#eventDate::-webkit-calendar-picker-indicator,
+body[data-ticket-variant="concert"] input#eventTime::-webkit-calendar-picker-indicator{
+  filter:brightness(0) invert(1)!important;
+  opacity:1!important;
+  cursor:pointer;
+}
