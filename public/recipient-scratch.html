@@ -225,11 +225,13 @@
     const model = recipientCardModel(data.reveal);
     const chosenTheme = data.scratchSurface.theme || DEFAULT_SCRATCH_THEME;
     const artwork = getScratchArtwork(data.scratchSurface.artworkId);
-    const visualTheme = artwork ? null : applyScratchTheme(document,chosenTheme,'recipient');
-    soundEnabled = data.audio?.enabled !== false;
     const isConcert = data.scratchSurface.variant === 'concert';
+    const visualTheme = (artwork || isConcert) ? null : applyScratchTheme(document,chosenTheme,'recipient');
+    soundEnabled = data.audio?.enabled !== false;
     document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
     $('card').classList.toggle('concert-ticket',isConcert);
+    if(isConcert) $('card').style.borderColor =
+      {gold:'#d3a752',silver:'#d2dce7',midnight:'#6079d4',rose:'#d69cac'}[data.scratchSurface.foil] || '#d3a752';
     document.querySelector('.eyebrow').textContent = isConcert ? 'Concert ticket' : (artwork ? 'A special scratch reveal' : visualTheme.icon+' '+visualTheme.label+' reveal');
     text('title','A surprise for ' + model.recipient);
     text('name',model.recipient);
@@ -261,7 +263,7 @@
       canvas:$('foilCanvas'),
       foil:data.scratchSurface.foil,
       theme:chosenTheme,
-      coverStyle:data.scratchSurface.style === 'custom' ? 'classic' : data.scratchSurface.style,
+      coverStyle:isConcert ? 'concert' : data.scratchSurface.style === 'custom' ? 'classic' : data.scratchSurface.style,
       brushSize:49,
       onScratch:() => cinematic.onFirstScratch(),
       onProgress:p => {
@@ -274,7 +276,9 @@
     });
 
     scratch.artworkId = artwork?.id || null;
-    if (artwork && !data.scratchSurface.hasImage) {
+    if (isConcert) {
+      // Never cover the chosen colour with old theme artwork or uploads.
+    } else if (artwork && !data.scratchSurface.hasImage) {
       const applied = await scratch.setCoverImage(artwork.src);
       if (!applied) throw new Error('The selected scratch artwork could not be opened.');
     } else if (data.scratchSurface.hasImage) {
