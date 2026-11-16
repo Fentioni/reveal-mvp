@@ -44,6 +44,13 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   }
   $('concertLiveAdmit').textContent=$('admit').value.trim();
   $('concertLiveAdmit').hidden=!$('admit').value.trim();
+  const recipient=$('recipient').value.trim(),sender=$('sender').value.trim();
+  $('concertLiveRecipient').textContent=recipient?'For: '+recipient:'';
+  $('concertLiveRecipient').hidden=!recipient;
+  $('concertLiveSender').textContent=sender?'From: '+sender:'';
+  $('concertLiveSender').hidden=!sender;
+  $('concertLiveMessage').textContent=$('personalMessage').value.trim();
+  $('concertLiveMessage').hidden=!$('personalMessage').value.trim();
   $('concertLiveTicketNumber').textContent=detail.ticketNumber?'No. '+detail.ticketNumber:'';
   $('concertLiveTicketNumber').hidden=!detail.ticketNumber;
   const qr=$('concertLiveQr'),link=$('concertLiveLink');
@@ -89,7 +96,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $(field.id).addEventListener('input',render);
   $(field.id).addEventListener('change',render);
  }
- for(const id of ['eventName','eventDate','eventTime','venue','admit','ticketUrl']){
+ for(const id of ['recipient','sender','eventName','eventDate','eventTime','venue','admit','personalMessage','ticketUrl']){
   $(id).addEventListener('input',render);
   $(id).addEventListener('change',render);
  }
