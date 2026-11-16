@@ -618,3 +618,58 @@ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-she
   min-height:0!important;
   max-width:100%!important;
 }
+
+
+/* Scale the entire 3:1 ticket as ONE artwork on phones. Fixed 7/8px minimums
+   made a 390px-wide ticket overflow even though its poster zones were correct.
+   Zoomed tickets get larger text because cqw is tied to ticket width, not phone. */
+@media(max-width:700px){
+ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] > .concert-live-main,
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] > article.ticket,
+ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] .ticket-underlay > article.ticket{
+   row-gap:.55%!important;
+ }
+ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveEvent,
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #ticketTitle,
+ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #eventName{
+   font-size:clamp(8px,2.9cqw,58px)!important;
+   line-height:1.03!important;
+   margin:0!important;
+ }
+ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] .concert-live-headnote,
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] .ticket-label,
+ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] .ticket .kicker{
+   font-size:clamp(5px,.78cqw,18px)!important;
+   line-height:1!important;
+ }
+ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveSubtitle,
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] #reviewConcertSubtitle,
+ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #concertEventSubtitle{
+   font-size:clamp(5px,1.08cqw,24px)!important;
+   line-height:1.08!important;
+ }
+ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-layout]
+   :is(#concertLiveFields,.ct-detail-zone,#ticketGrid) :is(dt,.detail-label){
+   font-size:clamp(4px,.67cqw,16px)!important;
+   line-height:1!important;
+   margin:0 0 .25cqw!important;
+ }
+ body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame,.review-shell,.card.concert-ticket)[data-concert-layout]
+   :is(#concertLiveFields,.ct-detail-zone,#ticketGrid) :is(dd,.detail-value){
+   font-size:clamp(5px,1.15cqw,25px)!important;
+   line-height:1.1!important;
+ }
+ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveFields,
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] .ct-detail-zone,
+ body[data-ticket-variant="concert"] .card.concert-ticket[data-concert-layout] #ticketGrid{
+   gap:.6cqw 1.8cqw!important;
+   padding-top:1%!important;
+ }
+ body[data-ticket-variant="concert"] .review-shell[data-concert-layout] .ct-detail-zone :is(.details,.review-concert-extra){
+   gap:.3cqw 1.2cqw!important;
+ }
+ body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame[data-concert-layout] #concertLiveEvent,
+ body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket[data-concert-layout] #eventName{
+   font-size:clamp(8px,2.9cqw,58px)!important;
+ }
+}
