@@ -350,7 +350,7 @@ test('concert scratch variant reuses ticket surface persistence without adding a
   const fields=JSON.parse(state.config.fields_json);
   assert.deepEqual(fields.scratchSurface,{
     style:'festival',foil:'midnight',theme:'luxury-elegant',variant:'concert',coverAssetId:null,
-    ticketTemplate:'classic-notches',revealTheme:'classic',linkMode:'link'
+    ticketTemplate:'classic-notches',revealTheme:'classic',linkMode:'link',ticketDetails:{}
   });
   const restored=await scratchSurfaceResponse(request(),env,{},legacy);
   assert.deepEqual((await restored.json()).surface,result.surface);
