@@ -375,11 +375,13 @@ export class ScratchCard {
     drawConcertTicketPath(ctx,w,h,this.ticketTemplate);
     ctx.fill();
     ctx.restore();
-    const stubX=w*.72;
-    ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.58)':'rgba(40,34,46,.34)';
-    ctx.lineWidth=Math.max(1,w*.0025);
-    drawConcertTicketPath(ctx,w,h,this.ticketTemplate);
-    ctx.stroke();
+    // The printed trim border must sit within the deepest scallops/notches:
+    // never stroke the clipped outside edge and lose half the border.
+    const stubLeft=this.ticketTemplate==='side-perforations';
+    const stubX=w*(stubLeft?.24:.76);
+    ctx.strokeStyle=this.foil==='midnight'?'rgba(231,238,255,.65)':'rgba(40,34,46,.44)';
+    ctx.lineWidth=Math.max(1,w*.0022);
+    ctx.strokeRect(w*.056,h*.064,w*.888,h*.872);
     ctx.fillStyle=this.foil==='midnight'?'rgba(240,246,255,.72)':'rgba(45,40,54,.48)';
     for(let y=h*.055;y<h*.95;y+=Math.max(7,h*.055)){
       ctx.fillRect(stubX-1,y,2,Math.max(3,h*.027));
