@@ -624,10 +624,15 @@
       clip-path:polygon(0 0,76% 0,78% 5%,80% 0,100% 0,100% 100%,
         80% 100%,78% 95%,76% 100%,0 100%)
     }
-    body[data-ticket-variant="concert"] .scratch-surface-thumb::after{
-      content:"";position:absolute;left:78%;top:0;bottom:0;
-      border-left:2px dashed #f3dba09c;pointer-events:none;z-index:3
-    }
+    body[data-ticket-variant="concert"] .scratch-surface-thumb::after{display:none}
+    body[data-ticket-variant="concert"] .review-shell{background-size:cover;background-position:center}
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="classic"]{background-image:url('/concert-reveal-art/classic.svg')}
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="concert-lights"]{background-image:url('/concert-reveal-art/concert-lights.svg')}
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="festival"]{background-image:url('/concert-reveal-art/festival.svg')}
+    body[data-ticket-variant="concert"] .review-shell[data-concert-theme="backstage"]{background-image:url('/concert-reveal-art/backstage.svg')}
+    body[data-ticket-variant="concert"] .review-shell > .ticket{background:rgba(255,248,230,.89)}
+    .owner-concert-qr{margin-top:10px;display:flex;justify-content:center}
+    .owner-concert-qr svg{max-width:130px;width:100%;height:auto;background:white;padding:6px}
     @media(max-width:570px){
       body[data-ticket-variant="concert"] .review-shell{min-height:185px;border-width:2px}
       body[data-ticket-variant="concert"] .review-heading{padding:11px 8px}
@@ -766,6 +771,7 @@
         <div id="bookingCard" class="booking-card" hidden>
           <div class="booking-label">Official ticket or booking link</div>
           <div id="bookingValue" class="booking-value"></div>
+          <div id="ownerConcertQr" class="owner-concert-qr" hidden></div>
         </div>
       </section>
 
@@ -882,7 +888,8 @@
 
   <script defer src="/qr.js"></script>
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=concert-solid-3';
+    import { ScratchCard } from '/scratchcard.js?v=concert-templates-4';
+    import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=1';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
     'use strict';
@@ -1208,6 +1215,29 @@
       if (!artwork && result.surface.variant !== 'concert') applyScratchTheme(document,chosenTheme,'review');
       const isConcert = result.surface.variant === 'concert';
       document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
+      if(isConcert){
+        const shape=isConcertTemplate(result.surface.ticketTemplate)
+          ? result.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
+        const look=isConcertRevealTheme(result.surface.revealTheme)
+          ? result.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
+        const shell=document.querySelector('.review-shell');
+        shell.dataset.concertTheme=look;
+        shell.style.clipPath=concertTicketClipPath(shape);
+        elements.surfaceReview.querySelector('.scratch-surface-thumb').style.clipPath=concertTicketClipPath(shape);
+        if(result.surface.linkMode==='qr' && reveal.ticketUrl){
+          if(window.QRCode?.generateSVG){
+            document.getElementById('ownerConcertQr').replaceChildren(
+              window.QRCode.generateSVG(reveal.ticketUrl,{ecclevel:'M',modulesize:4,margin:4})
+            );
+            document.getElementById('ownerConcertQr').hidden=false;
+            document.getElementById('bookingValue').hidden=true;
+            elements.bookingCard.querySelector('.booking-label').textContent='QR code destination';
+          }
+        } else {
+          document.getElementById('ownerConcertQr').hidden=true;
+          document.getElementById('bookingValue').hidden=false;
+        }
+      }
       if (isConcert) {
         // Reuse the existing image, link, review and save elements. Moving
         // them inside the ticket is visual only and never changes stored data.
@@ -1222,7 +1252,9 @@
       const {audio} = result;
       const names = {classic:'Classic premium foil',theatre:'Theatre Velvet',concert:'Concert Lights',festival:'Festival Access',backstage:'Backstage Pass',custom:'Your uploaded scratch image'};
       elements.surfaceReviewDescription.textContent = isConcert
-        ? foil[0].toUpperCase() + foil.slice(1) + ' concert finish'
+        ? (result.surface.ticketTemplate || DEFAULT_CONCERT_TEMPLATE).replace(/-/g,' ') +
+          ' · ' + foil[0].toUpperCase() + foil.slice(1) + ' foil · ' +
+          (result.surface.revealTheme || DEFAULT_CONCERT_REVEAL_THEME).replace(/-/g,' ') + ' revealed artwork'
         : artwork ? artwork.label : (names[style] || 'Scratch card') + ' · ' + foil + ' finish';
       elements.surfaceAudioDescription.textContent = audio?.enabled !== false
         ? 'Sound: cinematic orchestral drum roll begins approximately 3 seconds after the first scratch.'
@@ -1230,7 +1262,9 @@
       elements.surfaceReview.hidden = false;
       if (staticScratchCard) staticScratchCard.destroy();
       staticScratchCard = new ScratchCard({canvas:elements.surfaceReviewCanvas,
-        foil,theme:chosenTheme,concertTicket:isConcert,coverStyle:isConcert ? 'concert' : style === 'custom' ? 'classic' : style});
+        foil,theme:chosenTheme,concertTicket:isConcert,
+        ticketTemplate:isConcert ? result.surface.ticketTemplate || DEFAULT_CONCERT_TEMPLATE : DEFAULT_CONCERT_TEMPLATE,
+        coverStyle:isConcert ? 'concert' : style === 'custom' ? 'classic' : style});
       staticScratchCard.artworkId = artwork?.id || null;
       staticScratchCard.canvas.style.pointerEvents = 'none';
       if (isConcert) {
