@@ -275,7 +275,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket .ticket-identity>.label
 body[data-ticket-variant="concert"] .review-shell .review-label{margin:0!important;}
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields,
 body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows,
-body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields{
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-stub-fields{
   display:flex!important;
   flex:1 1 auto;
   flex-direction:row!important;
@@ -288,7 +288,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields{
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields>div,
 body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows>div,
-body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields>div{
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-stub-fields>div{
   display:flex!important;
   flex-direction:column;
   justify-content:center;
@@ -309,7 +309,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields>div{
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveStubFields :is(dt,dd),
 body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows :is(small,strong),
-body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields :is(dt,dd){
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-stub-fields :is(dt,dd){
   color:var(--ct-light)!important;
   font:700 clamp(.46rem,.85vw,.75rem)/1 system-ui,sans-serif!important;
   letter-spacing:.06em!important;
@@ -317,7 +317,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields :is(
   text-transform:uppercase;
   white-space:nowrap;max-height:100%;overflow:hidden;
 }
-body[data-ticket-variant="concert"] :is(#concertLiveStubFields,#reviewConcertStubRows,#concertStubFields) :is(dt,small){
+body[data-ticket-variant="concert"] :is(#concertLiveStubFields,#reviewConcertStubRows,.concert-stub-fields) :is(dt,small){
   color:var(--ct-gold)!important;
   font-size:clamp(.42rem,.7vw,.65rem)!important;
 }
@@ -325,8 +325,8 @@ body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-s
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>#concertLiveQr[hidden],
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame .concert-live-stub>#concertLiveLink[hidden],
 body[data-ticket-variant="concert"] .review-shell #reviewConcertStubRows[hidden],
-body[data-ticket-variant="concert"] .card.concert-ticket #concertStubFields[hidden]{display:none!important;}
-body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow){
+body[data-ticket-variant="concert"] .card.concert-ticket .concert-stub-fields[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow,.card.concert-ticket .qr-row){
   position:absolute;
   z-index:3;
   right:5%;bottom:10%;
@@ -338,12 +338,12 @@ body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQ
   background:transparent!important;
   overflow:hidden!important;
 }
-body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow) svg{
+body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow,.card.concert-ticket .qr-row) svg{
   max-width:100%;max-height:100%;width:100%!important;
   height:auto!important;padding:3px!important;background:#fff!important;
   border-radius:3px;
 }
-body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow){
+body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow,.card.concert-ticket .booking-row){
   position:absolute;
   z-index:3;
   left:6%;right:6%;bottom:7%;
@@ -358,14 +358,14 @@ body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRo
   color:var(--ct-light)!important;
   border:0!important;
 }
-body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow)[hidden]{display:none!important;}
+body[data-ticket-variant="concert"] :is(#concertLiveLink,#bookingCard,#bookingRow,.card.concert-ticket .booking-row)[hidden]{display:none!important;}
 body[data-ticket-variant="concert"] .review-shell #bookingValue{
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
   font-size:clamp(.42rem,.7vw,.62rem)!important;
 }
 body[data-ticket-variant="concert"] .card.concert-ticket .booking-row a{color:var(--ct-light)!important;}
 /* QR/link need space, without covering the printed stub fields. */
-body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity):has(svg) :is(#concertLiveStubFields,#reviewConcertStubRows,#concertStubFields){
+body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity):has(svg) :is(#concertLiveStubFields,#reviewConcertStubRows,.concert-stub-fields){
   padding-bottom:24%!important;
 }
 @media(max-width:680px){
@@ -397,13 +397,13 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
   body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-stub>strong,.review-shell .review-label,.card.concert-ticket .ticket-identity>.label){
     font-size:.42rem!important;
   }
-  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields>div,.review-shell #reviewConcertStubRows>div,.card.concert-ticket #concertStubFields>div){
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields>div,.review-shell #reviewConcertStubRows>div,.card.concert-ticket .concert-stub-fields>div){
     padding:0 1px!important;
   }
-  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields dt,#concertRevealedPreviewFrame #concertLiveStubFields dd,.review-shell #reviewConcertStubRows small,.review-shell #reviewConcertStubRows strong,.card.concert-ticket #concertStubFields dt,.card.concert-ticket #concertStubFields dd){
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveStubFields dt,#concertRevealedPreviewFrame #concertLiveStubFields dd,.review-shell #reviewConcertStubRows small,.review-shell #reviewConcertStubRows strong,.card.concert-ticket .concert-stub-fields dt,.card.concert-ticket .concert-stub-fields dd){
     font-size:.4rem!important;
   }
-  body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow){width:38px}
+  body[data-ticket-variant="concert"] :is(#concertLiveQr,#ownerConcertQr,#concertQrRow,.card.concert-ticket .qr-row){width:38px}
 }
 
 
