@@ -451,8 +451,6 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
        const strong=document.createElement('strong');strong.textContent=value;
        cell.append(small,strong);rows.append(cell);
      }
-     document.getElementById('reviewConcertNumber').hidden=false;
-     document.getElementById('reviewConcertNumber').textContent='No. T-123';
      document.getElementById('bookingCard').hidden=false;
      document.querySelector('#bookingCard .booking-label').textContent='QR CODE';
      document.getElementById('bookingValue').textContent='Optional booking link';
