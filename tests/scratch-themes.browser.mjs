@@ -272,7 +272,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
        remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom,
        pad:getComputedStyle(frame.querySelector('.concert-live-main')).paddingBottom};
    });
-   assert.ok(bottomSpace.remaining >= bottomSpace.height*.075,
+   assert.ok(bottomSpace.remaining >= bottomSpace.height*(size.name==='desktop'?.11:.075),
      'Last concert ticket detail must sit safely above the bottom border: '+JSON.stringify(bottomSpace));
    assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
    assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
@@ -414,6 +414,8 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
        const text=document.createElement('span');text.className='detail-value';text.textContent=value;
        cell.append(name,text);extra.append(cell);
      }
+     // Match the saved-owner review's two-row details arrangement.
+     extra.prepend(document.getElementById('reviewVenueRow'));
      const shell=document.querySelector('.review-shell');
      shell.dataset.concertTheme='backstage';
      const ticket=shell.querySelector('.ticket');
@@ -474,7 +476,7 @@ test('concert owner static review remains a landscape 2.15:1 ticket, not a tall 
        return {height:frame.getBoundingClientRect().height,
          remaining:frame.getBoundingClientRect().bottom-last.getBoundingClientRect().bottom};
      });
-     assert.ok(bottomSpace.remaining >= bottomSpace.height*.075,
+     assert.ok(bottomSpace.remaining >= bottomSpace.height*.11,
        'Owner concert details must have space above the inset printed border: '+JSON.stringify(bottomSpace));
    }
    // Owner's static cover must use the SAVED foil. The original thumbnail's
