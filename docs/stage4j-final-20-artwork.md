@@ -10,7 +10,9 @@ The only approved preset artwork is the set of **20 exact JPEG files** supplied 
 - Selecting a different option updates the actual unscratchable live preview Canvas, not just the body background.
 - The four foil finish swatches (Gold, Silver, Midnight and Rose) are **Concert Ticket only**, not offered on the 20-image portrait Scratch Ticket.
 - Optional private photo upload remains available; no additional artwork upload control is added.
-- The separate Concert Ticket creator retains its own landscape artwork choices and foil swatches, but no redundant scratch-surface heading, explanatory paragraph, promotional slogans or watermark-like text.
+- The **separate Concert Ticket creator uses only four full-surface foil colours: Gold, Silver, Midnight and Rose.** It has no Concert Lights, Festival Access, Backstage Pass, or other theme/artwork tiles. Each colour must repaint the entire ticket, not only its border. The surface has no decorative diagonal rays, slogans or watermark-like text.
+- The colour-only concert ticket keeps its landscape ticket shape, neutral inner outline and perforated stub. The preview and the paid recipient Canvas must both use the same selected colour, including on narrow/mobile screens where the ticket content can grow vertically.
+- The optional concert event/ticket image remains a **reveal attachment** shown after payment and must never override the scratch-surface colour.
 - Neither selected final JPEGs nor landscape concert scratch-face artwork should receive automatic text labels, stamps or watermarks. Scratch instructions belong outside the Canvas.
 - The default selection is Azure Kaleidoscope.
 
