@@ -279,7 +279,7 @@
 </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
 <script defer src="/qr.js"></script>
-<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-8">
+<link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-9">
 </head>
 <body>
 <main>
@@ -292,7 +292,6 @@
       <div class="ticket-identity">
         <div class="label" id="concertStubHeading">ADMIT ONE</div>
         <h2 class="recipient" id="name"></h2>
-        <span id="recipientConcertNumber" class="ct-reference" hidden></span>
         <span class="ct-barcode-art" aria-hidden="true"></span>
         <dl id="concertStubFields" class="concert-stub-fields"></dl>
       </div>
@@ -301,7 +300,6 @@
         <div class="kicker" id="ticketKicker">PERSONALISED EVENT TICKET</div>
         <h2 id="eventName"></h2>
          <p id="concertEventSubtitle" class="concert-subtitle" hidden></p>
-         <p id="concertSupportAct" class="concert-subtitle" hidden></p>
         <div id="eventImageWrap" class="event-image-wrap" hidden>
           <img id="eventImage" alt="Personal image included with this surprise">
         </div>
@@ -347,7 +345,7 @@
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
   import { recipientCardModel } from '/scratch-recipient-fields.js?v=complete-card-1';
-   import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=1';
+   import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
   const $ = id => document.getElementById(id);
   const slug = location.pathname.split('/').filter(Boolean)[1];
   const status = $('status');
@@ -360,18 +358,11 @@
   function applyConcertTicketFields(raw) {
     const details=cleanConcertTicketDetails(raw);
     text('concertEventSubtitle',details.eventSubtitle||'');
-    text('concertSupportAct',details.supportAct?'Special guest: '+details.supportAct:'');
     $('concertEventSubtitle').hidden=!details.eventSubtitle;
-    $('concertSupportAct').hidden=!details.supportAct;
     for(const old of $('ticketGrid').querySelectorAll('.concert-extra-row'))old.remove();
     $('concertStubFields').replaceChildren();
     for(const field of displayConcertTicketRows(details)){
-      if(['eventSubtitle','supportAct'].includes(field.id))continue;
-      if(field.id==='ticketNumber'){
-        $('recipientConcertNumber').textContent='No. '+field.value;
-        $('recipientConcertNumber').hidden=false;
-        continue;
-      }
+      if(field.id==='eventSubtitle')continue;
       const stub=['section','row','seat','gate'].includes(field.id);
       const row=document.createElement('div');row.className='ticket-item concert-extra-row';
       row.dataset.concertField=field.id;
