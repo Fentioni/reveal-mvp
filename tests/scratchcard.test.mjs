@@ -324,8 +324,8 @@ test('landscape ticket is confined to concert variant in creator, review and pai
   assert.match(review, /body\[data-ticket-variant="concert"\] \.scratch-surface-thumb\{[\s\S]*?aspect-ratio:2\.15\/1/);
   assert.ok(review.includes('aspect-ratio:3/4'));
   assert.ok(review.includes("document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket'"));
-  assert.ok(review.includes('ticket.appendChild(elements.imageWrap)'));
-  assert.ok(review.includes('ticket.appendChild(elements.bookingCard)'));
+  assert.ok(review.includes("ticket.querySelector('#ticketTitle').after(elements.imageWrap)"));
+  assert.ok(review.includes('stub.appendChild(elements.bookingCard)'));
   assert.ok(recipient.includes("document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket'"));
   assert.ok(recipient.includes("$('card').classList.toggle('concert-ticket',isConcert)"));
   assert.ok(recipient.includes('.card.concert-ticket'));
