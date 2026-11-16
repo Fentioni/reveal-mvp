@@ -5,6 +5,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve,dirname} from 'node:path';
 import {SCRATCH_THEMES,DEFAULT_SCRATCH_THEME,getScratchTheme,applyScratchTheme} from '../public/scratch-themes.js';
 import {ScratchCard} from '../public/scratchcard.js';
+import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
 
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..');
 test('theme catalogue has the thirteen requested distinct designs with safe color definitions',()=>{
@@ -34,30 +35,36 @@ test('scratch theme applies the selected environment without changing card foil 
  assert.equal(properties.get('--scratch-highlight'),elegant.highlight);
 });
 
-test('13 themes are wired through the same creator, owner review, recipient and Canvas without extra products',async()=>{
- const paths=['public/legacy-create.html','public/reveal.html','public/recipient-scratch.html'];
- const files=await Promise.all(paths.map(p=>readFile(resolve(root,p),'utf8')));
- assert.match(files[0],/makeScratchThemePicker/);
- assert.match(files[0],/surfaceBody.append\("theme", scratchThemeId\)/);
- assert.match(files[0],/chooseScratchTheme\(savedSurface.surface.theme/);
- assert.match(files[1],/applyScratchTheme\(document,chosenTheme,'review'\)/);
- assert.match(files[1],/theme:chosenTheme/);
- assert.match(files[2],/applyScratchTheme\(document,chosenTheme,'recipient'\)/);
- assert.match(files[2],/theme:chosenTheme/);
- const canvasSource=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
- assert.match(canvasSource,/drawThemeDecoration/);
- assert.match(canvasSource,/this\.setTheme|setTheme\(id\)/);
- assert.match(canvasSource,/if \(!this\.coverImage\) this\.drawArtwork\(\)/);
- assert.match(canvasSource,/if \(this\.coverImage\?\.complete/);
- assert.match(canvasSource,/this\.drawThemeDecoration\(\)/);
- assert.match(canvasSource,/destination-out/);
- const stylesheet=await readFile(resolve(root,'public/scratch-themes.css'),'utf8');
- assert.match(stylesheet,/data-scratch-theme-mode="recipient"/);
- assert.match(stylesheet,/data-scratch-theme-mode="creator"/);
- assert.match(stylesheet,/data-scratch-theme-mode="review"/);
- assert.match(stylesheet,/scratch-theme-grid/);
+test('the creator lists exactly the 20 approved scratch images, with no thematic picker',async()=>{
+ const paths=['public/legacy-create.html','public/reveal.html','public/recipient-scratch.html','src/scratch-surface.js','src/scratch-recipient.js'];
+ const [creator,review,recipient,owner,paid]=await Promise.all(paths.map(p=>readFile(resolve(root,p),'utf8')));
+ const names=['Azure Kaleidoscope','Birthday Opulence','Champagne Currents','Champagne Ribbons',
+ 'Compass Journey','Copper Petals','Crimson Vortex','Emerald Elegance','Festive Midnight',
+ 'Fuchsia Prism','Gilded Archways','Golden Spotlight','Lunar Lullaby','Metallic Spirals',
+ 'Midnight Romance','Ruby Diamonds','Sapphire Geometry','Sapphire Weave','Scarlet Waves','Silver Apex'];
+ assert.deepEqual(SCRATCH_ARTWORKS.map(i=>i.label),names);
+ assert.equal(SCRATCH_ARTWORKS.length,20);
+ assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,20);
+ assert.equal(DEFAULT_SCRATCH_ARTWORK,'azure-kaleidoscope');
+ assert.equal(getScratchArtwork('missing'),null);
+ for(const art of SCRATCH_ARTWORKS) {
+   assert.match(art.file,/^[A-Za-z_]+\.jpg$/);
+   assert.equal(art.src,'/scratch-artwork/'+art.file);
+ }
+ assert.match(creator,/id="scratchArtwork"/);
+ assert.match(creator,/SCRATCH_ARTWORKS/);
+ assert.match(creator,/surfaceBody\.append\("artworkId"/);
+ assert.doesNotMatch(creator,/makeScratchThemePicker|scratchThemeChoices/);
+ assert.match(review,/getScratchArtwork\(result\.surface\.artworkId\)/);
+ assert.match(review,/setCoverImage\(artwork\.src\)/);
+ assert.match(recipient,/getScratchArtwork\(data\.scratchSurface\.artworkId\)/);
+ assert.match(recipient,/setCoverImage\(artwork\.src\)/);
+ assert.match(owner,/getScratchArtwork\(artworkId\)/);
+ assert.match(paid,/getScratchArtwork\(settings\.artworkId\)/);
+ const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
+ assert.match(engine,/if \(!this\.artworkId\)/);
+ assert.match(engine,/destination-out/);
 });
-
 test('ScratchCard constructor and theme setter preserve existing foil and uploaded-image choice',()=>{
  const data={};
  const canvas={
