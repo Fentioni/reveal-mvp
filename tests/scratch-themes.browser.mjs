@@ -315,13 +315,17 @@ test('concert purchaser can switch between scratch cover and a fully personalise
        el.id!=='concertLiveImage'&&!el.hidden&&getComputedStyle(el).display!=='none');
      const level=frame.querySelector('[data-concert-field="level"] dt');
      const paper=frame.getBoundingClientRect();
-     return {photoLeft:art.left,photoRight:art.right,textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
+     return {photoLeft:art.left,photoRight:art.right,photoWidth:art.width,
+       mainWidth:frame.querySelector('.concert-live-main').getBoundingClientRect().width,
+       textRight:Math.max(...content.map(el=>el.getBoundingClientRect().right)),
        trimRight:paper.right-paper.width*.076,levelTextWidth:level?.scrollWidth||0,levelBoxWidth:level?.clientWidth||0};
    });
    assert.ok(photoLayout.textRight+2<=photoLayout.photoLeft,
      'Event poster must never cover preview ticket text: '+JSON.stringify(photoLayout));
    assert.ok(photoLayout.photoRight<=photoLayout.trimRight-2,
      'Event poster must stay INSIDE the gold inner border: '+JSON.stringify(photoLayout));
+   assert.ok(photoLayout.photoWidth<=photoLayout.mainWidth*.26,
+     'Poster must shrink to protect the main ticket text area: '+JSON.stringify(photoLayout));
    assert.ok(photoLayout.levelTextWidth<=photoLayout.levelBoxWidth+1,
      'Level must remain a horizontal readable label: '+JSON.stringify(photoLayout));
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
