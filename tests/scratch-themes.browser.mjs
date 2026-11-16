@@ -182,6 +182,61 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+test('concert purchaser can switch between scratch cover and a fully personalised live revealed-ticket preview',
+ {timeout:95000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
+   await page.locator('#concertTemplateChoices .concert-template-option:enabled').first().waitFor();
+   const tabSelector=size.name==='mobile'?'#concertPreviewTabsMobile':'#concertPreviewTabsDesktop';
+   assert.equal(await page.locator(tabSelector+':visible').count(),1);
+   await page.locator('#eventName').fill('Live Music at the Hall');
+   await page.locator('#eventSubtitle').fill('A very special evening');
+   await page.locator('#supportAct').fill('The Openers');
+   await page.locator('#venue').fill('The Grand Hall');
+   await page.locator('#venueAddress').fill('London, England');
+   await page.locator('#section').fill('Balcony');
+   await page.locator('#row').fill('G');
+   await page.locator('#seat').fill('18');
+   await page.locator('#gate').fill('A');
+   await page.locator('#ticketPrice').fill('£25');
+   await page.locator('#ticketNumber').fill('T-123');
+   await page.locator('#eventDate').fill('2027-03-20');
+   await page.locator('#eventTime').fill('19:30');
+   await page.locator('#ticketUrl').fill('https://example.org/tickets/123');
+   await page.locator('#concertLinkMode').selectOption('qr');
+   await page.locator('.concert-template-option[data-value="stamp-edge"]').click();
+   await page.locator('.concert-theme-option[data-value="concert-lights"]').click();
+   assert.equal(await page.locator('body').getAttribute('data-concert-preview'),'revealed');
+   assert.equal(await page.locator('#concertRevealedPreviewFrame:visible').count(),1);
+   assert.equal(await page.locator('.scratch-static-frame:visible').count(),0);
+   assert.equal((await page.locator('#concertLiveEvent').textContent()).trim(),'Live Music at the Hall');
+   const details=await page.locator('#concertLiveFields').textContent();
+   for(const value of ['The Grand Hall','London, England','Balcony','G','18','A','£25']){
+    assert.ok(details.includes(value),'Revealed ticket must include '+value);
+   }
+   assert.equal((await page.locator('#concertLiveSubtitle').textContent()).trim(),'A very special evening');
+   assert.match(await page.locator('#concertLiveSupport').textContent(),/The Openers/);
+   assert.match(await page.locator('#concertLiveTicketNumber').textContent(),/T-123/);
+   assert.equal(await page.locator('#concertLiveQr svg').count(),1);
+   const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
+   assert.ok(background.includes('concert-lights.svg'));
+   await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
+   await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
+   assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
+   assert.equal(await page.locator('#concertRevealedPreviewFrame:visible').count(),0);
+   await page.locator('[data-scratch-foil="rose"]').click();
+   assert.equal(await page.locator('#scratchFoil').inputValue(),'rose');
+   await page.screenshot({path:resolve(output,size.name+'-scratch-cover-after-reveal.png'),fullPage:true});
+   assert.deepEqual(errors,[]);
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
 test('paid concert recipient sees four full-surface foil colours, even on narrow phones',
  {timeout:95000},async()=>{
  const {server,base}=await startServer();
