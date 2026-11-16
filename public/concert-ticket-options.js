@@ -1,24 +1,38 @@
-/**
- * Four original, responsive concert-ticket silhouettes based on the owner's
- * reference sheet. Scratch foil colour and post-scratch theme are independent.
- * All geometry is normalised so the same ticket is used by the creator,
- * owner review and paid recipient.
+/** Five locked 3:1 concert ticket layouts, based on the owner's five
+ * supplied reference images. These are designs, not interchangeable
+ * free-floating blocks. Existing four shape IDs remain supported for drafts.
+ * Metallic scratch covers and reveal artwork themes remain independent.
  */
 export const CONCERT_TICKET_TEMPLATES=Object.freeze([
- Object.freeze({id:'side-perforations',label:'Side perforations',description:'Perforated left and right ticket edges'}),
- Object.freeze({id:'stamp-edge',label:'Stamp edge',description:'Fine scallops along the top and bottom'}),
- Object.freeze({id:'classic-notches',label:'Classic notches',description:'Inward cut-outs on all four corners'}),
- Object.freeze({id:'rounded-stub',label:'Rounded stub',description:'Rounded ticket with a detachable end'})
+ Object.freeze({id:'premium-headliner',label:'Premium Headliner',description:'Navy headline, dedicated portrait panel and white barcode stub'}),
+ Object.freeze({id:'rock-split',label:'Rock Split',description:'Full-height artist photograph, bold centre information and side admission stub'}),
+ Object.freeze({id:'promo-poster',label:'Promo Poster',description:'Purple poster ticket with small portrait and oversized title'}),
+ Object.freeze({id:'neon-tour',label:'Neon Tour',description:'Bright pink entry stub, huge tour headline and spaced concert details'}),
+ Object.freeze({id:'editorial-concert',label:'Editorial Concert',description:'Pink admission strip, black editorial headline and dedicated right image panel'})
 ]);
+const LEGACY_CONCERT_SHAPES=Object.freeze(['side-perforations','stamp-edge','classic-notches','rounded-stub']);
+const PRESET_SHAPES=Object.freeze({
+ 'premium-headliner':'premium-headliner',
+ 'rock-split':'classic-notches',
+ 'promo-poster':'rounded-stub',
+ 'neon-tour':'side-perforations',
+ 'editorial-concert':'stamp-edge'
+});
+export const CONCERT_PRESET_IDS=Object.freeze(CONCERT_TICKET_TEMPLATES.map(x=>x.id));
+export const concertTemplateLayout=id=>PRESET_SHAPES[id] ? id : ({
+ 'side-perforations':'neon-tour','stamp-edge':'editorial-concert',
+ 'classic-notches':'rock-split','rounded-stub':'promo-poster'
+}[id] || 'premium-headliner');
+export const isConcertStubLeft=id=>['neon-tour','editorial-concert','promo-poster'].includes(concertTemplateLayout(id));
 export const CONCERT_REVEAL_THEMES=Object.freeze([
  Object.freeze({id:'classic',label:'Classic',description:'Elegant cream and gold ticket'}),
  Object.freeze({id:'concert-lights',label:'Concert Lights',description:'Stage lighting and live music'}),
  Object.freeze({id:'festival',label:'Festival',description:'Sunset festival atmosphere'}),
  Object.freeze({id:'backstage',label:'Backstage',description:'VIP backstage styling'})
 ]);
-export const DEFAULT_CONCERT_TEMPLATE='classic-notches';
+export const DEFAULT_CONCERT_TEMPLATE='premium-headliner';
 export const DEFAULT_CONCERT_REVEAL_THEME='classic';
-const templateIds=new Set(CONCERT_TICKET_TEMPLATES.map(x=>x.id));
+const templateIds=new Set([...CONCERT_PRESET_IDS,...LEGACY_CONCERT_SHAPES]);
 const revealIds=new Set(CONCERT_REVEAL_THEMES.map(x=>x.id));
 export const isConcertTemplate=id=>templateIds.has(id);
 export const isConcertRevealTheme=id=>revealIds.has(id);
@@ -27,7 +41,7 @@ const pt=(out,x,y)=>out.push([clamp(x),clamp(y)]);
 
 // Normalised polygon along a ticket's exterior, clockwise.
 export function concertTicketPolygon(id=DEFAULT_CONCERT_TEMPLATE){
- const t=isConcertTemplate(id)?id:DEFAULT_CONCERT_TEMPLATE,p=[];
+ const t=PRESET_SHAPES[id]|| (LEGACY_CONCERT_SHAPES.includes(id)?id:DEFAULT_CONCERT_TEMPLATE),p=[];
  if(t==='side-perforations'){
   pt(p,0,0);pt(p,1,0);
   for(const y of [.13,.27,.41,.55,.69,.83]){
@@ -76,6 +90,13 @@ export function concertTicketPolygon(id=DEFAULT_CONCERT_TEMPLATE){
   for(let i=0;i<=8;i++){const a=Math.PI/2+i*Math.PI/16;pt(p,.045+.045*Math.cos(a),.92+.08*Math.sin(a));}
   pt(p,0,.16);
   for(let i=0;i<=8;i++){const a=Math.PI+i*Math.PI/16;pt(p,.045+.045*Math.cos(a),.08+.08*Math.sin(a));}
+ }else if(t==='premium-headliner'){
+  // White right-hand stub with smooth admission cut-outs above/below divider.
+  pt(p,0,0);pt(p,.76,0);
+  for(let i=0;i<=12;i++){const a=Math.PI-i*Math.PI/12;pt(p,.80+.04*Math.cos(a),.04*Math.sin(a));}
+  pt(p,1,0);pt(p,1,1);pt(p,.84,1);
+  for(let i=0;i<=12;i++){const a=i*Math.PI/12;pt(p,.80+.04*Math.cos(a),1-.04*Math.sin(a));}
+  pt(p,0,1);
  }else{
   // Corner-notch admission ticket (third design in reference)
   pt(p,.040,0);pt(p,.960,0);
