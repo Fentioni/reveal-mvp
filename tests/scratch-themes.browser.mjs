@@ -96,6 +96,41 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+test('Concert Ticket exclusively shows four foil finishes with no redundant headings or scratch-face watermarks',
+ {timeout:95000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   const page=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+   const errors=[];
+   page.on('pageerror',error=>errors.push(error.message));
+   await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
+   await page.locator('#scratchFoilGrid:visible').waitFor();
+   assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
+   assert.equal(await page.locator('#surfaceHeading').count(),0);
+   assert.equal(await page.locator('#surfaceDescription').count(),0);
+   assert.equal(await page.locator('#scratchFoilLabel:visible').count(),1);
+   assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'Foil finish');
+   assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
+   assert.equal(await page.locator('#scratchArtGrid:visible').count(),1);
+   const paintings=new Set();
+   for(const foil of ['gold','silver','midnight','rose']){
+    await page.locator('[data-scratch-foil="'+foil+'"]').click();
+    await page.waitForFunction(id=>document.querySelector('#scratchFoil').value===id,foil);
+    paintings.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
+   }
+   assert.equal(paintings.size,4,'Each concert foil option must update the ticket Canvas');
+   const ratio=await page.locator('#scratchSurfacePreview').evaluate(node=>{
+    const bounds=node.getBoundingClientRect();return bounds.width/bounds.height;
+   });
+   assert.ok(Math.abs(ratio-2.15)<.15,'Concert preview stays landscape');
+   assert.deepEqual(errors,[]);
+   await page.screenshot({path:resolve(output,size.name+'-concert-foil-options.png'),fullPage:true});
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
 test('paid recipient uses selected artwork as scratch foil while hiding surprise until scratched',
  {timeout:90000},async()=>{
  const {server,base}=await startServer();
