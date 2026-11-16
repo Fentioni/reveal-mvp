@@ -1396,7 +1396,11 @@
         shell.dataset.concertTheme=look;
         shell.dataset.concertTemplate=shape;
         shell.style.clipPath=concertTicketClipPath(shape);
-        elements.surfaceReview.querySelector('.scratch-surface-thumb').style.clipPath=concertTicketClipPath(shape);
+        const ownerFoilSurface=elements.surfaceReview.querySelector('.scratch-surface-thumb');
+        ownerFoilSurface.style.clipPath=concertTicketClipPath(shape);
+        // The owner review must show the SAVED foil, not the thumb's
+        // historical gold background (the hidden canvas can be transparent).
+        ownerFoilSurface.dataset.foil=['gold','silver','midnight','rose'].includes(foil)?foil:'gold';
         if(result.surface.linkMode==='qr' && reveal.ticketUrl){
           if(window.QRCode?.generateSVG){
             document.getElementById('ownerConcertQr').replaceChildren(
@@ -1819,7 +1823,10 @@
       }else if (isQuizReview) {
         window.location.href = '/quiz-create?edit=' + encodeURIComponent(revealId);
       } else {
-        window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId);
+        // Preserve the product on the navigation itself. The editor also
+        // hides its controls until it has retrieved the saved configuration.
+        const variant=document.body.dataset.ticketVariant==='concert'?'&variant=concert':'';
+        window.location.href = '/legacy-create?edit=' + encodeURIComponent(revealId) + variant;
       }
     }
 
