@@ -93,7 +93,7 @@ body[data-ticket-variant="concert"] .card.concert-ticket .ticket .kicker{
 }
 body[data-ticket-variant="concert"] #concertRevealedPreviewFrame #concertLiveEvent,
 body[data-ticket-variant="concert"] .review-shell #ticketTitle,
-body[data-ticket-variant="concert"] .card.concert-ticket #eventName{
+body[data-ticket-variant="concert"] .card.concert-ticket .ticket h2{
   font:italic 600 clamp(1.25rem,4.1vw,3.7rem)/.96 Georgia,Times New Roman,serif!important;
   letter-spacing:-.045em!important;
   color:inherit!important;
@@ -376,7 +376,7 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
   body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-main,.review-shell>.ticket,.card.concert-ticket .ticket){
     padding:6px 8px!important;gap:2px!important;
   }
-  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveEvent,.review-shell #ticketTitle,.card.concert-ticket #eventName){
+  body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame #concertLiveEvent,.review-shell #ticketTitle,.card.concert-ticket .ticket h2){
     font-size:clamp(.87rem,3.6vw,1.25rem)!important;max-height:2em
   }
   body[data-ticket-variant="concert"] :is(#concertRevealedPreviewFrame .concert-live-fields,.review-shell .details,.review-shell .review-concert-extra,.card.concert-ticket .ticket-grid){
@@ -562,7 +562,7 @@ body[data-ticket-variant="concert"] #concertZoomButton{
     gap:7px!important;
   }
   body[data-ticket-variant="concert"][data-concert-zoom="open"] #concertRevealedPreviewFrame #concertLiveEvent,
-  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket #eventName{
+  body[data-ticket-variant="concert"] #concertFullTicketDialog .card.concert-ticket .ticket h2{
     font-size:2.25rem!important;
     margin:4px 0 9px!important;
   }
