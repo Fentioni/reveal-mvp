@@ -10,8 +10,7 @@ export const CONCERT_TICKET_FIELDS = Object.freeze([
  Object.freeze({id:'level',label:'Level',max:50}),
  Object.freeze({id:'row',label:'Row',max:40}),
  Object.freeze({id:'seat',label:'Seat',max:40}),
- Object.freeze({id:'gate',label:'Gate',max:40}),
- Object.freeze({id:'ticketPrice',label:'Ticket face value',max:50})
+ Object.freeze({id:'gate',label:'Gate',max:40})
 ]);
 const byId=new Map(CONCERT_TICKET_FIELDS.map(field=>[field.id,field]));
 /** Return only allowlisted fields; reject incorrect types and excessive lengths on save. */
