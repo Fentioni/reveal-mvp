@@ -50,7 +50,7 @@ async function startServer(){
   const file=path==='/legacy-create'?'/legacy-create.html'
    :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose))$/)?'/recipient-scratch.html'
    :path;
-  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
