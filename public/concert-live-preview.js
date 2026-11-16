@@ -25,8 +25,6 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   const detail=Object.fromEntries(CONCERT_TICKET_FIELDS.map(f=>[f.id,$(f.id).value.trim()]));
   $('concertLiveSubtitle').textContent=detail.eventSubtitle;
   $('concertLiveSubtitle').hidden=!detail.eventSubtitle;
-  $('concertLiveSupport').textContent=detail.supportAct?'Special guest: '+detail.supportAct:'';
-  $('concertLiveSupport').hidden=!detail.supportAct;
   const mainRows=[
    ['DATE',$('eventDate').value?dateText($('eventDate').value):''],
    ['TIME',$('eventTime').value?timeText($('eventTime').value):''],
@@ -49,6 +47,7 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
    }
   }
   paintRows($('concertLiveFields'),mainRows);
+  $('concertLiveFields').hidden=!$('concertLiveFields').childElementCount;
   paintRows($('concertLiveStubFields'),stubRows);
   $('concertLiveAdmit').textContent=$('admit').value.trim();
   $('concertLiveAdmit').hidden=!$('admit').value.trim();
@@ -61,8 +60,6 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $('concertLiveSender').hidden=true;
   $('concertLiveMessage').textContent=$('personalMessage').value.trim();
   $('concertLiveMessage').hidden=!$('personalMessage').value.trim();
-  $('concertLiveTicketNumber').textContent=detail.ticketNumber?'No. '+detail.ticketNumber:'';
-  $('concertLiveTicketNumber').hidden=!detail.ticketNumber;
   const qr=$('concertLiveQr'),link=$('concertLiveLink');
   qr.hidden=true;link.hidden=true;qr.replaceChildren();
   const url=safeUrl($('ticketUrl').value.trim());
