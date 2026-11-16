@@ -800,3 +800,32 @@ body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.tick
 body[data-ticket-variant="concert"] :is(.concert-live-stub,.review-heading,.ticket-identity):has(svg)>.ct-barcode-art{
   display:none!important;
 }
+
+
+/* Private owner scratch-cover REVIEW: use saved foil from the D1-backed
+   configuration. The historical base thumb is gold; making the Canvas
+   transparent without repainting caused every saved foil to look gold. */
+body[data-ticket-variant="concert"] .scratch-surface-thumb{
+  background-color:#a47c33;
+  background-image:linear-gradient(105deg,#654114 0%,#F8E3A0 30%,#BD8430 60%,#FFF3BF 84%,#9A6420 100%);
+}
+body[data-ticket-variant="concert"] .scratch-surface-thumb[data-foil="gold"]{
+  background-color:#bd8430!important;
+  background-image:linear-gradient(105deg,#654114 0%,#F8E3A0 30%,#BD8430 60%,#FFF3BF 84%,#9A6420 100%)!important;
+}
+body[data-ticket-variant="concert"] .scratch-surface-thumb[data-foil="silver"]{
+  background-color:#a3b0be!important;
+  background-image:linear-gradient(105deg,#687382 0%,#F2F6FA 30%,#A3B0BE 60%,#FFFFFF 84%,#778697 100%)!important;
+}
+body[data-ticket-variant="concert"] .scratch-surface-thumb[data-foil="midnight"]{
+  background-color:#101b41!important;
+  background-image:linear-gradient(105deg,#070F28 0%,#3555A4 30%,#101B41 60%,#667FD9 84%,#111933 100%)!important;
+}
+body[data-ticket-variant="concert"] .scratch-surface-thumb[data-foil="rose"]{
+  background-color:#be8398!important;
+  background-image:linear-gradient(105deg,#835465 0%,#FAD5D4 30%,#BE8398 60%,#FFE8DD 84%,#9C5A70 100%)!important;
+}
+body[data-ticket-variant="concert"] .scratch-surface-thumb canvas{
+  /* Review is static, never scratchable; match the static creator's fill. */
+  opacity:0!important;pointer-events:none!important;
+}
