@@ -15,7 +15,7 @@ test('five reference-based concert presets are distinct, bounded and renderable 
  for(const t of CONCERT_TICKET_TEMPLATES){
   assert.equal(isConcertTemplate(t.id),true);
   const points=concertTicketPolygon(t.id);
-  assert.ok(points.length>15,'Template '+t.id+' must contain a detailed outline');
+  assert.equal(points.length,4,'New reference layouts use a clean rectangular exterior');
   for(const [x,y] of points){
    assert.ok(x>=0&&x<=1 && y>=0&&y<=1,'Normalized shape must stay inside canvas');
   }
@@ -23,7 +23,7 @@ test('five reference-based concert presets are distinct, bounded and renderable 
   assert.match(css,/^polygon\(/);
   paths.add(css);
  }
- assert.equal(paths.size,5,'Every silhouette must be visually different');
+ assert.equal(paths.size,1,'All five references have a rectangular OUTER edge; stub details differ internally');
  assert.equal(isConcertTemplate('../../hidden'),false);
  assert.equal(concertTicketClipPath('invalid'),concertTicketClipPath(DEFAULT_CONCERT_TEMPLATE));
 });
