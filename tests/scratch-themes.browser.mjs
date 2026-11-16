@@ -269,6 +269,15 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(await page.locator('#concertLiveQr svg').count(),1);
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
    assert.ok(background.includes('concert-lights.svg'));
+   if(size.name==='mobile'){
+     await page.locator('#concertZoomButton').click();
+     assert.equal(await page.locator('body').getAttribute('data-concert-zoom'),'open');
+     const pan=await page.locator('#scratchDesktopDock').evaluate(el=>({
+       client:el.clientWidth,scroll:el.scrollWidth
+     }));
+     assert.ok(pan.scroll>pan.client+250,'Full-size ticket preview must be horizontally inspectable on phones');
+     await page.locator('#concertZoomButton').click();
+   }
    await page.screenshot({path:resolve(output,size.name+'-live-revealed-ticket.png'),fullPage:true});
    await page.locator(tabSelector+' [data-preview-mode="cover"]').click();
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),1);
@@ -400,6 +409,16 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
    assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
    assert.equal(await page.locator('#bookingAction:visible').count(),0);
    assert.equal(await page.locator('#concertQrRow').evaluate(e=>getComputedStyle(e).visibility),'hidden');
+   assert.equal(await page.locator('#concertFullTicketButton:visible').count(),0,
+     'Full-size recipient view must be inaccessible until the scratch progress threshold');
+   await page.evaluate(()=>document.getElementById('concertFullTicketButton').hidden=false);
+   await page.locator('#concertFullTicketButton').click();
+   assert.equal(await page.locator('#concertFullTicketDialog[open]').count(),1);
+   const large=await page.locator('#concertFullTicketScroll>.card').boundingBox();
+   assert.ok(large.width>=800,'Once unlocked, full-size recipient ticket should be readable on mobile');
+   assert.equal(await page.locator('#concertFullTicketScroll .ticket-underlay').count(),1);
+   await page.locator('#concertCloseZoom').click();
+   assert.equal(await page.locator('#concertFullTicketDialog[open]').count(),0);
    assert.equal(await page.locator('body').getAttribute('data-ticket-variant'),'concert');
    assert.equal(await page.locator('#ticketGrid').textContent().then(v=>v.includes('London, England')),true);
    assert.deepEqual(errors,[]);
