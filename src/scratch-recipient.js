@@ -4,6 +4,7 @@
  * No public or owner review can retrieve personalised scratch data pre-payment.
  */
 import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
+import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const hide = () => new Response('This reveal is not available.', {
   status:404,
   headers:{'cache-control':'no-store','content-type':'text/plain; charset=utf-8','x-content-type-options':'nosniff'}
@@ -56,7 +57,13 @@ export async function scratchRecipientResponse(request, env, ctx) {
         success:true,
         scratchSurface:{style:settings.style,foil:settings.foil,
            ...(getScratchArtwork(settings.artworkId)?{artworkId:settings.artworkId}:{}),
-           theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,variant:settings.variant === 'concert' ? 'concert' : 'ticket'},
+           theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,
+           variant:settings.variant === 'concert' ? 'concert' : 'ticket',
+           ...(settings.variant === 'concert' ? {
+             ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
+             revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
+             linkMode:settings.linkMode === 'qr' ? 'qr' : 'link'
+           } : {})},
         audio:audioSettings,
         reveal:{
           recipient:row.recipient,
