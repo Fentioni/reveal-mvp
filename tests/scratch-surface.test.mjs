@@ -337,11 +337,12 @@ test('concert creator stores template, independent reveal art and URL/QR mode wi
 });
 test('concert ticket fields are saved and restored, validated, and unrelated checkout data remains untouched',async()=>{
  const {env,legacy,state}=makeMocks();
- const values={eventSubtitle:'A special evening',supportAct:'Support Group',venueAddress:'1 Music Lane, London',
-  ticketNumber:'TICKET-123',section:'Standing',level:'Ground',row:'F',seat:'18',gate:'A2'};
+ const values={eventSubtitle:'A special evening',venueAddress:'1 Music Lane, London',
+  section:'Standing',level:'Ground',row:'F',seat:'18',gate:'A2'};
  const form=new FormData();
  form.append('variant','concert');form.append('style','concert');form.append('foil','silver');
- form.append('ticketDetails',JSON.stringify(values));
+ // Historical draft fields should be safely ignored, not displayed or re-saved.
+ form.append('ticketDetails',JSON.stringify({...values,supportAct:'Legacy guest',ticketNumber:'Legacy reference'}));
  const resp=await scratchSurfaceResponse(request('PUT',form),env,{},legacy);
  assert.equal(resp.status,200);
  const saved=(await resp.json()).surface;
@@ -359,7 +360,9 @@ test('concert ticket fields are saved and restored, validated, and unrelated che
    'An invalid field must not overwrite the saved ticket');
  }
  const creator=await fs.promises.readFile(path.join(root,'public/legacy-create.html'),'utf8');
- assert.ok(creator.includes('concertLiveTicketNumber'));
+ assert.ok(!creator.includes('id="concertLiveTicketNumber"'));
+ assert.ok(!creator.includes('id="supportAct"'));
+ assert.ok(!creator.includes('id="ticketNumber"'));
  assert.ok(creator.includes('concertLiveFields'));
  assert.ok(creator.includes('concertPreviewTabsDesktop'));
  assert.ok(creator.includes('concertPreviewTabsMobile'));
@@ -368,6 +371,12 @@ test('concert ticket fields are saved and restored, validated, and unrelated che
  assert.ok(review.includes('reviewConcertExtra'));
  const paid=await fs.promises.readFile(path.join(root,'public/recipient-scratch.html'),'utf8');
  assert.ok(paid.includes('applyConcertTicketFields(data.scratchSurface.ticketDetails)'));
+ assert.ok(!paid.includes('id="recipientConcertNumber"'));
+ const empty=new FormData();
+ empty.append('variant','concert');empty.append('style','concert');empty.append('foil','silver');
+ empty.append('ticketDetails',JSON.stringify({}));
+ assert.equal((await scratchSurfaceResponse(request('PUT',empty),env,{},legacy)).status,200,
+   'All concert ticket-information fields are optional');
 });
 
 test('concert scratch variant reuses ticket surface persistence without adding a new product or changing payment', async () => {
