@@ -631,6 +631,7 @@
     body[data-ticket-variant="concert"] .concert-pickers-left,
     body[data-ticket-variant="concert"] .concert-pickers-right{display:block;min-width:0}
     body[data-ticket-variant="concert"] #concertTemplateSection{margin:0 0 22px}
+    body[data-ticket-variant="concert"] .concert-template-description{font:.75rem/1.3 system-ui,sans-serif;color:#d1c3ce}
     body[data-ticket-variant="concert"] #concertThemeSection{margin:0}
     body[data-ticket-variant="concert"] .concert-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
     body[data-ticket-variant="concert"] .concert-template-thumb{
@@ -773,6 +774,7 @@
   </style>
   
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
+<link rel="stylesheet" href="/concert-layout-presets.css?v=presets-1">
 </head>
 
 <body>
@@ -817,7 +819,7 @@
           <div id="concertPickers" class="concert-pickers">
             <div class="concert-pickers-left">
           <section id="concertTemplateSection" class="concert-build-group" hidden aria-labelledby="concertTemplateHeading">
-            <h3 id="concertTemplateHeading">1. Ticket template</h3>
+            <h3 id="concertTemplateHeading">1. Concert ticket design</h3>
             <p class="field-help">Choose the ticket shape.</p>
             <div id="concertTemplateChoices" class="concert-option-grid" role="group" aria-label="Ticket shape"></div>
           </section>
@@ -1168,7 +1170,7 @@
   <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
-    import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath} from '/concert-ticket-options.js?v=1';
+    import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate} from '/concert-ticket-options.js?v=2';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=2';
@@ -1292,13 +1294,16 @@
       button.dataset.value=shape.id;button.setAttribute('aria-pressed',String(shape.id===concertTemplateId));
       const thumb=document.createElement('span');thumb.className='concert-template-thumb';
       thumb.style.clipPath=concertTicketClipPath(shape.id);
+      thumb.dataset.concertLayout=shape.id;
       const label=document.createElement('strong');label.textContent=shape.label;
-      button.append(thumb,label);
+      const description=document.createElement('span');description.className='concert-template-description';
+      description.textContent=shape.description;
+      button.append(thumb,label,description);
       button.addEventListener('click',()=>{
         if(!ready||busy)return;
         concertTemplateId=shape.id;
         selectConcertOption('concertTemplateChoices',shape.id);
-        concertLivePreview.setMode('cover');
+        concertLivePreview.setMode('revealed');
         setScratchPreview().catch(error=>show(error.message));
         concertLivePreview.render();
       });
@@ -1334,8 +1339,10 @@
       const frame = scratchPreview.canvas.closest(".scratch-static-frame");
       if (frame && frame.parentElement !== dock) dock.appendChild(frame);
       concertLivePreview.position(dock);
-      if (frame) frame.style.clipPath = currentVariant === 'concert'
-        ? concertTicketClipPath(concertTemplateId) : '';
+      if(frame){
+        frame.style.clipPath=currentVariant==='concert'?concertTicketClipPath(concertTemplateId):'';
+        frame.dataset.concertLayout=currentVariant==='concert'?concertTemplateLayout(concertTemplateId):'';
+      }
       scratchPreview.canvas.style.pointerEvents = "none";
       scratchPreview.resize();
     }
@@ -1521,6 +1528,7 @@
         previewFrame.style.clipPath=currentVariant==='concert'
           ? concertTicketClipPath(concertTemplateId) : '';
         previewFrame.dataset.concertTemplate=currentVariant==='concert' ? concertTemplateId : '';
+        previewFrame.dataset.concertLayout=currentVariant==='concert'?concertTemplateLayout(concertTemplateId):'';
         // Creator preview is an un-scratchable static foil. CSS gives a
         // reliable full-card fill regardless of Canvas resize or tab visibility.
         previewFrame.style.backgroundImage=currentVariant==='concert'
@@ -1835,7 +1843,7 @@
         $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
         if(savedSurface.surface.variant==='concert'){
-          concertTemplateId=CONCERT_TICKET_TEMPLATES.some(t=>t.id===savedSurface.surface.ticketTemplate)
+          concertTemplateId=isConcertTemplate(savedSurface.surface.ticketTemplate)
             ? savedSurface.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
           concertRevealThemeId=CONCERT_REVEAL_THEMES.some(t=>t.id===savedSurface.surface.revealTheme)
             ? savedSurface.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
