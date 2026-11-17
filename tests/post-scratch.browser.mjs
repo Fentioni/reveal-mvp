@@ -112,7 +112,8 @@ try{
  await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
  assert.equal(await page.locator('#postTemplate option').count(),15);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
- assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
+ assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
+ assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
  await page.locator('#scratchActualRevealed svg[data-post-template="custom-image"]').waitFor({state:'attached'});

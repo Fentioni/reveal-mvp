@@ -881,7 +881,6 @@
             <section id="postScratchControls" class="field">
 <label for="postTemplate">Revealed template</label><select id="postTemplate"></select>
 <p id="postTemplateDescription" class="field-help"></p>
-<label for="postSubtitle">Subtitle / introduction (optional)</label><input id="postSubtitle" maxlength="100">
 <label for="postVenueAddress">Address / location (optional)</label><input id="postVenueAddress" maxlength="140">
 <div id="postImageControls" hidden>
 <label for="postImagePosition">Image crop position</label><select id="postImagePosition">
@@ -975,6 +974,11 @@
             >
           </div>
 
+
+          <div class="field" id="postSubtitleField" hidden>
+            <label for="postSubtitle">Subtitle / introduction (optional)</label>
+            <input id="postSubtitle" type="text" maxlength="100">
+          </div>
 
           <div class="two-columns">
             <div class="field">
@@ -1324,6 +1328,7 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $('postScratchControls').hidden=isConcert;
+      $('postSubtitleField').hidden=isConcert;
       $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert;

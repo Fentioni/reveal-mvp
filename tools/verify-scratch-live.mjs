@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='reference-panels-1';
+const marker='id="postSubtitleField"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<15;i++){
@@ -26,6 +26,7 @@ try{
   await page.locator('#scratchActualCovered canvas').waitFor({state:'visible',timeout:20000});
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
   assert.equal(await page.locator('#postTemplate option').count(),15);
+  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');
   for(const [field,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Jesus Christ Superstar',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'Drury Lane, London',postSubtitle:'A night to remember',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'}))await page.locator('#'+field).fill(value);
   const img=await page.evaluate(()=>{
    const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');
