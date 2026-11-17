@@ -118,7 +118,7 @@ function neon(svg,d){
  type(svg,'ADMIT ONE',96,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900});
  type(svg,'ADMIT: '+fallback(d.admit,d.recipient),339,577,{size:28,min:19,maxWidth:515,rotate:-90,fill:'#190b19',weight:550});
  type(svg,d.eventTitle,467,62,{size:136,min:64,maxWidth:950,maxLines:2,weight:900,fill:'#ff78c5',leading:.92,role:'title'});
- type(svg,d.subtitle,469,341,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff',role:'subtitle'});
+ type(svg,d.subtitle,469,385,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff',role:'subtitle'});
  type(svg,'ADMIT',1250,284,{size:37,min:22,maxWidth:340,fill:'#f9c1e0',weight:600});
  type(svg,fallback(d.admit,d.recipient),1250,323,{size:69,min:35,maxWidth:310,maxLines:2,fill:'#fff',weight:800});
  seat(svg,d,1642,308,319,'#ff91d5',45);
