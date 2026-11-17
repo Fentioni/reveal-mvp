@@ -152,6 +152,89 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
+
+test('Scratch Ticket creator upload, save, purchaser review and amend retain independent artwork and surprise image',
+ {timeout:90000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ const staging='https://reveal-stage4b-test.michael-fenton9.workers.dev';
+ try{
+   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   let savedReveal,savedSurface,imageBytes;
+   const art=SCRATCH_ARTWORKS[5].id;
+   await page.route(staging+'/**',async route=>{
+     const req=route.request(),u=new URL(req.url()),p=u.pathname;
+     const json=result=>route.fulfill({json:result});
+     if(p==='/api/reveals'&&req.method()==='POST'){
+       const form=await new Response(req.postDataBuffer(),{headers:{'content-type':req.headers()['content-type']}}).formData();
+       const photo=form.get('image');assert.ok(photo&&photo.size>0);
+       imageBytes=Buffer.from(await photo.arrayBuffer());
+       savedReveal={...Object.fromEntries([...form.entries()].filter(([k,v])=>typeof v==='string')),
+         id:'image-check',revision:1,status:'draft',hasImage:true};
+       return json({success:true,id:'image-check',revision:1,editToken:'owner-test-token'});
+     }
+     if(p==='/api/reveals/image-check/scratch-surface'&&req.method()==='PUT'){
+       assert.equal(req.headers()['x-edit-token'],'owner-test-token');
+       const form=await new Response(req.postDataBuffer(),{headers:{'content-type':req.headers()['content-type']}}).formData();
+       assert.equal(form.get('style'),'classic');
+       assert.equal(form.get('artworkId'),art);
+       assert.equal(form.has('coverImage'),false,'Surprise image must not be saved as cover');
+       savedSurface={...Object.fromEntries(form.entries()),hasImage:false,theme:'luxury-elegant'};
+       return json({success:true,surface:savedSurface});
+     }
+     if(p==='/api/reveals/image-check')return json({success:true,reveal:savedReveal});
+     if(p==='/api/reveals/image-check/scratch-surface')return json({success:true,surface:savedSurface,audio:{enabled:false}});
+     if(p==='/api/reveals/image-check/image')return route.fulfill({contentType:'image/png',body:imageBytes});
+     if(p.endsWith('/quiz')||p.endsWith('/gender'))return route.fulfill({status:404});
+     assert.ok(!p.endsWith('/scratch-surface/image'),'Catalogue scratch cover must not retrieve a custom image');
+     assert.ok(!p.startsWith('/r/'),'Purchaser must use owner-only endpoints');
+     return route.fulfill({response:await route.fetch({url:base+p+u.search})});
+   });
+   await page.goto(staging+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
+   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.locator('#scratchArtwork').selectOption(art);
+   await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
+   await page.locator('#recipient').fill('Chloe');
+   await page.locator('#sender').fill('Mick');
+   await page.locator('#eventName').fill('Jesus Christ Superstar');
+   await page.locator('#venue').fill('Theatre Royal, Drury Lane');
+   await page.locator('#personalMessage').fill('A special night');
+   const data=await page.evaluate(()=>{
+     const c=document.createElement('canvas');c.width=800;c.height=1000;
+     const ctx=c.getContext('2d');ctx.fillStyle='#f12b34';ctx.fillRect(0,0,800,1000);
+     return c.toDataURL('image/png').split(',')[1];
+   });
+   await page.locator('#image').setInputFiles({name:'surprise.png',mimeType:'image/png',buffer:Buffer.from(data,'base64')});
+   await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
+   async function checkCurrent(){
+     assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
+     assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
+     assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
+     assert.equal(await page.locator('#scratchActualRevealed #eventName').textContent(),'Jesus Christ Superstar');
+     assert.equal(await page.locator('#scratchActualRevealed #eventImage').evaluate(e=>e.naturalWidth),800);
+     assert.equal(await page.locator('#scratchActualRevealed canvas').count(),0);
+     const px=await page.locator('#scratchActualCovered canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data));
+     assert.ok(px[3]===255&&!(px[0]>220&&px[1]<60&&px[2]<70),'Opaque catalogue cover must not show the red uploaded surprise photograph');
+   }
+   await checkCurrent();
+   await page.locator('#reviewButton').click();
+   await page.waitForURL('**/reveal?id=image-check',{timeout:15000});
+   await page.locator('#scratchActualReview:visible').waitFor();
+   await checkCurrent();
+   assert.equal(await page.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
+   await page.locator('#editButton').click();
+   await page.waitForURL('**/legacy-create?**',{timeout:15000});
+   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
+   await checkCurrent();
+   assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
+   assert.equal(await page.locator('.preview-details-toggle:visible').count(),0);
+   assert.deepEqual(errors,[]);
+   await page.close();
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+
 test('creator shows only the 20-artwork dropdown without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
