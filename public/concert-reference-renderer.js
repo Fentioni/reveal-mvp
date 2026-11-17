@@ -245,6 +245,23 @@ export function renderConcertReference(root,raw){
  const svg=el('svg',{class:'ct-reference-art',viewBox:'0 0 '+W+' '+H,preserveAspectRatio:'xMidYMid meet',role:'img','aria-label':'Concert ticket: '+data.eventTitle,'data-event-title':data.eventTitle,'data-reference-preset':data.preset});
  defs(svg);
  renderers[data.preset](svg,data);
+ // Preserve a REAL booking QR in QR mode; decorative barcodes never encode
+ // a ticket number. For paid recipients QR stays covered until 70% scratched.
+ const qr=root.querySelector('#concertLiveQr:not([hidden]) svg, #ownerConcertQr:not([hidden]) svg, #concertQrRow:not([hidden]) svg');
+ if(qr){
+  const spots={'neon-tour':[286,524,92],'editorial-concert':[352,540,98],
+   'promo-poster':[278,527,108],'premium-headliner':[1812,545,94],
+   'rock-split':[1772,546,96]};
+  const [x,y,size]=spots[data.preset];
+  rect(svg,x-5,y-5,size+10,size+10,'#fff',{rx:4});
+  const holder=el('svg',{class:'ct-reference-qr',x,y,width:size,height:size,viewBox:'0 0 100 100'},svg);
+  const copy=qr.cloneNode(true);
+  copy.removeAttribute('style');
+  copy.setAttribute('x','0');copy.setAttribute('y','0');
+  copy.setAttribute('width','100');copy.setAttribute('height','100');
+  holder.append(copy);
+  if(root.classList.contains('concert-ticket'))holder.style.visibility='hidden';
+ }
  target.append(svg);
  root.dataset.referenceLayout=data.preset;
 }
