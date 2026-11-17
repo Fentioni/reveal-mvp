@@ -502,7 +502,11 @@
         // The link is also available below the finished card once the user
         // has substantially scratched it; Canvas overlays otherwise block taps.
         if (bookingLink && !concertQrMode && p >= 0.7) $('bookingAction').hidden = false;
-        if(concertQrMode && p >= 0.7) $('concertQrRow').style.visibility='visible';
+        if(concertQrMode && p >= 0.7){
+          $('concertQrRow').style.visibility='visible';
+          const printedQr=$('card').querySelector('.ct-reference-qr');
+          if(printedQr)printedQr.style.visibility='visible';
+        }
         if(isConcert && p>=0.7){
           $('closingDetails').style.visibility='visible';
           $('concertFullTicketButton').hidden=false;
@@ -567,7 +571,11 @@
     cinematic.reset();
     scratch.reset();
     $('bookingAction').hidden = true;
-    if(concertQrMode) $('concertQrRow').style.visibility='hidden';
+    if(concertQrMode){
+      $('concertQrRow').style.visibility='hidden';
+      const printedQr=$('card').querySelector('.ct-reference-qr');
+      if(printedQr)printedQr.style.visibility='hidden';
+    }
     if(document.body.dataset.ticketVariant==='concert')$('closingDetails').style.visibility='hidden';
     $('concertFullTicketButton').hidden=true;
     if($('concertFullTicketDialog').open)$('concertFullTicketDialog').close();
