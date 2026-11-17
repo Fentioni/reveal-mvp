@@ -736,6 +736,16 @@ test('all five reference-based concert layouts keep photo and text in locked zon
     assert.ok(titleSafety.count>=1,'Reference ticket must render the event heading');
     assert.deepEqual(titleSafety.overlaps,[],
       'Headlines and optional subtitles must never collide: '+JSON.stringify(titleSafety));
+    if(name==='neon-tour'){
+      const admissionGap=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+        const art=frame.querySelector(':scope > svg.ct-reference-art');
+        const admit=art.querySelector('[data-ct-role="stub-admit"]').getBoundingClientRect();
+        const barcode=art.querySelector('[data-ct-role="barcode"]').getBoundingClientRect();
+        return {admitRight:admit.right,barcodeLeft:barcode.left};
+      });
+      assert.ok(admissionGap.admitRight+3<admissionGap.barcodeLeft,
+        'Neon Tour rotated ADMIT text must not overlap its barcode: '+JSON.stringify(admissionGap));
+    }
     assert.equal(layout.layout,name);
     assert.equal(layout.image,'true');
     assert.equal(layout.grid,'grid');
