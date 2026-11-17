@@ -145,7 +145,8 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal(await page.locator('.concert-template-option').count(),4);
    assert.equal(await page.locator('.concert-template-option[data-value="rock-split"]').count(),0);
    assert.equal(await page.locator('.concert-theme-option, #concertThemeSection, #concertThemeChoices').count(),0,'Artwork selector must not exist');
-   assert.equal(await page.locator('#concertLinkModeField:visible').count(),1);
+   assert.equal(await page.locator('#concertLinkModeField, #concertLinkMode').count(),0,'No QR selector');
+   assert.equal(await page.locator('#ticketUrl:visible').count(),1,'Optional clickable link remains');
    assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
    assert.equal(await page.locator('#image').count(),1);
    assert.equal(await page.locator('#scratchArtwork').getAttribute('required'),null);
@@ -171,8 +172,6 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    }
    assert.equal(silhouettes.size,1,'Four source references have a common clean rectangular outer edge');
    // Canvas paint timestamps can differ; shape is asserted through the computed clip path above.
-   await page.locator('#concertLinkMode').selectOption('qr');
-   assert.equal(await page.locator('#concertLinkMode').inputValue(),'qr');
    const paintings=new Set();
    const centreColours=new Set();
    const visibleGradients=new Set();
@@ -241,7 +240,6 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#eventDate').fill('2027-03-20');
    await page.locator('#eventTime').fill('19:30');
    await page.locator('#ticketUrl').fill('https://example.org/tickets/123');
-   await page.locator('#concertLinkMode').selectOption('qr');
    await page.locator('.concert-template-option[data-value="premium-headliner"]').click();
    assert.equal(await page.locator('body').getAttribute('data-concert-preview'),'revealed');
    assert.equal(await page.locator('#concertRevealedPreviewFrame:visible').count(),1);
@@ -274,7 +272,8 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(await page.locator('#concertLiveSender:visible').count(),0,
      'Sender belongs with the personal message, not another vertical stub stripe');
    assert.equal((await page.locator('#concertLiveMessage').textContent()).trim(),'A night to remember!');
-   assert.equal(await page.locator('#concertLiveQr svg').count(),1);
+   assert.equal(await page.locator('#concertLiveQr, .ct-reference-qr').count(),0);
+   assert.equal(await page.locator('#concertLiveLink').getAttribute('title'),'https://example.org/tickets/123');
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
    assert.ok(background==='none'||background.includes('classic.svg'));
    assert.equal(await page.locator('#concertRevealedPreviewFrame svg.ct-reference-art').count(),1,
@@ -475,7 +474,7 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
        cell.append(small,strong);rows.append(cell);
      }
      document.getElementById('bookingCard').hidden=false;
-     document.querySelector('#bookingCard .booking-label').textContent='QR CODE';
+     document.querySelector('#bookingCard .booking-label').textContent='Official ticket or booking link';
      document.getElementById('bookingValue').textContent='Optional booking link';
    });
    const layout=await page.evaluate(()=>{
@@ -545,7 +544,7 @@ test('concert owner static review remains a landscape 3:1 ticket, not a tall pos
   }
  }finally{await browser.close();}
 });
-test('paid concert QR is generated from the chosen URL but is hidden until scratching',
+test('legacy paid concert QR configuration provides a clickable booking link after scratching',
  {timeout:90000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -561,13 +560,23 @@ test('paid concert QR is generated from the chosen URL but is hidden until scrat
      'Use just four separated ticket credentials rather than six narrow vertical columns');
    assert.equal(await page.locator('#recipientConcertNumber').count(),0,
      'Legacy reference must not appear on recipient ticket');
-   assert.equal(await page.locator('#concertQrRow svg').count(),1,'Generate a real local SVG QR code');
-   assert.equal(await page.locator('#bookingRow:visible').count(),0,'Link mode is mutually exclusive with QR mode');
+    assert.equal(await page.locator('#concertQrRow, .ct-reference-qr').count(),0);
+    assert.equal(await page.locator('#bookingUrl').getAttribute('href'),'https://example.org/concert?t=42');
+    assert.equal(await page.locator('#bookingAction').getAttribute('href'),'https://example.org/concert?t=42');
    assert.equal(await page.locator('#bookingAction:visible').count(),0);
-   assert.equal(await page.locator('#concertQrRow').evaluate(e=>getComputedStyle(e).visibility),'hidden');
    assert.equal(await page.locator('#concertFullTicketButton:visible').count(),0,
      'Full-size recipient view must be inaccessible until the scratch progress threshold');
-   await page.evaluate(()=>document.getElementById('concertFullTicketButton').hidden=false);
+    // Scratch using real pointer events, rather than manually unlocking the button.
+    const foil=await page.locator('#foilCanvas').boundingBox();
+    for(let y=foil.y+6;y<foil.y+foil.height;y+=12){
+      await page.mouse.move(foil.x+5,y);
+      await page.mouse.down();
+      await page.mouse.move(foil.x+foil.width-5,y,{steps:20});
+      await page.mouse.up();
+    }
+    await page.locator('#bookingAction:visible').waitFor({timeout:15000});
+    assert.equal(await page.locator('#bookingAction').getAttribute('target'),'_blank');
+    assert.equal(await page.locator('#concertFullTicketButton:visible').count(),1);
    await page.locator('#concertFullTicketButton').click();
    assert.equal(await page.locator('#concertFullTicketDialog[open]').count(),1);
    const large=await page.locator('#concertFullTicketScroll>.card').boundingBox();

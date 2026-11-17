@@ -278,7 +278,6 @@
   @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 <link rel="stylesheet" href="/scratch-themes.css?v=themes-13-1">
-<script defer src="/qr.js"></script>
 <link rel="stylesheet" href="/concert-ticket-premium.css?v=premium-10">
 <link rel="stylesheet" href="/concert-layout-presets.css?v=presets-3">
 <link rel="stylesheet" href="/concert-reference-renderer.css?v=reference-1">
@@ -316,7 +315,6 @@
           <dd><a id="bookingUrl" rel="noopener noreferrer nofollow" referrerpolicy="no-referrer"
             target="_blank"></a></dd>
         </dl>
-        <div id="concertQrRow" class="qr-row" hidden aria-label="QR code for your event link"></div>
       </article>
       <div id="closingDetails" hidden>
         <div class="message-wrap" id="messageWrap" hidden><p class="message" id="message"></p></div>
@@ -343,7 +341,7 @@
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=concert-professional-6';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
-  import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-5';
+  import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
    import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
   import { ScratchCinematicAudio } from '/scratch-audio.js?v=first-scratch-v1';
@@ -357,7 +355,6 @@
   let soundEnabled = true;
   const text = (id,value) => { $(id).textContent = value ?? ''; };
   let bookingLink = '';
-  let concertQrMode=false;
   function applyConcertTicketFields(raw) {
     const details=cleanConcertTicketDetails(raw);
     text('concertEventSubtitle',details.eventSubtitle||'');
@@ -389,7 +386,7 @@
     $('closingDetails').hidden = !model.sender && !model.message;
     text('sender',model.sender ? 'With love, from ' + model.sender : '');
     bookingLink = model.ticketUrl;
-    $('bookingRow').hidden = !bookingLink || concertQrMode;
+    $('bookingRow').hidden = !bookingLink;
     if (bookingLink) {
       $('bookingUrl').textContent = bookingLink;
       $('bookingUrl').href = bookingLink;
@@ -424,15 +421,6 @@
       $('card').dataset.concertLayout=concertTemplateLayout(shape);
       $('card').dataset.hasImage=model.hasEventImage?'true':'false';
       $('card').style.clipPath=concertTicketClipPath(shape);
-      concertQrMode=data.scratchSurface.linkMode==='qr' && Boolean(model.ticketUrl);
-      $('bookingRow').hidden=concertQrMode || !model.ticketUrl;
-      $('concertQrRow').hidden=!concertQrMode;
-      if(concertQrMode){
-        if(!window.QRCode?.generateSVG)throw new Error('QR code generator unavailable.');
-        const code=window.QRCode.generateSVG(model.ticketUrl,{ecclevel:'M',modulesize:4,margin:4});
-        $('concertQrRow').replaceChildren(code);
-        $('concertQrRow').style.visibility='hidden';
-      }
     }
     if(isConcert) $('card').style.borderColor =
       {gold:'#d3a752',silver:'#d2dce7',midnight:'#6079d4',rose:'#d69cac'}[data.scratchSurface.foil] || '#d3a752';
@@ -449,12 +437,12 @@
       $('admitRow').hidden=true;
       $('name').textContent=admit?.value || model.recipient;
       $('concertStubHeading').textContent='ADMIT';
-      // Keep QR and link inside the stub and personal message beneath the
+      // Keep the link inside the stub and personal message beneath the
       // fixed-size ticket; neither should enlarge the scratchable Canvas.
       $('card').after($('closingDetails'));
       $('closingDetails').classList.add('concert-after-card');
       $('closingDetails').style.visibility='hidden';
-      $('card').querySelector('.ticket-identity').append($('bookingRow'),$('concertQrRow'));
+      $('card').querySelector('.ticket-identity').append($('bookingRow'));
     }
     if (model.hasEventImage) {
       const image = $('eventImage');
@@ -501,12 +489,7 @@
         $('progress').value = Math.round(p*100);
         // The link is also available below the finished card once the user
         // has substantially scratched it; Canvas overlays otherwise block taps.
-        if (bookingLink && !concertQrMode && p >= 0.7) $('bookingAction').hidden = false;
-        if(concertQrMode && p >= 0.7){
-          $('concertQrRow').style.visibility='visible';
-          const printedQr=$('card').querySelector('.ct-reference-qr');
-          if(printedQr)printedQr.style.visibility='visible';
-        }
+        if (bookingLink && p >= 0.7) $('bookingAction').hidden = false;
         if(isConcert && p>=0.7){
           $('closingDetails').style.visibility='visible';
           $('concertFullTicketButton').hidden=false;
@@ -571,11 +554,6 @@
     cinematic.reset();
     scratch.reset();
     $('bookingAction').hidden = true;
-    if(concertQrMode){
-      $('concertQrRow').style.visibility='hidden';
-      const printedQr=$('card').querySelector('.ct-reference-qr');
-      if(printedQr)printedQr.style.visibility='hidden';
-    }
     if(document.body.dataset.ticketVariant==='concert')$('closingDetails').style.visibility='hidden';
     $('concertFullTicketButton').hidden=true;
     if($('concertFullTicketDialog').open)$('concertFullTicketDialog').close();

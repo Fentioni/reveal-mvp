@@ -3,7 +3,7 @@
  * Receives current unsaved form values; never fetches protected recipient data.
  */
 import {CONCERT_TICKET_FIELDS} from './concert-ticket-fields.js';
-import {renderConcertReference} from './concert-reference-renderer.js?v=reference-5';
+import {renderConcertReference} from './concert-reference-renderer.js?v=reference-6';
 import {concertTicketClipPath,concertTemplateLayout} from './concert-ticket-options.js';
 const foilNames=['gold','silver','midnight','rose'];
 const safeUrl=raw=>{
@@ -62,18 +62,10 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $('concertLiveSender').hidden=true;
   $('concertLiveMessage').textContent=$('personalMessage').value.trim();
   $('concertLiveMessage').hidden=!$('personalMessage').value.trim();
-  const qr=$('concertLiveQr'),link=$('concertLiveLink');
-  qr.hidden=true;link.hidden=true;qr.replaceChildren();
+  const link=$('concertLiveLink');
   const url=safeUrl($('ticketUrl').value.trim());
-  if(url){
-   if($('concertLinkMode').value==='qr' && window.QRCode?.generateSVG){
-    qr.append(window.QRCode.generateSVG(url,{ecclevel:'M',modulesize:3,margin:3}));
-    qr.hidden=false;
-   }else if($('concertLinkMode').value==='link'){
-    link.textContent='Booking link';
-    link.title=url;link.hidden=false;
-   }
-  }
+  link.textContent=url?'Booking link':'';
+  link.title=url;link.hidden=!url;
   const img=$('concertLiveImage'),src=getImage()||'';
   img.hidden=!src;
   frame.dataset.hasImage=src?'true':'false';
@@ -118,7 +110,6 @@ export function createConcertLivePreview({getVariant,getTemplate,getTheme,getIma
   $(id).addEventListener('input',render);
   $(id).addEventListener('change',render);
  }
- $('concertLinkMode').addEventListener('change',render);
  for(const tab of document.querySelectorAll('.concert-preview-tab')){
   tab.addEventListener('click',()=>{if(getVariant()==='concert')setMode(tab.dataset.previewMode);});
  }

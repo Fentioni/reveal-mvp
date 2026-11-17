@@ -1010,14 +1010,6 @@
             ></textarea>
           </div>
 
-          <div id="concertLinkModeField" class="field" hidden>
-            <label for="concertLinkMode">4. Add a link or QR code (optional)</label>
-            <select id="concertLinkMode">
-              <option value="link">Show a clickable link</option>
-              <option value="qr">Show a scannable QR code</option>
-            </select>
-            <p class="field-help">A QR code is generated from the URL you enter below. It is never shown before payment.</p>
-          </div>
           <div class="field">
             <label for="ticketUrl" id="ticketUrlLabel">Official ticket or booking link</label>
             <p class="field-help">
@@ -1073,7 +1065,6 @@
             <span id="concertLiveSender" class="concert-live-ref" hidden></span>
             <dl id="concertLiveStubFields" class="concert-live-stub-fields"></dl>
             <span class="ct-barcode-art" aria-hidden="true"></span>
-            <div id="concertLiveQr" class="concert-qr-preview" hidden></div>
             <span id="concertLiveLink" class="concert-preview-link" hidden></span>
           </div>
         </section>
@@ -1161,13 +1152,12 @@
     </div>
   </main>
 
-  <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-6';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
-    import {createConcertLivePreview} from '/concert-live-preview.js?v=7';
+    import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1232,14 +1222,13 @@
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert;
       $("concertTemplateSection").hidden = !isConcert;
-      $("concertLinkModeField").hidden = !isConcert;
       $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
       const uploadDock=$("concertEventUploadDock");
       uploadDock.hidden=!isConcert;
       if(isConcert) uploadDock.append(upload);
       else form.querySelector(".scratch-choice").append(upload);
-      $("ticketUrlLabel").textContent=isConcert ? "Link or QR code destination" : "Official ticket or booking link";
+      $("ticketUrlLabel").textContent=isConcert ? "4. Add a clickable link (optional)" : "Official ticket or booking link";
       $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add an image";
       $("imageUploadHelp").textContent = isConcert
         ? "JPEG, PNG or WebP · maximum 10 MB · at least 400 × 240 pixels. For best results, use a high-resolution portrait event poster (e.g. 1200 × 1600 px). The image sits in a small area of the revealed ticket and may be cropped, so keep important text away from its edges. It is never shown on the scratch cover."
@@ -1639,10 +1628,6 @@
       event.preventDefault();
 
       if (!ready || busy || !form.reportValidity()) return;
-      if(currentVariant==='concert' && $('concertLinkMode').value==='qr' && !$('ticketUrl').value.trim()){
-        show('Enter a URL to generate the QR code. Or choose a clickable link.');
-        $('ticketUrl').focus();return;
-      }
       if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage) {
         show("Choose an image using Add an image to create your custom scratch-card cover.");
         $("image").focus();
@@ -1706,7 +1691,7 @@
         if(currentVariant==='concert'){
           surfaceBody.append('ticketTemplate',concertTemplateId);
           surfaceBody.append('revealTheme',concertRevealThemeId);
-          surfaceBody.append('linkMode',$('concertLinkMode').value);
+          surfaceBody.append('linkMode','link');
           surfaceBody.append('ticketDetails',JSON.stringify(
             Object.fromEntries(CONCERT_TICKET_FIELDS.map(field=>[field.id,$(field.id).value.trim()]))
           ));
@@ -1825,7 +1810,6 @@
             ? savedLayout : DEFAULT_CONCERT_TEMPLATE;
           concertRevealThemeId=CONCERT_REVEAL_THEMES.some(t=>t.id===savedSurface.surface.revealTheme)
             ? savedSurface.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
-          $('concertLinkMode').value=savedSurface.surface.linkMode==='qr'?'qr':'link';
           for(const field of CONCERT_TICKET_FIELDS){
             $(field.id).value=savedSurface.surface.ticketDetails?.[field.id] || '';
           }

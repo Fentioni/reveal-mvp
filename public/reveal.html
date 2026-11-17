@@ -910,7 +910,6 @@
         <div id="bookingCard" class="booking-card" hidden>
           <div class="booking-label">Official ticket or booking link</div>
           <div id="bookingValue" class="booking-value"></div>
-          <div id="ownerConcertQr" class="owner-concert-qr" hidden></div>
         </div>
       </section>
 
@@ -1030,7 +1029,7 @@
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
-    import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-5';
+    import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
     import {getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {applyScratchTheme,getScratchTheme,DEFAULT_SCRATCH_THEME} from '/scratch-themes.js?v=themes-13-1';
     'use strict';
@@ -1395,22 +1394,10 @@
         // The owner review must show the SAVED foil, not the thumb's
         // historical gold background (the hidden canvas can be transparent).
         ownerFoilSurface.dataset.foil=['gold','silver','midnight','rose'].includes(foil)?foil:'gold';
-        if(result.surface.linkMode==='qr' && reveal.ticketUrl){
-          if(window.QRCode?.generateSVG){
-            document.getElementById('ownerConcertQr').replaceChildren(
-              window.QRCode.generateSVG(reveal.ticketUrl,{ecclevel:'M',modulesize:4,margin:4})
-            );
-            document.getElementById('ownerConcertQr').hidden=false;
-            document.getElementById('bookingValue').hidden=true;
-            elements.bookingCard.querySelector('.booking-label').textContent='QR code destination';
-          }
-        } else {
-          document.getElementById('ownerConcertQr').hidden=true;
-          document.getElementById('bookingValue').hidden=false;
-        }
+        document.getElementById('bookingValue').hidden=false;
       }
       if (isConcert) {
-        // Keep the 2.15:1 ticket fixed; QR/link and credentials go into the
+        // Keep the ticket fixed; link and credentials go into the
         // detachable stub rather than expanding the event panel vertically.
         const ticket = document.querySelector('.review-shell > article.ticket');
         const stub = document.querySelector('.review-shell > .review-heading');
