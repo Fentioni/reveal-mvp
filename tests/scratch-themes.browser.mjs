@@ -132,6 +132,9 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     });
     assert.equal(await owner.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
     assert.equal(await owner.locator('#scratchActualReview button').count(),2);
+    assert.equal(await owner.locator('#scratchActualCovered h1,#scratchActualRevealed h1,#scratchActualCovered .eyebrow,#scratchActualRevealed .eyebrow,#scratchActualCovered .intro,#scratchActualRevealed .intro').count(),0,'Neither preview repeats recipient page heading or instructions');
+    assert.equal(await owner.locator('#scratchActualCovered main').evaluate(el=>getComputedStyle(el).paddingTop),'0px');
+    assert.equal(await recipient.locator('h1').count(),1,'Recipient page retains its own heading and instructions');
      assert.equal(await owner.locator('#scratchActualRevealed a[href]').count(),0);
      const readPanel=()=>owner.locator('#scratchActualReview').evaluate(section=>{
        const a=section.querySelector('#scratchActualCovered'),b=section.querySelector('#scratchActualRevealed');
@@ -299,6 +302,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'covered');
+   assert.equal(await page.locator('#scratchActualCovered h1,#scratchActualRevealed h1,#scratchActualCovered .eyebrow,#scratchActualRevealed .eyebrow,#scratchActualCovered .intro,#scratchActualRevealed .intro').count(),0);
+   assert.equal(await page.locator('#scratchActualCovered main').evaluate(el=>getComputedStyle(el).paddingTop),'0px');
     assert.equal(await page.locator('#scratchActualCovered').evaluate(x=>getComputedStyle(x).opacity),'1');
     assert.equal(await page.locator('#scratchActualRevealed').evaluate(x=>getComputedStyle(x).opacity),'0');
     assert.equal(await page.locator('#scratchCreatorActual').evaluate(x=>x.parentElement.id||x.parentElement.className),size.name==='mobile'?'scratchMobileDock':'preview-column');

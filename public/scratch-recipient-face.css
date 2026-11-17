@@ -46,7 +46,8 @@
 :host *{box-sizing:border-box}
 :host [hidden]{display:none!important}
 .scratch-preview-stage{color:#fcf5e6;background:radial-gradient(circle at 15% 10%,#a57f3a2b,transparent 32%),radial-gradient(circle at 85% 85%,#7962ca2a,transparent 35%),#10111c;border-radius:19px;overflow:hidden}
-.scratch-preview-stage main{padding-bottom:26px}
+.scratch-preview-stage main{padding-block:0}
+.scratch-preview-stage #bookingAction{margin-bottom:12px}
 .scratch-preview-themed{background:radial-gradient(ellipse at 15% 13%,color-mix(in srgb,var(--scratch-accent) 45%,transparent),transparent 49%),radial-gradient(ellipse at 91% 75%,color-mix(in srgb,var(--scratch-highlight) 13%,transparent),transparent 50%),linear-gradient(150deg,var(--scratch-bg),var(--scratch-bg2) 63%,var(--scratch-bg))}
 .scratch-preview-themed .eyebrow{color:var(--scratch-highlight)}
 :host #foilCanvas{pointer-events:none!important;touch-action:auto!important;cursor:default!important}

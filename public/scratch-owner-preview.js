@@ -8,7 +8,7 @@ import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=post-templates-1';
+const stylesheet='/scratch-recipient-face.css?v=post-preview-compact-2';
 const active=new WeakMap();
 const boundSwitches=new WeakSet();
 function setupPreviewSwitch(section,covered,revealed){
@@ -50,12 +50,9 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface})
  const screen=make('div','','scratch-preview-stage');
  const main=make('main');
  screen.append(main);root.append(screen);
- const eyebrow=make('div',artwork?'A special scratch reveal':theme.icon+' '+theme.label+' reveal','eyebrow');
- const title=make('h1','A surprise for '+(model.recipient||'you'));
- const intro=make('p','Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.','intro');
  const card=make('div','','card');
  card.id='card';
- main.append(eyebrow,title,intro,card);
+ main.append(card);
  await renderPostScratchFace(card,reveal,surface.postScratch,eventImage);
  if(!artwork){
   setPortraitFaceTheme(card,theme.id);
