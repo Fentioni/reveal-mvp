@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='data-editor-revision="2"';
+const marker='data-editor-revision="3"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<35;i++){
@@ -31,7 +31,8 @@ try{
     return {sameForm:editor.parentElement===review.parentElement,link:bounds(link),editor:bounds(editor),review:bounds(review),visible:!editor.hidden};
    });
    assert.ok(coords.sameForm&&coords.visible&&coords.link.bottom<=coords.editor.top&&coords.editor.bottom<=coords.review.top);
-   console.log('LIVE EDITOR POSITION',viewport.width,JSON.stringify(coords));
+   assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Upload immediately precedes image editor with exact label');
+   console.log('LIVE EDITOR AND UPLOAD POSITION',viewport.width,JSON.stringify(coords));
    await page.locator('#postImageControls').screenshot({path:'test-output/scratch-live/'+viewport.width+'-editor-at-bottom.png'});
   }finally{await page.close();}
  }

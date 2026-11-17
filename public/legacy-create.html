@@ -894,43 +894,7 @@
 <label for="postTemplate">Revealed template</label><select id="postTemplate"></select>
 <p id="postTemplateDescription" class="field-help"></p>
 <p id="postTemplateWarning" class="field-help" role="status"></p>
-</section><div class="scratch-one-upload"><div class="field">
-                <label id="imageUploadLabel" for="image">Add an image</label>
-                <p id="imageUploadHelp" class="field-help">Optional: upload a picture for your scratch card.</p>
-
-                <input
-                  id="image"
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                >
-
-                <div class="warning-box">
-                  Avoid uploading visible QR codes, barcodes or other
-                  information that could allow somebody else to use the real ticket.
-                </div>
-
-                <div id="imagePreviewWrap" class="image-preview-wrap">
-                  <img
-                    id="imagePreview"
-                    class="image-preview"
-                    alt="Selected gift image"
-                  >
-
-                  <div class="image-caption">
-                    <span id="imageCaption">Image selected</span>
-                    <button
-                      id="removeImageButton"
-                      class="remove-image-button"
-                      type="button"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-
-            </div>
+</section>
             <input type="checkbox" id="scratchAudioEnabled" hidden aria-hidden="true" tabindex="-1">
 <div id="concertPreviewTabsMobile" class="concert-preview-tabs" role="tablist" aria-label="Concert ticket preview" hidden>
             <button type="button" class="concert-preview-tab" data-preview-mode="cover" role="tab" aria-selected="true">Scratch cover</button>
@@ -1081,7 +1045,45 @@
             >
           </div>
 
-          <section id="postImageControls" data-placement="form-bottom" data-editor-revision="2" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
+          <div class="scratch-one-upload" id="scratchImageUpload"><div class="field">
+                <label id="imageUploadLabel" for="image">Add Image (Optional)</label>
+                <p id="imageUploadHelp" class="field-help">Optional: upload a picture for your scratch card.</p>
+
+                <input
+                  id="image"
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                >
+
+                <div class="warning-box">
+                  Avoid uploading visible QR codes, barcodes or other
+                  information that could allow somebody else to use the real ticket.
+                </div>
+
+                <div id="imagePreviewWrap" class="image-preview-wrap">
+                  <img
+                    id="imagePreview"
+                    class="image-preview"
+                    alt="Selected gift image"
+                  >
+
+                  <div class="image-caption">
+                    <span id="imageCaption">Image selected</span>
+                    <button
+                      id="removeImageButton"
+                      class="remove-image-button"
+                      type="button"
+                    >
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+
+          <section id="postImageControls" data-placement="form-bottom" data-editor-revision="3" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
             <div class="post-image-editor-heading">
               <h3 id="postImageEditorTitle">Edit your image</h3>
               <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
@@ -1298,7 +1300,7 @@
       for(const axis of ['X','Y']){const n=Number($('postImagePan'+axis).value);$('postImagePan'+axis+'Value').textContent=n===0?'Centre':(n>0?'+':'')+n;}
       $('postTemplateDescription').textContent=t.description;
       $('postShadeValue').textContent=$('postShade').value+'%';
-      $('imageUploadLabel').textContent=custom?'Upload your full-card image':'Optional surprise image';
+      $('imageUploadLabel').textContent='Add Image (Optional)';
       $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.round(p.w*2)+' × '+Math.round(p.h*2)+' px. '+(p.full?'Use image fit, zoom and position to compose your full-card image.':'Adjust the size and position within the fixed image frame.')+' Only appears after scratching.';
     }
     const imageEditIds=new Set(['postImagePosition','postImageFit','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade']);
@@ -1396,9 +1398,9 @@
       const uploadDock=$("concertEventUploadDock");
       uploadDock.hidden=!isConcert;
       if(isConcert) uploadDock.append(upload);
-      else form.querySelector(".scratch-choice").append(upload);
+      else $('postImageControls').before(upload);
       $("ticketUrlLabel").textContent=isConcert ? "4. Add a clickable link (optional)" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add a surprise image (optional)";
+      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add Image (Optional)";
       $("imageUploadHelp").textContent = isConcert
         ? "JPEG, PNG or WebP · maximum 10 MB · at least 400 × 240 pixels. For best results, use a high-resolution portrait event poster (e.g. 1200 × 1600 px). The image sits in a small area of the revealed ticket and may be cropped, so keep important text away from its edges. It is never shown on the scratch cover."
         : "This photo appears ONLY after scratching. Your chosen scratch-card artwork stays on the front. JPEG, PNG or WebP, up to 10 MB.";
