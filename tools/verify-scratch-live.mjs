@@ -21,6 +21,7 @@ try{
   console.log('Live module',JSON.stringify({status:module.status(),oldHeader:code.includes(forbidden),compact:code.includes('main.append(card);'),cache:module.headers()['cache-control']}));
   assert.equal(module.status(),200);assert.ok(code.includes('main.append(card);'));assert.ok(!code.includes(forbidden));
   await page.locator('#scratchActualCovered canvas').waitFor({state:'visible',timeout:20000});
+  assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Concert-only full-size control must not appear in Scratch Ticket creator');
   await page.locator('#scratchCreatorActual').screenshot({path:'test-output/scratch-live/'+viewport.width+'-covered.png'});
   for(const mode of ['covered','revealed']){
    await page.locator('[data-scratch-preview-mode="'+mode+'"]').click();

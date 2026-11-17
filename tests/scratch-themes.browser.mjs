@@ -300,6 +300,7 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
    await page.locator('#scratchArtwork:enabled').waitFor();
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
+   assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'covered');
    assert.equal(await page.locator('#scratchActualCovered h1,#scratchActualRevealed h1,#scratchActualCovered .eyebrow,#scratchActualRevealed .eyebrow,#scratchActualCovered .intro,#scratchActualRevealed .intro').count(),0);

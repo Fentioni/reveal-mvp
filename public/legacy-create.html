@@ -570,6 +570,7 @@
     body[data-ticket-variant="concert"][data-concert-preview="revealed"] .scratch-static-frame{display:none!important}
     body[data-ticket-variant="concert"][data-concert-preview="revealed"] #concertRevealedPreviewFrame{display:grid}
     .preview-details-toggle{display:none!important}
+    body:not([data-ticket-variant="concert"]) #concertZoomButton{display:none!important}
     body[data-ticket-variant="ticket"] .scratch-static-frame,
     body[data-ticket-variant="ticket"] .scratch-mobile-caption,
     body[data-ticket-variant="ticket"] #concertPreviewNote{display:none!important}
@@ -1088,7 +1089,7 @@
             <button type="button" class="concert-preview-tab" data-preview-mode="cover" role="tab" aria-selected="true">Scratch cover</button>
             <button type="button" class="concert-preview-tab" data-preview-mode="revealed" role="tab" aria-selected="false">Revealed ticket</button>
           </div>
-        <button id="concertZoomButton" type="button" aria-pressed="false">View full-size ticket</button>
+        <button id="concertZoomButton" type="button" aria-pressed="false" hidden>View full-size ticket</button>
         <div id="scratchDesktopDock" class="scratch-desktop-dock"></div>
         <section id="concertRevealedPreviewFrame" class="concert-live-ticket" aria-label="Static revealed concert ticket preview" hidden>
           <div class="concert-live-main">
@@ -1292,6 +1293,12 @@
       currentVariant = variant === "concert" ? "concert" : "ticket";
       document.body.dataset.ticketVariant = currentVariant;
       const isConcert = currentVariant === "concert";
+      $("concertZoomButton").hidden=!isConcert;
+      if(!isConcert){
+        document.body.dataset.concertZoom='closed';
+        $("concertZoomButton").textContent='View full-size ticket';
+        $("concertZoomButton").setAttribute('aria-pressed','false');
+      }
       document.title = isConcert
         ? "Create Scratch Concert Ticket Reveal | Reveal"
         : "Create Ticket & Concert Reveal | Reveal";
