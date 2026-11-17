@@ -48,10 +48,13 @@ function text(svg,zone,value,ghost=false){
 // Decorations, field frames and icons are vector components, never baked
 // placeholder text. The user image is clipped to the defined photo zone.
 function drawDecor(svg,items){
- for(const d of items||[]){
-  if(d.kind==='rect')mk('rect',{x:d.x,y:d.y,width:d.w,height:d.h,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,rx:d.rx},svg);
-  if(d.kind==='path')mk('path',{d:d.d,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,'stroke-linejoin':'round'},svg);
-  if(d.kind==='line')mk('line',{x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2,stroke:d.stroke,'stroke-width':d.sw,'stroke-dasharray':d.dash},svg);
+ for(const [index,d] of (items||[]).entries()){
+  const group=mk('g',{'data-decor-index':index},svg);
+  if(d.kind==='rect')mk('rect',{x:d.x,y:d.y,width:d.w,height:d.h,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,rx:d.rx},group);
+  if(d.kind==='ellipse')mk('ellipse',{cx:d.x+d.w/2,cy:d.y+d.h/2,rx:d.w/2,ry:d.h/2,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw},group);
+  if(d.kind==='path')mk('path',{d:d.d,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,'stroke-linejoin':'round',transform:d.tx||d.ty?'translate('+(d.tx||0)+' '+(d.ty||0)+')':undefined},group);
+  if(d.kind==='line')mk('line',{x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2,stroke:d.stroke,'stroke-width':d.sw,'stroke-dasharray':d.dash},group);
+  if(d.kind==='text'&&!d.hidden){text(group,{...d,key:'decoration-'+index},d.text);group.querySelector('text')?.removeAttribute('data-field');}
  }
 }
 function drawIcon(svg,key,cx,cy,size,ink){
@@ -127,9 +130,10 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   mk('rect',{x:0,y:0,width:900,height:1200,fill:darkText?'#e2e5e7':'#344454'},svg);
   if(src){
    const photoId=id+'-full-photo',clip=mk('clipPath',{id:photoId},defs);
-   mk('rect',{x:0,y:0,width:900,height:1200},clip);
+   const p=template.photo||{x:0,y:0,w:900,h:1200,full:true};
+   mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h},clip);
    const group=mk('g',{'clip-path':'url(#'+photoId+')','data-photo-slot':'true'},svg);
-   mk('image',{href:src,...photoGeometry({x:0,y:0,w:900,h:1200,full:true},options)},group);
+   mk('image',{href:src,...photoGeometry(p,options)},group);
   }
   else if(preview&&options.guides){
    const g=mk('g',{'data-photo-placeholder':'true'},svg);
@@ -142,16 +146,18 @@ export function renderPostScratchTemplate(container,template,data={},options={})
    for(const [offset,factor] of [[0,1],[.24,1],[.33,.75],[.40,.08],[.46,.08],[.54,.80],[.67,1],[1,1]])mk('stop',{offset:String(offset*100)+'%','stop-color':tone,'stop-opacity':shade*factor},gradient);
    mk('rect',{'data-background-shading':'true',x:0,y:0,width:900,height:1200,fill:'url(#'+id+'-contrast)'},svg);
   }
+  drawDecor(svg,template.decor);
+  drawPanels(svg,template.panels,values,src,options.guides===true);
  }else{
- mk('image',{href:options.backgroundSrc||template.image,x:0,y:0,width:900,height:1200,preserveAspectRatio:'xMidYMid meet'},svg);
+ if(template.showBackground===false)mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
+ else mk('image',{href:options.backgroundSrc||template.image,x:0,y:0,width:900,height:1200,preserveAspectRatio:'xMidYMid meet'},svg);
  if(template.structured){
   drawDecor(svg,template.decor);
   drawPanels(svg,template.panels,values,src,options.guides===true);
-  if(['pop-panels','doodle-party'].includes(template.id)){
-   // Fit the existing black-line illustration entirely inside its own
-   // panel rather than letting the underlying art overlap the photo or text.
-   const comic=template.id==='pop-panels';
-   const art=mk('svg',{x:comic?40:110,y:comic?220:320,width:comic?236:340,height:comic?260:300,viewBox:'145 315 420 430',preserveAspectRatio:'xMidYMid meet',overflow:'hidden','data-decoration':'dj'},svg);
+  const comic=template.id==='pop-panels';
+  const illustration=template.illustration===undefined?(['pop-panels','doodle-party'].includes(template.id)?{x:comic?40:110,y:comic?220:320,w:comic?236:340,h:comic?260:300}:null):template.illustration;
+  if(illustration){
+   const art=mk('svg',{x:illustration.x,y:illustration.y,width:illustration.w,height:illustration.h,viewBox:'145 315 420 430',preserveAspectRatio:'xMidYMid meet',overflow:'hidden','data-decoration':'dj'},svg);
    mk('image',{href:'/post-scratch-artwork/doodle-party.webp',x:0,y:0,width:900,height:1200,preserveAspectRatio:'none'},art);
   }
   if(template.photo&&(src||options.guides))drawPhoto(svg,defs,template.photo,src,options.guides===true,id+'-photo',options);
@@ -162,9 +168,10 @@ export function renderPostScratchTemplate(container,template,data={},options={})
  }else if(template.photo&&(src||options.guides))drawPhoto(svg,defs,template.photo,src,options.guides===true,id+'-photo',options);
  }
  if(template.id==='editorial'&&!template.structured){const pts=[];for(let i=0;i<64;i++){const a=i*Math.PI/32,r=i%2?25:43;pts.push((724+Math.cos(a)*r)+','+(242+Math.sin(a)*r));}mk('polygon',{points:pts.join(' '),fill:'#e5e3da'},svg);}
- const zones=template.id==='custom-image'?template.zones.map(z=>({...z,ink:options.textContrast==='dark'?'#15212b':'#ffffff'})):template.zones;
+ const zones=template.id==='custom-image'?template.zones.map(z=>({...z,ink:z.useTemplateInk?z.ink:options.textContrast==='dark'?'#15212b':'#ffffff'})):template.zones;
  const errors=[],tiny=[],checks=[];
  for(const zone of zones){
+  if(zone.hidden)continue;
   const value=val(values[zone.key]);const ghost=!value&&options.guides===true;
   if(!value&&!ghost)continue;
   const slot=mk('g',{'data-slot':zone.key},svg);

@@ -8,6 +8,7 @@ import { quizQuestionImageResponse } from './quiz-question-images.js';
 import { genderOwnerResponse,genderAudienceResponse } from './gender-reveal.js';
 import { questResponse } from './quest.js';
 import { questStripeTestResponse } from './quest-stripe-test.js';
+import { templateDesignResponse } from './template-designs.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -23,6 +24,12 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const design=await templateDesignResponse(request,env);if(design)return design;
+    if(/^\/admin-template-designer(?:\.html)?\/?$/.test(path)){
+      if(env.STAGING_DISABLE_CHECKOUT!=='true')return textError('Not available.',404);
+      if(!['GET','HEAD'].includes(request.method))return textError('Method not allowed.',405);
+      return env.ASSETS.fetch(new Request(new URL('/admin-template-designer',url),request));
+    }
 
     // Stripe remains disabled unless separate TEST secrets and an explicit
     // Quest-only feature flag are present. Never enable other product checkouts.

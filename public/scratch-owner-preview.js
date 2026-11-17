@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=image-editor-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=designer-1';
 /**
  * Private, read-only owner preview. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal

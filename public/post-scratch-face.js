@@ -1,8 +1,8 @@
-import {getPostTemplate} from './post-scratch-catalogue.js?v=reference-panels-1';
+import {loadPublishedDesign} from './published-template-designs.js?v=designer-1';
 import {cleanPostSettings} from './post-scratch-settings.js?v=image-editor-1';
-import {renderPostScratchTemplate} from './post-scratch-renderer.js?v=image-editor-1';
+import {renderPostScratchTemplate} from './post-scratch-renderer.js?v=designer-1';
 export async function renderPostScratchFace(card,reveal,settings,imageSrc=''){
- const s=cleanPostSettings(settings),template=getPostTemplate(s.templateId);
+ const s=cleanPostSettings(settings),{template}=await loadPublishedDesign(s.templateId);
  // Load before showing the underlay, including authenticated blob images.
  await Promise.all([template.id==='custom-image'?'':template.image,imageSrc].filter(Boolean).map(src=>new Promise((resolve,reject)=>{
   const image=new Image();image.onload=resolve;image.onerror=()=>reject(new Error('The revealed design image could not be loaded.'));image.src=src;

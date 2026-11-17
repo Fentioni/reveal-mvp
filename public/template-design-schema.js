@@ -1,0 +1,49 @@
+import {getPostTemplate} from './post-scratch-catalogue.js';
+export const FONTS=[
+ 'Georgia, "Times New Roman", serif','Arial, Helvetica, sans-serif','"Arial Black", Arial, Helvetica, sans-serif',
+ '"Apple Chancery", "Segoe Script", Georgia, serif','Georgia, serif','Arial, sans-serif',
+ 'Verdana, sans-serif','"Trebuchet MS", sans-serif','"Courier New", monospace','"Times New Roman", serif','Impact, sans-serif'
+];
+export const clone=x=>JSON.parse(JSON.stringify(x));
+export function defaultDesign(id){
+ const base=getPostTemplate(id);if(!base)return null;
+ const t=clone(base);
+ t.decor=t.decor||[];t.panels=t.panels||[];t.showBackground=true;t.backgroundFill='#ffffff';
+ t.illustration=['pop-panels','doodle-party'].includes(id)?{x:id==='pop-panels'?40:110,y:id==='pop-panels'?220:320,w:id==='pop-panels'?236:340,h:id==='pop-panels'?260:300}:null;
+ return t;
+}
+const fail=()=>{throw Error('Invalid template design. Check geometry and style values.');};
+const num=(x,min,max)=>{if(typeof x!=='number'||!Number.isFinite(x)||x<min||x>max)fail();return x;};
+const str=(x,max)=>{if(typeof x!=='string'||x.length>max)fail();return x;};
+const bool=x=>{if(typeof x!=='boolean')fail();return x;};
+const color=x=>{if(typeof x!=='string'||!/^#[0-9a-f]{3}(?:[0-9a-f]{3})?$/i.test(x)&&x!=='none')fail();return x;};
+const font=x=>{if(!FONTS.includes(x))fail();return x;};
+const choice=(x,a)=>{if(!a.includes(x))fail();return x;};
+const obj=x=>{if(!x||typeof x!=='object'||Array.isArray(x))fail();return x;};
+const list=(x,max)=>{if(!Array.isArray(x)||x.length>max)fail();return x;};
+function box(o){obj(o);const x=num(o.x,0,900),y=num(o.y,0,1200),w=num(o.w,12,900),h=num(o.h,12,1200);if(x+w>900.01||y+h>1200.01)fail();return {x,y,w,h};}
+const opt=(o,key,fn,d)=>o[key]===undefined?d:fn(o[key]);
+function style(z){return {size:num(z.size,12,200),family:font(z.family),weight:num(z.weight,100,900),ink:color(z.ink),align:choice(z.align,['left','center','right']),italic:opt(z,'italic',bool,false),upper:opt(z,'upper',bool,false),noWordSplit:opt(z,'noWordSplit',bool,true),spacing:opt(z,'spacing',x=>num(x,0,20),0),hidden:opt(z,'hidden',bool,false),useTemplateInk:opt(z,'useTemplateInk',bool,false),...(z.glow?{glow:color(z.glow)}:{}),...(z.outline?{outline:color(z.outline)}:{})};}
+function panel(p,keys){obj(p);if(!keys.has(p.key))fail();const b=box(p);const out={key:p.key,...b,fill:color(p.fill),stroke:color(p.stroke),sw:num(p.sw,0,30),rx:num(p.rx,0,200),ink:color(p.ink)};
+ if(p.key==='image')return out;
+ return {...out,label:str(p.label,80),icon:choice(p.icon,['','date','time','venue','venueAddress','sender','recipient']),accent:color(p.accent),gutter:num(p.gutter,0,b.w-1),labelH:num(p.labelH,0,b.h-1),align:choice(p.align,['left','center','right']),family:font(p.family),iconBg:p.iconBg?color(p.iconBg):'',labelInk:color(p.labelInk),variant:choice(p.variant,['standard','paper-entry','comic-metric','comic-value']),valueBox:p.valueBox?box(p.valueBox):null,divider:color(p.divider)};
+}
+function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line','path','text']);
+ if(kind==='text')return {kind,...box(d),...style(d),text:str(d.text,300)};
+ const stroke=color(d.stroke),sw=num(d.sw,0,30);
+ if(kind==='line')return {kind,x1:num(d.x1,0,900),y1:num(d.y1,0,1200),x2:num(d.x2,0,900),y2:num(d.y2,0,1200),stroke,sw,...(d.dash?{dash:str(d.dash,40).match(/^[0-9. ,]+$/)?d.dash:fail()}: {})};
+ const fill=color(d.fill);
+ if(kind==='path'){const path=str(d.d,4000);if(!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\s-]+$/.test(path))fail();return {kind,d:path,fill,stroke,sw,tx:opt(d,'tx',x=>num(x,-900,900),0),ty:opt(d,'ty',x=>num(x,-1200,1200),0)};}
+ return {kind,...box(d),fill,stroke,sw,...(kind==='rect'?{rx:num(d.rx,0,200)}:{})};
+}
+export function validateDesign(id,input){
+ const base=defaultDesign(id);if(!base)fail();obj(input);if(input.id!==id)fail();
+ const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
+ const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);return {key:z.key,...box(z),...style(z)};});
+ if(seen.size!==keys.size)fail();
+ const allowed=new Set(base.panels.map(p=>p.key)),ps=new Set();
+ const panels=list(input.panels,15).map(p=>{if(ps.has(p.key))fail();ps.add(p.key);return panel(p,allowed);});
+ const p=obj(input.photo);const photo={...box(p),...(base.photo.full?{full:true}:{radius:num(p.radius,0,200),frame:color(p.frame),primary:true})};
+ const illustration=input.illustration===null?null:base.illustration?box(input.illustration):fail();
+ return {...base,zones,panels,photo,decor:list(input.decor,100).map(decoration),illustration,showBackground:bool(input.showBackground),backgroundFill:color(input.backgroundFill)};
+}
