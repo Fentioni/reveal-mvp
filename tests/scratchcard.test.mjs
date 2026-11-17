@@ -333,5 +333,5 @@ test('landscape ticket is confined to concert variant in creator, review and pai
   assert.ok(recipient.includes('.concert-ticket .ticket-grid'));
   assert.ok(recipient.includes('clip-path:polygon'));
   assert.ok(recipient.includes('recipientCardModel(data.reveal)'));
-  assert.ok(recipient.includes('applyDetails(model)'));
+  assert.ok(recipient.includes('fillScratchFace(document,model,{concert:isConcert})'));
 });

@@ -4,6 +4,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {recipientCardModel} from '../public/scratch-recipient-fields.js';
+import {FACE_MARKUP} from '../public/scratch-recipient-face.js';
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
 
@@ -63,23 +64,29 @@ test('booking links must be valid http(s), never executable or credentialed URLs
   assert.equal(recipientCardModel({ticketUrl:'https://example.org/' }).ticketUrl,'https://example.org/');
 });
 
-test('recipient scratch document binds every optional element to the paid model',()=>{
+test('recipient and private preview share the same optional face fields and image loader',()=>{
   const html=fs.readFileSync(path.join(root,'public/recipient-scratch.html'),'utf8');
+  const face=fs.readFileSync(path.join(root,'public/scratch-recipient-face.js'),'utf8');
+  const style=fs.readFileSync(path.join(root,'public/scratch-recipient-face.css'),'utf8');
+  const owner=fs.readFileSync(path.join(root,'public/scratch-owner-preview.js'),'utf8');
   assert.ok(html.includes('recipientCardModel(data.reveal)'));
-  assert.ok(html.includes('applyDetails(model)'));
+  assert.ok(html.includes('fillScratchFace(document,model,{concert:isConcert})'));
+  assert.ok(owner.includes('fillScratchFace(root,model)'));
+  assert.ok(html.includes("mountScratchFace($('card'))"));
+  assert.ok(owner.includes('mountScratchFace(card)'));
   for(const name of ['date','time','venue','admit'])
-    assert.ok(html.includes('id="'+name+'Row" hidden'));
+    assert.ok(FACE_MARKUP.includes('id="'+name+'Row" hidden'));
   for(const name of ['messageWrap','senderWrap','closingDetails','bookingRow','eventImageWrap'])
-    assert.ok(html.includes('id="'+name+'"'));
-  assert.ok(html.includes("$('ticketGrid').hidden = model.details.length === 0"));
-  assert.ok(html.includes("$('bookingRow').hidden = !bookingLink"));
-  assert.ok(html.includes("$('eventImageWrap').hidden = false"));
+    assert.ok(FACE_MARKUP.includes('id="'+name+'"'));
+  assert.ok(face.includes("$('ticketGrid').hidden=model.details.length===0"));
+  assert.ok(face.includes("$('bookingRow').hidden=!model.ticketUrl"));
+  assert.ok(face.includes('wrap.hidden=false'));
   assert.ok(html.includes("'/scratch-image'"));
-  assert.ok(!html.includes("'To be confirmed'"));
-  assert.ok(!html.includes("'A moment just for you.'"));
-  assert.ok(html.includes('overflow-wrap:anywhere'));
-  assert.ok(html.includes('rel="noopener noreferrer nofollow"'));
-  assert.ok(html.includes('referrerpolicy="no-referrer"'));
+  assert.ok(!FACE_MARKUP.includes('To be confirmed'));
+  assert.ok(!FACE_MARKUP.includes('A moment just for you.'));
+  assert.ok(style.includes('overflow-wrap:anywhere'));
+  assert.ok(FACE_MARKUP.includes('rel="noopener noreferrer nofollow"'));
+  assert.ok(FACE_MARKUP.includes('referrerpolicy="no-referrer"'));
 });
 
 
