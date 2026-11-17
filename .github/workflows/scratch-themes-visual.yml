@@ -5,6 +5,8 @@ on:
     paths:
       - 'public/legacy-create.html'
       - 'public/concert-layout-presets.css'
+      - 'public/concert-reference-renderer.js'
+      - 'public/concert-reference-renderer.css'
       - 'public/concert-ticket-premium.css'
       - 'public/concert-ticket-options.js'
       - 'public/concert-live-preview.js'
