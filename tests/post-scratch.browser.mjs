@@ -67,7 +67,7 @@ try{
   const {POST_TEMPLATES}=await import('/post-scratch-catalogue.js');
   const {renderPostScratchFace}=await import('/post-scratch-face.js');
   const list=document.getElementById('preview');
-  list.style.cssText='max-width:454px;margin:0 auto;display:grid;gap:24px';
+  list.style.cssText='width:min(100%,454px);margin:0 auto;display:grid;gap:24px';
   for(const template of POST_TEMPLATES){
    const card=document.createElement('div');card.id='template-'+template.id;list.append(card);
    await renderPostScratchFace(card,{eventName:'Jesus Christ Superstar',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special evening out, just for you.',ticketUrl:'https://example.org'},{templateId:template.id,subtitle:'A night to remember',venueAddress:'Drury Lane, London'},'/post-scratch-artwork/editorial.webp');
@@ -76,6 +76,21 @@ try{
   return POST_TEMPLATES.map(t=>t.id);
  });
  for(const id of templates)await gallery.locator('#template-'+id).screenshot({path:'test-output/post-scratch/'+viewport.width+'-'+id+'.png'});
+ if(viewport.width===1380){
+  // A full 15-design visual proof, with the same sample data on each card.
+  await gallery.setViewportSize({width:1250,height:1150});
+  await gallery.locator('#preview').evaluate(list=>{
+   list.style.cssText='width:1220px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 auto;background:#e8e5dc';
+   for(const card of list.querySelectorAll(':scope > [id^=template-]')){
+    const label=document.createElement('p');label.textContent=card.id.replace('template-','');label.style.cssText='margin:3px 0 8px;text-align:center;font:600 12px Arial;color:#202020';card.append(label);
+   }
+  });
+  const image=await gallery.locator('#preview').screenshot({path:'test-output/post-scratch/all-15-designs.jpg',type:'jpeg',quality:82});
+  // Log small chunks so the visual audit can inspect the actual render,
+  // without depending on access to binary workflow artifacts.
+  const encoded=image.toString('base64');
+  for(let i=0;i<encoded.length;i+=5000)console.log('GALLERY_IMAGE '+encoded.slice(i,i+5000));
+ }
  await gallery.close();
  }
  // Actual creator page: all 15 options, custom controls and amend restoration.

@@ -1,15 +1,15 @@
 name: Scratch Ticket live staging verification
 on:
   push:
-    branches: [feature/scratch-template-integration]
-    paths: ['tools/verify-scratch-live.mjs', '.github/workflows/scratch-live-verification.yml']
+    branches: [feature/stage4b-cloudflare-staging]
+    paths: ['public/post-scratch-*.js', 'public/legacy-create.html', 'public/scratch-owner-preview.js', 'tools/verify-scratch-live.mjs', '.github/workflows/scratch-live-verification.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 4
+    timeout-minutes: 8
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
