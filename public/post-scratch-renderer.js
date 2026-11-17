@@ -100,6 +100,10 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   if(error&&!ghost){errors.push(zone.key);continue;}
   const node=inside.querySelector('text');if(node&&!ghost){checks.push({node,zone});if(Number(node.getAttribute('font-size'))<22)tiny.push(zone.key);}
  }
+ // Measure glyphs at one canonical size. Browser font hinting at responsive
+ // widths otherwise gives slightly different fit transforms in each page.
+ const responsiveStyle=svg.getAttribute('style');
+ svg.setAttribute('style','display:block;width:900px;height:1200px;position:absolute;visibility:hidden;');
  container.replaceChildren(svg);
  // Verify actual SVG glyph geometry in the browser, not only a canvas estimate.
  // SVG clipping is a final guarantee; reject rather than exporting hidden text.
@@ -121,6 +125,7 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   const dy=b.y<zone.y+3?zone.y+3-b.y:b.y+b.height>zone.y+zone.h-3?zone.y+zone.h-3-b.y-b.height:0;
   if(dx||dy)node.setAttribute('transform',`translate(${dx} ${dy}) `+(node.getAttribute('transform')||''));
  }
+ svg.setAttribute('style',responsiveStyle);
  return {svg,errors:[...new Set(errors)],tiny,bookingUrl:safeLink(data.ticketUrl)};
 }
 
