@@ -142,8 +142,9 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal((await page.locator('#scratchFoilLabel').textContent()).trim(),'2. Scratch colour');
    assert.equal(await page.locator('#scratchFoilGrid [data-scratch-foil]:visible').count(),4);
    assert.equal(await page.locator('#scratchArtGrid').count(),0,'Old scratch artwork choices must stay removed');
-   assert.equal(await page.locator('.concert-template-option').count(),5);
-   assert.equal(await page.locator('.concert-theme-option').count(),4);
+   assert.equal(await page.locator('.concert-template-option').count(),4);
+   assert.equal(await page.locator('.concert-template-option[data-value="rock-split"]').count(),0);
+   assert.equal(await page.locator('.concert-theme-option, #concertThemeSection, #concertThemeChoices').count(),0,'Artwork selector must not exist');
    assert.equal(await page.locator('#concertLinkModeField:visible').count(),1);
    assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
    assert.equal(await page.locator('#image').count(),1);
@@ -153,32 +154,23 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    const layout=await page.evaluate(()=>{
      const rect=id=>{const x=document.querySelector(id).getBoundingClientRect();return {top:x.top,left:x.left,right:x.right,bottom:x.bottom,width:x.width};};
      return {preview:rect('.preview-column'),template:rect('#concertTemplateSection'),
-       foil:rect('#scratchFoilGrid'),theme:rect('#concertThemeSection'),
+       foil:rect('#scratchFoilGrid'),
        frame:rect('.scratch-static-frame')};
    });
    assert.ok(layout.preview.bottom <= layout.template.top+4,'Full-width ticket preview must appear above ticket selectors');
    assert.ok(layout.frame.width > (size.name==='desktop'?740:310),'Ticket must use substantially more width than before');
-   if(size.name==='desktop'){
-     assert.ok(layout.theme.left > layout.template.right,'Revealed artwork belongs in right column');
-     assert.ok(Math.abs(layout.theme.top-layout.template.top)<40,'Template and theme choices start together');
-     assert.ok(layout.foil.top > layout.template.top,'Scratch colours belong below templates on the left');
-   }else{
-     assert.ok(layout.theme.top > layout.foil.bottom,'Phone layout stacks theme after template and foil');
-   }
+   assert.ok(layout.foil.top >= layout.template.bottom-1,'Scratch colours remain below designs');
+   assert.ok(layout.template.width >= layout.frame.width*.85,'No empty artwork column');
    const silhouettes=new Set(),shapeCanvases=new Set();
-   for(const template of ['premium-headliner','rock-split','promo-poster','neon-tour','editorial-concert']){
+   for(const template of ['premium-headliner','promo-poster','neon-tour','editorial-concert']){
      await page.locator('.concert-template-option[data-value="'+template+'"]').click();
      assert.equal(await page.locator('.concert-template-option[data-value="'+template+'"]').getAttribute('aria-pressed'),'true');
      silhouettes.add(await page.locator('.scratch-static-frame').evaluate(el=>getComputedStyle(el).clipPath));
      await page.locator('#concertPreviewTabsDesktop [data-preview-mode="cover"]').click();
      shapeCanvases.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
-   assert.equal(silhouettes.size,1,'Five source references have a common clean rectangular outer edge');
+   assert.equal(silhouettes.size,1,'Four source references have a common clean rectangular outer edge');
    // Canvas paint timestamps can differ; shape is asserted through the computed clip path above.
-   for(const theme of ['classic','concert-lights','festival','backstage']){
-     await page.locator('.concert-theme-option[data-value="'+theme+'"]').click();
-     assert.equal(await page.locator('.concert-theme-option[data-value="'+theme+'"]').getAttribute('aria-pressed'),'true');
-   }
    await page.locator('#concertLinkMode').selectOption('qr');
    assert.equal(await page.locator('#concertLinkMode').inputValue(),'qr');
    const paintings=new Set();
@@ -251,7 +243,6 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    await page.locator('#ticketUrl').fill('https://example.org/tickets/123');
    await page.locator('#concertLinkMode').selectOption('qr');
    await page.locator('.concert-template-option[data-value="premium-headliner"]').click();
-   await page.locator('.concert-theme-option[data-value="concert-lights"]').click();
    assert.equal(await page.locator('body').getAttribute('data-concert-preview'),'revealed');
    assert.equal(await page.locator('#concertRevealedPreviewFrame:visible').count(),1);
    assert.equal(await page.locator('.scratch-static-frame:visible').count(),0);
@@ -285,7 +276,7 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal((await page.locator('#concertLiveMessage').textContent()).trim(),'A night to remember!');
    assert.equal(await page.locator('#concertLiveQr svg').count(),1);
    const background=await page.locator('#concertRevealedPreviewFrame').evaluate(e=>getComputedStyle(e).backgroundImage);
-   assert.ok(background==='none'||background.includes('concert-lights.svg'));
+   assert.ok(background==='none'||background.includes('classic.svg'));
    assert.equal(await page.locator('#concertRevealedPreviewFrame svg.ct-reference-art').count(),1,
      'Reference-specific drawing replaces the old background-only design');
    if(size.name==='mobile'){
@@ -622,11 +613,11 @@ test('paid recipient uses selected artwork as scratch foil while hiding surprise
 });
 
 
-test('all five reference-based concert layouts keep photo and text in locked zones at phone and desktop widths',
+test('all four selectable concert layouts keep photo and text in locked zones at phone and desktop widths',
  {timeout:120000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
- const names=['premium-headliner','rock-split','promo-poster','neon-tour','editorial-concert'];
+ const names=['premium-headliner','promo-poster','neon-tour','editorial-concert'];
  try{
   for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
    const page=await browser.newPage({viewport:size,reducedMotion:'reduce'});
@@ -717,7 +708,7 @@ test('all five reference-based concert layouts keep photo and text in locked zon
       const image=frame.querySelector(':scope > svg.ct-reference-art image[href^="blob:"]');
       return image?{x:Number(image.getAttribute('x')),width:Number(image.getAttribute('width'))}:null;
     });
-    const expectedImage={ 'premium-headliner':[139,478],'rock-split':[0,948],
+    const expectedImage={ 'premium-headliner':[139,478],
       'promo-poster':[489,200],'neon-tour':[400,1600],'editorial-concert':[1314,686]};
     assert.deepEqual(refImage,{x:expectedImage[name][0],width:expectedImage[name][1]},
       'Uploaded image must occupy the exact dedicated photo coordinates for '+name);

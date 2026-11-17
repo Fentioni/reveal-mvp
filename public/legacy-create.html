@@ -625,8 +625,8 @@
     }
     body[data-ticket-variant="concert"] .form-card{order:1;width:100%;max-width:none;margin:0 auto}
     body[data-ticket-variant="concert"] .concert-pickers{
-      display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);
-      gap:clamp(20px,5vw,70px);align-items:start;margin:0 0 28px
+      display:grid;grid-template-columns:minmax(0,1fr);
+      gap:0;align-items:start;margin:0 0 28px
     }
     body[data-ticket-variant="concert"] .concert-pickers-left,
     body[data-ticket-variant="concert"] .concert-pickers-right{display:block;min-width:0}
@@ -634,6 +634,7 @@
     body[data-ticket-variant="concert"] .concert-template-description{font:.75rem/1.3 system-ui,sans-serif;color:#d1c3ce}
     body[data-ticket-variant="concert"] #concertThemeSection{margin:0}
     body[data-ticket-variant="concert"] .concert-option-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+    @media(min-width:901px){body[data-ticket-variant="concert"] #concertTemplateChoices{grid-template-columns:repeat(4,minmax(0,1fr))}}
     body[data-ticket-variant="concert"] .concert-template-thumb{
       max-height:none;height:auto;aspect-ratio:2.15/1
     }
@@ -821,8 +822,8 @@
             <div class="concert-pickers-left">
           <section id="concertTemplateSection" class="concert-build-group" hidden aria-labelledby="concertTemplateHeading">
             <h3 id="concertTemplateHeading">1. Concert ticket design</h3>
-            <p class="field-help">Choose the ticket shape.</p>
-            <div id="concertTemplateChoices" class="concert-option-grid" role="group" aria-label="Ticket shape"></div>
+            <p class="field-help">Choose your ticket design.</p>
+            <div id="concertTemplateChoices" class="concert-option-grid" role="group" aria-label="Concert ticket design"></div>
           </section>
           <div class="scratch-choice">
             <div id="scratchFoilLabel" class="scratch-option-label" hidden>2. Scratch colour</div>
@@ -897,14 +898,6 @@
           </div>
 
             </div>
-            <div class="concert-pickers-right">
-            <section id="concertThemeSection" class="concert-build-group" hidden aria-labelledby="concertThemeHeading">
-              <h3 id="concertThemeHeading">3. Revealed ticket artwork</h3>
-              <p class="field-help">This design appears after the recipient scratches the colour away.</p>
-              <div id="concertThemeChoices" class="concert-option-grid" role="group" aria-label="Revealed ticket artwork"></div>
-            </section>
-
-            </div>
           </div>
           <h3 class="details-subhead">Personalise the surprise</h3>
           <div class="field">
@@ -974,7 +967,7 @@
           </div>
 
           <section id="concertTicketDetailsSection" class="concert-build-group" hidden aria-labelledby="concertTicketDetailsHeading">
-            <h3 id="concertTicketDetailsHeading">4. Ticket information</h3>
+            <h3 id="concertTicketDetailsHeading">3. Ticket information</h3>
             <p class="field-help">Every field in this section is optional. Leave any or all of them blank if they don't apply.</p>
             <div class="concert-details-form">
               <div class="field">
@@ -1018,7 +1011,7 @@
           </div>
 
           <div id="concertLinkModeField" class="field" hidden>
-            <label for="concertLinkMode">5. Add a link or QR code (optional)</label>
+            <label for="concertLinkMode">4. Add a link or QR code (optional)</label>
             <select id="concertLinkMode">
               <option value="link">Show a clickable link</option>
               <option value="qr">Show a scannable QR code</option>
@@ -1171,7 +1164,7 @@
   <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-6';
-    import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate} from '/concert-ticket-options.js?v=2';
+    import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=7';
@@ -1239,7 +1232,6 @@
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert;
       $("concertTemplateSection").hidden = !isConcert;
-      $("concertThemeSection").hidden = !isConcert;
       $("concertLinkModeField").hidden = !isConcert;
       $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
@@ -1248,7 +1240,7 @@
       if(isConcert) uploadDock.append(upload);
       else form.querySelector(".scratch-choice").append(upload);
       $("ticketUrlLabel").textContent=isConcert ? "Link or QR code destination" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "6. Event artwork (optional)" : "Add an image";
+      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add an image";
       $("imageUploadHelp").textContent = isConcert
         ? "JPEG, PNG or WebP · maximum 10 MB · at least 400 × 240 pixels. For best results, use a high-resolution portrait event poster (e.g. 1200 × 1600 px). The image sits in a small area of the revealed ticket and may be cropped, so keep important text away from its edges. It is never shown on the scratch cover."
         : "Optional: upload an image for a custom scratch-card cover.";
@@ -1309,22 +1301,6 @@
         concertLivePreview.render();
       });
       $('concertTemplateChoices').append(button);
-    }
-    for(const theme of CONCERT_REVEAL_THEMES){
-      const button=document.createElement('button');
-      button.type='button';button.className='concert-theme-option';
-      button.dataset.value=theme.id;button.setAttribute('aria-pressed',String(theme.id===concertRevealThemeId));
-      const thumb=document.createElement('span');thumb.className='concert-theme-thumb';
-      thumb.style.backgroundImage="url('/concert-reveal-art/"+theme.id+".svg')";
-      const label=document.createElement('strong');label.textContent=theme.label;
-      button.append(thumb,label);
-      button.addEventListener('click',()=>{
-        if(!ready||busy)return;
-        concertRevealThemeId=theme.id;
-        selectConcertOption('concertThemeChoices',theme.id);
-        concertLivePreview.setMode('revealed');
-      });
-      $('concertThemeChoices').append(button);
     }
     $("scratchArtwork").addEventListener("change",()=>{
       if(!ready||busy)return;
@@ -1844,8 +1820,9 @@
         $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
         $("scratchFoil").value = savedSurface.surface.foil;
         if(savedSurface.surface.variant==='concert'){
-          concertTemplateId=isConcertTemplate(savedSurface.surface.ticketTemplate)
-            ? savedSurface.surface.ticketTemplate : DEFAULT_CONCERT_TEMPLATE;
+          const savedLayout=concertTemplateLayout(savedSurface.surface.ticketTemplate);
+          concertTemplateId=CONCERT_TICKET_TEMPLATES.some(t=>t.id===savedLayout)
+            ? savedLayout : DEFAULT_CONCERT_TEMPLATE;
           concertRevealThemeId=CONCERT_REVEAL_THEMES.some(t=>t.id===savedSurface.surface.revealTheme)
             ? savedSurface.surface.revealTheme : DEFAULT_CONCERT_REVEAL_THEME;
           $('concertLinkMode').value=savedSurface.surface.linkMode==='qr'?'qr':'link';
@@ -1853,7 +1830,6 @@
             $(field.id).value=savedSurface.surface.ticketDetails?.[field.id] || '';
           }
           selectConcertOption('concertTemplateChoices',concertTemplateId);
-          selectConcertOption('concertThemeChoices',concertRevealThemeId);
         }
         scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
         $("scratchArtwork").value = scratchArtworkId;

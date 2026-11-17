@@ -1,11 +1,10 @@
-/** Five locked 3:1 concert ticket layouts, based on the owner's five
+/** Four selectable concert ticket layouts, based on the owner's five
  * supplied reference images. These are designs, not interchangeable
  * free-floating blocks. Existing four shape IDs remain supported for drafts.
  * Metallic scratch covers and reveal artwork themes remain independent.
  */
 export const CONCERT_TICKET_TEMPLATES=Object.freeze([
  Object.freeze({id:'premium-headliner',label:'Premium Headliner',description:'Navy headline, dedicated portrait panel and white barcode stub'}),
- Object.freeze({id:'rock-split',label:'Rock Split',description:'Full-height artist photograph, bold centre information and side admission stub'}),
  Object.freeze({id:'promo-poster',label:'Promo Poster',description:'Purple poster ticket with small portrait and oversized title'}),
  Object.freeze({id:'neon-tour',label:'Neon Tour',description:'Bright pink entry stub, huge tour headline and spaced concert details'}),
  Object.freeze({id:'editorial-concert',label:'Editorial Concert',description:'Pink admission strip, black editorial headline and dedicated right image panel'})
@@ -32,7 +31,8 @@ export const CONCERT_REVEAL_THEMES=Object.freeze([
 ]);
 export const DEFAULT_CONCERT_TEMPLATE='premium-headliner';
 export const DEFAULT_CONCERT_REVEAL_THEME='classic';
-const templateIds=new Set([...CONCERT_PRESET_IDS,...LEGACY_CONCERT_SHAPES]);
+// Retired layout remains supported for previously saved tickets.
+const templateIds=new Set([...CONCERT_PRESET_IDS,...LEGACY_CONCERT_SHAPES,'rock-split']);
 const revealIds=new Set(CONCERT_REVEAL_THEMES.map(x=>x.id));
 export const isConcertTemplate=id=>templateIds.has(id);
 export const isConcertRevealTheme=id=>revealIds.has(id);

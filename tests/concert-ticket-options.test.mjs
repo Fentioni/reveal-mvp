@@ -7,10 +7,12 @@ import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,
  DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketPolygon,
  concertTicketClipPath} from '../public/concert-ticket-options.js';
 
-test('five reference-based concert presets are distinct, bounded and renderable as CSS clip paths',()=>{
- assert.equal(CONCERT_TICKET_TEMPLATES.length,5);
- assert.equal(new Set(CONCERT_TICKET_TEMPLATES.map(t=>t.id)).size,5);
+test('four selectable concert presets are distinct, bounded and renderable as CSS clip paths',()=>{
+ assert.equal(CONCERT_TICKET_TEMPLATES.length,4);
+ assert.equal(new Set(CONCERT_TICKET_TEMPLATES.map(t=>t.id)).size,4);
  assert.equal(DEFAULT_CONCERT_TEMPLATE,'premium-headliner');
+ assert.equal(CONCERT_TICKET_TEMPLATES.some(t=>t.id==='rock-split'),false);
+ assert.equal(isConcertTemplate('rock-split'),true,'Existing tickets retain their saved layout');
  const paths=new Set();
  for(const t of CONCERT_TICKET_TEMPLATES){
   assert.equal(isConcertTemplate(t.id),true);
@@ -23,7 +25,7 @@ test('five reference-based concert presets are distinct, bounded and renderable 
   assert.match(css,/^polygon\(/);
   paths.add(css);
  }
- assert.equal(paths.size,1,'All five references have a rectangular OUTER edge; stub details differ internally');
+ assert.equal(paths.size,1,'All four selectable references have a rectangular OUTER edge; stub details differ internally');
  assert.equal(isConcertTemplate('../../hidden'),false);
  assert.equal(concertTicketClipPath('invalid'),concertTicketClipPath(DEFAULT_CONCERT_TEMPLATE));
 });
