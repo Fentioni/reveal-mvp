@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='data-placement="form-bottom"';
+const marker='data-editor-revision="2"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<35;i++){
@@ -19,6 +19,22 @@ assert.ok(ready,'Cloudflare has not published the new layouts yet');
 const browser=await chromium.launch({headless:true});
 try{
  await mkdir('test-output/scratch-live',{recursive:true});
+ for(const viewport of [{width:1380,height:900},{width:390,height:844}]){
+  const page=await browser.newPage({viewport});
+  try{
+   const res=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now());
+   assert.ok(res.ok());assert.ok((await res.text()).includes(marker));
+   await page.locator('#scratchArtwork:enabled').waitFor();
+   const coords=await page.evaluate(()=>{
+    const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');
+    const bounds=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom}};
+    return {sameForm:editor.parentElement===review.parentElement,link:bounds(link),editor:bounds(editor),review:bounds(review),visible:!editor.hidden};
+   });
+   assert.ok(coords.sameForm&&coords.visible&&coords.link.bottom<=coords.editor.top&&coords.editor.bottom<=coords.review.top);
+   console.log('LIVE EDITOR POSITION',viewport.width,JSON.stringify(coords));
+   await page.locator('#postImageControls').screenshot({path:'test-output/scratch-live/'+viewport.width+'-editor-at-bottom.png'});
+  }finally{await page.close();}
+ }
  for(const viewport of [{width:1380,height:900},{width:390,height:844}]){
   const page=await browser.newPage({viewport}); const errors=[];page.on('pageerror',e=>errors.push(e.message));
   const res=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now());

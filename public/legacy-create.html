@@ -1081,7 +1081,7 @@
             >
           </div>
 
-          <section id="postImageControls" data-placement="form-bottom" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
+          <section id="postImageControls" data-placement="form-bottom" data-editor-revision="2" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
             <div class="post-image-editor-heading">
               <h3 id="postImageEditorTitle">Edit your image</h3>
               <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
@@ -1508,6 +1508,7 @@
         control.disabled = locked;
       }
 
+      if(!locked)syncPostImageEditor();
       form.setAttribute("aria-busy", String(busy));
     }
 
