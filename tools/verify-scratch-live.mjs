@@ -48,7 +48,8 @@ try{
    const host=page.locator('#scratchActualRevealed');
    await page.waitForFunction(id=>{
     const root=document.querySelector('#scratchActualRevealed')?.shadowRoot,card=root?.querySelector('#card'),svg=card?.querySelector('svg');
-    return card?.dataset.postTemplate===id&&svg?.querySelectorAll('[data-field]').length===10&&!!svg?.querySelector('[data-photo-slot] image, image[data-photo-slot]');
+    const image=svg?.querySelector('[data-photo-slot] image');
+    return card?.dataset.postTemplate===id&&svg?.querySelectorAll('[data-field]').length===10&&!!image&&image.getAttribute('preserveAspectRatio')==='xMidYMid slice';
    },template.id,{timeout:15000});
    const result=await host.evaluate(el=>{
     const root=el.shadowRoot,card=root.querySelector('#card'),svg=card.querySelector('svg'),r=card.getBoundingClientRect();

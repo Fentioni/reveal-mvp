@@ -203,7 +203,11 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
        assert.equal(form.get('style'),'classic');
        assert.equal(form.get('artworkId'),art);
        assert.equal(form.has('coverImage'),false,'Surprise image must not be saved as cover');
-       savedSurface={...Object.fromEntries(form.entries()),hasImage:false,theme:'luxury-elegant'};
+       savedSurface={...Object.fromEntries(form.entries()),postScratch:JSON.parse(form.get('postScratch')),hasImage:false,theme:'luxury-elegant'};
+       assert.equal(savedSurface.postScratch.imageZoom,160);
+       assert.equal(savedSurface.postScratch.imagePanX,25);
+       assert.equal(savedSurface.postScratch.imagePanY,-20);
+       assert.equal(savedSurface.postScratch.imageFit,'cover');
        return json({success:true,surface:savedSurface});
      }
      if(p==='/api/reveals/image-check')return json({success:true,reveal:savedReveal});
@@ -230,7 +234,16 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    });
    await page.locator('#image').setInputFiles({name:'surprise.png',mimeType:'image/png',buffer:Buffer.from(data,'base64')});
    await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
+   await page.locator('#postImageControls').waitFor();
+   await page.locator('#postImageFit').selectOption('cover');
+   await page.locator('#postImageZoom').fill('160');
+   await page.locator('#postImagePanX').fill('25');
+   await page.locator('#postImagePanY').fill('-20');
+   await page.waitForFunction(()=>{const r=document.querySelector('#scratchActualRevealed').shadowRoot;const image=r.querySelector('[data-photo-slot] image');return image?.getAttribute('preserveAspectRatio')==='xMidYMid slice'&&Number(image.getAttribute('width'))>450;});
+   let edited;
    async function checkCurrent(){
+     const geometry=await page.locator('#scratchActualRevealed [data-photo-slot] image').evaluate(i=>['x','y','width','height','preserveAspectRatio'].map(k=>i.getAttribute(k)));
+     if(!edited)edited=geometry;else assert.deepEqual(geometry,edited,'Image composition survives review and amend');
      assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
      assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
      assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
@@ -252,6 +265,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
    await checkCurrent();
    assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
+   for(const [id,value] of Object.entries({postImageZoom:'160',postImagePanX:'25',postImagePanY:'-20',postImageFit:'cover'}))assert.equal(await page.locator('#'+id).inputValue(),value);
    assert.equal(await page.locator('.preview-details-toggle:visible').count(),0);
    assert.deepEqual(errors,[]);
    await page.close();
