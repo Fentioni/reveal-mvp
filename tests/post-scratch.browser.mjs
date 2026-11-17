@@ -59,7 +59,7 @@ try{
  assert.equal(await page.locator('#postTemplate option').count(),15);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
- await page.locator('#scratchActualRevealed [data-post-template="custom-image"]').waitFor();
+ await page.locator('#scratchActualRevealed svg[data-post-template="custom-image"]').waitFor();
  await page.screenshot({path:'test-output/post-scratch/amend-mobile.png',fullPage:true});assert.deepEqual(errors,[]);
  console.log('Creator Amend restores all template fields and image appearance');
  await page.close();
