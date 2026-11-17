@@ -126,6 +126,16 @@ try{
  await page.locator('#postImageReset').click();
  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
+ assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
+ assert.equal(await page.locator('#postShade').inputValue(),'70');
+ assert.equal(await page.evaluate(()=>{const a=document.querySelector('#venue'),b=document.querySelector('#postVenueAddress');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Address directly follows venue');
+ for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
+  await page.locator('#postTemplate').selectOption(option);
+  assert.equal(await page.locator('#postImageControls').isVisible(),true);
+  assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
+  assert.equal(await page.locator('#postImageReset').isVisible(),true);
+  assert.equal(await page.locator('#postImageReset').isEnabled(),true);
+ }
  assert.equal(await page.locator('#postImagePanX').inputValue(),'0');
  await page.screenshot({path:'test-output/post-scratch/amend-mobile.png',fullPage:true});assert.deepEqual(errors,[]);
  console.log('Creator Amend restores all template fields and image appearance');

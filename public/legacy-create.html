@@ -485,7 +485,12 @@
     .post-image-editor label{display:flex;justify-content:space-between;align-items:center;gap:8px;margin:12px 0 4px;font-size:.9rem}
     .post-image-editor output{color:#f1d89d;font-variant-numeric:tabular-nums}
     .post-image-editor input[type="range"]{display:block;width:100%;padding:0;min-height:35px;accent-color:#efce81;background:transparent;border:0}
-    .post-image-reset{display:block;width:100%;margin-top:14px;min-height:44px;padding:8px 10px;border:1px solid #bfa36a;border-radius:8px;background:transparent;color:#f1d89d;font:600 .85rem/1.3 system-ui,sans-serif;cursor:pointer}
+    .post-image-editor-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:8px}
+    .post-image-editor-heading h3{margin:0}
+    .post-image-editor fieldset{border:0;padding:0;margin:0;min-width:0;width:100%}
+    .post-image-editor fieldset:disabled{opacity:.55}
+    .post-image-reset{display:inline-flex;align-items:center;justify-content:center;flex:none;min-width:78px;min-height:44px;padding:8px 14px;border:1px solid #e9cb8d;border-radius:8px;background:#f1d89d;color:#211b19;font:700 .85rem/1.3 system-ui,sans-serif;cursor:pointer}
+    .post-image-reset:disabled{opacity:.48;cursor:default}
     body[data-ticket-variant="concert"] #postImageControls{display:none!important}
     /* Scratch Ticket only: keep the two header lines above the whole builder,
        not inside the former narrow hero column. */
@@ -888,7 +893,6 @@
             <section id="postScratchControls" class="field">
 <label for="postTemplate">Revealed template</label><select id="postTemplate"></select>
 <p id="postTemplateDescription" class="field-help"></p>
-<label for="postVenueAddress">Address / location (optional)</label><input id="postVenueAddress" maxlength="140">
 <p id="postTemplateWarning" class="field-help" role="status"></p>
 </section><div class="scratch-one-upload"><div class="field">
                 <label id="imageUploadLabel" for="image">Add an image</label>
@@ -924,8 +928,12 @@
                   </div>
                 </div>
                 <section id="postImageControls" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
-                  <h3 id="postImageEditorTitle">Edit your image</h3>
-                  <p class="field-help">Resize and position your photograph within the template. The preview updates automatically.</p>
+                  <div class="post-image-editor-heading">
+                    <h3 id="postImageEditorTitle">Edit your image</h3>
+                    <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
+                  </div>
+                  <p id="postImageEditorHelp" class="field-help">Upload an image to activate the editing controls.</p>
+                  <fieldset id="postImageAdjustments" disabled>
                   <label for="postImageFit">Image fit</label>
                   <select id="postImageFit"><option value="auto">Template default</option><option value="contain">Fit whole image</option><option value="cover">Fill image frame</option></select>
                   <label for="postImageZoom">Zoom <output id="postImageZoomValue" for="postImageZoom">100%</output></label>
@@ -940,7 +948,7 @@
                     <label for="postTextContrast">Text colour</label><select id="postTextContrast"><option value="light">White text · dark shading</option><option value="dark">Dark text · light shading</option></select>
                     <label for="postShade">Background shading: <output id="postShadeValue">70%</output></label><input id="postShade" type="range" min="0" max="90" step="5" value="70">
                   </div>
-                  <button id="postImageReset" class="post-image-reset" type="button">Reset image size and position</button>
+                  </fieldset>
                 </section>
               </div>
 
@@ -1021,6 +1029,11 @@
               placeholder="The Grand Theatre, London"
               maxlength="200"
             >
+          </div>
+
+          <div class="field" id="postVenueAddressField" hidden>
+            <label for="postVenueAddress">Address / location (optional)</label>
+            <input id="postVenueAddress" type="text" maxlength="140">
           </div>
 
           <div class="field">
@@ -1268,10 +1281,17 @@
     for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('postTemplate').append(o);}
     function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
     function restorePostSettings(value){const p=cleanPostSettings(value);for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
+    function syncPostImageEditor(){
+      const available=currentVariant==='ticket',hasImage=Boolean(objectUrl);
+      $('postImageControls').hidden=!available;
+      $('postImageAdjustments').disabled=!available||!hasImage;
+      $('postImageReset').disabled=!available||!hasImage;
+      $('postImageEditorHelp').textContent=hasImage?'Resize and position your image. The revealed preview updates automatically.':'Upload an image to activate the editing controls.';
+    }
     function postGuidance(){
+      syncPostImageEditor();
       if(currentVariant!=='ticket')return;
       const t=getPostTemplate($('postTemplate').value),custom=t.id==='custom-image',p=t.photo;
-      $('postImageControls').hidden=!objectUrl;
       $('postFullImageControls').hidden=!custom;
       $('postImageZoomValue').textContent=$('postImageZoom').value+'%';
       for(const axis of ['X','Y']){const n=Number($('postImagePan'+axis).value);$('postImagePan'+axis+'Value').textContent=n===0?'Centre':(n>0?'+':'')+n;}
@@ -1291,7 +1311,7 @@
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
-    $('postImageReset').addEventListener('click',()=>{resetPostImageGeometry();pendingReview=false;showImageEditingPreview();postGuidance();schedulePortraitPreview();});
+    $('postImageReset').addEventListener('click',()=>{resetPostImageGeometry();$('postTextContrast').value='light';$('postShade').value=70;pendingReview=false;showImageEditingPreview();postGuidance();schedulePortraitPreview();});
     let portraitPreviewQueue=Promise.resolve();
     let portraitPreviewTimer;
     let portraitPreviewRevision=0;
@@ -1363,8 +1383,9 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $('postScratchControls').hidden=isConcert;
-      $('postImageControls').hidden=isConcert||!objectUrl;
+      syncPostImageEditor();
       $('postSubtitleField').hidden=isConcert;
+      $('postVenueAddressField').hidden=isConcert;
       $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert;
@@ -1582,7 +1603,7 @@
       }
 
       objectUrl = null;
-      $('postImageControls').hidden=true;
+      syncPostImageEditor();
     }
 
     function showImage(blob, caption) {

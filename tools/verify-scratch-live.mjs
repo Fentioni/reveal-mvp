@@ -5,10 +5,10 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='id="postImageZoom"';
+const marker='id="postVenueAddressField"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
-for(let i=0;i<15;i++){
+for(let i=0;i<35;i++){
  try{
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(res.ok&&(await res.text()).includes(marker)){ready=true;break;}
@@ -26,6 +26,11 @@ try{
   await page.locator('#scratchActualCovered canvas').waitFor({state:'visible',timeout:20000});
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
   assert.equal(await page.locator('#postTemplate option').count(),15);
+  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#venue'),b=document.querySelector('#postVenueAddress');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Address directly follows venue');
+  assert.equal(await page.locator('#postImageControls').isVisible(),true);
+  assert.equal(await page.locator('#postImageZoom').isEnabled(),false);
+  assert.equal(await page.locator('#postImageReset').isVisible(),true);
+  assert.equal(await page.locator('#postImageReset').isEnabled(),false);
   assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');
   for(const [field,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Jesus Christ Superstar',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'Drury Lane, London',postSubtitle:'A night to remember',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'}))await page.locator('#'+field).fill(value);
   const img=await page.evaluate(()=>{
@@ -37,7 +42,8 @@ try{
    return c.toDataURL('image/png').split(',')[1];
   });
   await page.locator('#image').setInputFiles({name:'sample-poster.png',mimeType:'image/png',buffer:Buffer.from(img,'base64')});
-  await page.locator('#postImageControls').waitFor({state:'visible'});
+  await page.locator('#postImageZoom:enabled').waitFor({state:'visible'});
+  assert.equal(await page.locator('#postImageReset').isEnabled(),true);
   await page.locator('#postImageZoom').fill('150');
   await page.locator('#postImageFit').selectOption('cover');
   await page.locator('#postImagePanX').fill('20');
@@ -45,6 +51,10 @@ try{
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const template of POST_TEMPLATES){
    await page.locator('#postTemplate').selectOption(template.id);
+   assert.equal(await page.locator('#postImageControls').isVisible(),true);
+   assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
+   assert.equal(await page.locator('#postImageReset').isVisible(),true);
+   assert.equal(await page.locator('#postImageReset').isEnabled(),true);
    const host=page.locator('#scratchActualRevealed');
    await page.waitForFunction(id=>{
     const root=document.querySelector('#scratchActualRevealed')?.shadowRoot,card=root?.querySelector('#card'),svg=card?.querySelector('svg');
@@ -62,6 +72,9 @@ try{
    await page.locator('#scratchActualRevealed #card').screenshot({path:'test-output/scratch-live/'+viewport.width+'-'+template.id+'.png'});
    console.log('LIVE:',viewport.width,JSON.stringify(result));
   }
+  await page.locator('#postImageReset').click();
+  for(const [id,value] of Object.entries({postImageZoom:'100',postImagePanX:'0',postImagePanY:'0',postImageFit:'auto',postImagePosition:'xMidYMid',postTextContrast:'light',postShade:'70'}))assert.equal(await page.locator('#'+id).inputValue(),value);
+  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
   await page.locator('[data-scratch-preview-mode="covered"]').click();
   assert.equal(await page.locator('#scratchActualCovered').evaluate(el=>getComputedStyle(el).opacity),'1');
   assert.deepEqual(errors,[]);await page.close();
