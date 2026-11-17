@@ -189,7 +189,7 @@ function premium(svg,d){
  type(svg,'ROW',61,209,{size:27,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
  type(svg,d.row,93,212,{size:28,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
  type(svg,d.eventTitle,672,77,{size:82,min:42,maxWidth:785,maxLines:2,fill:'#fff',weight:850,spacing:1,role:'title'});
- type(svg,d.subtitle,682,268,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550,role:'subtitle'});
+ type(svg,d.subtitle,682,310,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550,role:'subtitle'});
  type(svg,d.date,705,359,{size:41,min:25,maxWidth:370,fill:'#fff',weight:750});
  type(svg,d.time,1110,360,{size:33,min:22,maxWidth:288,fill:'#fff',weight:650});
  type(svg,d.venue,681,437,{size:33,min:21,maxWidth:725,fill:'#fff',weight:750});
