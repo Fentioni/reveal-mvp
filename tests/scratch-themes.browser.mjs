@@ -23,6 +23,7 @@ const sample={
 async function startServer(){
  const server=createServer(async(req,res)=>{
   const path=new URL(req.url,'http://localhost').pathname;
+  if(/^\/api\/template-designs\/[a-z-]+$/.test(path)){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({revision:'base',template:null}));return;}
   const jpg=SCRATCH_ARTWORKS.find(item=>path===item.src);
   if(jpg){
    // Synthetic artwork is deliberate: browser routing/Canvas tests must not
@@ -65,7 +66,7 @@ async function startServer(){
   const file=path==='/reveal'?'/reveal.html':path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(file!=='/published-template-designs.js'&&!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
@@ -99,6 +100,7 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     const ownerRequests=[];
     await owner.route(staging+'/**',async route=>{
       const u=new URL(route.request().url()),p=u.pathname;
+      if(p.startsWith('/api/template-designs/'))return route.fulfill({json:{revision:'base',template:null}});
       if(p.startsWith('/api/')){
         ownerRequests.push(p);
         assert.equal(route.request().headers()['x-edit-token'],'owner-edit-token');

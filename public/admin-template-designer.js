@@ -13,7 +13,7 @@ const ctx=sampleCanvas.getContext('2d');const gradient=ctx.createLinearGradient(
 const sampleImage=sampleCanvas.toDataURL('image/png');
 function status(s,error=false){$('status').textContent=s;$('status').style.color=error?'#ffb3b3':'';}
 function clean(){return JSON.stringify(model)===saved;}
-function mark(){if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
+function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
 function remember(){undo.push(clone(model));if(undo.length>75)undo.shift();redo=[];}
 function changed(full=true){mark();paint();if(full){layers();inspector();}}
 function apiHeaders(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
@@ -181,8 +181,9 @@ async function save(){
  finally{busy=false;changed();}
 }
 $('save').onclick=save;$('authSave').onclick=async e=>{e.preventDefault();const input=$('token');token=input.value.trim();input.value='';if(!token){$('authMessage').textContent='Enter your admin token.';return;}
+ $('authSave').disabled=true;
  try{await response(await fetch('/api/admin/template-designer',{headers:apiHeaders(),cache:'no-store'}));$('auth').close();await save();}
- catch(err){token='';$('authMessage').textContent=err.message;}};
+ catch(err){token='';$('authMessage').textContent=err.message;}finally{$('authSave').disabled=false;}};
 window.addEventListener('beforeunload',e=>{if(model&&!clean()){e.preventDefault();e.returnValue='';}});
 for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('template').append(o);}
 load(POST_TEMPLATES[0].id,true);
