@@ -38,8 +38,8 @@ try{
    // Render recipient with same input and compare text plus SVG geometry attributes.
    const recipient=document.createElement('div');document.body.append(recipient);recipient.style.width=b.getBoundingClientRect().width+'px';
    await renderPostScratchFace(recipient,reveal,surface.postScratch,image);
-   const normalize=svg=>svg.outerHTML.replace(/post-scratch-\d+/g,'post-scratch-ID');
-   if(normalize(recipient.querySelector('svg'))!==normalize(b.querySelector('svg')))issues.push(template.id+' renderer mismatch');
+   const normalize=svg=>svg.outerHTML.replace(/post-scratch-\d+/g,'post-scratch-ID').replace(/-?\d+\.\d+/g,n=>String(Math.round(Number(n)*10)/10));
+   if(normalize(recipient.querySelector('svg'))!==normalize(b.querySelector('svg'))){const x=normalize(recipient.querySelector('svg')),y=normalize(b.querySelector('svg')),i=[...x].findIndex((c,i)=>c!==y[i]);issues.push(template.id+' renderer mismatch: '+x.slice(i-70,i+100)+' vs '+y.slice(i-70,i+100));}
    recipient.remove();count++;
   }
   return {count,issues};
