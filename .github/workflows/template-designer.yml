@@ -16,6 +16,7 @@ jobs:
         with:
           node-version: '22'
       - run: node --test tests/template-designs.test.mjs
+      - run: npx --yes wrangler deploy --dry-run --outdir /tmp/reveal-worker-build
       - run: npm install --no-save playwright
       - run: npx playwright install chromium
       - run: node tests/template-designer.browser.mjs
