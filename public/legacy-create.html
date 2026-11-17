@@ -480,6 +480,20 @@
     .page-header h1{font-size:clamp(2.65rem,5.8vw,5.3rem)}
     .page-header h1 em{font-weight:normal}
     .intro{color:#d4cbd0}
+    /* Scratch Ticket only: keep the two header lines above the whole builder,
+       not inside the former narrow hero column. */
+    body[data-ticket-variant="ticket"] .page-header{max-width:none;width:100%;margin:0 0 18px}
+    body[data-ticket-variant="ticket"] .creator-brand{margin-bottom:10px}
+    body[data-ticket-variant="ticket"] .page-header .eyebrow{margin-bottom:6px;font-size:.65rem}
+    body[data-ticket-variant="ticket"] #creatorTitle{font-size:clamp(.875rem,4.4vw,3.4rem);line-height:1.13;margin:0 0 6px;white-space:nowrap}
+    body[data-ticket-variant="ticket"] #creatorIntro{max-width:none;line-height:1.4;font-size:.9rem;white-space:nowrap}
+    body[data-ticket-variant="ticket"] #creatorIntro .compact-intro{display:none}
+    @media(max-width:900px){
+      body[data-ticket-variant="ticket"] #creatorIntro .full-intro{display:none}
+      body[data-ticket-variant="ticket"] #creatorIntro .compact-intro{display:inline}
+      body[data-ticket-variant="ticket"] #creatorIntro{font-size:clamp(.70rem,3.25vw,.9rem)}
+      body[data-ticket-variant="ticket"] .page-header{margin-bottom:14px}
+    }
     .builder-layout{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(30px,5vw,76px);align-items:start}
     .form-card{background:none;box-shadow:none;padding:0;border-radius:0}
     .section-heading{font:normal 1.65rem Georgia,serif;margin-bottom:12px}
@@ -1283,13 +1297,12 @@
         : "Create Ticket & Concert Reveal | Reveal";
       $("creatorEyebrow").textContent = isConcert
         ? "Scratch Concert Ticket Reveal · staging test"
-        : "Ticket & Concert Reveal · staging test";
+        : "Scratch Ticket Reveal · staging · checkout disabled";
       $("creatorTitle").innerHTML = isConcert
         ? "Reveal the <em>big gig.</em>"
         : "Make the moment <em>unforgettable.</em>";
-      $("creatorIntro").textContent = isConcert
-        ? "Choose Gold, Silver, Midnight or Rose. The entire ticket changes colour."
-        : "Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.";
+      if(isConcert) $("creatorIntro").textContent = "Choose Gold, Silver, Midnight or Rose. The entire ticket changes colour.";
+      else $("creatorIntro").innerHTML = '<span class="full-intro">Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.</span><span class="compact-intro">Choose from 20 designs and personalise your reveal.</span>';
       // Foil swatches and the separate concert cover choices are concert-only.
       // The portrait Scratch Ticket uses its approved 20-image dropdown.
       $("scratchFoilLabel").hidden = !isConcert;

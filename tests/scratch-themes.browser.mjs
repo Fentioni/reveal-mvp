@@ -254,6 +254,36 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
+test('Scratch Ticket header spans the page and fits both lines without overflow at narrow and desktop widths',{timeout:60000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  for(const width of [320,390,768,900,1024,1380]){
+   const page=await browser.newPage({viewport:{width,height:900}});
+   await page.goto(base+'/legacy-create?variant=ticket');
+   await page.locator('#scratchArtwork:enabled').waitFor();
+   const metrics=await page.locator('.page-header').evaluate(header=>{
+    const h=header.getBoundingClientRect(),builder=document.querySelector('.builder-layout').getBoundingClientRect();
+    const measure=id=>{
+     const el=document.getElementById(id),bounds=el.getBoundingClientRect(),style=getComputedStyle(el);
+     const range=document.createRange();range.selectNodeContents(el);
+     const text=range.getBoundingClientRect();
+     return {height:bounds.height,lineHeight:parseFloat(style.lineHeight),textWidth:text.width,width:bounds.width,scrollWidth:el.scrollWidth};
+    };
+    return {headerWidth:h.width,builderWidth:builder.width,headerHeight:h.height,title:measure('creatorTitle'),intro:measure('creatorIntro')};
+   });
+   assert.ok(Math.abs(metrics.headerWidth-metrics.builderWidth)<=1,'Header uses full builder width at '+width);
+   assert.ok(metrics.headerHeight<150,'Compact header at '+width+': '+JSON.stringify(metrics));
+   for(const key of ['title','intro']){
+    const m=metrics[key];
+    assert.ok(m.height<=m.lineHeight+2,'Single line '+key+' at '+width+': '+JSON.stringify(m));
+    assert.ok(m.textWidth<=m.width+1&&m.scrollWidth<=m.width+1,'No clipping '+key+' at '+width+': '+JSON.stringify(m));
+   }
+   await page.close();
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+
 test('creator shows only the 20-artwork dropdown without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
