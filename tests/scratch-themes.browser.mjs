@@ -135,7 +135,8 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     assert.equal(before.visibility,'hidden');
     assert.equal(before.pointer,'none');
     assert.equal(after.text,actual.text,'Exactly the same recipient markup and formatted fields');
-    assert.equal(after.background,actual.background,'Actual selected theme');
+    assert.equal(after.background,'none','Revealed design owns the background');
+    assert.equal(after.background,actual.background,'Same post-scratch background treatment');
     for(const v of [before,after]){assert.ok(Math.abs(v.width-actual.width)<=1,'Same recipient width '+JSON.stringify({v:{width:v.width},actual:actual.width}));assert.ok(Math.abs(v.height-actual.height)<=1,'Same recipient height');}
     assert.equal(before.paint,actual.paint,'Identical artwork canvas, not a separate thumbnail');
     assert.equal(await owner.locator('#scratchActualRevealed svg image').count(),3);
@@ -211,7 +212,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
      assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
      assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
-     assert.equal(await page.locator('#scratchActualRevealed [data-field=eventName]').textContent(),'JESUS CHRIST SUPERSTAR');
+     assert.equal((await page.locator('#scratchActualRevealed [data-field=eventName] tspan').allTextContents()).join(' '),'JESUS CHRIST SUPERSTAR');
      assert.equal(await page.locator('#scratchActualRevealed svg image').nth(1).evaluate(e=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth);i.src=e.getAttribute('href');})),800);
      assert.equal(await page.locator('#scratchActualRevealed canvas').count(),0);
      const px=await page.locator('#scratchActualCovered canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data));
@@ -480,7 +481,22 @@ test('concert purchaser can switch between scratch cover and a fully personalise
    assert.equal(integrity.area,'image','Poster is assigned to image grid zone');
    assert.equal(integrity.posterInside,true,'Poster must be fully contained');
    assert.deepEqual(integrity.overlap,[],'Poster must not overlap any printed text');
-   assert.deepEqual(integrity.overflow,[],'Printed text must remain inside main zone');
+   // The reference SVG is the visible printed ticket. Legacy HTML is retained
+   // for form bindings and may have a different layout beneath the opaque SVG.
+   const printed=await page.locator('#concertRevealedPreviewFrame svg.ct-reference-art').evaluate(svg=>{
+     const frame=svg.getBoundingClientRect(), photo=svg.querySelector('image');
+     const p=photo?.getBoundingClientRect();
+     const inside=r=>r.left>=frame.left-1&&r.right<=frame.right+1&&r.top>=frame.top-1&&r.bottom<=frame.bottom+1;
+     const overlap=(a,b)=>a.left<b.right-1&&a.right>b.left+1&&a.top<b.bottom-1&&a.bottom>b.top+1;
+     const text=[...svg.querySelectorAll('text')];
+     return {photo:!!p&&inside(p),textCount:text.length,
+       overflow:text.filter(n=>!inside(n.getBoundingClientRect())).map(n=>n.textContent),
+       overlap:p?text.filter(n=>overlap(n.getBoundingClientRect(),p)).map(n=>n.textContent):[]};
+   });
+   assert.ok(printed.textCount>0,'Rendered ticket contains printed text');
+   assert.equal(printed.photo,true,'Printed photo is contained in ticket');
+   assert.deepEqual(printed.overflow,[],'Visible printed text stays inside ticket');
+   assert.deepEqual(printed.overlap,[],'Visible printed text does not overlap photo');
    if(size.name==='mobile'){
      await page.locator('#concertZoomButton').click();
      const zoomRatio=await page.locator('#concertRevealedPreviewFrame')
