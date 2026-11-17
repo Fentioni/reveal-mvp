@@ -555,7 +555,15 @@
     #concertRevealedPreviewFrame{display:none}
     body[data-ticket-variant="concert"][data-concert-preview="revealed"] .scratch-static-frame{display:none!important}
     body[data-ticket-variant="concert"][data-concert-preview="revealed"] #concertRevealedPreviewFrame{display:grid}
-    body[data-ticket-variant="concert"] .preview-details-toggle{display:none!important}
+    .preview-details-toggle{display:none!important}
+    body[data-ticket-variant="ticket"] .scratch-static-frame,
+    body[data-ticket-variant="ticket"] .scratch-mobile-caption,
+    body[data-ticket-variant="ticket"] #concertPreviewNote{display:none!important}
+    #scratchCreatorActual h3,#scratchCreatorCoverBlock h3{font:650 1rem/1.3 system-ui,sans-serif;color:#f5dfac;margin:12px 0}
+    #scratchCreatorActual p,#scratchCreatorCoverBlock p{font-size:.82rem;color:#d0c5bd;line-height:1.5}
+    #scratchCreatorActual[hidden],#scratchCreatorCoverBlock[hidden]{display:none!important}
+    body[data-ticket-variant="concert"] #scratchCreatorActual,
+    body[data-ticket-variant="concert"] #scratchCreatorCoverBlock{display:none!important}
     .concert-live-ticket{width:100%;min-height:clamp(235px,29vw,380px);aspect-ratio:auto;
       grid-template-columns:minmax(0,74%) minmax(0,26%);overflow:hidden;position:relative;
       background-size:cover;background-position:center;border:2px solid #cfaa68;color:#fbf2dc;
@@ -1069,7 +1077,20 @@
           </div>
         </section>
         <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
-        <details class="preview-details-toggle">
+        <section id="scratchCreatorActual" hidden aria-label="Actual live Scratch Ticket preview">
+          <div id="scratchCreatorCoverBlock">
+            <h3>Before scratching</h3>
+            <div id="scratchActualCovered"></div>
+            <p>Selected scratch artwork · static preview</p>
+          </div>
+          <div id="scratchCreatorRevealBlock">
+            <h3>After scratching</h3>
+            <div id="scratchActualRevealed"></div>
+            <p>Actual revealed ticket · static preview</p>
+          </div>
+          <p id="scratchActualSound"></p>
+        </section>
+        <details class="preview-details-toggle" hidden>
           <summary>View your personalised ticket details</summary>
         <div class="preview-shell">
           <div class="preview-top">
@@ -1153,7 +1174,8 @@
   </main>
 
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=concert-professional-6';
+    import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=actual-2';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1182,10 +1204,35 @@
     let removeImage = false;
     let objectUrl = null;
     let pendingReview = false;
-    let selectedScratchImage = null;
-    let selectedScratchUrl = null;
-    let savedScratchUrl = null;
-    let existingScratchImage = false;
+    let portraitPreviewQueue=Promise.resolve();
+    let portraitPreviewTimer;
+    let portraitPreviewRevision=0;
+    function refreshPortraitPreview(){
+      const generation=++portraitPreviewRevision;
+      if(currentVariant!=='ticket')return Promise.resolve();
+      const reveal=Object.fromEntries(fields.map(key=>[key,$(key).value.trim()]));
+      reveal.hasImage=Boolean(objectUrl);
+      const surface={style:'classic',foil:$('scratchFoil').value,artworkId:scratchArtworkId,hasImage:false,variant:'ticket'};
+      const artwork=getScratchArtwork(scratchArtworkId);
+      const image=objectUrl;
+      const run=async()=>{
+        if(generation!==portraitPreviewRevision||currentVariant!=='ticket')return;
+        await renderScratchOwnerPreview($('scratchCreatorActual'),{
+          reveal,surface,artwork,eventImage:image,coverImage:'',
+          audio:{enabled:$('scratchAudioEnabled').checked},
+          hosts:{covered:$('scratchActualCovered'),revealed:$('scratchActualRevealed'),sound:$('scratchActualSound')}
+        });
+      };
+      portraitPreviewQueue=portraitPreviewQueue.catch(()=>{}).then(run);
+      return portraitPreviewQueue.catch(error=>{
+        if(generation===portraitPreviewRevision)throw error;
+      });
+    }
+    function schedulePortraitPreview(){
+      clearTimeout(portraitPreviewTimer);
+      if(currentVariant==='ticket'&&ready)
+        portraitPreviewTimer=setTimeout(()=>refreshPortraitPreview().catch(error=>show(error.message)),100);
+    }
     let scratchSelectionSequence = 0;
     let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
     let concertTemplateId = DEFAULT_CONCERT_TEMPLATE;
@@ -1229,10 +1276,12 @@
       if(isConcert) uploadDock.append(upload);
       else form.querySelector(".scratch-choice").append(upload);
       $("ticketUrlLabel").textContent=isConcert ? "4. Add a clickable link (optional)" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add an image";
+      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add a surprise image (optional)";
       $("imageUploadHelp").textContent = isConcert
         ? "JPEG, PNG or WebP · maximum 10 MB · at least 400 × 240 pixels. For best results, use a high-resolution portrait event poster (e.g. 1200 × 1600 px). The image sits in a small area of the revealed ticket and may be cropped, so keep important text away from its edges. It is never shown on the scratch cover."
-        : "Optional: upload an image for a custom scratch-card cover.";
+        : "This photo appears ONLY after scratching. Your chosen scratch-card artwork stays on the front. JPEG, PNG or WebP, up to 10 MB.";
+      $("scratchCreatorActual").hidden=isConcert;
+      $("scratchCreatorCoverBlock").hidden=isConcert;
       $("concertPreviewNote").hidden = isConcert;
       document.querySelector(".scratch-mobile-caption").hidden = isConcert;
       if (initialiseChoice) {
@@ -1301,6 +1350,12 @@
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
       const mobile = currentVariant !== 'concert' && window.matchMedia("(max-width: 900px)").matches;
+      const coverBlock=$('scratchCreatorCoverBlock');
+      if(mobile){
+        if(coverBlock.parentElement!==$('scratchMobileDock'))$('scratchMobileDock').append(coverBlock);
+      }else if(coverBlock.parentElement!==$('scratchCreatorActual')){
+        $('scratchCreatorActual').prepend(coverBlock);
+      }
       const dock = $(mobile ? "scratchMobileDock" : "scratchDesktopDock");
       const frame = scratchPreview.canvas.closest(".scratch-static-frame");
       if (frame && frame.parentElement !== dock) dock.appendChild(frame);
@@ -1412,6 +1467,7 @@
       ]) {
         $(key).hidden = !value;
       }
+      schedulePortraitPreview();
     }
 
     function clearImage() {
@@ -1439,6 +1495,7 @@
       $("imagePreviewWrap").classList.add("visible");
       $("liveImageWrap").classList.add("visible");
       concertLivePreview.render();
+      schedulePortraitPreview();
     }
 
     async function api(path, options = {}) {
@@ -1503,28 +1560,16 @@
       }
       if (currentVariant === "concert") document.body.style.setProperty("--concert-foil-edge",
         {gold:"#d3a752",silver:"#d2dce7",midnight:"#6079d4",rose:"#d69cac"}[foil]);
-      const useImage = currentVariant !== "concert" && style === "custom";
-      const artwork = currentVariant === "ticket" && !useImage
-        ? getScratchArtwork(scratchArtworkId) : null;
-      scratchPreview.artworkId = artwork?.id || null;
+      if(currentVariant === "ticket"){
+        // The selected artwork is the cover; event photos go underneath.
+        await refreshPortraitPreview();
+        return;
+      }
+      scratchPreview.artworkId=null;
       scratchPreview.setFoil(foil);
       concertLivePreview.render();
-      if (currentVariant === "concert") {
-        await scratchPreview.setCoverImage(null);
-        scratchPreview.setCoverStyle("concert");
-      } else if (useImage && (selectedScratchUrl || savedScratchUrl)) {
-        await scratchPreview.setCoverImage(selectedScratchUrl || savedScratchUrl);
-      } else if (artwork) {
-        scratchPreview.setCoverStyle("classic");
-        try {
-          await scratchPreview.setCoverImage(artwork.src);
-        } catch {
-          throw new Error('The selected artwork image is not yet installed on Cloudflare: ' + artwork.label + '.');
-        }
-      } else {
-        await scratchPreview.setCoverImage(null);
-        scratchPreview.setCoverStyle(useImage ? "classic" : style);
-      }
+      await scratchPreview.setCoverImage(null);
+      scratchPreview.setCoverStyle("concert");
       if (sequence !== scratchSelectionSequence) return;
       scratchPreview.canvas.style.pointerEvents = "none";
     }
@@ -1547,7 +1592,7 @@
         if (image.naturalWidth < minWidth || image.naturalHeight < minHeight) {
           throw new Error(currentVariant==='concert'
             ? "Choose event artwork at least 400 × 240 pixels."
-            : "Choose a scratch image at least 640 × 640 pixels.");
+            : "Choose a surprise image at least 640 × 640 pixels.");
         }
         return url;
       } catch(error) {
@@ -1573,8 +1618,8 @@
       setScratchPreview().catch(error => show(error.message));
     });
     window.addEventListener("pagehide", () => {
-      if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
-      if (savedScratchUrl) URL.revokeObjectURL(savedScratchUrl);
+      clearTimeout(portraitPreviewTimer);
+      disposeScratchOwnerPreview($("scratchCreatorActual"));
       scratchPreview.destroy();
     });
 
@@ -1588,17 +1633,12 @@
       const file = $("image").files?.[0];
       if (!file) return;
       try {
-        // One user image can be used in both existing product image storage
-        // and the private R2 scratch-cover asset. No second file selector.
         const next = await examineScratchFile(file);
-        if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
-        selectedScratchUrl = next;
-        selectedScratchImage = currentVariant === "concert" ? null : file;
+        URL.revokeObjectURL(next);
         selectedImage = file;
         removeImage = false;
-        if (currentVariant !== "concert") $("scratchStyle").value = "custom";
-        await setScratchPreview();
         showImage(file, file.name);
+        await setScratchPreview();
         hide();
       } catch (error) {
         $("image").value = "";
@@ -1610,15 +1650,9 @@
       if (!ready || busy) return;
 
       selectedImage = null;
-      selectedScratchImage = null;
-      if (selectedScratchUrl) URL.revokeObjectURL(selectedScratchUrl);
-      selectedScratchUrl = null;
       $("image").value = "";
       removeImage = existingImage;
 
-      if ($("scratchStyle").value === "custom") {
-        $("scratchStyle").value = currentVariant === "concert" ? "concert" : "classic";
-      }
       clearImage();
       setScratchPreview().catch(error => show(error.message));
       hide();
@@ -1628,12 +1662,6 @@
       event.preventDefault();
 
       if (!ready || busy || !form.reportValidity()) return;
-      if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage) {
-        show("Choose an image using Add an image to create your custom scratch-card cover.");
-        $("image").focus();
-        return;
-      }
-
       busy = true;
       lock(true);
       hide();
@@ -1686,7 +1714,7 @@
 
         const surfaceBody = new FormData();
         surfaceBody.append("variant", currentVariant);
-        surfaceBody.append("style", currentVariant === "concert" ? "concert" : $("scratchStyle").value);
+        surfaceBody.append("style", currentVariant === "concert" ? "concert" : "classic");
         surfaceBody.append("foil", $("scratchFoil").value);
         if(currentVariant==='concert'){
           surfaceBody.append('ticketTemplate',concertTemplateId);
@@ -1696,11 +1724,8 @@
             Object.fromEntries(CONCERT_TICKET_FIELDS.map(field=>[field.id,$(field.id).value.trim()]))
           ));
         }
-        surfaceBody.append("artworkId", currentVariant === "ticket" && $("scratchStyle").value !== "custom" ? scratchArtworkId : "");
+        surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
-        if ($("scratchStyle").value === "custom" && selectedScratchImage) {
-          surfaceBody.append("coverImage", selectedScratchImage);
-        }
         await api("/api/reveals/" + encodeURIComponent(id) + "/scratch-surface", {
           method: "PUT",
           headers: {"X-Edit-Token": token},
@@ -1802,7 +1827,7 @@
         );
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         concertLivePreview.setVariant(currentVariant);
-        $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : savedSurface.surface.style;
+        $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : "classic";
         $("scratchFoil").value = savedSurface.surface.foil;
         if(savedSurface.surface.variant==='concert'){
           const savedLayout=concertTemplateLayout(savedSurface.surface.ticketTemplate);
@@ -1818,20 +1843,9 @@
         scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
         $("scratchArtwork").value = scratchArtworkId;
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
-        existingScratchImage = Boolean(savedSurface.surface.hasImage);
-        if (existingScratchImage) {
-          const coverResponse = await fetch(
-            "/api/reveals/" + encodeURIComponent(id) + "/scratch-surface/image",
-            {cache:"no-store", headers:{"X-Edit-Token":token}}
-          );
-          if (!coverResponse.ok) throw new Error("Saved scratch-surface image could not be retrieved. Please try again.");
-          const blob = await coverResponse.blob();
-          if (!["image/jpeg","image/png","image/webp"].includes(blob.type)) {
-            throw new Error("Saved scratch-surface image has an unexpected format.");
-          }
-          savedScratchUrl = URL.createObjectURL(blob);
-          if (!reveal.hasImage) showImage(blob, "Current saved scratch image");
-        }
+        // Incorrect old dual-use uploads return to the catalogue on amend.
+        // Existing paid tickets are not rewritten.
+        const replacedLegacyCover=currentVariant==='ticket'&&savedSurface.surface.hasImage;
         await setScratchPreview();
 
         for (const key of fields) {
@@ -1868,12 +1882,6 @@
             }
 
             showImage(blob, "Current saved image");
-            if ($("scratchStyle").value === "custom" && !existingScratchImage && !selectedScratchImage) {
-              const prior = new File([blob], "saved-cover." + (blob.type.split("/")[1] === "jpeg" ? "jpg" : blob.type.split("/")[1]), {type:blob.type});
-              selectedScratchUrl = await examineScratchFile(prior);
-              selectedScratchImage = prior;
-              await setScratchPreview();
-            }
 
           } catch {
             $("imagePreviewWrap").classList.add("visible");
@@ -1887,6 +1895,8 @@
           }
         }
 
+        if(replacedLegacyCover)show("Your previous draft used the uploaded surprise image as its scratch cover. Choose your preferred scratch-card artwork above; the photo now appears only after scratching.","info");
+        await setScratchPreview();
         ready = true;
         lock(false);
         // Display the correct product only AFTER the saved configuration

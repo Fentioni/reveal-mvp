@@ -936,6 +936,7 @@
       <section id="scratchActualReview" hidden aria-label="Actual Scratch Ticket preview">
         <h2>Your actual scratch reveal</h2>
         <p class="scratch-actual-description">Both views below show your saved ticket as the recipient will see it. These previews are read-only; scratching and sound remain disabled here.</p>
+        <p id="scratchLegacyCoverWarning" class="scratch-actual-description" hidden>This older draft uses an uploaded image as its cover. Select Amend details to choose a scratch-card artwork and keep your surprise photograph hidden until scratching.</p>
         <h3>1. Before scratching</h3>
         <div id="scratchActualCovered"></div>
         <h3>2. After scratching</h3>
@@ -1042,8 +1043,8 @@
 
   <script defer src="/qr.js"></script>
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=concert-professional-7';
-    import {renderScratchOwnerPreview} from '/scratch-owner-preview.js?v=actual-1';
+    import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
+    import {renderScratchOwnerPreview} from '/scratch-owner-preview.js?v=actual-2';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
     import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
@@ -1375,6 +1376,7 @@
       if(!isConcert){
         document.querySelector('.review-shell').hidden=true;
         elements.surfaceReview.hidden=true;
+        document.getElementById('scratchLegacyCoverWarning').hidden=!hasImage;
         if(hasImage){
           const response=await fetch('/api/reveals/'+encodeURIComponent(revealId)+'/scratch-surface/image',{headers:ownerHeaders(),cache:'no-store'});
           if(!response.ok)throw new Error('The saved scratch image could not be loaded. Amend the reveal or try again.');

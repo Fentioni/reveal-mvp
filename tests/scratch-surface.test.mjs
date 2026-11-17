@@ -179,7 +179,7 @@ test('scratch API is staging-only and excludes paid recipient routes', async () 
   assert.ok(controller.includes('cache-control\':\'private, no-store'));
 });
 
-test('ticket creator contains static surface preview and saves/restores owner cover', () => {
+test('ticket creator contains actual previews and separates the selected cover from the event image', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   assert.ok(creator.includes('id="scratchStyle"'));
   assert.ok(creator.includes('id="scratchFoil"'));
@@ -191,15 +191,15 @@ test('ticket creator contains static surface preview and saves/restores owner co
     'ticket creator must have one image selector');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
-  assert.ok(creator.includes('selectedScratchImage = currentVariant === "concert" ? null : file;'));
+  assert.ok(!creator.includes('selectedScratchImage'));
   assert.ok(creator.includes('selectedImage = file;'));
-  assert.ok(creator.includes('$("scratchStyle").value = "custom";'));
+  assert.ok(!creator.includes('$("scratchStyle").value = "custom";'));
   assert.ok(creator.includes('body.append("image", selectedImage)'));
-  assert.ok(creator.includes('surfaceBody.append("coverImage", selectedScratchImage)'));
-  assert.ok(creator.includes('if ($("scratchStyle").value === "custom" && !selectedScratchImage && !existingScratchImage)'));
+  assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
+  assert.ok(creator.includes('renderScratchOwnerPreview'));
   assert.ok(creator.includes('setScratchPreview().catch(error => show(error.message));'));
-  assert.ok(creator.includes('selectedScratchImage = null;'));
-  assert.ok(creator.includes('"/scratch-surface/image"'));
+  assert.ok(creator.includes('scratchArtworkId'));
+  assert.ok(creator.includes('replacedLegacyCover'));
   assert.ok(creator.includes('await setScratchPreview()'));
 });
 
@@ -282,24 +282,19 @@ test('invalid audio setting rejected and no D1 writes occur', async () => {
 });
 
 
-test('the single image picker supports custom scratch cover without a second file selection', () => {
+test('event upload must never switch the selected scratch artwork to a custom cover', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   const form=creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
   assert.equal((form.match(/type="file"/g)||[]).length,1);
   assert.ok(form.includes('id="image"'));
-  assert.ok(!form.includes('scratchCoverImage'));
-  assert.ok(form.indexOf('id="scratchArtwork"') < form.indexOf('id="image"'));
-  assert.ok(form.indexOf('id="image"') < form.indexOf('id="recipient"'));
-  assert.ok(creator.includes('const next = await examineScratchFile(file);'));
-  assert.ok(creator.includes('selectedScratchUrl = next;'));
-  assert.ok(creator.includes('selectedScratchImage = currentVariant === "concert" ? null : file;'));
+  assert.ok(creator.includes('This photo appears ONLY after scratching.'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(creator.includes('showImage(file, file.name);'));
-  assert.ok(creator.includes('surfaceBody.append("coverImage", selectedScratchImage);'));
   assert.ok(creator.includes('body.append("image", selectedImage);'));
-  assert.ok(creator.includes('Choose an image using Add an image to create your custom scratch-card cover.'));
-  assert.ok(creator.includes('selectedScratchImage = null;'));
-  assert.ok(creator.includes('await setScratchPreview();'));
+  assert.ok(creator.includes('surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");'));
+  assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
+  assert.ok(!creator.includes('selectedScratchImage'));
+  assert.ok(creator.includes('await refreshPortraitPreview()'));
 });
 
 
@@ -425,7 +420,7 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(!creator.includes('data-show-for="concert"'),'Concert theme buttons must be removed');
   assert.ok(creator.includes('$("scratchArtGrid")') === false);
   assert.ok(creator.includes('$("scratchFoilGrid").hidden = !isConcert;'));
-  assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : $("scratchStyle").value)'));
+  assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : "classic")'));
   assert.ok(creator.includes('currentVariant === "concert" ? "concert" : "classic"'));
   assert.ok(creator.includes('id="image"'));
   assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);

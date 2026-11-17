@@ -165,9 +165,6 @@ export class ScratchCard {
         ctx.fillStyle = gradient;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
-      } else {
-        ctx.fillStyle = 'rgba(12, 11, 25, 0.19)';
-        ctx.fillRect(0, 0, w, h);
       }
     }
 
@@ -175,7 +172,7 @@ export class ScratchCard {
     // banners, or decorative stamp over the scratchable artwork.
     // Legacy portrait covers retain their pre-existing illustrated themes,
     // but the separately designed landscape concert ticket does not.
-    if (!this.artworkId && w <= h*1.4) {
+    if (!this.artworkId && !this.coverImage && w <= h*1.4) {
       drawScratchThemeArtwork(ctx,w,h,getScratchTheme(this.theme),{
         photo:Boolean(this.coverImage),landscape:false
       });

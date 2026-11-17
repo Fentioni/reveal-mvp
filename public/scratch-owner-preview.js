@@ -3,11 +3,16 @@
  * once completely covered and once completely revealed. No public reveal
  * requests, no scratch hooks or audio playback, no unlocking interaction.
  */
-import {ScratchCard} from './scratchcard.js?v=concert-professional-7';
+import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {mountScratchFace,fillScratchFace,setPortraitFaceTheme,setScratchFaceImage} from './scratch-recipient-face.js?v=actual-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
 const stylesheet='/scratch-recipient-face.css?v=actual-1';
+const active=new WeakMap();
+export function disposeScratchOwnerPreview(section){
+ active.get(section)?.destroy();
+ active.delete(section);
+}
 function make(tag,text,cls){
  const node=document.createElement(tag);
  if(text)node.textContent=text;
@@ -15,7 +20,8 @@ function make(tag,text,cls){
  return node;
 }
 async function stage(host,model,{cover,theme,artwork,eventImage}){
- const root=host.attachShadow({mode:'open'});
+ const root=host.shadowRoot||host.attachShadow({mode:'open'});
+ root.replaceChildren();
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
  const ready=new Promise((resolve,reject)=>{css.onload=resolve;css.onerror=()=>reject(new Error('The actual preview styles could not be loaded.'));});
  root.append(css);
@@ -43,11 +49,13 @@ async function stage(host,model,{cover,theme,artwork,eventImage}){
  if(cover){
   root.getElementById('underlay').inert=true;
   root.getElementById('underlay').setAttribute('aria-hidden','true');
+  card.dataset.previewState='covered';
   const canvas=document.createElement('canvas');
   canvas.id='foilCanvas';canvas.setAttribute('aria-hidden','true');
   card.append(canvas);
  }else{
   card.classList.add('foil-ready');
+  card.dataset.previewState='revealed';
   const link=root.getElementById('bookingUrl');
   link.removeAttribute('href');link.setAttribute('aria-disabled','true');
   if(model.ticketUrl){
@@ -59,11 +67,15 @@ async function stage(host,model,{cover,theme,artwork,eventImage}){
  await ready;
  return root;
 }
-export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio}){
+export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio,hosts}){
  const model=recipientCardModel({...reveal,hasEventImage:reveal.hasImage===true});
  if(model.hasEventImage&&!eventImage)throw new Error('The saved event image could not be loaded. Please retry or amend the reveal.');
  const theme=getScratchTheme(surface.theme||DEFAULT_SCRATCH_THEME);
- const covered=section.querySelector('#scratchActualCovered'),revealed=section.querySelector('#scratchActualRevealed');
+ const covered=hosts?.covered||section.querySelector('#scratchActualCovered');
+ const revealed=hosts?.revealed||section.querySelector('#scratchActualRevealed');
+ const sound=hosts?.sound||section.querySelector('#scratchActualSound');
+ disposeScratchOwnerPreview(section);
+ section.hidden=false;
  const [coverRoot]=await Promise.all([
   stage(covered,model,{cover:true,theme,artwork,eventImage}),
   stage(revealed,model,{cover:false,theme,artwork,eventImage})
@@ -76,9 +88,13 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  });
  card.artworkId=artwork?.id||null;
  const image=surface.hasImage?coverImage:artwork?.src;
+ if(!surface.hasImage&&!artwork&&surface.artworkId)throw new Error('Your selected scratch artwork is not available.');
  if(surface.hasImage&&!image)throw new Error('The saved scratch image could not be loaded.');
  if(image&&!(await card.setCoverImage(image)))throw new Error('The selected scratch artwork could not be opened.');
- section.querySelector('#scratchActualSound').textContent=audio?.enabled!==false
+ active.set(section,card);
+ covered.dataset.renderedArtwork=artwork?.id||'';
+ revealed.dataset.renderedImage=eventImage||'';
+ sound.textContent=audio?.enabled!==false
   ? 'Sound: cinematic drum roll begins about 3 seconds after the recipient first scratches.'
   : 'Sound: disabled for the recipient.';
  section.hidden=false;

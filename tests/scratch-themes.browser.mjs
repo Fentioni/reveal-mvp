@@ -165,6 +165,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
    await page.locator('#scratchArtwork:enabled').waitFor();
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
+   assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
+   assert.equal(await page.locator('#scratchActualRevealed #card:visible').count(),1);
    assert.equal(await page.locator('.scratch-theme-option').count(),0);
    assert.equal(await page.locator('[data-scratch-foil]:visible').count(),0);
    assert.equal(await page.locator('#surfaceHeading:visible').count(),0);
@@ -180,7 +182,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
     await page.waitForFunction(id=>document.querySelector('#scratchArtwork')?.value===id,art.id);
     await page.waitForTimeout(75);
     assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
-    paintings.add(await page.locator('#scratchSurfacePreview').evaluate(canvas=>canvas.toDataURL('image/png')));
+    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art.id);
+    paintings.add(await page.locator('#scratchActualCovered canvas').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
    assert.equal(paintings.size,20,'Each approved artwork must actually repaint the surface Canvas');
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
