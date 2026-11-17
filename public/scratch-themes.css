@@ -36,7 +36,7 @@ body.scratch-themed[data-scratch-theme-mode="recipient"] .card{
  border-color:var(--scratch-accent);
  box-shadow:0 25px 68px #0009,0 0 28px color-mix(in srgb,var(--scratch-accent) 20%,transparent);
 }
-body.scratch-themed[data-scratch-theme-mode="recipient"] .ticket-underlay:not(.concert-ticket .ticket-underlay){
+body.scratch-themed[data-scratch-theme-mode="recipient"] .ticket-underlay:not(.concert-ticket .ticket-underlay, .post-scratch-underlay){
  background:radial-gradient(circle at 50% 14%,var(--scratch-bg2),transparent 64%),
  linear-gradient(148deg,var(--scratch-bg),var(--scratch-bg2) 70%,var(--scratch-bg));
 }
