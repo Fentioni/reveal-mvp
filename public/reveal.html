@@ -558,6 +558,12 @@
         animation: none;
       }
     }
+    #scratchActualReview{margin:24px 0 28px}
+    #scratchActualReview h2{font:normal 1.55rem Georgia,serif;margin:0 0 8px}
+    #scratchActualReview h3{font:650 1.05rem/1.3 system-ui,sans-serif;margin:24px 0 10px}
+    #scratchActualReview .scratch-actual-description{font-size:.87rem;color:#665a4c;line-height:1.6}
+    #scratchActualReview :is(#scratchActualCovered,#scratchActualRevealed){margin-inline:-16px;max-width:490px}
+    @media(min-width:522px){#scratchActualReview :is(#scratchActualCovered,#scratchActualRevealed){margin-inline:auto;width:490px}}
     .scratch-surface-summary{margin:22px 0;padding:20px;border:1px solid #d9c8a9;border-radius:17px;background:#fbf7ee;color:#493c2f}
     .scratch-surface-summary[hidden]{display:none!important}
     .scratch-surface-summary h2{font-family:Georgia,serif;font-weight:500;margin:0 0 7px;font-size:1.35rem}
@@ -927,6 +933,16 @@
         <div id="quizReviewQuestions"></div>
       </section>
 
+      <section id="scratchActualReview" hidden aria-label="Actual Scratch Ticket preview">
+        <h2>Your actual scratch reveal</h2>
+        <p class="scratch-actual-description">Both views below show your saved ticket as the recipient will see it. These previews are read-only; scratching and sound remain disabled here.</p>
+        <h3>1. Before scratching</h3>
+        <div id="scratchActualCovered"></div>
+        <h3>2. After scratching</h3>
+        <div id="scratchActualRevealed"></div>
+        <p id="scratchActualSound" class="scratch-actual-description"></p>
+      </section>
+
       <section id="surfaceReview" class="scratch-surface-summary" hidden aria-label="Static scratch surface review">
         <h2>Scratch-card surface</h2>
         <p id="surfaceReviewDescription"></p>
@@ -1026,7 +1042,8 @@
 
   <script defer src="/qr.js"></script>
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=concert-professional-5';
+    import { ScratchCard } from '/scratchcard.js?v=concert-professional-7';
+    import {renderScratchOwnerPreview} from '/scratch-owner-preview.js?v=actual-1';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
     import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
@@ -1355,6 +1372,26 @@
       if (!artwork && result.surface.variant !== 'concert') applyScratchTheme(document,chosenTheme,'review');
       const isConcert = result.surface.variant === 'concert';
       document.body.dataset.ticketVariant = isConcert ? 'concert' : 'ticket';
+      if(!isConcert){
+        document.querySelector('.review-shell').hidden=true;
+        elements.surfaceReview.hidden=true;
+        if(hasImage){
+          const response=await fetch('/api/reveals/'+encodeURIComponent(revealId)+'/scratch-surface/image',{headers:ownerHeaders(),cache:'no-store'});
+          if(!response.ok)throw new Error('The saved scratch image could not be loaded. Amend the reveal or try again.');
+          const blob=await response.blob();
+          if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw new Error('Unexpected scratch image format.');
+          if(surfaceObjectUrl)URL.revokeObjectURL(surfaceObjectUrl);
+          surfaceObjectUrl=URL.createObjectURL(blob);
+        }
+        if(staticScratchCard)staticScratchCard.destroy();
+        staticScratchCard=await renderScratchOwnerPreview(document.getElementById('scratchActualReview'),{
+          reveal,surface:result.surface,artwork,
+          eventImage:reveal.hasImage?imageObjectUrl:'',
+          coverImage:hasImage?surfaceObjectUrl:'',
+          audio:result.audio
+        });
+        return;
+      }
       if(isConcert){
         const details=cleanConcertTicketDetails(result.surface.ticketDetails);
         const subtitle=document.getElementById('reviewConcertSubtitle');

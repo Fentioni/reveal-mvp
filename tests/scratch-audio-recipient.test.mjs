@@ -245,7 +245,7 @@ test('staging-only paid scratch recipient route is wired, and public static shel
   assert.ok(html.includes("'/scratch-image'"));
   assert.ok(html.includes('recipientCardModel(data.reveal)'));
   assert.ok(html.includes('class="card" hidden'));
-  assert.ok(html.includes('.card.foil-ready .ticket-underlay{visibility:visible}'));
+  assert.ok(fs.readFileSync(path.join(root,'public/scratch-recipient-face.css'),'utf8').includes('.card.foil-ready .ticket-underlay{visibility:visible}'));
   assert.ok(!html.includes('Chloe'));
   const scripts=[...html.matchAll(/<script type="module">([\s\S]*?)<\/script>/g)];
   assert.equal(scripts.length,1);

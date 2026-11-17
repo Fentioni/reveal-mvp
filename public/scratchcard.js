@@ -26,7 +26,7 @@ const distPointToSegmentSquared = (px, py, x1, y1, x2, y2) => {
 
 export class ScratchCard {
   constructor({ canvas, foil = 'gold', coverStyle = 'classic', concertTicket = false, ticketTemplate = DEFAULT_CONCERT_TEMPLATE, theme = DEFAULT_SCRATCH_THEME, brushSize = 48,
-    coverImage = null, onScratch = () => {}, onProgress = () => {},
+    coverImage = null, interactive = true, onScratch = () => {}, onProgress = () => {},
     onComplete = () => {} } = {}) {
     if (!(canvas instanceof HTMLCanvasElement)) {
       throw new TypeError('ScratchCard needs a canvas element.');
@@ -64,10 +64,13 @@ export class ScratchCard {
       pointerup: event => this.pointerEnd(event),
       pointercancel: event => this.pointerEnd(event)
     };
-    canvas.style.touchAction = 'none';
-    canvas.setAttribute('aria-label', 'Scratch the surface to reveal the fictional surprise');
-    for (const [name, handler] of Object.entries(this.events)) {
-      canvas.addEventListener(name, handler);
+    canvas.style.touchAction = interactive ? 'none' : 'auto';
+    if(interactive){
+      canvas.setAttribute('aria-label', 'Scratch the surface to reveal the fictional surprise');
+      for (const [name, handler] of Object.entries(this.events)) canvas.addEventListener(name, handler);
+    }else{
+      canvas.style.pointerEvents='none';
+      canvas.setAttribute('aria-hidden','true');
     }
     this.observer = typeof ResizeObserver !== 'undefined'
       ? new ResizeObserver(() => this.resize()) : null;

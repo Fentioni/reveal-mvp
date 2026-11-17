@@ -62,10 +62,10 @@ async function startServer(){
    res.end(JSON.stringify({...sample,scratchSurface:{...sample.scratchSurface,artworkId:art.id}}));
    return;
   }
-  const file=path==='/legacy-create'?'/legacy-create.html'
+  const file=path==='/reveal'?'/reveal.html':path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!/^\/(?:legacy-create\.html|recipient-scratch\.html|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
@@ -79,6 +79,79 @@ async function startServer(){
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));
  return{server,base:'http://127.0.0.1:'+server.address().port};
 }
+test('actual private Scratch Ticket review matches paid card markup, geometry and artwork with no active scratch controls',
+ {timeout:120000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ const staging='https://reveal-stage4b-test.michael-fenton9.workers.dev';
+ try{
+  await mkdir(output,{recursive:true});
+  for(const size of [{name:'mobile',width:390,height:844},{name:'desktop',width:1380,height:900}]){
+   for(const custom of [false,true]){
+    const owner=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+    const recipient=await browser.newPage({viewport:size,deviceScaleFactor:1,reducedMotion:'reduce'});
+    const errors=[];owner.on('pageerror',e=>errors.push(e.message));recipient.on('pageerror',e=>errors.push(e.message));
+    const details={...sample.reveal,eventName:'Jesus Christ Superstar',ticketUrl:'https://example.org/tickets',hasEventImage:true};
+    const surface={...sample.scratchSurface,theme:'luxury-elegant',style:custom?'custom':'classic',hasImage:custom,artworkId:custom?null:DEFAULT_SCRATCH_ARTWORK};
+    // Valid synthetic PNG bytes, used for both authenticated owner and paid recipient.
+    const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');
+    await owner.addInitScript(()=>localStorage.setItem('reveal_edit_private-draft','owner-edit-token'));
+    const ownerRequests=[];
+    await owner.route(staging+'/**',async route=>{
+      const u=new URL(route.request().url()),p=u.pathname;
+      if(p.startsWith('/api/')){
+        ownerRequests.push(p);
+        assert.equal(route.request().headers()['x-edit-token'],'owner-edit-token');
+        if(p==='/api/reveals/private-draft')return route.fulfill({json:{success:true,reveal:{...details,hasImage:true,status:'draft',id:'private-draft'}}});
+        if(p==='/api/reveals/private-draft/quiz'||p==='/api/reveals/private-draft/gender')return route.fulfill({status:404});
+        if(p==='/api/reveals/private-draft/scratch-surface')return route.fulfill({json:{success:true,surface,audio:{enabled:false}}});
+        if(p.endsWith('/image'))return route.fulfill({contentType:'image/png',body:png});
+      }
+      assert.ok(!p.startsWith('/r/'),'Private review must not request a public recipient endpoint');
+      return route.fulfill({response:await route.fetch({url:base+p+u.search})});
+    });
+    await recipient.route('**/r/artwork-*/scratch-data',route=>route.fulfill({json:{...sample,reveal:details,scratchSurface:surface}}));
+    await recipient.route('**/r/artwork-*/scratch-image',route=>route.fulfill({contentType:'image/png',body:png}));
+    await recipient.route('**/r/artwork-*/scratch-cover',route=>route.fulfill({contentType:'image/png',body:png}));
+    await owner.goto(staging+'/reveal?id=private-draft',{waitUntil:'domcontentloaded'});
+    await owner.locator('#scratchActualReview:visible').waitFor({timeout:15000});
+    await recipient.goto(base+'/r/artwork-'+DEFAULT_SCRATCH_ARTWORK,{waitUntil:'domcontentloaded'});
+    await recipient.locator('#card.foil-ready:visible').waitFor({timeout:15000});
+    await owner.locator('#scratchActualCovered canvas').evaluate(el=>new Promise(done=>requestAnimationFrame(()=>requestAnimationFrame(done))));
+    const before=await owner.locator('#scratchActualCovered #card').evaluate(card=>{
+      const face=card.querySelector('#underlay'),canvas=card.querySelector('canvas'),r=card.getBoundingClientRect();
+      const c=canvas.getBoundingClientRect();return {width:r.width,height:r.height,canvasW:c.width,canvasH:c.height,paint:canvas.toDataURL(),visibility:getComputedStyle(face).visibility,pointer:getComputedStyle(canvas).pointerEvents};
+    });
+    const after=await owner.locator('#scratchActualRevealed #card').evaluate(card=>{
+      const r=card.getBoundingClientRect();
+      return {width:r.width,height:r.height,text:card.querySelector('#underlay').textContent,background:getComputedStyle(card.querySelector('.ticket-underlay')).backgroundImage};
+    });
+    const actual=await recipient.locator('#card').evaluate(card=>{
+      const r=card.getBoundingClientRect(),canvas=card.querySelector('canvas');
+      return {width:r.width,height:r.height,text:card.querySelector('#underlay').textContent,paint:canvas.toDataURL(),background:getComputedStyle(card.querySelector('.ticket-underlay')).backgroundImage};
+    });
+    assert.equal(await owner.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
+    assert.equal(await owner.locator('#scratchActualReview button, #scratchActualRevealed a[href]').count(),0);
+    assert.equal(before.visibility,'hidden');
+    assert.equal(before.pointer,'none');
+    assert.equal(after.text,actual.text,'Exactly the same recipient markup and formatted fields');
+    assert.equal(after.background,actual.background,'Actual selected theme');
+    for(const v of [before,after]){assert.ok(Math.abs(v.width-actual.width)<=1,'Same recipient width '+JSON.stringify({v:{width:v.width},actual:actual.width}));assert.ok(Math.abs(v.height-actual.height)<=1,'Same recipient height');}
+    assert.equal(before.paint,actual.paint,'Identical artwork canvas, not a separate thumbnail');
+    assert.equal(await owner.locator('#scratchActualRevealed #eventImageWrap:visible').count(),1);
+    const foil=owner.locator('#scratchActualCovered canvas');
+    await foil.evaluate(e=>{e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:50,clientY:50,pointerId:1}));e.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:70,clientY:70,pointerId:1}));});
+    assert.equal(await foil.evaluate(c=>c.toDataURL()),before.paint,'Owner cannot scratch even through dispatched pointer events');
+    assert.ok(ownerRequests.includes('/api/reveals/private-draft/scratch-surface'));
+    assert.equal(ownerRequests.includes('/api/reveals/private-draft/scratch-surface/image'),custom);
+    assert.deepEqual(errors,[]);
+    await owner.locator('#scratchActualReview').screenshot({path:resolve(output,size.name+'-actual-review-'+(custom?'custom':'catalogue')+'.png')});
+    await owner.close();await recipient.close();
+   }
+  }
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+
 test('creator shows only the 20-artwork dropdown without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();

@@ -1,0 +1,53 @@
+  main{max-width:490px;margin:0 auto;padding:clamp(20px,5vw,38px) 18px 70px;text-align:center}
+  .eyebrow{color:#e7cb88;letter-spacing:.2em;text-transform:uppercase;font-size:.7rem;font-weight:750}
+  h1{font:normal clamp(2rem,9vw,3.2rem)/1.09 Georgia,serif;letter-spacing:-.035em;margin:15px 0 10px}
+  .intro{color:#ded1ba;font-size:.9rem;line-height:1.6;margin:0 auto 22px;max-width:350px}
+  .error{background:#56303a;color:#fff;border:1px solid #af6872;padding:16px;border-radius:12px;margin:20px 0}
+  .card{position:relative;width:100%;min-height:min(128vw,620px);border:4px solid #cda45b;border-radius:24px;
+    overflow:hidden;background:#181527;box-shadow:0 25px 60px #0009;isolation:isolate}
+  .card[hidden]{display:none!important}
+  .ticket-underlay{visibility:hidden;width:100%;min-height:min(128vw,620px);display:flex;flex-direction:column;
+    justify-content:space-between;align-items:center;gap:15px;padding:clamp(16px,5vw,26px);
+    background:radial-gradient(ellipse at 50% 14%,#58426e,transparent 55%),
+    linear-gradient(135deg,#11182e,#2a1a3d 60%,#10182b)}
+  .card.foil-ready .ticket-underlay{visibility:visible}
+  .label{color:#eed294;font-size:.62rem;letter-spacing:.17em;font-weight:750}
+  .recipient{font:normal clamp(2rem,8vw,3rem)/1.05 Georgia,serif;margin:9px 0 4px;overflow-wrap:anywhere}
+  .headline{font:normal clamp(1.55rem,6vw,2.3rem)/1.1 Georgia,serif;overflow-wrap:anywhere;max-width:100%;margin:0}
+  .ticket{width:100%;color:#372719;background:linear-gradient(135deg,#f4e2bb,#fff9e7,#e8cda0);
+    border-radius:13px;text-align:left;padding:19px 17px;box-shadow:0 14px 36px #0006}
+  .ticket .kicker{font-size:.6rem;color:#977035;letter-spacing:.13em;font-weight:750}
+  .ticket h2{font:normal clamp(1.4rem,6vw,2rem)/1.1 Georgia,serif;margin:8px 0 14px;overflow-wrap:anywhere}
+  .ticket-grid{display:grid;grid-template-columns:1fr 1fr;gap:11px;border-top:2px dashed #c1a77d;padding-top:13px}
+  .ticket-item{min-width:0}
+  .ticket-item dt{font-size:.56rem;letter-spacing:.14em;color:#957242;font-weight:800;margin:0 0 3px}
+  .ticket-item dd{margin:0;font-size:.78rem;font-weight:650;overflow-wrap:anywhere}
+  .message{font:italic .88rem/1.45 Georgia,serif;color:#f1ddbc;overflow-wrap:anywhere;white-space:pre-wrap;margin:0}
+  .field-grid[hidden],.ticket-item[hidden],.event-image-wrap[hidden],.booking-row[hidden],
+  .message-wrap[hidden],.sender-wrap[hidden],#closingDetails[hidden],#bookingAction[hidden]{display:none!important}
+  .event-image-wrap{width:100%;margin:3px auto 0;min-height:0}
+  .event-image-wrap img{display:block;width:100%;max-height:185px;object-fit:contain;border-radius:11px}
+  .booking-row{margin-top:11px;border-top:2px dashed #c1a77d;padding-top:11px}
+  .booking-row dt{font-size:.58rem;letter-spacing:.14em;color:#957242;font-weight:800}
+  .booking-row dd{margin:4px 0 0;font-size:.76rem;overflow-wrap:anywhere;word-break:break-word}
+  .booking-row a{color:#4f3572;text-underline-offset:3px}
+  #bookingAction{display:inline-block;margin:12px auto 0;padding:11px 16px;min-height:44px;border:1px solid #d7b86f;
+    border-radius:99px;color:#fae8c3;text-decoration:none;font-weight:650;overflow-wrap:anywhere}
+  #bookingAction:focus-visible{outline:3px solid #fff;outline-offset:3px}
+  #foilCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+
+/* The same theme treatment on both the real card and the static owner face. */
+.card.scratch-face-themed{border-color:var(--scratch-accent);box-shadow:0 25px 68px #0009,0 0 28px color-mix(in srgb,var(--scratch-accent) 20%,transparent)}
+.card.scratch-face-themed .ticket-underlay{background:radial-gradient(circle at 50% 14%,var(--scratch-bg2),transparent 64%),linear-gradient(148deg,var(--scratch-bg),var(--scratch-bg2) 70%,var(--scratch-bg))}
+.card.scratch-face-themed .ticket-underlay .ticket{border-top:4px solid var(--scratch-accent)}
+.card.scratch-face-themed .label{color:var(--scratch-highlight)}
+/* Shadow root isolates the real recipient layout from the owner summary CSS. */
+:host{display:block;min-width:0;color:#fcf5e6;font:16px/1.6 system-ui,-apple-system,sans-serif;text-align:center}
+:host *{box-sizing:border-box}
+:host [hidden]{display:none!important}
+.scratch-preview-stage{color:#fcf5e6;background:radial-gradient(circle at 15% 10%,#a57f3a2b,transparent 32%),radial-gradient(circle at 85% 85%,#7962ca2a,transparent 35%),#10111c;border-radius:19px;overflow:hidden}
+.scratch-preview-stage main{padding-bottom:26px}
+.scratch-preview-themed{background:radial-gradient(ellipse at 15% 13%,color-mix(in srgb,var(--scratch-accent) 45%,transparent),transparent 49%),radial-gradient(ellipse at 91% 75%,color-mix(in srgb,var(--scratch-highlight) 13%,transparent),transparent 50%),linear-gradient(150deg,var(--scratch-bg),var(--scratch-bg2) 63%,var(--scratch-bg))}
+.scratch-preview-themed .eyebrow{color:var(--scratch-highlight)}
+:host #foilCanvas{pointer-events:none!important;touch-action:auto!important;cursor:default!important}
+:host .booking-row a[aria-disabled="true"]{text-decoration:underline;cursor:default}
