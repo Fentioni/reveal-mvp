@@ -1,4 +1,5 @@
-import {defaultDesign,validateDesign} from '../public/template-design-schema.js';
+import {defaultDesign,validateDesign,MAX_ARTWORK_DATA} from '../public/template-design-schema.js';
+const MAX_DESIGN_BYTES=MAX_ARTWORK_DATA+120000;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const prefix='admin-template-designs/v1/';
 const encoder=new TextEncoder();
@@ -34,8 +35,12 @@ export async function templateDesignResponse(request,env){
   const access=await authorised(request,env);if(access===null)return json({error:'Set TEMPLATE_ADMIN_TOKEN as a Cloudflare Worker secret (at least 24 characters).'},503);
   if(!access)return json({error:'Invalid administrator token.'},401);
   if(!request.headers.get('Content-Type')?.startsWith('application/json'))return json({error:'JSON required.'},415);
-  if(Number(request.headers.get('Content-Length'))>100000)return json({error:'Design is too large.'},413);
-  const raw=await request.text();if(raw.length>100000)return json({error:'Design is too large.'},413);
+  if(Number(request.headers.get('Content-Length'))>MAX_DESIGN_BYTES)return json({error:'Design or artwork is too large.'},413);
+  const reader=request.body?.getReader();if(!reader)return json({error:'JSON required.'},400);
+  const chunks=[];let length=0;
+  for(;;){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>MAX_DESIGN_BYTES){await reader.cancel();return json({error:'Design or artwork is too large.'},413);}chunks.push(value);}
+  const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
+  const raw=new TextDecoder().decode(bytes);
   let body,template;try{body=JSON.parse(raw);template=validateDesign(id,body.template);}catch(e){return json({error:e.message||'Invalid design.'},400);}
   const current=await env.IMAGES.get(key),saved=current?await current.json():null;
   if(body.revision!==(saved?.revision||'base'))return json({error:'This design has changed since you opened it. Reload before saving.'},409);

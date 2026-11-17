@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=1"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=2"></head>
 <body>
 <header class="top">
  <div class="brand"><span class="mark">R</span><div><strong>Reveal / Template Studio</strong><small>Administration · Scratch Ticket · Staging</small></div></div>
  <div class="toolbar"><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button><button id="export">Export JSON</button><button id="save" class="primary">Save template</button></div>
 </header>
-<section class="setup"><div><label for="template">Template</label><select id="template"></select></div><div class="status-wrap"><div id="status" role="status">Loading templates…</div><span id="revision"></span></div><button id="reload">Reload saved</button><button id="defaults">Restore original</button></section>
+<section class="setup"><div><label for="template">Template</label><select id="template"></select></div><div class="status-wrap"><div id="status" role="status">Loading templates…</div><span id="revision"></span></div><button id="reload">Reload saved</button><button id="artworkShortcut">Change template artwork</button><button id="defaults">Restore original</button></section>
 <main class="studio">
  <aside class="layers"><div class="section-head"><h2>Layers</h2><button id="add" aria-expanded="false">+ Add</button></div>
  <div id="addMenu" hidden><button data-add="rect">Rectangle</button><button data-add="ellipse">Ellipse</button><button data-add="line">Line</button><button data-add="text">Text</button><button data-add="panel">Restore field panel</button><button data-add="illustration" id="restoreArt" hidden>Restore illustration</button></div>
@@ -13,14 +13,14 @@
  <div class="layer-actions"><button id="layerUp">Bring forward</button><button id="layerDown">Send backward</button><button id="remove" class="danger">Remove / hide</button></div>
  </aside>
  <section class="workspace">
- <div class="canvas-tools"><label><input id="guides" type="checkbox" checked> Selection guides</label><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
+ <div class="canvas-tools"><label><input id="guides" type="checkbox" checked> Selection guides</label><label><input id="showSampleImage" type="checkbox" checked> Show customer photo</label><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
  <div class="canvas-area"><div id="stage" tabindex="0" aria-label="Template canvas. Use arrow keys to move selected layers."><div id="render"></div><svg id="overlay" viewBox="0 0 900 1200" aria-hidden="true"></svg></div></div>
  <div id="warnings" class="muted" role="status"></div>
- <div class="canvas-footer"><span>900 × 1200 design units · 1800 × 2400 export</span><label class="upload-label">Preview image <input id="sampleImage" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
+ <div class="canvas-footer"><span>900 × 1200 design units · 1800 × 2400 export</span><label class="upload-label">Test customer photo <input id="sampleImage" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
  </section>
  <aside class="inspector"><div class="section-head"><h2>Properties</h2></div><p class="muted" id="selectionName">Select a layer</p><div id="properties"></div><p id="inspectorHint" class="muted"></p></aside>
 </main>
 <footer class="bottom"><span>Changes remain local until you save. Saved designs are used by the staging creator, review and recipient.</span><button id="import" class="secondary">Import JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></footer>
 <dialog id="auth"><form method="dialog"><h2>Administrator access</h2><p>Enter your private Template Studio token to save this design. The token stays in this tab only.</p><label for="token">Admin token</label><input id="token" type="password" autocomplete="off"><p id="authMessage" role="status"></p><div class="dialog-actions"><button value="cancel">Cancel</button><button id="authSave" class="primary" value="default">Unlock and save</button></div></form></dialog>
-<script type="module" src="/admin-template-designer.js?v=1"></script>
+<script type="module" src="/admin-template-designer.js?v=2"></script>
 </body></html>

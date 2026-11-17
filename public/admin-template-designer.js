@@ -1,6 +1,6 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,clone,FONTS} from './template-design-schema.js?v=1';
-import {renderPostScratchTemplate} from './post-scratch-renderer.js?v=designer-1';
+import {defaultDesign,validateDesign,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=2';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=artwork-2';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -13,7 +13,7 @@ const ctx=sampleCanvas.getContext('2d');const gradient=ctx.createLinearGradient(
 const sampleImage=sampleCanvas.toDataURL('image/png');
 function status(s,error=false){$('status').textContent=s;$('status').style.color=error?'#ffb3b3':'';}
 function clean(){return JSON.stringify(model)===saved;}
-function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
+function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
 function remember(){undo.push(clone(model));if(undo.length>75)undo.shift();redo=[];}
 function changed(full=true){mark();paint();if(full){layers();inspector();}}
 function apiHeaders(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
@@ -95,7 +95,29 @@ function number(label,key,o,lo,hi,step=1){control(label,key,'number',o[key],{min
 function inspector(){
  const p=$('properties');p.replaceChildren();const o=element();const layer=allLayers().find(x=>x.key===selected);$('selectionName').textContent=layer?layer.title:'Select a layer';$('inspectorHint').textContent='';
  if(!o)return;
- if(selected==='background'){group('Artwork');if(model.id!=='custom-image'){control('Show existing background','showBackground','checkbox',model.showBackground);paintColor('Background colour','backgroundFill',model);}else $('inspectorHint').textContent='Custom Image uses the customer’s photograph and contrast settings. Select Image area to resize it.';return;}
+ if(selected==='background'){
+  group('Template artwork');
+  const source=templateArtworkSource(model);
+  if(source){const preview=document.createElement('img');preview.className='artwork-thumb';preview.alt='Current template background';preview.src=source;p.append(preview);}
+  const info=document.createElement('p');info.className='muted';info.textContent='Replace the background behind the editable fields. Recommended: 1800 × 2400 px (3:4). JPEG, PNG or WebP, up to 10 MB.';p.append(info);
+  const fileLabel=document.createElement('label');fileLabel.htmlFor='artworkUpload';fileLabel.textContent='Upload new template artwork';fileLabel.className='artwork-file-label';
+  const upload=document.createElement('input');upload.id='artworkUpload';upload.type='file';upload.accept='image/jpeg,image/png,image/webp';p.append(fileLabel,upload);
+  upload.onchange=async()=>{
+   const f=upload.files?.[0];if(!f)return;const id=model.id;busy=true;mark();status('Preparing template artwork…');
+   try{const data=await prepareArtwork(f);if(model.id!==id)return;
+    remember();model.artworkSource='upload';model.artworkData=data;model.showBackground=true;
+    if(model.id==='custom-image')$('showSampleImage').checked=false;
+    status('New artwork ready. Save template to publish.');
+   }catch(e){status(e.message,true);}finally{busy=false;changed();}
+  };
+  control('Choose existing artwork','artworkSource','select',model.artworkSource||'original',{choices:[['original','Original artwork'],...(model.artworkSource==='upload'?[['upload','Uploaded artwork']]:[]),...ARTWORK_CHOICES.map(a=>[a.id,a.name])],apply:v=>{model.artworkSource=v;if(v!=='upload')model.artworkData='';model.showBackground=true;if(model.id==='custom-image')$('showSampleImage').checked=false;}});
+  control('Artwork fit','artworkFit','select',model.artworkFit||'contain',{choices:[['contain','Fit whole artwork'],['cover','Fill entire card']]});
+  control('Show background artwork','showBackground','checkbox',model.showBackground);
+  paintColor('Background colour','backgroundFill',model);
+  const restore=document.createElement('button');restore.id='restoreArtwork';restore.textContent='Restore original artwork';restore.className='restore-artwork';restore.onclick=()=>{remember();Object.assign(model,{artworkSource:'original',artworkData:'',artworkFit:'contain',showBackground:true,backgroundFill:defaultDesign(model.id).backgroundFill});changed();status('Original artwork restored. Save to publish.');};p.append(restore);
+  $('inspectorHint').textContent=model.id==='custom-image'?'The customer’s full-card photo sits above the background. Disable Show customer photo to inspect the artwork by itself.':'Artwork replacement leaves all editable positions and panels unchanged. Select a panel to change its fill or transparency.';
+  return;
+ }
  const b=bounds();if(b){group('Position & dimensions');const grid=document.createElement('div');grid.className='prop-grid';p.append(grid);
  for(const [k,l] of [['x','X position'],['y','Y position'],['w','Width'],['h','Height']]){if(o.kind==='path'&&['w','h'].includes(k))continue;control(l,k,'number',Math.round(b[k]),{parent:grid,min:0,max:k==='y'||k==='h'?1200:900,apply:v=>moveBox(selected,{...bounds(),[k]:v})});}}
  if(selected.startsWith('zone:')||o.kind==='text'){
@@ -125,9 +147,28 @@ function selection(){
  const r=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x,y:b.y,width:b.w,height:b.h,fill:'none',stroke:'#32d7ff','stroke-width':3,'stroke-dasharray':'8 5','vector-effect':'non-scaling-stroke'}))r.setAttribute(k,v);overlay.append(r);
  if(element()?.kind!=='path'){const handle=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x+b.w-10,y:b.y+b.h-10,width:20,height:20,rx:4,fill:'#32d7ff',stroke:'#102b41','stroke-width':2}))handle.setAttribute(k,v);overlay.append(handle);}
 }
+async function prepareArtwork(file){
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type)||file.size>10*1024*1024)throw Error('Choose a JPEG, PNG or WebP image no larger than 10 MB.');
+ const url=URL.createObjectURL(file);
+ try{
+  const image=new Image();image.src=url;await image.decode();
+  if(!image.naturalWidth||!image.naturalHeight)throw Error('The artwork could not be read.');
+  const canvas=document.createElement('canvas');
+  let scale=Math.min(1,2400/Math.max(image.naturalWidth,image.naturalHeight));
+  for(let n=0;n<5;n++){
+   canvas.width=Math.max(1,Math.round(image.naturalWidth*scale));canvas.height=Math.max(1,Math.round(image.naturalHeight*scale));
+   canvas.getContext('2d').drawImage(image,0,0,canvas.width,canvas.height);
+   for(const q of [.92,.83,.72,.60]){
+    const data=canvas.toDataURL('image/webp',q);if(/^data:image\/(webp|png);base64,/.test(data)&&data.length<=MAX_ARTWORK_DATA)return data;
+   }
+   scale*=.8;
+  }
+  throw Error('Artwork is too detailed to save. Try a smaller image.');
+ }catch(e){throw Error(e.message||'The artwork could not be read.');}finally{URL.revokeObjectURL(url);}
+}
 function paint(){
  if(!model)return;const data=$('sample').value==='blank'?{}:$('sample').value==='long'?longer:typical;
- try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:imageUrl||sampleImage,preview:true,guides:false,shade:45,textContrast:'light'});const warning=[];if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
+ try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:false,shade:45,textContrast:'light'});const warning=[];if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
  catch(e){$('warnings').textContent=e.message;}
  selection();
 }
@@ -163,7 +204,8 @@ function reorder(delta){if(!selected.startsWith('decor:'))return;const i=Number(
 $('layerUp').onclick=()=>reorder(1);$('layerDown').onclick=()=>reorder(-1);
 function history(from,to){if(!from.length)return;to.push(clone(model));model=from.pop();if(!element())selected='zone:eventName';changed();}
 $('undo').onclick=()=>history(undo,redo);$('redo').onclick=()=>history(redo,undo);
-$('guides').onchange=selection;$('sample').onchange=paint;
+$('guides').onchange=selection;$('sample').onchange=paint;$('showSampleImage').onchange=paint;
+$('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=defaultDesign(model.id);selected='zone:eventName';changed();};
 $('reload').onclick=()=>load(model.id);$('template').onchange=e=>load(e.target.value);

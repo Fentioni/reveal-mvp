@@ -35,3 +35,18 @@ test('staging API protects publishing, persists updates and rejects stale revisi
  const bad=clone(d);bad.zones.pop();assert.equal((await templateDesignResponse(req(id,'PUT',{revision:value.revision,template:bad}),env)).status,400);
  const restore=await templateDesignResponse(req(id,'PUT',{revision:value.revision,template:defaultDesign(id)}),env);assert.equal(restore.status,200);
 });
+
+test('published artwork is raster-only, template-specific and backwards-compatible',async()=>{
+ const id='candlelight',d=defaultDesign(id);
+ const png='data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==';
+ d.artworkSource='upload';d.artworkData=png;d.artworkFit='cover';
+ const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
+ const save=await templateDesignResponse(req(id,'PUT',{revision:'base',template:d}),env);assert.equal(save.status,200);
+ const read=await (await templateDesignResponse(req(id),env)).json();assert.equal(read.template.artworkData,png);assert.equal(read.template.artworkFit,'cover');
+ assert.equal((await (await templateDesignResponse(req('spotlight'),env)).json()).template,null);
+ for(const data of ['data:image/svg+xml;base64,PHN2Zz4=','https://example.org/art.png','data:image/png;base64,'+'A'.repeat(64),'data:image/png;base64,'+'A'.repeat(2400001)])assert.throws(()=>validateDesign(id,{...d,artworkData:data}));
+ assert.throws(()=>validateDesign(id,{...d,artworkSource:'https://example.org'}));
+ const builtIn=validateDesign(id,{...d,artworkSource:'spotlight'});assert.equal(builtIn.artworkData,'');
+ const old=clone(d);delete old.artworkSource;delete old.artworkData;delete old.artworkFit;assert.equal(validateDesign(id,old).artworkSource,'original');
+ const restore=await templateDesignResponse(req(id,'PUT',{revision:read.revision,template:{...d,artworkSource:'original',artworkData:''}}),env);assert.equal(restore.status,200);
+});

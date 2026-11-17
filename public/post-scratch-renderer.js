@@ -118,6 +118,18 @@ function drawPhoto(svg,defs,p,src,placeholder,id,options={}){
  if(src)mk('image',{href:src,...photoGeometry(p,options)},group);
  else {const bg=p.frame||'#f6f3ed';text(group,{key:'image-placeholder',x:p.x+10,y:p.y+10,w:p.w-20,h:p.h-20,size:26,family:'Arial',weight:500,ink:bg==='#f6f3ed'?'#777':'#fff',align:'center'},'IMAGE PLACEHOLDER',true);}
 }
+export function templateArtworkSource(template){
+ if(template.showBackground===false)return '';
+ if(template.artworkSource==='upload')return template.artworkData||'';
+ if(template.artworkSource&&template.artworkSource!=='original'&&/^[a-z-]+$/.test(template.artworkSource))return '/post-scratch-artwork/'+template.artworkSource+'.webp';
+ return template.id==='custom-image'?'':template.image;
+}
+function drawArtwork(svg,template,options){
+ const source=options.backgroundSrc||templateArtworkSource(template);
+ // A backing colour fills letterbox gaps; never stretch artwork.
+ if(!source||template.artworkSource&&template.artworkSource!=='original')mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
+ if(source)mk('image',{'data-template-artwork':'true',href:source,x:0,y:0,width:900,height:1200,preserveAspectRatio:template.artworkFit==='cover'?'xMidYMid slice':'xMidYMid meet'},svg);
+}
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
  const values=fields(data);const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
@@ -128,6 +140,8 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   const tone=darkText?'#ffffff':'#10131b';
   const shade=Number.isFinite(Number(options.shade))?Math.max(0,Math.min(.9,Number(options.shade)/100)):.7;
   mk('rect',{x:0,y:0,width:900,height:1200,fill:darkText?'#e2e5e7':'#344454'},svg);
+  if(templateArtworkSource(template))drawArtwork(svg,template,options);
+  else if(template.showBackground===false)mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
   if(src){
    const photoId=id+'-full-photo',clip=mk('clipPath',{id:photoId},defs);
    const p=template.photo||{x:0,y:0,w:900,h:1200,full:true};
@@ -149,8 +163,7 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   drawDecor(svg,template.decor);
   drawPanels(svg,template.panels,values,src,options.guides===true);
  }else{
- if(template.showBackground===false)mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
- else mk('image',{href:options.backgroundSrc||template.image,x:0,y:0,width:900,height:1200,preserveAspectRatio:'xMidYMid meet'},svg);
+ drawArtwork(svg,template,options);
  if(template.structured){
   drawDecor(svg,template.decor);
   drawPanels(svg,template.panels,values,src,options.guides===true);
