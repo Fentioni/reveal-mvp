@@ -1,6 +1,6 @@
-import {getPostTemplate} from './post-scratch-catalogue.js';
+import {getPostTemplate} from './post-scratch-catalogue.js?v=reference-panels-1';
 import {cleanPostSettings} from './post-scratch-settings.js';
-import {renderPostScratchTemplate} from './post-scratch-renderer.js';
+import {renderPostScratchTemplate} from './post-scratch-renderer.js?v=reference-panels-1';
 export async function renderPostScratchFace(card,reveal,settings,imageSrc=''){
  const s=cleanPostSettings(settings),template=getPostTemplate(s.templateId);
  // Load before showing the underlay, including authenticated blob images.

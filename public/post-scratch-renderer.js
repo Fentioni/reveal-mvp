@@ -81,7 +81,7 @@ function drawPanels(svg,panels,values,src,guides){
   // of the layout, only printed for populated details (or editor guides).
   if(p.label&&(val(values[p.key])||guides)){
    const center=p.align==='center',start=p.x+p.gutter+13;
-   const label=mk('text',{x:center?p.x+p.w/2:start,y:p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':Math.min(18,p.labelH*.78),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':.65,'data-layout-label':p.key},g);
+   const label=mk('text',{x:center?p.x+p.w/2:start,y:p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':Math.min(18,p.labelH*.78,Math.max(11,(p.w-p.gutter-26)/(p.label.length*.64))),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':.65,'data-layout-label':p.key},g);
    label.textContent=p.label;
   }
  }

@@ -19,18 +19,31 @@ try{
  await page.goto(base+'/matrix');
  const report=await page.evaluate(async()=>{
   const {POST_TEMPLATES}=await import('/post-scratch-catalogue.js');
+  const expectedFields=['eventName','subtitle','recipient','date','time','venue','venueAddress','message','link'];
+  for(const template of POST_TEMPLATES){
+   for(const field of expectedFields)if(!template.zones.some(z=>z.key===field))throw Error(template.id+' missing '+field);
+   if(!template.zones.some(z=>['sender','senderLine'].includes(z.key)))throw Error(template.id+' missing sender');
+   if(template.id!=='custom-image'){
+    if(!template.structured||!template.panels||template.panels.length<8)throw Error(template.id+' missing structured layout');
+    const all=[...template.zones,template.photo];
+    for(const zone of all)if(zone.x<0||zone.y<0||zone.x+zone.w>900||zone.y+zone.h>1200)throw Error(template.id+' outside card');
+    for(const [i,a] of all.entries())for(const b of all.slice(i+1)){
+     if(a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y)throw Error(template.id+' overlapping zones '+(a.key||'photo')+' '+(b.key||'photo'));
+    }
+   }
+  }
   const {SCRATCH_ARTWORKS}=await import('/scratch-artwork-catalogue.js');
   const {renderScratchOwnerPreview}=await import('/scratch-owner-preview.js');
   const {renderPostScratchFace}=await import('/post-scratch-face.js');
   const section=document.querySelector('#preview');section.style.maxWidth='490px';
-  const reveal={recipient:'Chloe',sender:'Michael',eventName:'A wonderful surprise',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'Happy birthday!',ticketUrl:'https://example.org/',hasImage:true};
+  const reveal={recipient:'Chloe',sender:'Michael',eventName:'A wonderful surprise',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'Happy birthday! We are going to an unforgettable evening together.',ticketUrl:'https://example.org/',hasImage:true};
   const image='/post-scratch-artwork/editorial.webp';
   const issues=[];let count=0;
   for(const template of POST_TEMPLATES)for(const artwork of SCRATCH_ARTWORKS){
    const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',textContrast:'dark',shade:45}};
    const scratch=await renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage:image,audio:{enabled:false},hosts:{covered:document.querySelector('#covered'),revealed:document.querySelector('#revealed'),sound:document.querySelector('#sound')}});
    const a=document.querySelector('#covered').shadowRoot.querySelector('#card'),b=document.querySelector('#revealed').shadowRoot.querySelector('#card');
-   for(const card of [a,b]){const r=card.getBoundingClientRect();if(Math.abs(r.width/r.height-.75)>.001)issues.push(template.id+' ratio '+r.width/r.height);if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);}
+   for(const card of [a,b]){const r=card.getBoundingClientRect();if(Math.abs(r.width/r.height-.75)>.001)issues.push(template.id+' ratio '+r.width/r.height);if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);if(card.querySelectorAll('svg [data-field]:not([data-field="image-placeholder"])').length!==10)issues.push(template.id+' incomplete ten fields');}
    if(getComputedStyle(a.querySelector('#underlay')).visibility!=='hidden')issues.push('covered data visible');
    if(getComputedStyle(b.querySelector('#underlay')).visibility!=='visible')issues.push('reveal invisible');
    if(getComputedStyle(a.querySelector('canvas')).pointerEvents!=='none')issues.push('owner interactive');
@@ -47,6 +60,23 @@ try{
  assert.equal(report.count,300);assert.deepEqual(report.issues,[]);assert.deepEqual(errors,[]);
  await mkdir('test-output/post-scratch',{recursive:true});await page.screenshot({path:'test-output/post-scratch/matrix-'+viewport.width+'.png'});
  console.log(viewport.width+'px: all 300 combinations passed');await page.close();
+ // One actual, populated recipient-side card per design at this viewport.
+ const gallery=await browser.newPage({viewport});
+ await gallery.goto(base+'/matrix');
+ const templates=await gallery.evaluate(async()=>{
+  const {POST_TEMPLATES}=await import('/post-scratch-catalogue.js');
+  const {renderPostScratchFace}=await import('/post-scratch-face.js');
+  const list=document.getElementById('preview');
+  list.style.cssText='max-width:454px;margin:0 auto;display:grid;gap:24px';
+  for(const template of POST_TEMPLATES){
+   const card=document.createElement('div');card.id='template-'+template.id;list.append(card);
+   await renderPostScratchFace(card,{eventName:'Jesus Christ Superstar',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special evening out, just for you.',ticketUrl:'https://example.org'},{templateId:template.id,subtitle:'A night to remember',venueAddress:'Drury Lane, London'},'/post-scratch-artwork/editorial.webp');
+   if(card.dataset.textOverflow)throw Error(template.id+' overflow '+card.dataset.textOverflow);
+  }
+  return POST_TEMPLATES.map(t=>t.id);
+ });
+ for(const id of templates)await gallery.locator('#template-'+id).screenshot({path:'test-output/post-scratch/'+viewport.width+'-'+id+'.png'});
+ await gallery.close();
  }
  // Actual creator page: all 15 options, custom controls and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));

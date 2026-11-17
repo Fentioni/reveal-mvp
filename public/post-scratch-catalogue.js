@@ -110,7 +110,7 @@ function build(id,fn){
   const gutter=icon?Math.min(68,w*.18):0;
   const labelH=label?Math.min(27,Math.max(20,h*.33)):0;
   panels.push({key,x,y,w,h,fill,stroke,sw:opts.sw??c.outline,rx,ink,label,icon:icon?key:'',accent:opts.iconInk||c.accent,gutter,labelH,align:opts.align||'left',family:opts.labelFamily||sans,iconBg:opts.iconBg||'',labelInk:opts.labelInk||ink});
-  zones.push({key,x:x+gutter+7,y:y+labelH+4,w:w-gutter-14,h:h-labelH-9,size:opts.size||33,family:opts.family||c.family,weight:opts.weight||600,ink,align:opts.align||'left',upper:opts.upper??false,noWordSplit:key!=='message',italic:opts.italic??false});
+  zones.push({key,x:x+gutter+7,y:y+labelH+1,w:w-gutter-14,h:h-labelH-4,size:opts.size||33,family:opts.family||c.family,weight:opts.weight||600,ink,align:opts.align||'left',upper:opts.upper??false,noWordSplit:key!=='message',italic:opts.italic??false});
  }
  function pic(x,y,w,h,opts={}){
   photo={x:x+8,y:y+8,w:w-16,h:h-16,radius:opts.radius??Math.max(0,c.round-4),frame:opts.fill||c.paper,primary:true};
