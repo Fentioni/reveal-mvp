@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='id="postSubtitleField"';
+const marker='id="postImageZoom"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<15;i++){
@@ -37,6 +37,11 @@ try{
    return c.toDataURL('image/png').split(',')[1];
   });
   await page.locator('#image').setInputFiles({name:'sample-poster.png',mimeType:'image/png',buffer:Buffer.from(img,'base64')});
+  await page.locator('#postImageControls').waitFor({state:'visible'});
+  await page.locator('#postImageZoom').fill('150');
+  await page.locator('#postImageFit').selectOption('cover');
+  await page.locator('#postImagePanX').fill('20');
+  await page.locator('#postImagePanY').fill('-15');
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const template of POST_TEMPLATES){
    await page.locator('#postTemplate').selectOption(template.id);
@@ -51,6 +56,8 @@ try{
    });
    assert.equal(result.headings,0);assert.equal(result.fields,10);assert.equal(result.overflow,'');assert.ok(Math.abs(result.ratio-.75)<.001);
    if(template.id!=='custom-image')assert.ok(result.panels>=8);
+   const geometry=await host.evaluate(el=>{const svg=el.shadowRoot.querySelector('svg[data-post-template]'),g=svg.querySelector('[data-photo-slot]'),i=g.querySelector('image');return {w:Number(i.getAttribute('width')),h:Number(i.getAttribute('height')),x:Number(i.getAttribute('x')),y:Number(i.getAttribute('y')),fit:i.getAttribute('preserveAspectRatio'),clip:g.getAttribute('clip-path')};});
+   const p=template.photo;assert.equal(geometry.w,p.w*1.5);assert.equal(geometry.h,p.h*1.5);assert.ok(Math.abs(geometry.x-(p.x-p.w*.25+p.w*.1))<.0001);assert.ok(Math.abs(geometry.y-(p.y-p.h*.25-p.h*.075))<.0001);assert.ok(geometry.fit.endsWith('slice'));assert.ok(geometry.clip.startsWith('url(#'));
    await page.locator('#scratchActualRevealed #card').screenshot({path:'test-output/scratch-live/'+viewport.width+'-'+template.id+'.png'});
    console.log('LIVE:',viewport.width,JSON.stringify(result));
   }

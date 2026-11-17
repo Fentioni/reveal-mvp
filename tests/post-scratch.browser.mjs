@@ -40,7 +40,7 @@ try{
   const image='/post-scratch-artwork/editorial.webp';
   const issues=[];let count=0;
   for(const template of POST_TEMPLATES)for(const artwork of SCRATCH_ARTWORKS){
-   const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',textContrast:'dark',shade:45}};
+   const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
    const scratch=await renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage:image,audio:{enabled:false},hosts:{covered:document.querySelector('#covered'),revealed:document.querySelector('#revealed'),sound:document.querySelector('#sound')}});
    const a=document.querySelector('#covered').shadowRoot.querySelector('#card'),b=document.querySelector('#revealed').shadowRoot.querySelector('#card');
    for(const card of [a,b]){const r=card.getBoundingClientRect();if(Math.abs(r.width/r.height-.75)>.001)issues.push(template.id+' ratio '+r.width/r.height);if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);if(card.querySelectorAll('svg [data-field]:not([data-field="image-placeholder"])').length!==10)issues.push(template.id+' incomplete ten fields');}
@@ -105,7 +105,7 @@ try{
  }
  // Actual creator page: all 15 options, custom controls and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:{templateId:'custom-image',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',textContrast:'dark',shade:45}};
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:{templateId:'custom-image',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
  await page.addInitScript(()=>localStorage.setItem('reveal_edit_saved','owner'));
  await page.route('**/api/reveals/saved',r=>r.fulfill({json:{success:true,reveal:{id:'saved',recipient:'Chloe',sender:'Michael',eventName:'Saved surprise',hasImage:true,status:'draft',revision:1}}}));
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
@@ -115,11 +115,18 @@ try{
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
+ for(const [id,value] of Object.entries({postImageFit:'cover',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
  await page.locator('#scratchActualRevealed svg[data-post-template="custom-image"]').waitFor({state:'attached'});
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('aria-hidden'),'true');
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
+ await page.locator('#postImageZoom').fill('200');
+ await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='1800');
+ await page.locator('#postImageReset').click();
+ await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
+ assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
+ assert.equal(await page.locator('#postImagePanX').inputValue(),'0');
  await page.screenshot({path:'test-output/post-scratch/amend-mobile.png',fullPage:true});assert.deepEqual(errors,[]);
  console.log('Creator Amend restores all template fields and image appearance');
  await page.close();
