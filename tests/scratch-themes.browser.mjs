@@ -718,6 +718,21 @@ test('all five reference-based concert layouts keep photo and text in locked zon
       'promo-poster':[489,200],'neon-tour':[400,1600],'editorial-concert':[1314,686]};
     assert.deepEqual(refImage,{x:expectedImage[name][0],width:expectedImage[name][1]},
       'Uploaded image must occupy the exact dedicated photo coordinates for '+name);
+    const titleSafety=await page.locator('#concertRevealedPreviewFrame').evaluate(frame=>{
+      const art=frame.querySelector(':scope > svg.ct-reference-art');
+      const titles=[...art.querySelectorAll('g[data-ct-role="title"]')];
+      const subtitles=[...art.querySelectorAll('g[data-ct-role="subtitle"]')];
+      const overlaps=[];
+      for(const a of titles)for(const b of subtitles){
+        const x=a.getBoundingClientRect(),y=b.getBoundingClientRect();
+        if(x.left<y.right-3&&x.right>y.left+3&&x.top<y.bottom-3&&x.bottom>y.top+3)
+          overlaps.push({title:a.textContent,subtitle:b.textContent,titleBottom:x.bottom,subtitleTop:y.top});
+      }
+      return {count:titles.length,overlaps};
+    });
+    assert.ok(titleSafety.count>=1,'Reference ticket must render the event heading');
+    assert.deepEqual(titleSafety.overlaps,[],
+      'Headlines and optional subtitles must never collide: '+JSON.stringify(titleSafety));
     assert.equal(layout.layout,name);
     assert.equal(layout.image,'true');
     assert.equal(layout.grid,'grid');
