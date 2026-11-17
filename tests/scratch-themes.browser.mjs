@@ -669,6 +669,9 @@ test('all five reference-based concert layouts keep photo and text in locked zon
     assert.equal(result.mode,'false','Without an upload no image lane should be reserved');
     assert.ok(Math.abs(result.ratio-3)<.18,'Every preset must be a wide 3:1 ticket');
     assert.equal(result.columns,1,'No-image ticket should expand its text area');
+    await page.locator('#concertRevealedPreviewFrame').screenshot({
+      path:resolve(output,size.name+'-reference-no-image-'+name+'.png')
+    });
    }
    await page.evaluate(async()=>{
      const canvas=document.createElement('canvas');canvas.width=600;canvas.height=800;
