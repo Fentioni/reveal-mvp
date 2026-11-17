@@ -7,7 +7,7 @@
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#10111C">
 <title>A special surprise</title>
-<link rel="stylesheet" href="/scratch-recipient-face.css?v=actual-1">
+<link rel="stylesheet" href="/scratch-recipient-face.css?v=post-templates-1">
 <style>
   :root{color-scheme:dark}
   *{box-sizing:border-box}
@@ -273,6 +273,7 @@
 </dialog>
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
+  import {renderPostScratchFace} from '/post-scratch-face.js';
   import {mountScratchFace,fillScratchFace,setPortraitFaceTheme,setScratchFaceImage} from '/scratch-recipient-face.js?v=actual-1';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
   import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
@@ -372,6 +373,8 @@
         officialLink:model.ticketUrl,imageSrc: model.hasEventImage ? $('eventImage').src : ''
       });
     }
+    $('card').hidden=false;
+    if(!isConcert)await renderPostScratchFace($('card'),data.reveal,data.scratchSurface.postScratch,model.hasEventImage?'/r/'+encodeURIComponent(slug)+'/scratch-image':'');
     $('intro').textContent = 'Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.';
     $('card').hidden = false;
 

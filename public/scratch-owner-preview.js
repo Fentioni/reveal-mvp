@@ -1,13 +1,14 @@
+import {renderPostScratchFace} from './post-scratch-face.js';
 /**
  * Private, read-only owner preview. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
  * requests, no scratch hooks or audio playback, no unlocking interaction.
  */
 import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
-import {mountScratchFace,fillScratchFace,setPortraitFaceTheme,setScratchFaceImage} from './scratch-recipient-face.js?v=actual-1';
+import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=actual-1';
+const stylesheet='/scratch-recipient-face.css?v=post-templates-1';
 const active=new WeakMap();
 export function disposeScratchOwnerPreview(section){
  active.get(section)?.destroy();
@@ -19,7 +20,7 @@ function make(tag,text,cls){
  if(cls)node.className=cls;
  return node;
 }
-async function stage(host,model,{cover,theme,artwork,eventImage}){
+async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface}){
  const root=host.shadowRoot||host.attachShadow({mode:'open'});
  root.replaceChildren();
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
@@ -34,9 +35,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage}){
  const card=make('div','','card');
  card.id='card';
  main.append(eyebrow,title,intro,card);
- mountScratchFace(card);
- fillScratchFace(root,model);
- await setScratchFaceImage(root,eventImage);
+ await renderPostScratchFace(card,reveal,surface.postScratch,eventImage);
  if(!artwork){
   setPortraitFaceTheme(card,theme.id);
   screen.classList.add('scratch-preview-themed');
@@ -56,8 +55,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage}){
  }else{
   card.classList.add('foil-ready');
   card.dataset.previewState='revealed';
-  const link=root.getElementById('bookingUrl');
-  link.removeAttribute('href');link.setAttribute('aria-disabled','true');
+
   if(model.ticketUrl){
    const action=make('span','Open your booking link');
    action.id='bookingAction';action.setAttribute('aria-disabled','true');
@@ -77,8 +75,8 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  disposeScratchOwnerPreview(section);
  section.hidden=false;
  const [coverRoot]=await Promise.all([
-  stage(covered,model,{cover:true,theme,artwork,eventImage}),
-  stage(revealed,model,{cover:false,theme,artwork,eventImage})
+  stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface}),
+  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface})
  ]);
  const card=new ScratchCard({
   canvas:coverRoot.getElementById('foilCanvas'),

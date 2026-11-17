@@ -1,3 +1,4 @@
+import {cleanPostSettings} from '../public/post-scratch-settings.js';
 /**
  * Staging-only paid recipient scratch route. Every private response requires
  * status=paid + paid_at, matching the established legacy recipient gate.
@@ -60,6 +61,7 @@ export async function scratchRecipientResponse(request, env, ctx) {
            ...(getScratchArtwork(settings.artworkId)?{artworkId:settings.artworkId}:{}),
            theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
+           ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch)}:{}),
            ...(settings.variant === 'concert' ? {
              ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
              revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,

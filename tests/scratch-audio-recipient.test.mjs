@@ -1,3 +1,4 @@
+import {DEFAULT_POST_SETTINGS} from '../public/post-scratch-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -269,7 +270,7 @@ test('paid scratch recipient receives chosen theme but unpaid visitors receive n
  const response=await scratchRecipientResponse(publicReq('/scratch-data'),env,{});
  assert.equal(response.status,200);
  const data=await response.json();
- assert.deepEqual(data.scratchSurface,{style:'theatre',foil:'silver',theme:'romance',hasImage:false,variant:'ticket'});
+ assert.deepEqual(data.scratchSurface,{style:'theatre',foil:'silver',theme:'romance',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
  assert.equal(data.reveal.recipient,'Chloe');
  const unpaid={...paid,status:'draft',paid_at:null};
  const privateEnv=recipientEnv(unpaid,themed).env;

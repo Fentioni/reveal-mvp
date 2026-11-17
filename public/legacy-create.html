@@ -855,7 +855,18 @@
               <option value="backstage">Backstage Pass</option>
               <option value="custom">Your own image</option>
             </select>
-            <div class="scratch-one-upload"><div class="field">
+            <section id="postScratchControls" class="field">
+<label for="postTemplate">Revealed template</label><select id="postTemplate"></select>
+<p id="postTemplateDescription" class="field-help"></p>
+<label for="postSubtitle">Subtitle / introduction (optional)</label><input id="postSubtitle" maxlength="100">
+<label for="postVenueAddress">Address / location (optional)</label><input id="postVenueAddress" maxlength="140">
+<div id="postImageControls" hidden>
+<label for="postImagePosition">Image crop position</label><select id="postImagePosition">
+<option value="xMidYMid">Centre</option><option value="xMidYMin">Top</option><option value="xMidYMax">Bottom</option><option value="xMinYMid">Left</option><option value="xMaxYMid">Right</option><option value="xMinYMin">Top left</option><option value="xMaxYMin">Top right</option><option value="xMinYMax">Bottom left</option><option value="xMaxYMax">Bottom right</option></select>
+<label for="postTextContrast">Text colour</label><select id="postTextContrast"><option value="light">White text · dark shading</option><option value="dark">Dark text · light shading</option></select>
+<label for="postShade">Background shading: <output id="postShadeValue">70%</output></label><input id="postShade" type="range" min="0" max="90" step="5" value="70">
+</div><p id="postTemplateWarning" class="field-help" role="status"></p>
+</section><div class="scratch-one-upload"><div class="field">
                 <label id="imageUploadLabel" for="image">Add an image</label>
                 <p id="imageUploadHelp" class="field-help">Optional: upload a picture for your scratch card.</p>
 
@@ -1175,11 +1186,13 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=actual-2';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=post-templates-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
+    import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js';
+    import {cleanPostSettings} from '/post-scratch-settings.js';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1204,6 +1217,20 @@
     let removeImage = false;
     let objectUrl = null;
     let pendingReview = false;
+    const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postTextContrast','postShade'];
+    for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('postTemplate').append(o);}
+    function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
+    function restorePostSettings(value){const p=cleanPostSettings(value);for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
+    function postGuidance(){
+      if(currentVariant!=='ticket')return;
+      const t=getPostTemplate($('postTemplate').value),custom=t.id==='custom-image',p=t.photo;
+      $('postImageControls').hidden=!custom;
+      $('postTemplateDescription').textContent=t.description;
+      $('postShadeValue').textContent=$('postShade').value+'%';
+      $('imageUploadLabel').textContent=custom?'Upload your full-card image':'Optional surprise image';
+      $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.round(p.w*2)+' × '+Math.round(p.h*2)+' px. '+(p.full?'Fills the card, cropped to 3:4 without stretching. Keep important details away from the edges.':'Fits inside the image area without cropping.')+' Only appears after scratching.';
+    }
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;postGuidance();schedulePortraitPreview();});
     let portraitPreviewQueue=Promise.resolve();
     let portraitPreviewTimer;
     let portraitPreviewRevision=0;
@@ -1212,7 +1239,8 @@
       if(currentVariant!=='ticket')return Promise.resolve();
       const reveal=Object.fromEntries(fields.map(key=>[key,$(key).value.trim()]));
       reveal.hasImage=Boolean(objectUrl);
-      const surface={style:'classic',foil:$('scratchFoil').value,artworkId:scratchArtworkId,hasImage:false,variant:'ticket'};
+      const surface={style:'classic',foil:$('scratchFoil').value,artworkId:scratchArtworkId,hasImage:false,variant:'ticket',postScratch:postSettings()};
+      postGuidance();
       const artwork=getScratchArtwork(scratchArtworkId);
       const image=objectUrl;
       const run=async()=>{
@@ -1222,6 +1250,8 @@
           audio:{enabled:$('scratchAudioEnabled').checked},
           hosts:{covered:$('scratchActualCovered'),revealed:$('scratchActualRevealed'),sound:$('scratchActualSound')}
         });
+        const overflow=$('scratchActualRevealed').shadowRoot?.querySelector('.post-scratch-card')?.dataset.textOverflow;
+        $('postTemplateWarning').textContent=overflow?'Shorten text that does not fit: '+overflow:'';
       };
       portraitPreviewQueue=portraitPreviewQueue.catch(()=>{}).then(run);
       return portraitPreviewQueue.catch(error=>{
@@ -1266,6 +1296,8 @@
         button.setAttribute("aria-label", foilLabels[button.dataset.scratchFoil] + " foil");
         button.title = foilLabels[button.dataset.scratchFoil];
       }
+      $('postScratchControls').hidden=isConcert;
+      $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert;
       $("concertTemplateSection").hidden = !isConcert;
@@ -1662,6 +1694,12 @@
       event.preventDefault();
 
       if (!ready || busy || !form.reportValidity()) return;
+      if(currentVariant==='ticket'){
+        try{await refreshPortraitPreview();}catch(error){return show(error.message);}
+        const overflow=$('scratchActualRevealed').shadowRoot?.querySelector('.post-scratch-card')?.dataset.textOverflow;
+        if(overflow)return show('Please shorten text that does not fit: '+overflow);
+        if(postSettings().templateId==='custom-image'&&!objectUrl)return show('Upload a full-card image for the Custom Image template.');
+      }
       busy = true;
       lock(true);
       hide();
@@ -1724,6 +1762,7 @@
             Object.fromEntries(CONCERT_TICKET_FIELDS.map(field=>[field.id,$(field.id).value.trim()]))
           ));
         }
+        if(currentVariant==='ticket')surfaceBody.append('postScratch',JSON.stringify(postSettings()));
         surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         await api("/api/reveals/" + encodeURIComponent(id) + "/scratch-surface", {
@@ -1825,6 +1864,7 @@
           "/api/reveals/" + encodeURIComponent(id) + "/scratch-surface",
           {headers: {"X-Edit-Token": token}}
         );
+        restorePostSettings(savedSurface.surface.postScratch);
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         concertLivePreview.setVariant(currentVariant);
         $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : "classic";

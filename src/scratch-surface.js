@@ -1,3 +1,4 @@
+import {checkPostSettings,cleanPostSettings} from '../public/post-scratch-settings.js';
 /**
  * Stage 4D private scratch-surface preferences and uploaded covers.
  * Only available in staging; entry-point explicitly gates this endpoint.
@@ -67,6 +68,7 @@ async function details(env, id) {
     ...(getScratchArtwork(saved.artworkId) ? {artworkId:saved.artworkId} : {}),
     coverAssetId: asset ? asset.id : null,
     variant: saved.variant === 'concert' ? 'concert' : 'ticket',
+    ...(saved.variant !== 'concert' ? {postScratch:cleanPostSettings(saved.postScratch)} : {}),
     ...(saved.variant === 'concert' ? {
       ticketTemplate:isConcertTemplate(saved.ticketTemplate) ? saved.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
       revealTheme:isConcertRevealTheme(saved.revealTheme) ? saved.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
@@ -197,6 +199,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
           variant:current.surface.variant,
+          ...(current.surface.variant!=='concert'?{postScratch:current.surface.postScratch}:{}),
           ...(current.surface.variant === 'concert' ? {
             ticketTemplate:current.surface.ticketTemplate,
             revealTheme:current.surface.revealTheme,
@@ -238,6 +241,14 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       catch {return error('Invalid concert ticket details.');}
       if(!ticketDetails)return error('Invalid concert ticket details.');
     }
+    let postScratch=cleanPostSettings(current.surface.postScratch);
+    if(variant!=='concert'&&body.has('postScratch')){
+      const raw=body.get('postScratch');
+      if(typeof raw!=='string'||raw.length>2000)return error('Invalid revealed template settings.');
+      try{postScratch=checkPostSettings(JSON.parse(raw));}catch{return error('Invalid revealed template settings.');}
+      if(!postScratch)return error('Invalid revealed template settings.');
+    }
+    if(variant!=='concert'&&postScratch.templateId==='custom-image'&&!reveal.hasImage)return error('Upload an image for the Custom Image template.');
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
@@ -290,6 +301,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme,
           ...(artworkId ? {artworkId} : {}),
           variant,
+          ...(variant!=='concert'?{postScratch}:{}),
           ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode,ticketDetails} : {}),
           coverAssetId:style==='custom' ? newAssetId : null
         },
@@ -319,7 +331,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
       return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant,
-        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{})},audio});
+        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{postScratch})},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       throw cause;

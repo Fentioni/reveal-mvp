@@ -71,9 +71,9 @@ test('recipient and private preview share the same optional face fields and imag
   const owner=fs.readFileSync(path.join(root,'public/scratch-owner-preview.js'),'utf8');
   assert.ok(html.includes('recipientCardModel(data.reveal)'));
   assert.ok(html.includes('fillScratchFace(document,model,{concert:isConcert})'));
-  assert.ok(owner.includes('fillScratchFace(root,model)'));
+  assert.ok(owner.includes('renderPostScratchFace(card,reveal,surface.postScratch,eventImage)'));
   assert.ok(html.includes("mountScratchFace($('card'))"));
-  assert.ok(owner.includes('mountScratchFace(card)'));
+  assert.ok(html.includes('renderPostScratchFace'));
   for(const name of ['date','time','venue','admit'])
     assert.ok(FACE_MARKUP.includes('id="'+name+'Row" hidden'));
   for(const name of ['messageWrap','senderWrap','closingDetails','bookingRow','eventImageWrap'])

@@ -1,3 +1,4 @@
+import {DEFAULT_POST_SETTINGS} from '../public/post-scratch-settings.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
@@ -95,17 +96,17 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   const {env,legacy,state} = makeMocks();
   const before = await scratchSurfaceResponse(request(),env,{},legacy);
   assert.equal(before.status,200);
-  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket'});
+  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const body = new FormData();
   body.append('style','theatre');body.append('foil','rose');
   const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(saved.status,200);
-  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket'});
+  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const fields = JSON.parse(state.config.fields_json);
   assert.equal(fields.scratchSurface.style,'theatre');
   assert.equal(fields.scratchSurface.coverAssetId,null);
   const fetched = await scratchSurfaceResponse(request(),env,{},legacy);
-  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket'});
+  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
 });
 
 test('20-image artwork selection is validated and persisted without exposing uploads', async () => {
@@ -135,7 +136,7 @@ test('owner can store a custom scratch image privately and retrieve it with a to
   body.append('coverImage',pngFile(), 'cover.png');
   const response = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(response.status,200);
-  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,variant:'ticket'});
+  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   assert.equal(state.stored.size,1);
   assert.equal(state.asset.r2_key.startsWith('scratch-covers/test-reveal/'),true);
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.coverAssetId,state.asset.id);
@@ -445,7 +446,7 @@ test('all 13 scratch themes persist on the same draft without changing artwork o
   const saved=await scratchSurfaceResponse(request('PUT',form),env,{},legacy);
   assert.equal(saved.status,200,theme);
   const response=await saved.json();
-  assert.deepEqual(response.surface,{style:'classic',foil:'rose',theme,hasImage:false,variant:'ticket'});
+  assert.deepEqual(response.surface,{style:'classic',foil:'rose',theme,hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const fetched=await scratchSurfaceResponse(request('GET'),env,{},legacy);
   assert.deepEqual((await fetched.json()).surface,response.surface);
   const fields=JSON.parse(state.config.fields_json);
@@ -478,4 +479,32 @@ test('invalid scratch themes are rejected, and absent theme preserves the previo
  assert.equal(surface.theme,'magical');
  assert.equal(surface.foil,'midnight');
  assert.equal(surface.style,'classic');
+});
+
+test('all 300 cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
+ const {POST_TEMPLATES}=await import('../public/post-scratch-catalogue.js');
+ const {SCRATCH_ARTWORKS}=await import('../public/scratch-artwork-catalogue.js');
+ const {state,env,legacy}=makeMocks();
+ state.config={fields_json:JSON.stringify({unrelated:{keep:true}})};
+ const withImage={fetch:async req=>{const res=await legacy.fetch(req);if(!res.ok)return res;const data=await res.json();data.reveal.hasImage=true;return Response.json(data);}};
+ let count=0;
+ for(const template of POST_TEMPLATES)for(const cover of SCRATCH_ARTWORKS){
+  const postScratch={templateId:template.id,subtitle:'Saved subtitle',venueAddress:'London',imagePosition:'xMaxYMin',textContrast:'dark',shade:45};
+  const body=new FormData();for(const [k,v] of Object.entries({style:'classic',foil:'gold',variant:'ticket',artworkId:cover.id,postScratch:JSON.stringify(postScratch)}))body.set(k,v);
+  const saved=await scratchSurfaceResponse(request('PUT',body),env,{},withImage);assert.equal(saved.status,200);
+  const got=await scratchSurfaceResponse(request(),env,{},withImage);const {surface}=await got.json();
+  assert.deepEqual(surface.postScratch,postScratch);assert.equal(surface.artworkId,cover.id);
+  assert.deepEqual(JSON.parse(state.config.fields_json).unrelated,{keep:true});count++;
+ }
+ assert.equal(count,300);
+});
+
+test('template settings reject malformed input and custom image without upload, preserving saved config',async()=>{
+ const {state,env,legacy}=makeMocks();
+ for(const post of ['{bad',JSON.stringify({templateId:'missing'}),JSON.stringify({templateId:'custom-image'}),JSON.stringify({shade:91}),JSON.stringify({imagePosition:'javascript:bad'}),JSON.stringify({subtitle:'x'.repeat(101)})]){
+  const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch',post);
+  assert.equal((await scratchSurfaceResponse(request('PUT',body),env,{},legacy)).status,400);assert.equal(state.config,null);
+ }
+ const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch','{}');
+ assert.equal((await scratchSurfaceResponse(request('PUT',body,'wrong'),env,{},legacy)).status,403);assert.equal(state.config,null);
 });

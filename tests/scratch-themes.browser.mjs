@@ -65,7 +65,7 @@ async function startServer(){
   const file=path==='/reveal'?'/reveal.html':path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
@@ -138,7 +138,7 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     assert.equal(after.background,actual.background,'Actual selected theme');
     for(const v of [before,after]){assert.ok(Math.abs(v.width-actual.width)<=1,'Same recipient width '+JSON.stringify({v:{width:v.width},actual:actual.width}));assert.ok(Math.abs(v.height-actual.height)<=1,'Same recipient height');}
     assert.equal(before.paint,actual.paint,'Identical artwork canvas, not a separate thumbnail');
-    assert.equal(await owner.locator('#scratchActualRevealed #eventImageWrap:visible').count(),1);
+    assert.equal(await owner.locator('#scratchActualRevealed svg image').count(),3);
     const foil=owner.locator('#scratchActualCovered canvas');
     await foil.evaluate(e=>{e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:50,clientY:50,pointerId:1}));e.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:70,clientY:70,pointerId:1}));});
     assert.equal(await foil.evaluate(c=>c.toDataURL()),before.paint,'Owner cannot scratch even through dispatched pointer events');
@@ -211,8 +211,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
      assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
      assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
-     assert.equal(await page.locator('#scratchActualRevealed #eventName').textContent(),'Jesus Christ Superstar');
-     assert.equal(await page.locator('#scratchActualRevealed #eventImage').evaluate(e=>e.naturalWidth),800);
+     assert.equal(await page.locator('#scratchActualRevealed [data-field=eventName]').textContent(),'JESUS CHRIST SUPERSTAR');
+     assert.equal(await page.locator('#scratchActualRevealed svg image').nth(1).evaluate(e=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth);i.src=e.getAttribute('href');})),800);
      assert.equal(await page.locator('#scratchActualRevealed canvas').count(),0);
      const px=await page.locator('#scratchActualCovered canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data));
      assert.ok(px[3]===255&&!(px[0]>220&&px[1]<60&&px[2]<70),'Opaque catalogue cover must not show the red uploaded surprise photograph');
