@@ -8,14 +8,14 @@ const safeLink=s=>{try{const u=new URL(s);return ['http:','https:'].includes(u.p
 function date(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return val(s);return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z'));}
 function time(s){if(!/^\d\d:\d\d$/.test(s||''))return val(s);const [h,m]=s.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');}
 function join(...items){return items.map(val).filter(Boolean).join(' · ');}
-function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender)?'From '+val(data.sender):'',message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Event link':''};}
+function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender)?'From '+val(data.sender):'',message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Open event link':''};}
 const canvas=typeof document==='undefined'?null:document.createElement('canvas');
 const ctx=canvas?.getContext('2d');
 let uid=0;
-const labels={eventName:'Reveal title',subtitle:'Subtitle',recipient:'Recipient',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From / host',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
+const labels={sender:'From / host',eventName:'Reveal title',subtitle:'Subtitle',recipient:'Recipient',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From / host',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
 function fitText(value,zone){
  const {family,weight,w,h}=zone;const max=Math.min(zone.size,Math.floor(h*.84));
- const min=Math.min(max,Math.max(19,Math.round(max*.38)));
+ const min=Math.min(max,Math.max(20,Math.round(max*.42)));
  sizeLoop: for(let size=max;size>=min;size--){
   const spacing=Math.min(zone.spacing||0,size*.07),leading=size*1.12;
   ctx.font=(zone.italic?'italic ':'')+weight+' '+size+'px '+family;
@@ -44,6 +44,47 @@ function text(svg,zone,value,ghost=false){
  const el=mk('text',{'data-field':zone.key,x,y,fill:zone.ink,'font-size':size,'font-family':zone.family,'font-weight':zone.weight,'font-style':zone.italic?'italic':'normal','text-anchor':zone.align==='left'?'start':zone.align==='right'?'end':'middle','letter-spacing':spacing,opacity:ghost?.65:1,style:zone.glow?'filter:drop-shadow(0 0 3px '+zone.glow+')':undefined,stroke:zone.outline||undefined,'stroke-width':zone.outline?1:undefined,'paint-order':zone.outline?'stroke fill':undefined},svg);
  lines.forEach((line,i)=>{const t=mk('tspan',{x,y:y+i*leading},el);t.textContent=line;});
  return null;
+}
+// Decorations, field frames and icons are vector components, never baked
+// placeholder text. The user image is clipped to the defined photo zone.
+function drawDecor(svg,items){
+ for(const d of items||[]){
+  if(d.kind==='rect')mk('rect',{x:d.x,y:d.y,width:d.w,height:d.h,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,rx:d.rx},svg);
+  if(d.kind==='path')mk('path',{d:d.d,fill:d.fill,stroke:d.stroke,'stroke-width':d.sw,'stroke-linejoin':'round'},svg);
+  if(d.kind==='line')mk('line',{x1:d.x1,y1:d.y1,x2:d.x2,y2:d.y2,stroke:d.stroke,'stroke-width':d.sw,'stroke-dasharray':d.dash},svg);
+ }
+}
+function drawIcon(svg,key,cx,cy,size,ink){
+ const paths={
+  date:'M4 6H20V21H4Z M4 10H20 M8 3V8 M16 3V8 M8 14H10 M14 14H16 M8 17H10 M14 17H16',
+  time:'M12 3A9 9 0 1 0 12 21A9 9 0 1 0 12 3 M12 7V12L16 14',
+  venue:'M12 21S4 13 4 9A8 8 0 0 1 20 9C20 13 12 21 12 21Z M12 6A3 3 0 1 0 12 12A3 3 0 1 0 12 6',
+  venueAddress:'M4 21V8H10V21 M10 21V3H20V21 M3 21H21 M13 7H16 M13 11H16 M13 15H16 M6 12H8 M6 16H8',
+  sender:'M12 3A4 4 0 1 0 12 11A4 4 0 1 0 12 3 M4 21V18A8 8 0 0 1 20 18V21Z',
+  recipient:'M9 3A4 4 0 1 0 9 11A4 4 0 1 0 9 3 M2 21V18A7 7 0 0 1 16 18V21Z M17 4A3 3 0 0 1 17 10 M18 14A6 6 0 0 1 22 20'
+ };
+ if(!paths[key])return;
+ const g=mk('g',{transform:'translate('+(cx-size/2)+' '+(cy-size/2)+') scale('+(size/24)+')','data-layout-icon':key,fill:'none',stroke:ink,'stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'},svg);
+ mk('path',{d:paths[key]},g);
+}
+function drawPanels(svg,panels,values,src,guides){
+ for(const p of panels||[]){
+  const g=mk('g',{'data-layout-panel':p.key},svg);
+  mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:p.rx,fill:p.fill,stroke:p.stroke,'stroke-width':p.sw},g);
+  if(p.key==='image')continue;
+  if(p.icon){
+   if(p.iconBg)mk('rect',{x:p.x+3,y:p.y+3,width:p.gutter-4,height:p.h-6,rx:Math.max(0,p.rx-3),fill:p.iconBg},g);
+   drawIcon(g,p.icon,p.x+p.gutter/2,p.y+p.h/2,Math.min(39,p.gutter*.69,p.h*.65),p.accent);
+   mk('line',{x1:p.x+p.gutter,y1:p.y+8,x2:p.x+p.gutter,y2:p.y+p.h-8,stroke:p.stroke,'stroke-width':1.6},g);
+  }
+  // The title and personal values remain editable. Field headings are part
+  // of the layout, only printed for populated details (or editor guides).
+  if(p.label&&(val(values[p.key])||guides)){
+   const center=p.align==='center',start=p.x+p.gutter+13;
+   const label=mk('text',{x:center?p.x+p.w/2:start,y:p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':Math.min(18,p.labelH*.78),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':.65,'data-layout-label':p.key},g);
+   label.textContent=p.label;
+  }
+ }
 }
 function drawPhoto(svg,defs,p,src,placeholder,id){
  if(!src&&!placeholder)return;
@@ -79,13 +120,22 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   }
  }else{
  mk('image',{href:options.backgroundSrc||template.image,x:0,y:0,width:900,height:1200,preserveAspectRatio:'xMidYMid meet'},svg);
- if(template.photo?.full&&src){drawPhoto(svg,defs,template.photo,src,false,id+'-photo');
+ if(template.structured){
+  drawDecor(svg,template.decor);
+  drawPanels(svg,template.panels,values,src,options.guides===true);
+  if(template.id==='pop-panels'){
+   // Retain the original black-line DJ illustration in the left comic panel.
+   const art=mk('svg',{x:40,y:220,width:236,height:260,viewBox:'145 355 405 380',preserveAspectRatio:'xMidYMid meet',overflow:'hidden'},svg);
+   mk('image',{href:'/post-scratch-artwork/doodle-party.webp',x:0,y:0,width:900,height:1200,preserveAspectRatio:'none'},art);
+  }
+  if(template.photo&&(src||options.guides))drawPhoto(svg,defs,template.photo,src,options.guides===true,id+'-photo');
+ }else if(template.photo?.full&&src){drawPhoto(svg,defs,template.photo,src,false,id+'-photo');
  // Preserve original decorative stars over the customer's full-bleed photograph.
  const top=mk('clipPath',{id:id+'-stars'},defs);mk('rect',{x:0,y:0,width:900,height:185},top);
  mk('image',{href:options.backgroundSrc||template.image,x:0,y:0,width:900,height:1200,preserveAspectRatio:'none','clip-path':'url(#'+id+'-stars)'},svg);
  }else if(template.photo&&(src||options.guides))drawPhoto(svg,defs,template.photo,src,options.guides===true,id+'-photo');
  }
- if(template.id==='editorial'){const pts=[];for(let i=0;i<64;i++){const a=i*Math.PI/32,r=i%2?25:43;pts.push((724+Math.cos(a)*r)+','+(242+Math.sin(a)*r));}mk('polygon',{points:pts.join(' '),fill:'#e5e3da'},svg);}
+ if(template.id==='editorial'&&!template.structured){const pts=[];for(let i=0;i<64;i++){const a=i*Math.PI/32,r=i%2?25:43;pts.push((724+Math.cos(a)*r)+','+(242+Math.sin(a)*r));}mk('polygon',{points:pts.join(' '),fill:'#e5e3da'},svg);}
  const zones=template.id==='custom-image'?template.zones.map(z=>({...z,ink:options.textContrast==='dark'?'#15212b':'#ffffff'})):template.zones;
  const errors=[],tiny=[],checks=[];
  for(const zone of zones){
