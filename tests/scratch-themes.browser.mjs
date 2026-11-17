@@ -131,7 +131,25 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
       return {width:r.width,height:r.height,text:card.querySelector('#underlay').textContent,paint:canvas.toDataURL(),background:getComputedStyle(card.querySelector('.ticket-underlay')).backgroundImage};
     });
     assert.equal(await owner.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
-    assert.equal(await owner.locator('#scratchActualReview button, #scratchActualRevealed a[href]').count(),0);
+    assert.equal(await owner.locator('#scratchActualReview button').count(),2);
+     assert.equal(await owner.locator('#scratchActualRevealed a[href]').count(),0);
+     const readPanel=()=>owner.locator('#scratchActualReview').evaluate(section=>{
+       const a=section.querySelector('#scratchActualCovered'),b=section.querySelector('#scratchActualRevealed');
+       const bounds=el=>{const r=el.getBoundingClientRect();return [r.x,r.y,r.width,r.height];};
+       return {mode:section.dataset.previewMode,coveredOpacity:getComputedStyle(a).opacity,revealedOpacity:getComputedStyle(b).opacity,
+         coveredInert:a.inert,revealedInert:b.inert,covered:bounds(a),revealed:bounds(b),height:section.querySelector('.scratch-preview-stack').getBoundingClientRect().height};
+     });
+     const first=await readPanel();
+     assert.equal(first.mode,'covered');assert.equal(first.coveredOpacity,'1');assert.equal(first.revealedOpacity,'0');
+     assert.equal(first.coveredInert,false);assert.equal(first.revealedInert,true);
+     assert.deepEqual(first.covered.slice(0,3),first.revealed.slice(0,3),'Both faces use the same location and width');
+     assert.ok(first.height<=Math.max(first.covered[3],first.revealed[3])+1,'Preview stack uses one card height');
+     await owner.locator('[data-scratch-preview-mode="revealed"]').click();
+     const second=await readPanel();
+     assert.equal(second.mode,'revealed');assert.equal(second.coveredOpacity,'0');assert.equal(second.revealedOpacity,'1');
+     assert.equal(second.coveredInert,true);assert.equal(second.revealedInert,false);
+     assert.equal(second.height,first.height);
+     await owner.locator('[data-scratch-preview-mode="covered"]').click();
     assert.equal(before.visibility,'hidden');
     assert.equal(before.pointer,'none');
     assert.equal(after.text,actual.text,'Exactly the same recipient markup and formatted fields');
@@ -250,7 +268,12 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    await page.locator('#scratchArtwork:enabled').waitFor();
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
-   assert.equal(await page.locator('#scratchActualRevealed #card:visible').count(),1);
+   assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'covered');
+    assert.equal(await page.locator('#scratchActualCovered').evaluate(x=>getComputedStyle(x).opacity),'1');
+    assert.equal(await page.locator('#scratchActualRevealed').evaluate(x=>getComputedStyle(x).opacity),'0');
+    assert.equal(await page.locator('#scratchCreatorActual').evaluate(x=>x.parentElement.id||x.parentElement.className),size.name==='mobile'?'scratchMobileDock':'preview-column');
+    await page.locator('[data-scratch-preview-mode="revealed"]').click();
+    assert.equal(await page.locator('#scratchActualRevealed').evaluate(x=>getComputedStyle(x).opacity),'1');
    assert.equal(await page.locator('.scratch-theme-option').count(),0);
    assert.equal(await page.locator('[data-scratch-foil]:visible').count(),0);
    assert.equal(await page.locator('#surfaceHeading:visible').count(),0);
@@ -270,6 +293,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
     paintings.add(await page.locator('#scratchActualCovered canvas').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
    assert.equal(paintings.size,20,'Each approved artwork must actually repaint the surface Canvas');
+    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed','Updating artwork preserves the selected preview side');
+    await page.locator('[data-scratch-preview-mode="covered"]').click();
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);

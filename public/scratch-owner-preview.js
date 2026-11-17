@@ -10,6 +10,27 @@ import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
 const stylesheet='/scratch-recipient-face.css?v=post-templates-1';
 const active=new WeakMap();
+const boundSwitches=new WeakSet();
+function setupPreviewSwitch(section,covered,revealed){
+ const controls=[...section.querySelectorAll('[data-scratch-preview-mode]')];
+ if(!controls.length)return;
+ function select(mode){
+  mode=mode==='revealed'?'revealed':'covered';
+  section.dataset.previewMode=mode;
+  for(const button of controls)button.setAttribute('aria-pressed',String(button.dataset.scratchPreviewMode===mode));
+  for(const [name,panel] of [['covered',covered],['revealed',revealed]]){
+   const inactive=name!==mode;
+   panel.inert=inactive;
+   if(inactive)panel.setAttribute('aria-hidden','true');
+   else panel.removeAttribute('aria-hidden');
+  }
+ }
+ if(!boundSwitches.has(section)){
+  for(const button of controls)button.addEventListener('click',()=>select(button.dataset.scratchPreviewMode));
+  boundSwitches.add(section);
+ }
+ select(section.dataset.previewMode);
+}
 export function disposeScratchOwnerPreview(section){
  active.get(section)?.destroy();
  active.delete(section);
@@ -30,7 +51,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface})
  const main=make('main');
  screen.append(main);root.append(screen);
  const eyebrow=make('div',artwork?'A special scratch reveal':theme.icon+' '+theme.label+' reveal','eyebrow');
- const title=make('h1','A surprise for '+model.recipient);
+ const title=make('h1','A surprise for '+(model.recipient||'you'));
  const intro=make('p','Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.','intro');
  const card=make('div','','card');
  card.id='card';
@@ -73,6 +94,7 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  const revealed=hosts?.revealed||section.querySelector('#scratchActualRevealed');
  const sound=hosts?.sound||section.querySelector('#scratchActualSound');
  disposeScratchOwnerPreview(section);
+ setupPreviewSwitch(section,covered,revealed);
  section.hidden=false;
  const [coverRoot]=await Promise.all([
   stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface}),
