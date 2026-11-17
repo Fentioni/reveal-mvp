@@ -30,7 +30,7 @@ function defs(svg){
  const cp=el('clipPath',{id:'image-clip'},d);rect(cp,0,0,W,H,'#fff');
  return d;
 }
-function type(g,s,x,y,{size=42,min=16,maxWidth=500,maxLines=1,leading=1.05,weight=700,fill='#fff',family='Arial, Helvetica, sans-serif',anchor='start',italic=false,spacing=0,stroke='',strokeWidth=1,uppercase=false,rotate=0}={}){
+function type(g,s,x,y,{size=42,min=16,maxWidth=500,maxLines=1,leading=1.05,weight=700,fill='#fff',family='Arial, Helvetica, sans-serif',anchor='start',italic=false,spacing=0,stroke='',strokeWidth=1,uppercase=false,rotate=0,role=''}={}){
  let value=safe(s);if(!value)return;
  if(uppercase)value=value.toUpperCase();
  let font=size,lines=[];
@@ -51,7 +51,7 @@ function type(g,s,x,y,{size=42,min=16,maxWidth=500,maxLines=1,leading=1.05,weigh
    while(kept[maxLines-1].length>1&&ctx.measureText(kept[maxLines-1]+'…').width>maxWidth)kept[maxLines-1]=kept[maxLines-1].slice(0,-1);
    kept[maxLines-1]+='…';lines=kept;
  }
- const group=el('g',rotate?{transform:'rotate('+rotate+' '+x+' '+y+')'}:{},g);
+ const group=el('g',rotate?{transform:'rotate('+rotate+' '+x+' '+y+')','data-ct-role':role}:{'data-ct-role':role},g);
  for(let i=0;i<lines.length;i++){
   const t=el('text',{x,y:y+font*(1+i*leading),'font-family':family,'font-size':font,'font-weight':weight,'font-style':italic?'italic':'normal','letter-spacing':spacing,fill,'text-anchor':anchor,'paint-order':'stroke',stroke:stroke||'none','stroke-width':strokeWidth},group);
   t.textContent=lines[i];
@@ -117,8 +117,8 @@ function neon(svg,d){
  barcode(svg,165,97,112,472,'#19051c','horizontal');
  type(svg,'ADMIT ONE',96,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900});
  type(svg,'ADMIT: '+fallback(d.admit,d.recipient),339,577,{size:28,min:19,maxWidth:515,rotate:-90,fill:'#190b19',weight:550});
- type(svg,d.eventTitle,467,62,{size:136,min:64,maxWidth:950,maxLines:2,weight:900,fill:'#ff78c5',leading:.92});
- type(svg,d.subtitle,469,341,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff'});
+ type(svg,d.eventTitle,467,62,{size:136,min:64,maxWidth:950,maxLines:2,weight:900,fill:'#ff78c5',leading:.92,role:'title'});
+ type(svg,d.subtitle,469,341,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff',role:'subtitle'});
  type(svg,'ADMIT',1250,284,{size:37,min:22,maxWidth:340,fill:'#f9c1e0',weight:600});
  type(svg,fallback(d.admit,d.recipient),1250,323,{size:69,min:35,maxWidth:310,maxLines:2,fill:'#fff',weight:800});
  seat(svg,d,1642,308,319,'#ff91d5',45);
@@ -145,9 +145,9 @@ function editorial(svg,d){
  type(svg,'SEAT',236,495,{size:20,maxWidth:130,fill:'#190c14'});
  type(svg,d.seat,236,527,{size:49,maxWidth:130,fill:'#190c14',weight:600});
  type(svg,'WELCOME',531,71,{size:25,maxWidth:340,fill:'#fff',weight:450,spacing:1});
- type(svg,d.eventTitle,529,103,{size:73,min:40,maxWidth:740,maxLines:2,weight:900,fill:'#ff9fc6',leading:.99});
- type(svg,d.eventTitle,532,277,{size:55,min:31,maxWidth:740,maxLines:1,fill:'#030304',stroke:'#f0a5c5',strokeWidth:2,weight:900});
- type(svg,d.subtitle,533,357,{size:27,min:16,maxWidth:740,fill:'#fff',weight:500});
+ type(svg,d.eventTitle,529,103,{size:73,min:40,maxWidth:740,maxLines:2,weight:900,fill:'#ff9fc6',leading:.99,role:'title'});
+ type(svg,d.eventTitle,532,277,{size:55,min:31,maxWidth:740,maxLines:1,fill:'#030304',stroke:'#f0a5c5',strokeWidth:2,weight:900,role:'title'});
+ type(svg,d.subtitle,533,357,{size:27,min:16,maxWidth:740,fill:'#fff',weight:500,role:'subtitle'});
  type(svg,d.date,536,453,{size:39,min:22,maxWidth:475,fill:'#ffb9d3',weight:650});
  type(svg,d.time,536,501,{size:29,min:20,maxWidth:450,fill:'#fff'});
  type(svg,d.venue,536,549,{size:29,min:20,maxWidth:480,fill:'#fff',weight:700});
@@ -172,10 +172,10 @@ function promo(svg,d){
  photo(svg,489,138,200,268,d.imageSrc);
  rect(svg,488,137,202,270,'none',{stroke:'#fff','stroke-width':4});
  type(svg,d.venueAddress||d.venue,467,500,{size:27,min:16,maxWidth:500,fill:'#381659',weight:700});
- type(svg,d.eventTitle,836,51,{size:124,min:53,maxWidth:780,maxLines:2,leading:1.01,fill:'#42115b',family:'Georgia,serif',weight:400});
+ type(svg,d.eventTitle,836,51,{size:124,min:53,maxWidth:780,maxLines:2,leading:1.01,fill:'#42115b',family:'Georgia,serif',weight:400,role:'title'});
  type(svg,'ADMIT',994,341,{size:39,min:25,maxWidth:350,fill:'#1c0a29',weight:700});
  type(svg,fallback(d.admit,d.recipient),1136,340,{size:50,min:28,maxWidth:660,maxLines:2,fill:'#23092d',weight:700});
- type(svg,d.subtitle,835,458,{size:30,min:20,maxWidth:1000,fill:'#42155b',weight:550});
+ type(svg,d.subtitle,835,458,{size:30,min:20,maxWidth:1000,fill:'#42155b',weight:550,role:'subtitle'});
  type(svg,d.officialLink?new URL(d.officialLink).hostname:'',1190,545,{size:30,min:18,maxWidth:620,fill:'#441960',anchor:'middle',weight:700});
 }
 function premium(svg,d){
@@ -188,8 +188,8 @@ function premium(svg,d){
  type(svg,d.section||d.level,92,515,{size:27,maxWidth:230,rotate:-90,fill:'#f8f9ff'});
  type(svg,'ROW',61,209,{size:27,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
  type(svg,d.row,93,212,{size:28,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
- type(svg,d.eventTitle,672,77,{size:82,min:42,maxWidth:785,maxLines:2,fill:'#fff',weight:850,spacing:1});
- type(svg,d.subtitle,682,268,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550});
+ type(svg,d.eventTitle,672,77,{size:82,min:42,maxWidth:785,maxLines:2,fill:'#fff',weight:850,spacing:1,role:'title'});
+ type(svg,d.subtitle,682,268,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550,role:'subtitle'});
  type(svg,d.date,705,359,{size:41,min:25,maxWidth:370,fill:'#fff',weight:750});
  type(svg,d.time,1110,360,{size:33,min:22,maxWidth:288,fill:'#fff',weight:650});
  type(svg,d.venue,681,437,{size:33,min:21,maxWidth:725,fill:'#fff',weight:750});
@@ -210,8 +210,8 @@ function rock(svg,d){
  rect(svg,1554,0,446,647,'#060607');
  line(svg,1554,0,1554,647,'#f6f6f6',7,{'stroke-dasharray':'20 17'});
  circle(svg,1554,0,55,'#fff');circle(svg,1554,647,55,'#fff');
- type(svg,d.eventTitle,967,65,{size:91,min:39,maxWidth:545,maxLines:2,fill:'#fff',family:'Georgia,serif',weight:800});
- type(svg,d.subtitle,973,282,{size:26,min:16,maxWidth:520,fill:'#fff',weight:450});
+ type(svg,d.eventTitle,967,65,{size:91,min:39,maxWidth:545,maxLines:2,fill:'#fff',family:'Georgia,serif',weight:800,role:'title'});
+ type(svg,d.subtitle,973,282,{size:26,min:16,maxWidth:520,fill:'#fff',weight:450,role:'subtitle'});
  rect(svg,974,341,250,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
  rect(svg,1250,341,254,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
  type(svg,d.time,1002,351,{size:33,min:20,maxWidth:202,fill:'#fff',weight:500,family:'Georgia,serif'});
