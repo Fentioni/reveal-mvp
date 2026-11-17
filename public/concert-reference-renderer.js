@@ -59,7 +59,7 @@ function type(g,s,x,y,{size=42,min=16,maxWidth=500,maxLines=1,leading=1.05,weigh
  return group;
 }
 function barcode(g,x,y,w,h,ink,orientation='vertical'){
- const group=el('g',{opacity:.96},g);const units=orientation==='vertical'?w:h;let cursor=0,i=0;
+ const group=el('g',{opacity:.96,'data-ct-role':'barcode'},g);const units=orientation==='vertical'?w:h;let cursor=0,i=0;
  while(cursor<units-2){const width=[2,5,3,2,7,2,4,2,8,3,2,6][i%12];if(i%3!==1){if(orientation==='vertical')rect(group,x+cursor,y,Math.min(width,w-cursor),h,ink);else rect(group,x,y+cursor,w,Math.min(width,h-cursor),ink);}cursor+=width+1;i++;}
 }
 function photo(svg,x,y,w,h,src,{tint='',opacity=1}={}){
@@ -115,7 +115,7 @@ function neon(svg,d){
  for(let j=0;j<3;j++){circle(svg,400,j*323.5,78,'#faf8f5');}
  line(svg,400,0,400,647,'#fff',8,{'stroke-dasharray':'64 22'});
  barcode(svg,165,97,112,472,'#19051c','horizontal');
- type(svg,'ADMIT ONE',96,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900});
+ type(svg,'ADMIT ONE',45,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900,role:'stub-admit'});
  type(svg,'ADMIT: '+fallback(d.admit,d.recipient),339,577,{size:28,min:19,maxWidth:515,rotate:-90,fill:'#190b19',weight:550});
  type(svg,d.eventTitle,467,62,{size:136,min:64,maxWidth:950,maxLines:2,weight:900,fill:'#ff78c5',leading:.92,role:'title'});
  type(svg,d.subtitle,469,385,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff',role:'subtitle'});
