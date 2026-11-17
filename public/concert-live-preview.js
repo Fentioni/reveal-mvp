@@ -3,7 +3,7 @@
  * Receives current unsaved form values; never fetches protected recipient data.
  */
 import {CONCERT_TICKET_FIELDS} from './concert-ticket-fields.js';
-import {renderConcertReference} from './concert-reference-renderer.js?v=reference-3';
+import {renderConcertReference} from './concert-reference-renderer.js?v=reference-4';
 import {concertTicketClipPath,concertTemplateLayout} from './concert-ticket-options.js';
 const foilNames=['gold','silver','midnight','rose'];
 const safeUrl=raw=>{
