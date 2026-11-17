@@ -69,8 +69,19 @@ function photo(svg,x,y,w,h,src,{tint='',opacity=1}={}){
  if(safe(src))el('image',{href:src,x,y,width:w,height:h,preserveAspectRatio:'xMidYMid slice',opacity},g);
  else{
   rect(g,x,y,w,h,'url(#photo-stage)');
-  el('image',{href:'/concert-reveal-art/concert-lights.svg',x,y,width:w,height:h,preserveAspectRatio:'xMidYMid slice',opacity:.68},g);
-  path(g,'M'+x+' '+(y+h)+' L'+(x+w*.22)+' '+(y+h*.58)+' Q'+(x+w*.28)+' '+(y+h*.40)+' '+(x+w*.44)+' '+(y+h*.50)+' L'+(x+w*.64)+' '+(y+h)+'Z','#080818',{opacity:.83});
+  // Self-contained stage artwork: nested external SVG image resources are
+  // suppressed by some Safari/Chromium SVG security contexts.
+  // This draws the lighting and performer directly, so no blank picture box.
+  path(g,'M'+(x+w*.10)+' '+y+' L'+(x+w*.73)+' '+(y+h)+' L'+(x+w*.98)+' '+(y+h)+' L'+(x+w*.29)+' '+y+'Z','#e86abd',{opacity:.22});
+  path(g,'M'+(x+w*.90)+' '+y+' L'+(x+w*.03)+' '+(y+h)+' L'+(x+w*.28)+' '+(y+h)+' L'+(x+w*.96)+' '+y+'Z','#68bdea',{opacity:.20});
+  circle(g,x+w*.23,y+h*.14,Math.max(6,w*.055),'#ffe7ab',{opacity:.60});
+  circle(g,x+w*.82,y+h*.09,Math.max(5,w*.040),'#e0baff',{opacity:.48});
+  path(g,'M'+x+' '+(y+h)+' L'+x+' '+(y+h*.83)+' Q'+(x+w*.16)+' '+(y+h*.64)+' '+(x+w*.29)+' '+(y+h*.86)+' Q'+(x+w*.37)+' '+(y+h*.60)+' '+(x+w*.50)+' '+(y+h*.87)+' Q'+(x+w*.75)+' '+(y+h*.64)+' '+(x+w)+' '+(y+h*.87)+' L'+(x+w)+' '+(y+h)+'Z','#0a081a',{opacity:.87});
+  circle(g,x+w*.51,y+h*.39,Math.min(w*.13,h*.12),'#100d1c',{opacity:.96});
+  path(g,'M'+(x+w*.35)+' '+(y+h*.90)+' L'+(x+w*.40)+' '+(y+h*.55)+' Q'+(x+w*.50)+' '+(y+h*.48)+' '+(x+w*.62)+' '+(y+h*.56)+' L'+(x+w*.70)+' '+(y+h*.92)+'Z','#0d0b19',{opacity:.98});
+  line(g,x+w*.66,y+h*.26,x+w*.64,y+h*.82,'#a7aec5',Math.max(2,w*.010),{opacity:.80});
+  circle(g,x+w*.66,y+h*.27,Math.max(3,w*.025),'#d5ccdd',{opacity:.90});
+  path(g,'M'+(x+w*.31)+' '+(y+h*.68)+' Q'+(x+w*.56)+' '+(y+h*.54)+' '+(x+w*.71)+' '+(y+h*.68)+' Q'+(x+w*.70)+' '+(y+h*.86)+' '+(x+w*.41)+' '+(y+h*.79)+'Z','#56204b',{opacity:.95,stroke:'#bb80a9','stroke-width':Math.max(1,w*.005)});
  }
  if(tint)rect(g,x,y,w,h,tint,{opacity:.35});
  return g;
