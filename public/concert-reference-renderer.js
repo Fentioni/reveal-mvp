@@ -115,7 +115,7 @@ function neon(svg,d){
  for(let j=0;j<3;j++){circle(svg,400,j*323.5,78,'#faf8f5');}
  line(svg,400,0,400,647,'#fff',8,{'stroke-dasharray':'64 22'});
  barcode(svg,165,97,112,472,'#19051c','horizontal');
- type(svg,'ADMIT ONE',122,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900});
+ type(svg,'ADMIT ONE',96,549,{size:78,maxWidth:480,rotate:-90,fill:'#180b19',weight:900});
  type(svg,'ADMIT: '+fallback(d.admit,d.recipient),339,577,{size:28,min:19,maxWidth:515,rotate:-90,fill:'#190b19',weight:550});
  type(svg,d.eventTitle,467,62,{size:136,min:64,maxWidth:950,maxLines:2,weight:900,fill:'#ff78c5',leading:.92});
  type(svg,d.subtitle,469,341,{size:33,min:18,maxWidth:805,weight:500,fill:'#fff'});
@@ -172,7 +172,7 @@ function promo(svg,d){
  photo(svg,489,138,200,268,d.imageSrc);
  rect(svg,488,137,202,270,'none',{stroke:'#fff','stroke-width':4});
  type(svg,d.venueAddress||d.venue,467,500,{size:27,min:16,maxWidth:500,fill:'#381659',weight:700});
- type(svg,d.eventTitle,836,51,{size:117,min:53,maxWidth:1060,maxLines:2,leading:1.01,fill:'#42115b',family:'Georgia,serif',weight:400});
+ type(svg,d.eventTitle,836,51,{size:124,min:53,maxWidth:780,maxLines:2,leading:1.01,fill:'#42115b',family:'Georgia,serif',weight:400});
  type(svg,'ADMIT',994,341,{size:39,min:25,maxWidth:350,fill:'#1c0a29',weight:700});
  type(svg,fallback(d.admit,d.recipient),1136,340,{size:50,min:28,maxWidth:660,maxLines:2,fill:'#23092d',weight:700});
  type(svg,d.subtitle,835,458,{size:30,min:20,maxWidth:1000,fill:'#42155b',weight:550});
@@ -189,13 +189,13 @@ function premium(svg,d){
  type(svg,'ROW',61,209,{size:27,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
  type(svg,d.row,93,212,{size:28,maxWidth:160,rotate:-90,fill:'#f8f9ff'});
  type(svg,d.eventTitle,672,77,{size:82,min:42,maxWidth:785,maxLines:2,fill:'#fff',weight:850,spacing:1});
- type(svg,d.subtitle,682,222,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550});
- type(svg,d.date,705,337,{size:41,min:25,maxWidth:370,fill:'#fff',weight:750});
- type(svg,d.time,1110,340,{size:33,min:22,maxWidth:288,fill:'#fff',weight:650});
- type(svg,d.venue,681,415,{size:33,min:21,maxWidth:725,fill:'#fff',weight:750});
- type(svg,d.venueAddress,681,465,{size:26,min:16,maxWidth:730,fill:'#d8e4f4'});
- type(svg,'ADMIT ONE',937,526,{size:27,maxWidth:300,fill:'#fff',anchor:'middle',weight:750});
- type(svg,fallback(d.admit,d.recipient),937,566,{size:31,min:20,maxWidth:440,fill:'#fff',anchor:'middle'});
+ type(svg,d.subtitle,682,268,{size:29,min:19,maxWidth:730,fill:'#f3f9ff',weight:550});
+ type(svg,d.date,705,359,{size:41,min:25,maxWidth:370,fill:'#fff',weight:750});
+ type(svg,d.time,1110,360,{size:33,min:22,maxWidth:288,fill:'#fff',weight:650});
+ type(svg,d.venue,681,437,{size:33,min:21,maxWidth:725,fill:'#fff',weight:750});
+ type(svg,d.venueAddress,681,487,{size:26,min:16,maxWidth:730,fill:'#d8e4f4'});
+ type(svg,'ADMIT ONE',937,539,{size:27,maxWidth:300,fill:'#fff',anchor:'middle',weight:750});
+ type(svg,fallback(d.admit,d.recipient),937,573,{size:31,min:20,maxWidth:440,fill:'#fff',anchor:'middle'});
  line(svg,1554,0,1554,647,'#fff',3);
  type(svg,'ROW',1620,501,{size:29,maxWidth:210,rotate:-90,fill:'#101829',weight:750});
  type(svg,d.row,1654,501,{size:25,maxWidth:210,rotate:-90,fill:'#101829'});
@@ -211,11 +211,11 @@ function rock(svg,d){
  line(svg,1554,0,1554,647,'#f6f6f6',7,{'stroke-dasharray':'20 17'});
  circle(svg,1554,0,55,'#fff');circle(svg,1554,647,55,'#fff');
  type(svg,d.eventTitle,967,65,{size:91,min:39,maxWidth:545,maxLines:2,fill:'#fff',family:'Georgia,serif',weight:800});
- type(svg,d.subtitle,973,250,{size:26,min:16,maxWidth:520,fill:'#fff',weight:450});
- rect(svg,974,314,250,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
- rect(svg,1250,314,254,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
- type(svg,d.time,1002,324,{size:33,min:20,maxWidth:202,fill:'#fff',weight:500,family:'Georgia,serif'});
- type(svg,d.date,1276,324,{size:30,min:19,maxWidth:205,fill:'#fff',weight:500,family:'Georgia,serif'});
+ type(svg,d.subtitle,973,282,{size:26,min:16,maxWidth:520,fill:'#fff',weight:450});
+ rect(svg,974,341,250,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
+ rect(svg,1250,341,254,61,'none',{stroke:'#fff','stroke-width':2,rx:28});
+ type(svg,d.time,1002,351,{size:33,min:20,maxWidth:202,fill:'#fff',weight:500,family:'Georgia,serif'});
+ type(svg,d.date,1276,351,{size:30,min:19,maxWidth:205,fill:'#fff',weight:500,family:'Georgia,serif'});
  type(svg,'ADMIT',968,429,{size:32,min:22,maxWidth:150,fill:'#fff',weight:500});
  type(svg,fallback(d.admit,d.recipient),1092,419,{size:37,min:22,maxWidth:420,maxLines:2,fill:'#fff',weight:500,family:'Georgia,serif'});
  type(svg,d.venue,969,510,{size:33,min:20,maxWidth:520,maxLines:2,fill:'#fff',weight:650});
