@@ -927,29 +927,6 @@
                     </button>
                   </div>
                 </div>
-                <section id="postImageControls" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
-                  <div class="post-image-editor-heading">
-                    <h3 id="postImageEditorTitle">Edit your image</h3>
-                    <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
-                  </div>
-                  <p id="postImageEditorHelp" class="field-help">Upload an image to activate the editing controls.</p>
-                  <fieldset id="postImageAdjustments" disabled>
-                  <label for="postImageFit">Image fit</label>
-                  <select id="postImageFit"><option value="auto">Template default</option><option value="contain">Fit whole image</option><option value="cover">Fill image frame</option></select>
-                  <label for="postImageZoom">Zoom <output id="postImageZoomValue" for="postImageZoom">100%</output></label>
-                  <input id="postImageZoom" type="range" min="50" max="300" step="1" value="100">
-                  <label for="postImagePanX">Horizontal position <output id="postImagePanXValue" for="postImagePanX">Centre</output></label>
-                  <input id="postImagePanX" type="range" min="-100" max="100" step="1" value="0">
-                  <label for="postImagePanY">Vertical position <output id="postImagePanYValue" for="postImagePanY">Centre</output></label>
-                  <input id="postImagePanY" type="range" min="-100" max="100" step="1" value="0">
-                  <label for="postImagePosition">Crop alignment</label>
-                  <select id="postImagePosition"><option value="xMidYMid">Centre</option><option value="xMidYMin">Top</option><option value="xMidYMax">Bottom</option><option value="xMinYMid">Left</option><option value="xMaxYMid">Right</option><option value="xMinYMin">Top left</option><option value="xMaxYMin">Top right</option><option value="xMinYMax">Bottom left</option><option value="xMaxYMax">Bottom right</option></select>
-                  <div id="postFullImageControls" hidden>
-                    <label for="postTextContrast">Text colour</label><select id="postTextContrast"><option value="light">White text · dark shading</option><option value="dark">Dark text · light shading</option></select>
-                    <label for="postShade">Background shading: <output id="postShadeValue">70%</output></label><input id="postShade" type="range" min="0" max="90" step="5" value="70">
-                  </div>
-                  </fieldset>
-                </section>
               </div>
 
 
@@ -1103,6 +1080,30 @@
               maxlength="2048"
             >
           </div>
+
+          <section id="postImageControls" data-placement="form-bottom" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
+            <div class="post-image-editor-heading">
+              <h3 id="postImageEditorTitle">Edit your image</h3>
+              <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
+            </div>
+            <p id="postImageEditorHelp" class="field-help">Upload an image to activate the editing controls.</p>
+            <fieldset id="postImageAdjustments" disabled>
+            <label for="postImageFit">Image fit</label>
+            <select id="postImageFit"><option value="auto">Template default</option><option value="contain">Fit whole image</option><option value="cover">Fill image frame</option></select>
+            <label for="postImageZoom">Zoom <output id="postImageZoomValue" for="postImageZoom">100%</output></label>
+            <input id="postImageZoom" type="range" min="50" max="300" step="1" value="100">
+            <label for="postImagePanX">Horizontal position <output id="postImagePanXValue" for="postImagePanX">Centre</output></label>
+            <input id="postImagePanX" type="range" min="-100" max="100" step="1" value="0">
+            <label for="postImagePanY">Vertical position <output id="postImagePanYValue" for="postImagePanY">Centre</output></label>
+            <input id="postImagePanY" type="range" min="-100" max="100" step="1" value="0">
+            <label for="postImagePosition">Crop alignment</label>
+            <select id="postImagePosition"><option value="xMidYMid">Centre</option><option value="xMidYMin">Top</option><option value="xMidYMax">Bottom</option><option value="xMinYMid">Left</option><option value="xMaxYMid">Right</option><option value="xMinYMin">Top left</option><option value="xMaxYMin">Top right</option><option value="xMinYMax">Bottom left</option><option value="xMaxYMax">Bottom right</option></select>
+            <div id="postFullImageControls" hidden>
+              <label for="postTextContrast">Text colour</label><select id="postTextContrast"><option value="light">White text · dark shading</option><option value="dark">Dark text · light shading</option></select>
+              <label for="postShade">Background shading: <output id="postShadeValue">70%</output></label><input id="postShade" type="range" min="0" max="90" step="5" value="70">
+            </div>
+            </fieldset>
+          </section>
 
           <div id="concertEventUploadDock" hidden></div>
           <button

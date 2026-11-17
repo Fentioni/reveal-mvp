@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='id="postVenueAddressField"';
+const marker='data-placement="form-bottom"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<35;i++){
@@ -26,6 +26,7 @@ try{
   await page.locator('#scratchActualCovered canvas').waitFor({state:'visible',timeout:20000});
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
   assert.equal(await page.locator('#postTemplate option').count(),15);
+  assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&Boolean(link.compareDocumentPosition(editor)&Node.DOCUMENT_POSITION_FOLLOWING)&&Boolean(editor.compareDocumentPosition(review)&Node.DOCUMENT_POSITION_FOLLOWING)&&link.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor follows all details and precedes review');
   assert.equal(await page.evaluate(()=>{const a=document.querySelector('#venue'),b=document.querySelector('#postVenueAddress');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Address directly follows venue');
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),false);

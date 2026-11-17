@@ -126,6 +126,7 @@ try{
  await page.locator('#postImageReset').click();
  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
+ assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&Boolean(link.compareDocumentPosition(editor)&Node.DOCUMENT_POSITION_FOLLOWING)&&Boolean(editor.compareDocumentPosition(review)&Node.DOCUMENT_POSITION_FOLLOWING)&&link.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor follows all details and precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
  assert.equal(await page.locator('#postShade').inputValue(),'70');
  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#venue'),b=document.querySelector('#postVenueAddress');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Address directly follows venue');
