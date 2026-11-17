@@ -7,11 +7,11 @@ const sans='Arial, Helvetica, sans-serif';
 const bold='"Arial Black", Arial, Helvetica, sans-serif';
 const script='"Apple Chancery", "Segoe Script", Georgia, serif';
 const configs={
- 'travel-collage':{ink:'#182e50',accent:'#c69338',paper:'#fff4dd',dark:'#182e50',title:'#fff5dc',family:sans,heading:serif,outline:3,round:15},
+ 'travel-collage':{ink:'#182e50',accent:'#c69338',border:'#182e50',icon:'#182e50',paper:'#fff4dd',dark:'#182e50',title:'#fff5dc',family:sans,heading:serif,outline:3,round:15},
  candlelight:{ink:'#fff1d8',accent:'#e7b76b',paper:'#281c15',dark:'#1d130e',title:'#f5d4a4',family:serif,heading:serif,outline:2,round:15},
  'paper-journey':{ink:'#503317',accent:'#95683b',paper:'#fff4de',dark:'#68401c',title:'#4a2a17',family:serif,heading:serif,outline:2,round:13},
  'sport-strike':{ink:'#064d2b',accent:'#d6fb44',paper:'#fffde8',dark:'#005b36',title:'#074a28',family:bold,heading:bold,outline:4,round:12},
- watercolour:{ink:'#8f2937',accent:'#cb9a32',paper:'#fff0ee',dark:'#9e3445',title:'#922c40',family:serif,heading:script,outline:2,round:11},
+ watercolour:{ink:'#8f2937',accent:'#cb9a32',icon:'#8f2937',paper:'#fff0ee',dark:'#9e3445',title:'#922c40',family:serif,heading:script,outline:2,round:11},
  spotlight:{ink:'#4a0a09',accent:'#f3cb6b',paper:'#ffedbd',dark:'#620e0d',title:'#fff0ba',family:serif,heading:serif,outline:3,round:15},
  'red-botanical':{ink:'#970f1e',accent:'#b4202b',paper:'#fbf0df',dark:'#a20f20',title:'#a40d1c',family:serif,heading:serif,outline:2,round:13},
  'pop-panels':{ink:'#111111',accent:'#161616',paper:'#fff9e8',dark:'#ff79ba',title:'#111111',family:bold,heading:bold,outline:4,round:13},
@@ -106,11 +106,25 @@ function build(id,fn){
  }
  function field(key,x,y,w,h,opts={}){
   const label=opts.label??labels[key],icon=opts.icon??(!['message','link'].includes(key));
-  const fill=opts.fill??c.paper,stroke=opts.stroke??c.accent,ink=opts.ink??c.ink,rx=opts.rx??c.round;
+
+  const fill=opts.fill??c.paper,stroke=opts.stroke??c.border??c.accent,ink=opts.ink??c.ink,rx=opts.rx??c.round;
+  const variant=opts.variant||'standard';
   const gutter=icon?Math.min(68,w*.18):0;
   const labelH=label?Math.min(27,Math.max(20,h*.33)):0;
-  panels.push({key,x,y,w,h,fill,stroke,sw:opts.sw??c.outline,rx,ink,label,icon:icon?key:'',accent:opts.iconInk||c.accent,gutter,labelH,align:opts.align||'left',family:opts.labelFamily||sans,iconBg:opts.iconBg||'',labelInk:opts.labelInk||ink});
-  zones.push({key,x:x+gutter+7,y:y+labelH+1,w:w-gutter-14,h:h-labelH-4,size:opts.size||33,family:opts.family||c.family,weight:opts.weight||600,ink,align:opts.align||'left',upper:opts.upper??false,noWordSplit:key!=='message',italic:opts.italic??false});
+  let box={x:x+gutter+7,y:y+labelH+1,w:w-gutter-14,h:h-labelH-4};
+  let valueBox=null;
+  if(variant==='paper-entry'){
+   valueBox={x:x+150,y:y+7,w:w-154,h:h-14};
+   box={x:valueBox.x+4,y:valueBox.y+2,w:valueBox.w-8,h:valueBox.h-4};
+  }else if(variant==='comic-metric'){
+   valueBox={x:x+16,y:y+h-62,w:w-32,h:50};
+   box={x:valueBox.x+3,y:valueBox.y+1,w:valueBox.w-6,h:valueBox.h-2};
+  }else if(variant==='comic-value'){
+   valueBox={x:x+gutter+12,y:y+Math.max(32,h*.32),w:w-gutter-24,h:h-Math.max(32,h*.32)-10};
+   box={x:valueBox.x+3,y:valueBox.y+1,w:valueBox.w-6,h:valueBox.h-2};
+  }
+  panels.push({key,x,y,w,h,fill,stroke,sw:opts.sw??c.outline,rx,ink,label,icon:icon?key:'',accent:opts.iconInk||c.icon||c.accent,gutter,labelH,align:opts.align||'left',family:opts.labelFamily||sans,iconBg:opts.iconBg||'',labelInk:opts.labelInk||ink,variant,valueBox,divider:opts.dividerInk||c.accent});
+  zones.push({key,...box,size:opts.size||33,family:opts.family||c.family,weight:opts.weight||600,ink,align:opts.align||'left',upper:opts.upper??false,noWordSplit:key!=='message',italic:opts.italic??false});
  }
  function pic(x,y,w,h,opts={}){
   photo={x:x+8,y:y+8,w:w-16,h:h-16,radius:opts.radius??Math.max(0,c.round-4),frame:opts.fill||c.paper,primary:true};
@@ -191,7 +205,7 @@ export const POST_TEMPLATES=[
   rect(226,143,448,95,'#fff0d7','#85592d',3,28);
   title('eventName',244,149,412,80,{size:58});
   title('subtitle',200,257,500,57,{size:33,italic:true});
-  ['date','time','venue','venueAddress'].forEach((k,i)=>field(k,111,336+i*65,454,56,{size:29,stroke:'#a78360',iconInk:'#72502d'}));
+  ['date','time','venue','venueAddress'].forEach((k,i)=>field(k,111,336+i*65,454,56,{size:29,variant:'paper-entry',stroke:'#886642',iconInk:'#72502d',label:k==='venue'?'LOCATION':k==='venueAddress'?'ADDRESS':labels[k]}));
   pic(600,336,195,251,{fill:'#e9decf',stroke:'#9f784d'});
   line(110,606,795,606,'#a07d57',2,'3 5');
   pair(621,'sender','recipient',111,684,69,{size:30});
@@ -226,14 +240,14 @@ export const POST_TEMPLATES=[
   rect(301,210,571,105,'#55e6b4','#111',4);
   rect(325,228,523,68,'#fff9e8','#111',3,18);
   title('subtitle',331,233,511,58,{size:37,upper:true,ink:'#111'});
-  field('date',301,328,279,164,{size:37,fill:'#ff89bc',align:'center',icon:false});
-  field('time',593,328,279,164,{size:37,fill:'#ff797b',align:'center',icon:false});
-  field('venue',28,505,420,102,{size:33,fill:'#d5f776'});
-  field('venueAddress',461,505,411,102,{size:31,fill:'#d5f776'});
+  field('date',301,328,279,164,{size:37,fill:'#ff89bc',align:'center',variant:'comic-metric'});
+  field('time',593,328,279,164,{size:37,fill:'#ff797b',align:'center',variant:'comic-metric'});
+  field('venue',28,505,420,102,{size:33,fill:'#d5f776',variant:'comic-value',align:'center',label:'VENUE'});
+  field('venueAddress',461,505,411,102,{size:31,fill:'#d5f776',variant:'comic-value',align:'center',label:'ADDRESS'});
   pic(28,620,314,285,{fill:'#8bd6ef',radius:2});
-  field('sender',355,620,517,136,{size:37,fill:'#ff93ca'});
-  field('recipient',355,769,517,136,{size:37,fill:'#55e6b4'});
-  message(918,28,844,166,{size:36,fill:'#ff797b'});
+  field('sender',355,620,517,136,{size:37,fill:'#ff93ca',variant:'comic-value',align:'center'});
+  field('recipient',355,769,517,136,{size:37,fill:'#55e6b4',variant:'comic-value',align:'center'});
+  message(918,28,844,166,{size:36,fill:'#ff797b',variant:'comic-value'});
   link(1096,28,570,73,{fill:'#ff9ace',ink:'#111'});
   rect(611,1096,261,73,'#1bd597','#111',4);
   path('M741 1105 L753 1127 L777 1133 L753 1140 L741 1160 L729 1140 L705 1133 L729 1127 Z','#f9e846','#111',3);
@@ -280,10 +294,14 @@ export const POST_TEMPLATES=[
   title('eventName',184,190,532,72,{size:56,upper:true});
   title('subtitle',220,267,460,54,{size:31,italic:true,upper:true,weight:400});
   pic(219,334,462,200,{fill:'#f5e2d8',stroke:'#a61020',sw:3});
-  pair(554,'date','time',179,542,66,{size:29,stroke:'#b4202b'});
-  row('venue',632,179,542,61,{size:31});
-  row('venueAddress',704,179,542,61,{size:29});
-  pair(776,'sender','recipient',179,542,66,{size:29});
+  const open={fill:'none',stroke:'none',iconInk:'#971321'};
+  pair(554,'date','time',179,542,66,{size:29,...open});
+  line(181,625,719,625,'#ae2430',1.5);
+  row('venue',632,179,542,61,{size:31,...open});
+  row('venueAddress',704,179,542,61,{size:29,...open});
+  line(181,770,719,770,'#ae2430',1.5);
+  pair(776,'sender','recipient',179,542,66,{size:29,...open});
+  line(181,845,719,845,'#ae2430',1.5);
   message(854,179,542,157,{size:33,italic:true});
   link(1024,226,448,51,{fill:'#f7e6e1',ink:'#a61020'});
  }),
@@ -301,7 +319,8 @@ export const POST_TEMPLATES=[
  build('doodle-party',({c,rect,line,title,field,pic,pair,row,message,link})=>{
   // Deliberately retain illustration art around the fields. Structured
   // comic-style panels eliminate the scattered text seen in the old editor.
-  rect(92,94,716,202,'#fffdf6','#151515',3,18);
+  rect(95,98,710,1010,'#fffdfb','none',0,8);
+  rect(100,100,700,190,'#fffdf6','#151515',3,18);
   title('eventName',110,103,680,133,{size:68,upper:true});
   title('subtitle',122,240,656,46,{size:32,ink:'#252525'});
   pic(472,321,315,300,{fill:'#fffaf0',stroke:'#161616',radius:12});

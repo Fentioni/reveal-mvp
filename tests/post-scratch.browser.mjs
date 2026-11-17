@@ -68,9 +68,19 @@ try{
   const {renderPostScratchFace}=await import('/post-scratch-face.js');
   const list=document.getElementById('preview');
   list.style.cssText='width:min(100%,454px);margin:0 auto;display:grid;gap:24px';
+  const poster=document.createElement('canvas');poster.width=800;poster.height=1000;
+  const ctx=poster.getContext('2d');
+  const g=ctx.createLinearGradient(0,0,800,1000);g.addColorStop(0,'#151b3c');g.addColorStop(.48,'#412a55');g.addColorStop(1,'#111327');ctx.fillStyle=g;ctx.fillRect(0,0,800,1000);
+  for(let i=0;i<18;i++){const x=(i*173)%800,y=70+(i*47)%380;ctx.fillStyle=i%2?'#edb46f':'#e8e8ff';ctx.beginPath();ctx.arc(x,y,3+(i%4)*2,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='#f6cf88';ctx.textAlign='center';ctx.font='700 48px Georgia';ctx.fillText('THEATRE NIGHT',400,180);
+  ctx.strokeStyle='#dfad73';ctx.lineWidth=5;ctx.strokeRect(38,38,724,924);
+  ctx.fillStyle='#e4b875';ctx.beginPath();ctx.moveTo(400,275);ctx.lineTo(530,590);ctx.lineTo(270,590);ctx.closePath();ctx.fill();
+  ctx.fillStyle='#261d36';ctx.beginPath();ctx.arc(400,435,70,0,Math.PI*2);ctx.fill();ctx.fillRect(350,496,100,124);
+  ctx.fillStyle='#fff0cd';ctx.font='600 38px Georgia';ctx.fillText('A SPECIAL EVENING',400,790);ctx.font='28px Arial';ctx.fillText('20 MARCH 2027',400,845);
+  const samplePoster=poster.toDataURL('image/png');
   for(const template of POST_TEMPLATES){
    const card=document.createElement('div');card.id='template-'+template.id;list.append(card);
-   await renderPostScratchFace(card,{eventName:'Jesus Christ Superstar',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special evening out, just for you.',ticketUrl:'https://example.org'},{templateId:template.id,subtitle:'A night to remember',venueAddress:'Drury Lane, London'},'/post-scratch-artwork/editorial.webp');
+   await renderPostScratchFace(card,{eventName:'Jesus Christ Superstar',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special evening out, just for you.',ticketUrl:'https://example.org'},{templateId:template.id,subtitle:'A night to remember',venueAddress:'Drury Lane, London'},samplePoster);
    if(card.dataset.textOverflow)throw Error(template.id+' overflow '+card.dataset.textOverflow);
   }
   return POST_TEMPLATES.map(t=>t.id);

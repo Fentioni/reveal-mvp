@@ -70,18 +70,28 @@ function drawIcon(svg,key,cx,cy,size,ink){
 function drawPanels(svg,panels,values,src,guides){
  for(const p of panels||[]){
   const g=mk('g',{'data-layout-panel':p.key},svg);
-  mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:p.rx,fill:p.fill,stroke:p.stroke,'stroke-width':p.sw},g);
+  const special=p.variant==='paper-entry';
+  if(!special)mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:p.rx,fill:p.fill,stroke:p.stroke,'stroke-width':p.sw},g);
   if(p.key==='image')continue;
+  if(p.valueBox)mk('rect',{...Object.fromEntries(Object.entries(p.valueBox).map(([k,v])=>[k==='w'?'width':k==='h'?'height':k,v])),rx:Math.min(13,p.rx),fill:special?p.fill:'#fff9e8',stroke:p.stroke,'stroke-width':special?1.5:3},g);
+  if(p.variant==='comic-metric'){
+   drawIcon(g,p.key,p.x+p.w/2,p.y+40,55,p.ink);
+   if(val(values[p.key])||guides){
+    const label=mk('text',{x:p.x+p.w/2,y:p.y+88,fill:p.labelInk,'font-family':p.family,'font-size':25,'font-weight':800,'text-anchor':'middle','data-layout-label':p.key},g);label.textContent=p.label;
+   }
+   continue;
+  }
   if(p.icon){
    if(p.iconBg)mk('rect',{x:p.x+3,y:p.y+3,width:p.gutter-4,height:p.h-6,rx:Math.max(0,p.rx-3),fill:p.iconBg},g);
    drawIcon(g,p.icon,p.x+p.gutter/2,p.y+p.h/2,Math.min(39,p.gutter*.69,p.h*.65),p.accent);
-   mk('line',{x1:p.x+p.gutter,y1:p.y+8,x2:p.x+p.gutter,y2:p.y+p.h-8,stroke:p.stroke,'stroke-width':1.6},g);
+   if(!special)mk('line',{x1:p.x+p.gutter,y1:p.y+8,x2:p.x+p.gutter,y2:p.y+p.h-8,stroke:p.divider,'stroke-width':1.6},g);
   }
   // The title and personal values remain editable. Field headings are part
   // of the layout, only printed for populated details (or editor guides).
   if(p.label&&(val(values[p.key])||guides)){
-   const center=p.align==='center',start=p.x+p.gutter+13;
-   const label=mk('text',{x:center?p.x+p.w/2:start,y:p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':Math.min(18,p.labelH*.78,Math.max(11,(p.w-p.gutter-26)/(p.label.length*.64))),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':.65,'data-layout-label':p.key},g);
+   const center=p.align==='center'&&!p.icon,start=p.x+p.gutter+13;
+   const comic=p.variant==='comic-value';
+   const label=mk('text',{x:center?p.x+p.w/2:start,y:special?p.y+p.h/2+7:comic?p.y+Math.min(28,p.h*.27):p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':special?Math.min(19,68/(p.label.length*.57)):comic?Math.min(22,(p.w-p.gutter-25)/(p.label.length*.65)):Math.min(18,p.labelH*.78,Math.max(11,(p.w-p.gutter-26)/(p.label.length*.64))),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':special?0:.65,'data-layout-label':p.key},g);
    label.textContent=p.label;
   }
  }
@@ -123,9 +133,11 @@ export function renderPostScratchTemplate(container,template,data={},options={})
  if(template.structured){
   drawDecor(svg,template.decor);
   drawPanels(svg,template.panels,values,src,options.guides===true);
-  if(template.id==='pop-panels'){
-   // Retain the original black-line DJ illustration in the left comic panel.
-   const art=mk('svg',{x:40,y:220,width:236,height:260,viewBox:'145 355 405 380',preserveAspectRatio:'xMidYMid meet',overflow:'hidden'},svg);
+  if(['pop-panels','doodle-party'].includes(template.id)){
+   // Fit the existing black-line illustration entirely inside its own
+   // panel rather than letting the underlying art overlap the photo or text.
+   const comic=template.id==='pop-panels';
+   const art=mk('svg',{x:comic?40:110,y:comic?220:320,width:comic?236:340,height:comic?260:300,viewBox:'145 315 420 430',preserveAspectRatio:'xMidYMid meet',overflow:'hidden','data-decoration':'dj'},svg);
    mk('image',{href:'/post-scratch-artwork/doodle-party.webp',x:0,y:0,width:900,height:1200,preserveAspectRatio:'none'},art);
   }
   if(template.photo&&(src||options.guides))drawPhoto(svg,defs,template.photo,src,options.guides===true,id+'-photo');

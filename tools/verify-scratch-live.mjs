@@ -27,7 +27,15 @@ try{
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
   assert.equal(await page.locator('#postTemplate option').count(),15);
   for(const [field,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Jesus Christ Superstar',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'Drury Lane, London',postSubtitle:'A night to remember',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'}))await page.locator('#'+field).fill(value);
-  await page.locator('#image').setInputFiles('public/post-scratch-artwork/editorial.webp');
+  const img=await page.evaluate(()=>{
+   const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');
+   const gradient=g.createLinearGradient(0,0,900,1200);gradient.addColorStop(0,'#151a40');gradient.addColorStop(1,'#8a3b6e');g.fillStyle=gradient;g.fillRect(0,0,900,1200);
+   g.fillStyle='#f3cf8b';g.font='bold 64px Georgia';g.textAlign='center';g.fillText('THEATRE NIGHT',450,220);
+   for(let i=0;i<18;i++){g.beginPath();g.arc((i*197)%900,300+(i*79)%460,5+(i%4)*2,0,Math.PI*2);g.fill();}
+   g.strokeStyle='#f3cf8b';g.lineWidth=8;g.strokeRect(40,40,820,1120);
+   return c.toDataURL('image/png').split(',')[1];
+  });
+  await page.locator('#image').setInputFiles({name:'sample-poster.png',mimeType:'image/png',buffer:Buffer.from(img,'base64')});
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const template of POST_TEMPLATES){
    await page.locator('#postTemplate').selectOption(template.id);
