@@ -1,0 +1,26 @@
+name: Template Studio
+on:
+  push:
+    branches: [feature/scratch-template-integration, feature/stage4b-cloudflare-staging]
+    paths: ['public/admin-template-designer.*', 'public/template-design-schema.js', 'public/published-template-designs.js', 'public/post-scratch-renderer.js', 'src/template-designs.js', 'tests/template-design*', '.github/workflows/template-designer.yml']
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  designer:
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --test tests/template-designs.test.mjs
+      - run: npm install --no-save playwright
+      - run: npx playwright install chromium
+      - run: node tests/template-designer.browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: template-designer-screenshots
+          path: test-output/template-designer/
