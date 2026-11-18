@@ -9,7 +9,7 @@ test('64 approved, unique, grouped, backwards-compatible templates',()=>{
  assert.equal(approved.length,64);assert.equal(POST_TEMPLATES.length,79);assert.equal(new Set(POST_TEMPLATES.map(t=>t.id)).size,79);
  assert.equal(new Set(approved.map(t=>t.collection)).size,8);
  for(const t of approved){
-  assert.equal(getPostTemplate(t.id),t);
+  assert.deepEqual(getPostTemplate(t.id),t);
   assert.equal(checkPostSettings({...DEFAULT_POST_SETTINGS,templateId:t.id}).templateId,t.id);
   assert.equal(validateDesign(t.id,defaultDesign(t.id)).zones.length,10);
   const boxes=[...t.zones,t.photo];
