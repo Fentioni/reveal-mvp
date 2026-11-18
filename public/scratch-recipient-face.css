@@ -97,3 +97,5 @@
 .customer-design-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
 .customer-design-grid label{display:flex;flex-direction:column;gap:4px;min-width:0;font-size:12px}.customer-design-grid label[hidden]{display:none}
 .customer-design-info,.customer-design-status{font-size:12px;margin:8px 0;color:#f0d6a0}.customer-design-status:empty{display:none}
+
+.customer-field-name{margin:10px 0 4px;font-size:14px;font-weight:700;color:#f5e9d0}.customer-design-grid[hidden]{display:none!important}

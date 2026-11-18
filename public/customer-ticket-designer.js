@@ -10,7 +10,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  const top=el('div','','customer-design-actions'),undo=el('button','Undo'),redo=el('button','Redo'),reset=el('button','Reset design');
  for(const b of [undo,redo,reset])b.type='button';top.append(undo,redo,reset);toolbar.append(top);
  const info=el('p','Select a field, drag it to move, or drag its corner to resize.','customer-design-info');toolbar.append(info);
- const selected=el('select');selected.setAttribute('aria-label','Select field to customise');toolbar.append(selected);
+ const selected=el('p','','customer-field-name');selected.setAttribute('aria-live','polite');toolbar.append(selected);
  const grid=el('div','','customer-design-grid');toolbar.append(grid);
  const fields={};
  function entry(key,label,type,opts){
@@ -20,7 +20,6 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
   if(type==='number'){input.min=opts[0];input.max=opts[1];input.step=1;}
   wrap.append(input);grid.append(wrap);fields[key]={wrap,input};return input;
  }
- for(const [k,label,max] of [['x','Position X',900],['y','Position Y',1200],['w','Width',900],['h','Height',1200]])entry(k,label,'number',[k==='w'||k==='h'?12:0,max]);
  entry('family','Font','select',CUSTOMER_FONTS.map((f,i)=>[f,labels[i]]));
  entry('size','Font size','number',[12,200]);entry('ink','Text colour','color');
  entry('align','Alignment','select',[['left','Left'],['center','Centre'],['right','Right']]);
@@ -36,15 +35,15 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  function report(text){status.textContent=text;}
  function syncControls(){
   const list=boxes();if(!list.some(b=>b.key===state.key))state.key=list[0]?.key;
-  selected.replaceChildren();for(const b of list){const o=el('option',FIELD_NAMES[b.key]);o.value=b.key;selected.append(o);}selected.value=state.key;
   const z=current();if(!z)return;
+  selected.textContent=FIELD_NAMES[z.key];grid.hidden=z.key==='image';
   for(const [key,{wrap,input}] of Object.entries(fields)){
-   wrap.hidden=z.key==='image'&&!['x','y','w','h'].includes(key);
+   wrap.hidden=z.key==='image';
    if(wrap.hidden)continue;
    if(key==='italic')input.checked=Boolean(z.italic);
    else if(key==='ink')input.value=/^#[0-9a-f]{6}$/i.test(z.ink)?z.ink:/^#[0-9a-f]{3}$/i.test(z.ink)?'#'+z.ink.slice(1).split('').map(c=>c+c).join(''):'#222222';
    else if(key==='weight')input.value=z.weight>=600?'700':'400';
-   else input.value=['x','y','w','h','size'].includes(key)?Math.round(z[key]):z[key];
+   else input.value=key==='size'?Math.round(z[key]):z[key];
   }
   undo.disabled=!state.undo.length;redo.disabled=!state.redo.length;reset.disabled=!Object.keys(layout()).length;
  }
@@ -84,6 +83,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
    box.addEventListener('pointerup',e=>{if(!drag||drag.id!==e.pointerId)return;const next=drag.next;drag=null;if(next)patch(zone.key,next);});
    box.addEventListener('pointercancel',()=>{drag=null;pos(box,zone);});
    box.addEventListener('click',()=>select(zone.key));
+   box.addEventListener('focus',()=>select(zone.key));
    box.addEventListener('keydown',e=>{
     const deltas={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};if(!deltas[e.key])return;e.preventDefault();
     const [dx,dy]=deltas[e.key],n=e.shiftKey?10:1;patch(zone.key,{x:clamp(zone.x+dx*n,0,900-zone.w),y:clamp(zone.y+dy*n,0,1200-zone.h)});
@@ -91,7 +91,6 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
    layer.append(box);
   }
  }
- selected.addEventListener('change',()=>select(selected.value));
  for(const [key,{input}] of Object.entries(fields))input.addEventListener('change',()=>{
   const z=current();if(!z)return;
   const value=input.type==='checkbox'?input.checked:input.type==='number'||key==='weight'?Number(input.value):input.value;

@@ -1,4 +1,4 @@
-import {mountCustomerDesigner} from './customer-ticket-designer.js?v=2';
+import {mountCustomerDesigner} from './customer-ticket-designer.js?v=3';
 import {normalizeBookingLink} from './booking-link.js?v=1';
 import {renderPostScratchFace} from './post-scratch-face.js?v=customer-design-1';
 /**
@@ -10,7 +10,7 @@ import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=customer-design-2';
+const stylesheet='/scratch-recipient-face.css?v=customer-design-3';
 const active=new WeakMap();
 const boundSwitches=new WeakSet();
 function setupPreviewSwitch(section,covered,revealed){
