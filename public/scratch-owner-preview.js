@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=orientation-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=layout-flow-1';
 /**
  * Private, read-only owner preview. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
@@ -41,7 +41,7 @@ function make(tag,text,cls){
  if(cls)node.className=cls;
  return node;
 }
-async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface}){
+async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,guides=false}){
  const root=host.shadowRoot||host.attachShadow({mode:'open'});
  root.replaceChildren();
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
@@ -53,7 +53,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface})
  const card=make('div','','card');
  card.id='card';
  main.append(card);
- await renderPostScratchFace(card,reveal,surface.postScratch,eventImage);
+ await renderPostScratchFace(card,reveal,surface.postScratch,eventImage,{guides:!cover&&guides});
  if(!artwork){
   setPortraitFaceTheme(card,theme.id);
   screen.classList.add('scratch-preview-themed');
@@ -83,7 +83,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface})
  await ready;
  return root;
 }
-export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio,hosts}){
+export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio,hosts,guides=false}){
  const model=recipientCardModel({...reveal,hasEventImage:reveal.hasImage===true});
  if(model.hasEventImage&&!eventImage)throw new Error('The saved event image could not be loaded. Please retry or amend the reveal.');
  const theme=getScratchTheme(surface.theme||DEFAULT_SCRATCH_THEME);
@@ -95,7 +95,7 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  section.hidden=false;
  const [coverRoot]=await Promise.all([
   stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface}),
-  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface})
+  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface,guides})
  ]);
  const card=new ScratchCard({
   canvas:coverRoot.getElementById('foilCanvas'),

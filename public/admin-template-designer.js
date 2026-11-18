@@ -1,6 +1,6 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=2';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=artwork-2';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=layout-flow-1';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -68,7 +68,7 @@ function layers(){
   const b=document.createElement('button');b.type='button';b.className='layer'+(l.key===selected?' selected':'')+(l.off?' off':'');b.dataset.layer=l.key;b.setAttribute('aria-pressed',String(l.key===selected));
   const text=document.createElement('span');text.textContent=l.title;const type=document.createElement('span');type.className='type';type.textContent=l.type;b.append(text,type);$('layers').append(b);
  }
- const o=element();$('remove').disabled=!o||selected==='background';$('remove').textContent=o?.hidden?'Show field':'Remove / hide';
+ const o=element();$('remove').disabled=!o||selected==='background'||selected==='photo'||selected.startsWith('zone:');$('remove').textContent=o?.hidden?'Show field':'Remove / hide';
  const index=selected.startsWith('decor:')?Number(selected.split(':')[1]):-1;
  $('layerUp').disabled=index<0||index===model.decor.length-1;$('layerDown').disabled=index<=0;
  $('restoreArt').hidden=!!model.illustration||!defaultDesign(model.id).illustration;
@@ -127,7 +127,7 @@ function inspector(){
   paintColor('Text colour','ink',o);control('Alignment','align','select',o.align,{choices:[['left','Left'],['center','Centre'],['right','Right']]});
   number('Letter spacing','spacing',{spacing:o.spacing||0},0,20,.5);
   control('Italic','italic','checkbox',o.italic);control('Uppercase','upper','checkbox',o.upper);
-  if(selected.startsWith('zone:'))control('Hide field','hidden','checkbox',o.hidden);
+  
   if(model.id==='custom-image'&&selected.startsWith('zone:'))control('Use this colour instead of customer contrast','useTemplateInk','checkbox',o.useTemplateInk);
  }
  if(selected.startsWith('panel:')||['rect','ellipse','path','line'].includes(o.kind)){
@@ -195,7 +195,7 @@ $('addMenu').addEventListener('click',e=>{
  else{const base={kind,x:275,y:520,w:350,h:100,fill:'#fff4d7',stroke:'#b58442',sw:3,rx:12};model.decor.push(kind==='line'?{kind,x1:270,y1:570,x2:630,y2:570,stroke:'#b58442',sw:3}:kind==='text'?{kind,x:220,y:520,w:460,h:100,text:'Your text',size:42,family:'Georgia, serif',weight:700,ink:'#222222',align:'center',spacing:0,noWordSplit:false}:base);selected='decor:'+(model.decor.length-1);}
  $('addMenu').hidden=true;$('add').setAttribute('aria-expanded','false');changed();
 });
-$('remove').addEventListener('click',()=>{const o=element();if(!o||selected==='background')return;remember();if(selected.startsWith('zone:'))o.hidden=!o.hidden;
+$('remove').addEventListener('click',()=>{const o=element();if(!o||selected==='background'||selected==='photo'||selected.startsWith('zone:'))return;remember();if(selected.startsWith('zone:'))o.hidden=false;
  else if(selected.startsWith('decor:')){model.decor.splice(Number(selected.split(':')[1]),1);selected='zone:eventName';}
  else if(selected.startsWith('panel:')){model.panels=model.panels.filter(x=>x!==o);selected='zone:eventName';}
  else if(selected==='illustration'){model.illustration=null;selected='zone:eventName';}
@@ -213,7 +213,7 @@ $('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),ur
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validateDesign(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
 async function save(){
  if(busy||!model)return;
- let valid;try{valid=validateDesign(model.id,model);}catch(e){status(e.message,true);return;}
+ let valid;try{valid=assertTemplateLayout(validateDesign(model.id,model));}catch(e){status(e.message,true);return;}
  if(!token){$('authMessage').textContent='';$('auth').showModal();return;}
  busy=true;mark();status('Saving template…');
  try{

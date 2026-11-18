@@ -1,4 +1,4 @@
-import {APPROVED_POST_TEMPLATES} from './approved-post-scratch-catalogue.js';
+import {APPROVED_POST_TEMPLATES} from './approved-post-scratch-catalogue.js?v=layout-flow-1';
 /* Fixed 900 x 1200 design coordinates (export 1800 x 2400).
  * Layout geometry is authored per design from the approved references.
  * No user data is embedded in the artwork. All ten values are editable.

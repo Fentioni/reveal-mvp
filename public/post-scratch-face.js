@@ -1,7 +1,7 @@
-import {loadPublishedDesign} from './published-template-designs.js?v=artwork-2';
+import {loadPublishedDesign} from './published-template-designs.js?v=layout-flow-1';
 import {cleanPostSettings} from './post-scratch-settings.js?v=orientation-1';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=orientation-1';
-export async function renderPostScratchFace(card,reveal,settings,imageSrc=''){
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-1';
+export async function renderPostScratchFace(card,reveal,settings,imageSrc='',{guides=false}={}){
  const s=cleanPostSettings(settings),{template}=await loadPublishedDesign(s.templateId);
  // Load before showing the underlay, including authenticated blob images.
  await Promise.all([templateArtworkSource(template),imageSrc].filter(Boolean).map(src=>new Promise((resolve,reject)=>{
@@ -11,7 +11,7 @@ export async function renderPostScratchFace(card,reveal,settings,imageSrc=''){
  if(!face){face=document.createElement('div');face.id='underlay';card.prepend(face);}
  face.className='ticket-underlay post-scratch-underlay';
  card.classList.add('post-scratch-card');
- const result=renderPostScratchTemplate(face,template,{...reveal,subtitle:s.subtitle,venueAddress:s.venueAddress},{...s,imageSrc});
+ const result=renderPostScratchTemplate(face,template,{...reveal,subtitle:s.subtitle,venueAddress:s.venueAddress},{...s,imageSrc,guides,preview:guides});
  card.dataset.postTemplate=s.templateId;
  card.dataset.textOverflow=result.errors.join(',');
  return result;

@@ -1,4 +1,4 @@
-import {getPostTemplate} from './post-scratch-catalogue.js?v=approved-backgrounds-1';
+import {getPostTemplate} from './post-scratch-catalogue.js?v=layout-flow-1';
 const cache=new Map();
 export async function loadPublishedDesign(id,{fresh=false}={}){
  const base=getPostTemplate(id);if(!base)return null;

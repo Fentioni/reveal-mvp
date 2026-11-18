@@ -72,6 +72,7 @@ function drawIcon(svg,key,cx,cy,size,ink){
 }
 function drawPanels(svg,panels,values,src,guides){
  for(const p of panels||[]){
+  if(!guides&&(p.key==='image'?!src:!val(values[p.key])))continue;
   const g=mk('g',{'data-layout-panel':p.key},svg);
   const special=p.variant==='paper-entry';
   if(!special)mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:p.rx,fill:p.fill,stroke:p.stroke,'stroke-width':p.sw},g);
@@ -131,7 +132,7 @@ function drawPhoto(svg,defs,p,src,placeholder,id,options={}){
  const group=mk('g',{'clip-path':'url(#'+id+')','data-photo-slot':'true'},svg);
  mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,fill:p.frame||'#f6f3ed'},group);
  if(src)mk('image',{href:src,...photoGeometry(p,options)},group);
- else {const bg=p.frame||'#f6f3ed';text(group,{key:'image-placeholder',x:p.x+10,y:p.y+10,w:p.w-20,h:p.h-20,size:26,family:'Arial',weight:500,ink:bg==='#f6f3ed'?'#777':'#fff',align:'center'},'IMAGE PLACEHOLDER',true);}
+ else {const bg=p.frame||'#f6f3ed';text(group,{key:'image-placeholder',x:p.x+10,y:p.y+10,w:p.w-20,h:p.h-20,size:Math.min(26,Math.max(17,(p.w-20)/9.5)),noWordSplit:false,family:'Arial',weight:500,ink:bg==='#f6f3ed'?'#777':'#fff',align:'center'},'IMAGE PLACEHOLDER',true);}
 }
 export function templateArtworkSource(template){
  if(template.showBackground===false)return '';
@@ -148,7 +149,7 @@ function drawArtwork(svg,template,options){
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
  template=orientTemplate(template,options.imageOrientation);
- const values=fields(data);const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
+ const values=fields(data);if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
  const svg=mk('svg',{viewBox:'0 0 900 1200',width:1800,height:2400,role:'img','aria-label':values.eventName||'Personalised reveal',xmlns:NS,'data-post-template':template.id,style:'display:block;width:100%;height:auto;aspect-ratio:3/4;overflow:hidden;'});
  const defs=mk('defs',{},svg);
  if(template.id==='custom-image'){
