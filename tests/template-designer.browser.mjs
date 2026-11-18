@@ -117,11 +117,12 @@ try{
   assert.equal(await creator.locator('#recipient:visible,#sender:visible,#eventName:visible,#ticketUrl:visible').count(),0);
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field]').count(),10);
   assert.equal(await creator.locator('#scratchActualCovered [data-edit-field]').count(),0);
+  const sizes=await creator.evaluate(()=>['scratchActualCovered','scratchActualRevealed'].map(id=>{const r=document.getElementById(id).shadowRoot.querySelector('#card').getBoundingClientRect();return [r.width,r.height];}));assert.deepEqual(sizes[0],sizes[1],'Cover and editable reveal retain equal dimensions');
   await creator.locator('#reviewButton').click();
   assert.match(await creator.locator('#messageBox').textContent(),/recipient/);
   for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',postSubtitle:'Just for you',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'London',personalMessage:'A special night',ticketUrl:'https://example.org'})){
    const input=creator.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
-   await input.focus();await input.fill(value);
+   if(['eventDate','eventTime'].includes(key))await input.focus();else await input.click();await input.fill(value);
    assert.equal(await creator.locator('#'+key).inputValue(),value);
   }
   await creator.locator('[data-scratch-preview-mode="covered"]').click();

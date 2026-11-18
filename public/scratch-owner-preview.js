@@ -8,7 +8,7 @@ import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=inline-edit-1';
+const stylesheet='/scratch-recipient-face.css?v=inline-edit-2';
 const active=new WeakMap();
 const boundSwitches=new WeakSet();
 function setupPreviewSwitch(section,covered,revealed){
@@ -96,13 +96,14 @@ function mountInlineEditor(card,face,edit){
  }
  card.append(overlay);
 }
-async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,guides=false,edit=null}){
+async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,guides=false,edit=null,creator=false}){
  const root=host.shadowRoot||host.attachShadow({mode:'open'});
  root.replaceChildren();
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
  const ready=new Promise((resolve,reject)=>{css.onload=resolve;css.onerror=()=>reject(new Error('The actual preview styles could not be loaded.'));});
  root.append(css);
  const screen=make('div','','scratch-preview-stage');
+ if(creator)screen.classList.add('scratch-inline-creator');
  const main=make('main');
  screen.append(main);root.append(screen);
  const card=make('div','','card');
@@ -150,8 +151,8 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  setupPreviewSwitch(section,covered,revealed);
  section.hidden=false;
  const [coverRoot]=await Promise.all([
-  stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface}),
-  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface,guides,edit})
+  stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface,creator:!!edit}),
+  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface,guides,edit,creator:!!edit})
  ]);
  const card=new ScratchCard({
   canvas:coverRoot.getElementById('foilCanvas'),

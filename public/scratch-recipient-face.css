@@ -70,4 +70,4 @@
 .inline-ticket-field input[type=date]:focus,.inline-ticket-field input[type=time]:focus{min-width:100%;width:100%;font-size:16px;padding:0}
 .inline-ticket-photo{cursor:pointer;border-radius:4px}
 .inline-ticket-photo:focus-visible{outline:3px solid #35b6e6;outline-offset:1px}
-@media(max-width:520px){.scratch-preview-stage:has(.inline-ticket-editor) main{padding-inline:0}}
+@media(max-width:520px){.scratch-inline-creator main{padding-inline:0}}
