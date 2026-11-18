@@ -9,6 +9,11 @@ function date(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return val(s);return new 
 function time(s){if(!/^\d\d:\d\d$/.test(s||''))return val(s);const [h,m]=s.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');}
 function join(...items){return items.map(val).filter(Boolean).join(' · ');}
 function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender)?'From '+val(data.sender):'',message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Open event link':''};}
+export function templateFieldText(template,key,data={}){
+ const values=fields(data);
+ if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);
+ return val(values[key]);
+}
 const canvas=typeof document==='undefined'?null:document.createElement('canvas');
 const ctx=canvas?.getContext('2d');
 let uid=0;
@@ -149,7 +154,11 @@ function drawArtwork(svg,template,options){
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
  template=orientTemplate(template,options.imageOrientation);
- const values=fields(data);if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
+ const values=fields(data);if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);
+ for(const zone of template.zones){
+  if(zone.textMode==='fixed'&&typeof zone.templateText==='string'&&(zone.key!=='link'||safeLink(data.ticketUrl)||options.preview))values[zone.key]=zone.templateText;
+ }
+ const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
  const svg=mk('svg',{viewBox:'0 0 900 1200',width:1800,height:2400,role:'img','aria-label':values.eventName||'Personalised reveal',xmlns:NS,'data-post-template':template.id,style:'display:block;width:100%;height:auto;aspect-ratio:3/4;overflow:hidden;'});
  const defs=mk('defs',{},svg);
  if(template.id==='custom-image'){

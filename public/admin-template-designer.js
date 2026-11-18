@@ -1,6 +1,6 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=template-management-2';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=template-management-1';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=saved-text-1';
+import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=saved-text-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -13,10 +13,8 @@ const ctx=sampleCanvas.getContext('2d');const gradient=ctx.createLinearGradient(
 const sampleImage=sampleCanvas.toDataURL('image/png');
 function status(s,error=false){$('status').textContent=s;$('status').style.color=error?'#ffb3b3':'';}
 let catalogue=[],catalogueReady=false,pendingAdmin=null;
-let sampleOverrides={};
-const sampleKey={eventName:'eventName',subtitle:'subtitle',recipient:'recipient',sender:'sender',senderLine:'sender',date:'eventDate',time:'eventTime',venue:'venue',venueAddress:'venueAddress',message:'personalMessage',link:'ticketUrl'};
-function sampleData(){return {...($('sample').value==='blank'?{}:$('sample').value==='long'?longer:typical),...sampleOverrides};}
-function snapshot(){return {model:clone(model),sampleOverrides:{...sampleOverrides},sampleMode:$('sample').value,selected};}
+function sampleData(){return $('sample').value==='blank'?{}:$('sample').value==='long'?longer:typical;}
+function snapshot(){return {model:clone(model),sampleMode:$('sample').value,selected};}
 function pushHistory(entry){undo.push(entry);if(undo.length>75)undo.shift();redo=[];}
 function textEditable(){const o=model&&element();return !!o&&(selected.startsWith('zone:')||o.kind==='text'||(selected.startsWith('panel:')&&o.key!=='image'));}
 
@@ -33,7 +31,7 @@ async function load(id,force=false){
  const run=++requestId;busy=true;mark();status('Loading '+catalogue.find(t=>t.id===id)?.name+'…');
  try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||baseDesign(id);revision=d.revision||'base';status('Template loaded.');}
  catch(e){if(run!==requestId)return;model=baseDesign(id);revision='base';status('Using original template: '+e.message,true);}
- if(run!==requestId)return;undo=[];redo=[];sampleOverrides={};saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
+ if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
 }
 function allLayers(){
  const a=[...model.zones.map(z=>({key:'zone:'+z.key,title:names[z.key]||z.key,type:'Text',off:z.hidden})),{key:'photo',title:'Image area',type:'Image'}];
@@ -140,12 +138,11 @@ function inspector(){
  if(selected.startsWith('zone:')||o.kind==='text'||(selected.startsWith('panel:')&&o.key!=='image')){
    group('Edit text');
    if(selected.startsWith('zone:')){
-    const key=sampleKey[o.key];
-    if(key){
-     control(o.key==='link'?'Preview event URL':'Preview text','sampleText',o.key==='message'?'textarea':'text',sampleData()[key]||'',{live:true,maxLength:1000,apply:v=>{sampleOverrides[key]=v;}});
-     const note=document.createElement('p');note.className='muted text-help';note.textContent='Preview only. Actual customer text is supplied when creating a reveal; font and layout changes are saved with the template.';p.append(note);
-     const reset=document.createElement('button');reset.type='button';reset.id='resetSampleText';reset.textContent='Reset preview text';reset.onclick=()=>{if(!Object.keys(sampleOverrides).length)return;remember();sampleOverrides={};changed();};p.append(reset);
-    }
+    const current=()=>templateFieldText(model,o.key,sampleData())||names[o.key]||o.key;
+    control('Text source','textMode','select',o.textMode||'customer',{choices:[['customer','Customer-entered text'],['fixed','Saved template wording']],apply:v=>{if(v==='fixed'&&!o.templateText?.trim())o.templateText=current();o.textMode=v;}});
+    control('Text to save','templateText','textarea',o.templateText??current(),{live:true,maxLength:1000,apply:v=>{o.templateText=v;o.textMode='fixed';$('prop-textMode').value='fixed';}});
+    const note=document.createElement('p');note.className='muted text-help';note.textContent='Changing this wording switches the field to saved template text. Save template to publish it. Choose Customer-entered text to let the customer personalise this field instead.';p.append(note);
+    const reset=document.createElement('button');reset.type='button';reset.id='resetTemplateText';reset.textContent='Restore customer text';reset.onclick=()=>{if(o.textMode!=='fixed'&&o.templateText===undefined)return;remember();delete o.templateText;delete o.textMode;changed();};p.append(reset);
    }else if(o.kind==='text')control('Fixed template text','text','textarea',o.text,{live:true,maxLength:300});
    else control('Fixed panel label','label','text',o.label,{live:true,maxLength:80});
   }
@@ -233,9 +230,9 @@ $('remove').addEventListener('click',()=>{const o=element();if(!o||selected==='b
  else{undo.pop();status('The customer image area must remain. Resize it or adjust its panel instead.');return;}changed();});
 function reorder(delta){if(!selected.startsWith('decor:'))return;const i=Number(selected.split(':')[1]),j=i+delta;if(j<0||j>=model.decor.length)return;remember();[model.decor[i],model.decor[j]]=[model.decor[j],model.decor[i]];selected='decor:'+j;changed();}
 $('layerUp').onclick=()=>reorder(1);$('layerDown').onclick=()=>reorder(-1);
-function history(from,to){if(busy||drag||!model||!from.length)return;to.push(snapshot());const state=from.pop();model=state.model;sampleOverrides=state.sampleOverrides;$('sample').value=state.sampleMode;selected=state.selected;if(!element())selected='zone:eventName';changed();status(from===undo?'Last action undone.':'Action redone.');}
+function history(from,to){if(busy||drag||!model||!from.length)return;to.push(snapshot());const state=from.pop();model=state.model;$('sample').value=state.sampleMode;selected=state.selected;if(!element())selected='zone:eventName';changed();status(from===undo?'Last action undone.':'Action redone.');}
 $('undo').onclick=()=>history(undo,redo);$('redo').onclick=()=>history(redo,undo);
-function editSelectedText(){if(!textEditable()||busy)return;const input=$('prop-sampleText')||$('prop-text')||$('prop-label');if(!input)return;input.scrollIntoView({block:'nearest'});input.focus({preventScroll:true});input.select();}
+function editSelectedText(){if(!textEditable()||busy)return;const input=$('prop-templateText')||$('prop-text')||$('prop-label');if(!input)return;input.scrollIntoView({block:'nearest'});input.focus({preventScroll:true});input.select();}
 $('editText').onclick=editSelectedText;
 $('stage').addEventListener('dblclick',()=>editSelectedText());
 $('layers').addEventListener('dblclick',e=>{const b=e.target.closest('[data-layer]');if(b)editSelectedText();});
@@ -247,7 +244,7 @@ document.addEventListener('keydown',e=>{
  }
  if(e.key==='Enter'&&e.target===$('stage')&&textEditable()){e.preventDefault();editSelectedText();}
 });
-$('guides').onchange=selection;$('sample').onchange=()=>{sampleOverrides={};changed();};$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
+$('guides').onchange=selection;$('sample').onchange=()=>changed();;$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
 $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=baseDesign(model.id);selected='zone:eventName';changed();};
@@ -256,7 +253,7 @@ $('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),ur
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validate(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
 async function save(){
  if(busy||!model)return;
- let valid;try{valid=assertTemplateLayout(validate(model.id,model));}catch(e){status(e.message,true);return;}
+ let valid;try{const empty=model.zones.find(z=>z.textMode==='fixed'&&!z.templateText?.trim());if(empty)throw Error('Enter wording for '+(names[empty.key]||empty.key)+' or choose Customer-entered text.');valid=assertTemplateLayout(validate(model.id,model));if(lastResult?.errors?.some(key=>model.zones.some(z=>z.key===key&&z.textMode==='fixed')))throw Error('Saved template text does not fit. Shorten the wording or resize its field.');}catch(e){status(e.message,true);return;}
  if(!token){requireAdmin(save);return;}
  busy=true;mark();status('Saving template…');
  try{

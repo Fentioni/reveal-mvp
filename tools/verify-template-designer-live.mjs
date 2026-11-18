@@ -4,7 +4,7 @@ import {mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 let ready=false;
 for(let n=0;n<35;n++){
- try{const r=await fetch(origin+'/admin-template-designer?v=text-history-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('id="editText"')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
+ try{const r=await fetch(origin+'/admin-template-designer?v=saved-text-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('saved-text-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
  await new Promise(r=>setTimeout(r,7000));
 }
 assert.ok(ready,'Template Studio is not deployed yet');
@@ -18,8 +18,8 @@ try{
   assert.equal(await page.locator('#template option').count(),catalogue.templates.filter(t=>!t.archived).length);
   assert.equal(await page.locator('#editText').isVisible(),true);
   await page.locator('#editText').click();
-  const sample=page.locator('#prop-sampleText'),original=await sample.inputValue();
-  await sample.fill('Test title');
+  const sample=page.locator('#prop-templateText'),original=await sample.inputValue();
+  await sample.fill('Test title');assert.equal(await page.locator('#save').isEnabled(),true);
   assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Test\s*title/i);
   await page.locator('#undo').click();assert.equal(await sample.inputValue(),original);
   await page.locator('#redo').click();assert.equal(await sample.inputValue(),'Test title');

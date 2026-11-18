@@ -56,7 +56,7 @@ function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line',
 export function validateDesign(id,input,entry){
  const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();
  const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
- const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);return {key:z.key,...box(z),...style(z)};});
+ const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...(z.templateText!==undefined?{templateText:str(z.templateText,1000)}:{}),...(z.textMode!==undefined?{textMode:choice(z.textMode,['customer','fixed'])}:{})};});
  if(seen.size!==keys.size)fail();
  const allowed=new Set(base.panels.map(p=>p.key)),ps=new Set();
  const panels=list(input.panels,15).map(p=>{if(ps.has(p.key))fail();ps.add(p.key);return panel(p,allowed);});

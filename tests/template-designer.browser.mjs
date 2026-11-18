@@ -30,13 +30,14 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),79);
- // Dynamic field sample text updates instantly, and can be undone/redone without publishing customer data.
- await page.locator('#editText').click();await page.locator('#prop-sampleText').fill('Preview title');
+ // Fixed wording updates instantly, marks the template dirty, and supports undo/redo.
+ await page.locator('#editText').click();await page.locator('#prop-templateText').fill('Preview title');
  assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);
- assert.equal(await page.locator('#save').isDisabled(),true);
+ assert.equal(await page.locator('#save').isEnabled(),true);
  await page.locator('#undo').click();assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/A night to remember/i);
  await page.locator('#redo').click();assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);
- await page.locator('#prop-sampleText').press('Control+z');assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/A night to remember/i);
+ await page.locator('#prop-templateText').press('Control+z');assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/A night to remember/i);
+ await page.locator('#prop-templateText').fill('A saved title');
  await page.locator('#stage').focus();
  const initial=Number(await page.locator('#prop-x').inputValue());
  // Move the title by dragging its actual visual area.
@@ -71,12 +72,12 @@ try{
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Saved.'));
  const api=await (await page.request.get(base+'/api/template-designs/candlelight')).json();
  assert.equal(api.template.artworkSource,'upload');assert.equal(api.template.artworkFit,'cover');assert.match(api.template.artworkData,/^data:image\//);
- assert.equal(api.template.zones[0].family,'Verdana, sans-serif');assert.equal(api.template.zones[0].ink,'#99ccee');assert.equal(api.template.photo.w,oldW-25);assert.equal(api.template.decor.at(-1).text,'Special occasion');
- await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();assert.equal(await page.locator('#prop-family').inputValue(),'Verdana, sans-serif');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
+ assert.equal(api.template.zones[0].templateText,'A saved title');assert.equal(api.template.zones[0].textMode,'fixed');assert.equal(api.template.zones[0].family,'Verdana, sans-serif');assert.equal(api.template.zones[0].ink,'#99ccee');assert.equal(api.template.photo.w,oldW-25);assert.equal(api.template.decor.at(-1).text,'Special occasion');
+ await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();assert.equal(await page.locator('#prop-templateText').inputValue(),'A saved title');assert.equal(await page.locator('#prop-textMode').inputValue(),'fixed');assert.equal(await page.locator('#prop-family').inputValue(),'Verdana, sans-serif');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
  // The same published design is loaded by the actual customer-facing renderer.
  await page.goto(base+'/matrix');
- const actual=await page.evaluate(async()=>{const {renderPostScratchFace}=await import('/post-scratch-face.js?v=artwork-2');const card=document.querySelector('#card');await renderPostScratchFace(card,{eventName:'A special night'},{templateId:'candlelight'});return {font:card.querySelector('[data-field="eventName"]').getAttribute('font-family'),fill:card.querySelector('[data-field="eventName"]').getAttribute('fill'),artwork:card.querySelector('[data-template-artwork]').getAttribute('href'),fit:card.querySelector('[data-template-artwork]').getAttribute('preserveAspectRatio')};});
- assert.deepEqual(actual,{font:'Verdana, sans-serif',fill:'#99ccee',artwork:api.template.artworkData,fit:'xMidYMid slice'});
+ const actual=await page.evaluate(async()=>{const {renderPostScratchFace}=await import('/post-scratch-face.js?v=artwork-2');const card=document.querySelector('#card');await renderPostScratchFace(card,{eventName:'A special night'},{templateId:'candlelight'});return {wording:card.querySelector('[data-field="eventName"]').textContent,font:card.querySelector('[data-field="eventName"]').getAttribute('font-family'),fill:card.querySelector('[data-field="eventName"]').getAttribute('fill'),artwork:card.querySelector('[data-template-artwork]').getAttribute('href'),fit:card.querySelector('[data-template-artwork]').getAttribute('preserveAspectRatio')};});
+ assert.match(actual.wording,/A\s*saved\s*title/i);delete actual.wording;assert.deepEqual(actual,{font:'Verdana, sans-serif',fill:'#99ccee',artwork:api.template.artworkData,fit:'xMidYMid slice'});
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();await page.locator('#artworkShortcut').click();await page.screenshot({path:'test-output/template-designer/desktop.png',fullPage:true});
  await page.locator('#restoreArtwork').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/candlelight.webp');await page.locator('#undo').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
  await page.locator('#reload').click();await page.waitForFunction(()=>document.querySelector('#status').textContent==='Template loaded.');

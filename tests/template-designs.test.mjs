@@ -30,8 +30,8 @@ test('staging API protects publishing, persists updates and rejects stale revisi
  assert.equal((await templateDesignResponse(req(id,'PUT',{revision:'base',template:d},secret,'https://evil.example'),env)).status,403);
  assert.equal((await templateDesignResponse(req(id,'PUT',{revision:'base',template:d},secret),{...env,TEMPLATE_ADMIN_TOKEN:undefined})).status,503);
  assert.equal((await templateDesignResponse(req(id,'GET'),{...env,STAGING_DISABLE_CHECKOUT:'false'})).status,404);
- d.zones[0].ink='#123456';const save=await templateDesignResponse(req(id,'PUT',{revision:'base',template:d}),env);assert.equal(save.status,200);const value=await save.json();assert.ok(value.revision);assert.equal(value.template.zones[0].ink,'#123456');
- const read=await templateDesignResponse(req(id,'GET',null,'no-access'),env);assert.equal((await read.json()).template.zones[0].ink,'#123456');
+ d.zones[0].ink='#123456';d.zones[0].templateText='A saved title';d.zones[0].textMode='fixed';const save=await templateDesignResponse(req(id,'PUT',{revision:'base',template:d}),env);assert.equal(save.status,200);const value=await save.json();assert.ok(value.revision);assert.equal(value.template.zones[0].ink,'#123456');
+ const read=await templateDesignResponse(req(id,'GET',null,'no-access'),env);const persisted=(await read.json()).template.zones[0];assert.equal(persisted.ink,'#123456');assert.equal(persisted.templateText,'A saved title');assert.equal(persisted.textMode,'fixed');
  assert.equal((await templateDesignResponse(req(id,'PUT',{revision:'base',template:d}),env)).status,409);
  const bad=clone(d);bad.zones.pop();assert.equal((await templateDesignResponse(req(id,'PUT',{revision:value.revision,template:bad}),env)).status,400);
  const restore=await templateDesignResponse(req(id,'PUT',{revision:value.revision,template:defaultDesign(id)}),env);assert.equal(restore.status,200);
@@ -105,3 +105,5 @@ test('scratch cover admin upload, authorization, catalogue removal and restorati
  assert.equal(await availableScratchArtwork(env,'azure-kaleidoscope'),null);assert.ok(await resolveStoredArtwork(env,'azure-kaleidoscope'));
  assert.equal((await scratchArtworkResponse(request('GET'),{...env,STAGING_DISABLE_CHECKOUT:'false'})).status,404);
 });
+
+test('saved wording validates and older customer-driven templates remain unchanged',()=>{const id='candlelight',d=defaultDesign(id);assert.equal(validateDesign(id,d).zones[0].textMode,undefined);const z=d.zones[0];z.templateText='My permanent title';z.textMode='fixed';assert.equal(validateDesign(id,d).zones[0].templateText,z.templateText);z.textMode='customer';assert.equal(validateDesign(id,d).zones[0].templateText,z.templateText);z.textMode='fixed';z.templateText='';assert.throws(()=>validateDesign(id,d));z.templateText='a'.repeat(1001);assert.throws(()=>validateDesign(id,d));});
