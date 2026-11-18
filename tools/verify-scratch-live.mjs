@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='data-inline-personalisation="1"';
+const marker='data-editor-revision="5"';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<35;i++){
@@ -25,15 +25,18 @@ try{
    const res=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now());
    assert.ok(res.ok());assert.ok((await res.text()).includes(marker));
    await page.locator('#scratchArtwork:enabled').waitFor();
-   const coords=await page.evaluate(()=>{
-    const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');
-    const bounds=e=>{const r=e.getBoundingClientRect();return {top:r.top,bottom:r.bottom}};
-    return {sameForm:editor.parentElement===review.parentElement,link:bounds(link),editor:bounds(editor),review:bounds(review),visible:!editor.hidden};
-   });
-   assert.ok(coords.sameForm&&coords.visible&&coords.editor.bottom<=coords.review.top);
-   assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Upload immediately precedes image editor with exact label');
-   console.log('LIVE EDITOR AND UPLOAD POSITION',viewport.width,JSON.stringify(coords));
-   await page.locator('#postImageControls').screenshot({path:'test-output/scratch-live/'+viewport.width+'-editor-at-bottom.png'});
+   const options=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));
+   const standard=options.find(id=>id!=='custom-image');assert.ok(standard);
+   await page.locator('#postTemplate').selectOption(standard);
+   await page.locator('#scratchActualRevealed .inline-ticket-photo').waitFor({state:'visible'});
+   assert.equal(await page.locator('#scratchImageUpload').isVisible(),false);
+   assert.equal(await page.locator('#postImageControls').isVisible(),false);
+   if(options.includes('custom-image')){
+    await page.locator('#postTemplate').selectOption('custom-image');
+    await page.locator('#scratchImageUpload').waitFor({state:'visible'});
+    assert.match(await page.locator('#imageUploadLabel').textContent(),/required/);
+   }
+   console.log('LIVE INLINE PHOTO PICKER AND HIDDEN DUPLICATE UPLOAD',viewport.width);
   }finally{await page.close();}
  }
  for(const viewport of [{width:1380,height:900},{width:390,height:844}]){
@@ -47,9 +50,9 @@ try{
   assert.equal(await page.locator('#recipient:visible,#eventName:visible,#ticketUrl:visible').count(),0);
   assert.equal(await page.locator('#scratchActualRevealed [data-edit-field]').count(),10);
   assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
-  assert.equal(await page.locator('#postImageControls').isVisible(),true);
+  assert.equal(await page.locator('#postImageControls').isVisible(),false);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),false);
-  assert.equal(await page.locator('#postImageReset').isVisible(),true);
+  assert.equal(await page.locator('#postImageReset').isVisible(),false);
   assert.equal(await page.locator('#postImageReset').isEnabled(),false);
   assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible').count(),0);
   for(const [field,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Jesus Christ Superstar',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'Drury Lane, London',postSubtitle:'A night to remember',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'})){const input=page.locator('#scratchActualRevealed [data-edit-field="'+field+'"]');await input.focus();await input.fill(value);}

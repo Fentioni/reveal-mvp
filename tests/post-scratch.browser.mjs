@@ -139,13 +139,14 @@ try{
  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
  assert.equal(await page.locator('#postImageOrientation').inputValue(),'auto');
- assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Upload immediately precedes image editor with exact label');
+ assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&!upload.hidden&&document.querySelector('#imageUploadLabel').textContent==='Upload full-card image (required)';}),true,'Upload immediately precedes image editor with exact label');
  assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
  assert.equal(await page.locator('#postShade').inputValue(),'70');
  assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
  for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
   await page.locator('#postTemplate').selectOption(option);
+  assert.equal(await page.locator('#scratchImageUpload').isVisible(),option==='custom-image');
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
    assert.equal(await page.locator('#postImageOrientation').isEnabled(),true);

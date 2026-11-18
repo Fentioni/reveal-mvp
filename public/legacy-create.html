@@ -1059,7 +1059,7 @@
             >
           </div>
 
-          <div class="scratch-one-upload" id="scratchImageUpload"><div class="field">
+          <div class="scratch-one-upload" id="scratchImageUpload" hidden><div class="field">
                 <label id="imageUploadLabel" for="image">Add Image (Optional)</label>
                 <p id="imageUploadHelp" class="field-help">Optional: upload a picture for your scratch card.</p>
 
@@ -1097,7 +1097,7 @@
 
             </div>
 
-          <section id="postImageControls" data-placement="form-bottom" data-editor-revision="4" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
+          <section id="postImageControls" data-placement="form-bottom" data-editor-revision="5" class="post-image-editor" hidden aria-labelledby="postImageEditorTitle">
             <div class="post-image-editor-heading">
               <h3 id="postImageEditorTitle">Edit your image</h3>
               <button id="postImageReset" class="post-image-reset" type="button" disabled>Reset</button>
@@ -1173,7 +1173,7 @@
             <button type="button" data-scratch-preview-mode="covered" aria-pressed="false" aria-controls="scratchActualCovered">Before scratching</button>
             <button type="button" data-scratch-preview-mode="revealed" aria-pressed="true" aria-controls="scratchActualRevealed">After scratching</button>
           </div>
-          <p class="inline-hint">Tap any field on the ticket to edit it. Title, recipient and sender are required.</p><p class="cover-hint">This is what the recipient sees before scratching.</p>
+          <p class="inline-hint">Tap the ticket to edit its text or add an image. Title, recipient and sender are required.</p><p class="cover-hint">This is what the recipient sees before scratching.</p>
           <p id="inlineValidation" class="inline-validation" role="status" aria-live="polite" hidden></p>
           <div class="scratch-preview-stack">
             <div id="scratchActualCovered" class="scratch-preview-panel" data-preview-panel="covered" aria-hidden="true" inert></div>
@@ -1267,7 +1267,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=booking-link-1';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=inline-photo-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=managed-covers-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1313,9 +1313,12 @@
     function restorePostSettings(value){const p=cleanPostSettings(value);if(!Array.from($('postTemplate').options).some(o=>o.value===p.templateId)){const t=studioCatalogue.find(t=>t.id===p.templateId)||getPostTemplate(p.templateId);addPostOption(t?{...t,id:p.templateId,name:t.name+' (previously selected)'}:{id:p.templateId,name:'Previously selected template',collection:'Existing reveal'});}for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageOrientation:'imageOrientation',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
     function syncPostImageEditor(){
       const available=currentVariant==='ticket',hasImage=Boolean(objectUrl);
-      $('postImageControls').hidden=!available;
-      $('postImageAdjustments').disabled=!available||!hasImage;
-      $('postImageReset').disabled=!available||!hasImage;
+      // The original input remains in the form as the shared, programmatically
+      // opened file picker. Only Custom Image and Concert show its full section.
+      $('scratchImageUpload').hidden=available&&$('postTemplate').value!=='custom-image';
+      $('postImageControls').hidden=!available||!hasImage;
+      $('postImageAdjustments').disabled=!available||!hasImage||!ready||busy;
+      $('postImageReset').disabled=!available||!hasImage||!ready||busy;
       $('postImageEditorHelp').textContent=hasImage?'Resize and position your image. The revealed preview updates automatically.':'Upload an image to activate the editing controls.';
     }
     function postGuidance(){
@@ -1327,7 +1330,7 @@
       for(const axis of ['X','Y']){const n=Number($('postImagePan'+axis).value);$('postImagePan'+axis+'Value').textContent=n===0?'Centre':(n>0?'+':'')+n;}
       $('postTemplateDescription').textContent=t.description;
       $('postShadeValue').textContent=$('postShade').value+'%';
-      $('imageUploadLabel').textContent='Add Image (Optional)';
+      $('imageUploadLabel').textContent=custom?'Upload full-card image (required)':'Add Image (Optional)';
       const describe=base=>{ const p=photoFrame(base,$('postImageOrientation').value),scale=Math.max(2,640/Math.min(p.w,p.h)); $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.ceil(p.w*scale)+' × '+Math.ceil(p.h*scale)+' px. '+(p.full?'Use image fit, zoom and position to compose your full-card image.':'Adjust the size and position within the selected portrait or landscape image frame.')+' Only appears after scratching.'; };
       describe(p);
       loadPublishedDesign(t.id).then(({template})=>{if(currentVariant==='ticket'&&$('postTemplate').value===t.id)describe(template.photo);}).catch(()=>{});
@@ -1415,7 +1418,10 @@
       value:key=>$(key).value,
       write:(key,value)=>{if(!ready||busy)return;$(key).value=value;pendingReview=false;preview(false);updateInlineValidation();},
       read:currentPortraitData,onOverflow:inlineWarning,
-      chooseImage:()=>{if(ready&&!busy)$('image').click();}
+      chooseImage:()=>{if(ready&&!busy)$('image').click();},
+      hasImage:()=>Boolean(objectUrl)||(existingImage&&!removeImage),
+      removeImage:()=>removeSelectedImage(),
+      imageHelp:()=>$('imageUploadHelp').textContent
     };
     function correctTicketUrl(){
       const field=$('ticketUrl'),normalized=normalizeBookingLink(field.value);
@@ -1520,7 +1526,7 @@
       if(isConcert) uploadDock.append(upload);
       else $('postImageControls').before(upload);
       $("ticketUrlLabel").textContent=isConcert ? "4. Add a clickable link (optional)" : "Official ticket or booking link";
-      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : "Add Image (Optional)";
+      $("imageUploadLabel").textContent = isConcert ? "5. Event artwork (optional)" : $("postTemplate").value==='custom-image' ? "Upload full-card image (required)" : "Add Image (Optional)";
       $("imageUploadHelp").textContent = isConcert
         ? "JPEG, PNG or WebP · maximum 10 MB · at least 400 × 240 pixels. For best results, use a high-resolution portrait event poster (e.g. 1200 × 1600 px). The image sits in a small area of the revealed ticket and may be cropped, so keep important text away from its edges. It is never shown on the scratch cover."
         : "This photo appears ONLY after scratching. Your chosen scratch-card artwork stays on the front. JPEG, PNG or WebP, up to 10 MB.";
@@ -1893,6 +1899,7 @@
         URL.revokeObjectURL(next);
         selectedImage = file;
         removeImage = false;
+        pendingReview=false;
         if(currentVariant==='ticket')resetPostImageGeometry();
         showImage(file, file.name);
         await setScratchPreview();
@@ -1904,17 +1911,19 @@
       }
     });
 
-    $("removeImageButton").addEventListener("click", () => {
+    function removeSelectedImage(){
       if (!ready || busy) return;
 
       selectedImage = null;
       $("image").value = "";
       removeImage = existingImage;
+      pendingReview=false;
 
       clearImage();
       setScratchPreview().catch(error => show(error.message));
       if(!validationAttempted||updateInlineValidation())hide();
-    });
+    }
+    $("removeImageButton").addEventListener("click", removeSelectedImage);
 
     form.addEventListener("submit", async event => {
       event.preventDefault();

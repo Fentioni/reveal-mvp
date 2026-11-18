@@ -163,6 +163,17 @@ try{
   assert.equal(await creator.locator('#recipient:visible,#sender:visible,#eventName:visible,#ticketUrl:visible').count(),0);
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field]').count(),10);
   assert.equal(await creator.locator('#scratchActualCovered [data-edit-field]').count(),0);
+  assert.equal(await creator.locator('#scratchImageUpload').isVisible(),false);
+  assert.equal(await creator.locator('#postImageControls').isVisible(),false);
+  const photo=creator.locator('#scratchActualRevealed .inline-ticket-photo');await photo.waitFor({state:'visible'});
+  const pixels=await creator.evaluate(()=>{const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');g.fillStyle='#47628a';g.fillRect(0,0,900,1200);return c.toDataURL('image/png').split(',')[1];});
+  const chooserEvent=creator.waitForEvent('filechooser');await photo.click();const chooser=await chooserEvent;
+  await chooser.setFiles({name:'photo.png',mimeType:'image/png',buffer:Buffer.from(pixels,'base64')});
+  await creator.locator('#scratchActualRevealed .inline-photo-remove').waitFor({state:'visible'});
+  assert.equal(await creator.locator('#scratchImageUpload').isVisible(),false);assert.equal(await creator.locator('#postImageControls').isVisible(),true);
+  await creator.locator('#scratchActualRevealed .inline-photo-remove').click();
+  await creator.waitForFunction(()=>!document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('[data-photo-slot] image')&&!document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('.inline-photo-remove'));
+  assert.equal(await creator.locator('#postImageControls').isVisible(),false);
   const sizes=await creator.evaluate(()=>['scratchActualCovered','scratchActualRevealed'].map(id=>{const r=document.getElementById(id).shadowRoot.querySelector('#card').getBoundingClientRect();return [r.width,r.height];}));assert.deepEqual(sizes[0],sizes[1],'Cover and editable reveal retain equal dimensions');
   // Review with all required fields absent, starting on the cover side.
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
@@ -200,6 +211,9 @@ try{
   assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
   await creator.locator('#postTemplate').selectOption('custom-image');
   await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='custom-image');
+  assert.equal(await creator.locator('#scratchImageUpload').isVisible(),true);
+  assert.equal(await creator.locator('#postImageControls').isVisible(),false);
+  assert.match(await creator.locator('#imageUploadLabel').textContent(),/required/);
   await creator.locator('#reviewButton').click();
   assert.equal(await creator.locator('#image').getAttribute('aria-invalid'),'true');
   assert.equal(await creator.locator('#scratchImageUpload').getAttribute('data-creator-invalid'),'true');

@@ -367,6 +367,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    await page.goto(base+'/legacy-create?variant=concert',{waitUntil:'networkidle'});
    await page.locator('#scratchFoilGrid:visible').waitFor();
    assert.equal(await page.locator('#scratchArtworkSection:visible').count(),0);
+   assert.equal(await page.locator('#scratchImageUpload').isVisible(),true,'Concert still has separate artwork uploader');
    const uploadHelp=await page.locator('#imageUploadHelp').textContent();
    for(const hint of ['JPEG','PNG','WebP','10 MB','400 × 240','1200 × 1600','cropped']){
      assert.ok(uploadHelp.includes(hint),'Upload guidance must include '+hint);

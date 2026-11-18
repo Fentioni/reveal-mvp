@@ -76,3 +76,8 @@
 .inline-ticket-field[data-invalid],.inline-ticket-field[data-invalid]:hover,.inline-ticket-field[data-invalid]:focus-within{outline:2px solid #ff636b;outline-offset:0;box-shadow:0 0 0 1px #47121b,inset 0 0 0 2px #ff636b;background:#e63b4620}
 .inline-ticket-field[data-invalid]::after{content:attr(data-error-label);position:absolute;right:0;top:0;transform:translateY(-100%);padding:1px 4px;background:#a51e32;color:#fff;font:700 10px/1.25 system-ui,sans-serif;white-space:nowrap;border-radius:3px 3px 0 0;pointer-events:none;z-index:7}
 .inline-ticket-field[data-invalid] input:focus,.inline-ticket-field[data-invalid] textarea:focus{background:#fff4f4}
+
+/* Photo actions are confined to the creator and the existing photo frame. */
+.inline-photo-prompt{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:95%;padding:5px 8px;border-radius:5px;background:#171a24e8;color:white;font:650 clamp(10px,2.8vw,13px)/1.2 system-ui,sans-serif;text-align:center;pointer-events:none;white-space:normal}
+.inline-photo-remove{position:absolute;transform:translateX(-100%);pointer-events:auto;z-index:5;width:32px;height:32px;max-height:100%;border:1px solid #ffffffb0;border-radius:0 0 0 7px;background:#20212ce8;color:white;font:700 24px/1 system-ui,sans-serif;cursor:pointer;padding:0;display:grid;place-items:center}
+.inline-photo-remove:focus-visible{outline:2px solid #35b6e6;outline-offset:1px}

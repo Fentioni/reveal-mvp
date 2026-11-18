@@ -9,7 +9,7 @@ import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=required-highlight-1';
+const stylesheet='/scratch-recipient-face.css?v=inline-photo-1';
 const active=new WeakMap();
 const boundSwitches=new WeakSet();
 function setupPreviewSwitch(section,covered,revealed){
@@ -94,8 +94,17 @@ function mountInlineEditor(card,face,edit){
  if(card.dataset.postTemplate!=='custom-image'&&edit.chooseImage){
   const box=face.svg.querySelector('[data-photo-slot] > rect');
   if(box){
-   const upload=make('button','','inline-ticket-photo');upload.type='button';positionInline(upload,box);upload.setAttribute('aria-label','Upload or replace image');upload.title='Upload or replace image';
+   const hasImage=edit.hasImage?.()??Boolean(face.svg.querySelector('[data-photo-slot] image'));
+   const upload=make('button','','inline-ticket-photo');upload.type='button';positionInline(upload,box);
+   upload.setAttribute('aria-label','Upload or replace image');upload.title=edit.imageHelp?.()||'Upload or replace image';
+   if(!hasImage){const prompt=make('span','Tap to add image','inline-photo-prompt');upload.append(prompt);}
    upload.addEventListener('click',edit.chooseImage);overlay.prepend(upload);
+   if(hasImage&&edit.removeImage){
+    const remove=make('button','×','inline-photo-remove');remove.type='button';remove.setAttribute('aria-label','Remove image');remove.title='Remove image';
+    remove.style.left=(Number(box.getAttribute('x'))+Number(box.getAttribute('width')))/9+'%';
+    remove.style.top=Number(box.getAttribute('y'))/12+'%';
+    remove.addEventListener('click',edit.removeImage);overlay.append(remove);
+   }
   }
  }
  card.append(overlay);
