@@ -72,3 +72,35 @@ test('studio templates can be created, edited and deleted while existing designs
  assert.equal((await templateDesignResponse(req('candlelight'),env)).status,200);
  assert.equal((await templateDesignResponse(catalogue('POST',args),{...env,STAGING_DISABLE_CHECKOUT:'false'})).status,404);
 });
+
+test('scratch cover admin upload, authorization, catalogue removal and restoration preserve existing images',async()=>{
+ const {scratchArtworkResponse,resolveStoredArtwork,availableScratchArtwork}=await import('../src/scratch-artwork-admin.js');
+ const {readFile}=await import('node:fs/promises');
+ const bucket=new Bucket();const originalGet=bucket.get.bind(bucket);bucket.get=async k=>{const item=await originalGet(k);return item?{...item,body:bucket.map.get(k).value}:null;};
+ bucket.delete=async k=>bucket.map.delete(k);
+ const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:bucket};
+ const request=(method='GET',body,auth=secret,origin='https://stage.example')=>new Request('https://stage.example/api/scratch-artwork',{method,headers:{Authorization:'Bearer '+auth,Origin:origin,...(typeof body==='string'?{'Content-Type':'application/json'}:{})},...(body?{body}:{})});
+ const list=async()=> (await (await scratchArtworkResponse(request(),env)).json()).artworks;
+ assert.equal((await list()).length,20);
+ // Use an original real raster cover, preserving its actual bytes.
+ const source=await readFile(new URL('../public/scratch-artwork/Azure_Kaleidoscope.jpg',import.meta.url));
+ const {dimensions}=await import('../src/image-dimensions.js');
+ const original=new File([source],'cover.jpg',{type:'image/jpeg'});
+ let file=original;const size=await dimensions(file);
+ // A small deterministic header fixture covers the API's dimension guard if original aspect is not exact.
+ if(size.width*4!==size.height*3||size.width<900){const b=new Uint8Array(24);b.set([137,80,78,71,13,10,26,10]);new DataView(b.buffer).setUint32(16,1800);new DataView(b.buffer).setUint32(20,2400);file=new File([b],'cover.png',{type:'image/png'});}
+ const form=()=>{const f=new FormData();f.set('name','New cover');f.set('image',file);return f;};
+ assert.equal((await scratchArtworkResponse(request('POST',form(),'wrong'),env)).status,401);
+ assert.equal((await scratchArtworkResponse(request('POST',form(),secret,'https://evil.example'),env)).status,403);
+ const created=await scratchArtworkResponse(request('POST',form()),env);assert.equal(created.status,201);const {id}=await created.json();
+ assert.equal((await list()).filter(a=>!a.archived).length,21);
+ assert.ok(await availableScratchArtwork(env,id));assert.equal((await scratchArtworkResponse(request('POST',form()),env)).status,409);
+ const drop=JSON.stringify({id});
+ assert.equal((await scratchArtworkResponse(request('DELETE',drop),env)).status,200);
+ assert.equal(await availableScratchArtwork(env,id),null);assert.ok(await resolveStoredArtwork(env,id));
+ const image=await scratchArtworkResponse(new Request('https://stage.example/api/scratch-artwork/'+id),env);assert.equal(image.status,200);assert.deepEqual(new Uint8Array(await image.arrayBuffer()),new Uint8Array(await file.arrayBuffer()));
+ assert.equal((await scratchArtworkResponse(request('PATCH',drop),env)).status,200);assert.ok(await availableScratchArtwork(env,id));
+ assert.equal((await scratchArtworkResponse(request('DELETE',JSON.stringify({id:'azure-kaleidoscope'})),env)).status,200);
+ assert.equal(await availableScratchArtwork(env,'azure-kaleidoscope'),null);assert.ok(await resolveStoredArtwork(env,'azure-kaleidoscope'));
+ assert.equal((await scratchArtworkResponse(request('GET'),{...env,STAGING_DISABLE_CHECKOUT:'false'})).status,404);
+});

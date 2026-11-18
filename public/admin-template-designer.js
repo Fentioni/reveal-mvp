@@ -16,7 +16,7 @@ let catalogue=[],catalogueReady=false,pendingAdmin=null;
 const baseDesign=id=>defaultDesign(id,catalogue.find(t=>t.id===id));
 const validate=(id,design)=>validateDesign(id,design,catalogue.find(t=>t.id===id));
 function clean(){return JSON.stringify(model)===saved;}
-function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;$('newTemplate').disabled=busy||!catalogueReady;$('deleteTemplate').disabled=busy||!model||!catalogueReady||catalogue.filter(t=>!t.archived).length<=1;if(!model){$('save').disabled=true;$('template').disabled=true;return;}$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
+function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('coverManager').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;$('newTemplate').disabled=busy||!catalogueReady;$('deleteTemplate').disabled=busy||!model||!catalogueReady||catalogue.filter(t=>!t.archived).length<=1;if(!model){$('save').disabled=true;$('template').disabled=true;return;}$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
 function remember(){undo.push(clone(model));if(undo.length>75)undo.shift();redo=[];}
 function changed(full=true){mark();paint();if(full){layers();inspector();}}
 function apiHeaders(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
@@ -261,3 +261,56 @@ $('cancelNewTemplate').onclick=()=>$('createTemplateDialog').close();
 $('createTemplateForm').onsubmit=e=>{e.preventDefault();const body={name:$('newTemplateName').value.trim(),baseId:$('newTemplateBase').value,blank:$('newTemplateBlank').checked};if(!body.name)return;$('createTemplateDialog').close();changeCatalogue('POST',body);};
 $('deleteTemplate').onclick=()=>{if(!model||busy)return;const id=model.id;if(confirm('Delete "'+model.name+'" from the template catalogue? Existing reveals will retain their design.'+(!clean()?' Your unsaved edits will be discarded.':'')))changeCatalogue('DELETE',{id});};
 (async()=>{busy=true;mark();try{const active=await refreshCatalogue();await load(active[0].id,true);}catch(e){catalogueReady=false;status('Could not load catalogue: '+e.message,true);busy=false;mark();}})();
+
+let coverBusy=false,coverPreviewUrl='';
+function coverStatus(text,error=false){$('coverStatus').textContent=text;$('coverStatus').classList.toggle('cover-error',error);}
+function lockCovers(locked){
+ coverBusy=locked;for(const control of $('coverManagerDialog').querySelectorAll('input,button'))control.disabled=locked;
+}
+function renderCoverList(artworks){
+ for(const [archived,target] of [[false,'coverList'],[true,'archivedCoverList']]){
+  const list=$(target);list.replaceChildren();const entries=artworks.filter(a=>!!a.archived===archived);
+  for(const a of entries){
+   const card=document.createElement('article');card.className='cover-item';card.dataset.coverId=a.id;
+   const image=document.createElement('img');image.src=a.src;image.alt=a.label;image.loading='lazy';
+   const name=document.createElement('strong');name.textContent=a.label;
+   const button=document.createElement('button');button.type='button';button.textContent=archived?'Restore':'Delete';button.className=archived?'secondary':'danger';
+   button.setAttribute('aria-label',(archived?'Restore ':'Delete ')+a.label);button.disabled=!archived&&entries.length<=1;
+   button.onclick=()=>{if(coverBusy)return;if(archived||confirm('Delete "'+a.label+'" from the scratch artwork collection? Existing reveals will retain this cover.'))changeCover(archived?'PATCH':'DELETE',{id:a.id});};
+   card.append(image,name,button);list.append(card);
+  }
+  if(!entries.length){const msg=document.createElement('p');msg.className='muted';msg.textContent=archived?'No deleted artwork.':'No cover artwork available.';list.append(msg);}
+ }
+ $('deletedCovers').querySelector('summary').textContent='Deleted artwork ('+artworks.filter(a=>a.archived).length+')';
+}
+async function refreshCovers(){
+ const result=await response(await fetch('/api/scratch-artwork',{cache:'no-store'}));renderCoverList(result.artworks);return result;
+}
+async function changeCover(method,body){
+ if(coverBusy)return;
+ if(!token){requireAdmin(()=>changeCover(method,body));return;}
+ lockCovers(true);coverStatus(method==='POST'?'Uploading artwork…':method==='PATCH'?'Restoring artwork…':'Deleting artwork…');
+ try{
+  const headers=method==='POST'?{'Authorization':'Bearer '+token}:apiHeaders();
+  await response(await fetch('/api/scratch-artwork',{method,headers,body:method==='POST'?body:JSON.stringify(body)}));
+  if(method==='POST'){$('coverUploadForm').reset();clearCoverPreview();}
+  await refreshCovers();coverStatus(method==='POST'?'Artwork added. It is available to new creators.':method==='PATCH'?'Artwork restored.':'Artwork deleted from customer selection. Existing reveals are preserved.');
+ }catch(e){coverStatus(e.message,true);if(/token|secret/i.test(e.message)){token='';requireAdmin(()=>changeCover(method,body),e.message);}}
+ finally{lockCovers(false);const cards=$('coverList').querySelectorAll('.cover-item');if(cards.length===1)cards[0].querySelector('button').disabled=true;}
+}
+function clearCoverPreview(){if(coverPreviewUrl)URL.revokeObjectURL(coverPreviewUrl);coverPreviewUrl='';$('coverUploadPreview').removeAttribute('src');$('coverUploadPreview').hidden=true;}
+$('coverFile').onchange=()=>{
+ clearCoverPreview();const f=$('coverFile').files?.[0];if(!f)return;
+ coverPreviewUrl=URL.createObjectURL(f);$('coverUploadPreview').src=coverPreviewUrl;$('coverUploadPreview').hidden=false;
+ if(!$('coverName').value)$('coverName').value=f.name.replace(/\.[^.]+$/,'').replace(/[_-]+/g,' ').slice(0,80);
+};
+$('coverUploadForm').onsubmit=async e=>{
+ e.preventDefault();const f=$('coverFile').files?.[0],name=$('coverName').value.trim();if(coverBusy||!f||!name)return;
+ if(f.size>10*1024*1024||!['image/jpeg','image/png','image/webp'].includes(f.type)){coverStatus('Choose JPEG, PNG or WebP up to 10 MB.',true);return;}
+ try{const bitmap=await createImageBitmap(f);const w=bitmap.width,h=bitmap.height;bitmap.close();if(w*4!==h*3||w<900||h>12000)throw Error('Choose a 3:4 portrait image, at least 900 × 1200 pixels.');}
+ catch(e){coverStatus(e.message,true);return;}
+ const form=new FormData();form.append('name',name);form.append('image',f);await changeCover('POST',form);
+};
+$('coverManager').onclick=async()=>{if(coverBusy)return;$('coverManagerDialog').showModal();coverStatus('Loading artwork…');lockCovers(true);try{const result=await refreshCovers();coverStatus(result.artworks.filter(a=>!a.archived).length+' active covers');}catch(e){coverStatus(e.message,true);}finally{lockCovers(false);const cards=$('coverList').querySelectorAll('.cover-item');if(cards.length===1)cards[0].querySelector('button').disabled=true;}};
+$('closeCoverManager').onclick=()=>{if(!coverBusy)$('coverManagerDialog').close();};
+$('coverManagerDialog').addEventListener('cancel',e=>{if(coverBusy)e.preventDefault();});

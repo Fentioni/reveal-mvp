@@ -103,4 +103,5 @@ export const SCRATCH_ARTWORKS = Object.freeze([
 ].map(item=>Object.freeze({...item,src:'/scratch-artwork/'+item.file})));
 export const DEFAULT_SCRATCH_ARTWORK = 'azure-kaleidoscope';
 const byId=new Map(SCRATCH_ARTWORKS.map(item=>[item.id,item]));
-export const getScratchArtwork=id=>byId.get(id)||null;
+export const isStudioScratchArtwork=id=>typeof id==='string'&&/^cover-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);
+export const getScratchArtwork=id=>byId.get(id)||(isStudioScratchArtwork(id)?{id,label:'Saved scratch cover',src:'/api/scratch-artwork/'+id}:null);

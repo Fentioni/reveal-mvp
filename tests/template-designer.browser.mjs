@@ -4,16 +4,17 @@ import {readFile,mkdir} from 'node:fs/promises';
 import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
 import {templateDesignResponse} from '../src/template-designs.js';
+import {scratchArtworkResponse} from '../src/scratch-artwork-admin.js';
 const root=resolve('public'),secret='browser-test-admin-secret-2026';
 const objects=new Map();let etag=0;
-const bucket={async get(k){const x=objects.get(k);return x?{etag:x.etag,json:async()=>JSON.parse(x.value)}:null;},async put(k,value,opts){const old=objects.get(k),c=opts.onlyIf;if(c?.etagMatches&&old?.etag!==c.etagMatches||c?.etagDoesNotMatch==='*'&&old)return null;const next={etag:String(++etag),value};objects.set(k,next);return next;}};
+const bucket={async get(k){const x=objects.get(k);return x?{etag:x.etag,json:async()=>JSON.parse(x.value),body:x.value}:null;},async put(k,value,opts){const old=objects.get(k),c=opts.onlyIf;if(c?.etagMatches&&old?.etag!==c.etagMatches||c?.etagDoesNotMatch==='*'&&old)return null;const next={etag:String(++etag),value};objects.set(k,next);return next;},async delete(k){objects.delete(k);}};
 const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:bucket};
 const server=createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://'+req.headers.host);
- if(url.pathname.startsWith('/api/template-designs/')||url.pathname==='/api/admin/template-designer'||url.pathname==='/api/template-catalogue'){
+ if(url.pathname.startsWith('/api/template-designs/')||url.pathname==='/api/admin/template-designer'||url.pathname==='/api/template-catalogue'||url.pathname.startsWith('/api/scratch-artwork')){
   const chunks=[];for await(const c of req)chunks.push(c);
   const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
-  const response=await templateDesignResponse(request,env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));return;
+  const response=await scratchArtworkResponse(request,env)||await templateDesignResponse(request,env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));return;
  }
  const p=url.pathname==='/admin-template-designer'?'/admin-template-designer.html':url.pathname;
  if(p==='/matrix'){res.setHeader('content-type','text/html');res.end('<div id="card" style="width:450px"></div>');return;}
@@ -108,6 +109,26 @@ try{
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),79);
  assert.deepEqual(errors,[]);
+ await page.locator('#coverManager').click();
+ await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),20);
+ const coverBytes=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');g.fillStyle='#b88c35';g.fillRect(0,0,900,1200);return c.toDataURL('image/png').split(',')[1];});
+ await page.locator('#coverFile').setInputFiles({name:'Test Gold.png',mimeType:'image/png',buffer:Buffer.from(coverBytes,'base64')});
+ await page.locator('#coverName').fill('Test Gold');await page.locator('#addCover').click();
+ await page.locator('#token').fill(secret);await page.locator('#authSave').click();
+ await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork added.'));
+ const coverId=await page.locator('#coverList .cover-item').last().getAttribute('data-cover-id');assert.match(coverId,/^cover-/);
+ const customer=await browser.newPage();await customer.goto(base+'/legacy-create.html?variant=ticket');await customer.locator('#reviewButton:enabled').waitFor();
+ await customer.locator('#scratchArtwork').selectOption(coverId);
+ await customer.waitForFunction(id=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork===id,coverId);
+ await customer.close();
+ page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
+ assert.equal(await page.locator('#coverList .cover-item').count(),20);assert.equal(await page.locator('#archivedCoverList .cover-item').count(),1);
+ await page.locator('#deletedCovers summary').click();await page.getByRole('button',{name:'Restore Test Gold',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork restored'));
+ page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
+ await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
+ await page.locator('#closeCoverManager').click();
  await page.close();
  for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
   const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));

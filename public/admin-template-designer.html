@@ -1,11 +1,11 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=2"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=cover-manager-1"></head>
 <body>
 <header class="top">
  <div class="brand"><span class="mark">R</span><div><strong>Reveal / Template Studio</strong><small>Administration · Scratch Ticket · Staging</small></div></div>
  <div class="toolbar"><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button><button id="export">Export JSON</button><button id="save" class="primary">Save template</button></div>
 </header>
-<section class="setup"><div><label for="template">Template</label><select id="template"></select></div><div class="status-wrap"><div id="status" role="status">Loading templates…</div><span id="revision"></span></div><button id="newTemplate" class="primary">+ New template</button><button id="deleteTemplate" class="danger">Delete template</button><button id="reload">Reload saved</button><button id="artworkShortcut">Change template artwork</button><button id="defaults">Restore original</button></section>
+<section class="setup"><div><label for="template">Template</label><select id="template"></select></div><div class="status-wrap"><div id="status" role="status">Loading templates…</div><span id="revision"></span></div><button id="newTemplate" class="primary">+ New template</button><button id="deleteTemplate" class="danger">Delete template</button><button id="reload">Reload saved</button><button id="coverManager" class="primary">Manage scratch cover artwork</button><button id="artworkShortcut">Change template artwork</button><button id="defaults">Restore original</button></section>
 <main class="studio">
  <aside class="layers"><div class="section-head"><h2>Layers</h2><button id="add" aria-expanded="false">+ Add</button></div>
  <div id="addMenu" hidden><button data-add="rect">Rectangle</button><button data-add="ellipse">Ellipse</button><button data-add="line">Line</button><button data-add="text">Text</button><button data-add="panel">Restore field panel</button><button data-add="illustration" id="restoreArt" hidden>Restore illustration</button></div>
@@ -23,5 +23,12 @@
 <footer class="bottom"><span>Changes remain local until you save. Saved designs are used by the staging creator, review and recipient.</span><button id="import" class="secondary">Import JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></footer>
 <dialog id="auth"><form method="dialog"><h2>Administrator access</h2><p>Enter your private Template Studio token to manage templates. The token stays in this tab only.</p><label for="token">Admin token</label><input id="token" type="password" autocomplete="off"><p id="authMessage" role="status"></p><div class="dialog-actions"><button value="cancel">Cancel</button><button id="authSave" class="primary" value="default">Unlock and continue</button></div></form></dialog>
 <dialog id="createTemplateDialog"><form method="dialog" id="createTemplateForm"><h2>Create new template</h2><p>Choose a starting layout for the required fields. Move fields, add shapes and upload artwork in the designer.</p><label for="newTemplateName">Template name</label><input id="newTemplateName" maxlength="80" required><label for="newTemplateBase">Starting layout</label><select id="newTemplateBase"></select><p><label><input id="newTemplateBlank" type="checkbox" checked style="display:inline;width:auto"> Start with a blank background (no artwork or decorative shapes)</label></p><div class="dialog-actions"><button type="button" id="cancelNewTemplate">Cancel</button><button class="primary" type="submit">Create template</button></div></form></dialog>
-<script type="module" src="/admin-template-designer.js?v=template-management-2"></script>
+<dialog id="coverManagerDialog" aria-labelledby="coverManagerTitle">
+ <div class="section-head"><h2 id="coverManagerTitle">Scratch cover artwork</h2><button id="closeCoverManager" type="button">Close</button></div>
+ <p class="muted">These are the images customers scratch away, not the revealed templates. Changes are saved immediately to staging. Deleted covers remain available to previous reveals.</p>
+ <form id="coverUploadForm"><label for="coverName">Artwork name</label><input id="coverName" maxlength="80" required placeholder="e.g. Gold Geometry"><label for="coverFile">Choose portrait artwork</label><input id="coverFile" type="file" accept="image/jpeg,image/png,image/webp" required><p class="muted">3:4 portrait · 1800 × 2400 recommended · at least 900 × 1200 · JPEG, PNG or WebP · max 10 MB.</p><img id="coverUploadPreview" alt="New cover preview" hidden><button id="addCover" class="primary" type="submit">+ Add scratch artwork</button></form>
+ <p id="coverStatus" role="status" aria-live="polite"></p><div id="coverList"></div>
+ <details id="deletedCovers"><summary>Deleted artwork</summary><div id="archivedCoverList"></div></details>
+</dialog>
+<script type="module" src="/admin-template-designer.js?v=cover-manager-1"></script>
 </body></html>

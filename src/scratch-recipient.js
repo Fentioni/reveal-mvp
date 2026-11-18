@@ -4,7 +4,7 @@ import {cleanPostSettings} from '../public/post-scratch-settings.js';
  * status=paid + paid_at, matching the established legacy recipient gate.
  * No public or owner review can retrieve personalised scratch data pre-payment.
  */
-import {getScratchArtwork} from '../public/scratch-artwork-catalogue.js';
+import {resolveStoredArtwork} from './scratch-artwork-admin.js';
 import {cleanConcertTicketDetails} from '../public/concert-ticket-fields.js';
 import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const hide = () => new Response('This reveal is not available.', {
@@ -58,7 +58,7 @@ export async function scratchRecipientResponse(request, env, ctx) {
       return json({
         success:true,
         scratchSurface:{style:settings.style,foil:settings.foil,
-           ...(getScratchArtwork(settings.artworkId)?{artworkId:settings.artworkId}:{}),
+           ...(await resolveStoredArtwork(env,settings.artworkId)?{artworkId:settings.artworkId}:{}),
            theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
            ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch)}:{}),

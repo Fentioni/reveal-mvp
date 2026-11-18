@@ -847,7 +847,7 @@
       <a class="creator-brand" href="/" aria-label="Reveal home">✦ REVEAL<span>.</span></a>
       <div id="creatorEyebrow" class="eyebrow">Ticket &amp; Concert Reveal · staging test</div>
       <h1 id="creatorTitle">Make the moment <em>unforgettable.</em></h1>
-      <p class="intro" id="creatorIntro">Choose from our final 20 scratch-card artworks and select a foil finish. Your chosen image appears in the live preview.</p>
+      <p class="intro" id="creatorIntro">Choose from our scratch-card artworks. Your chosen image appears in the live preview.</p>
     </header>
 
     <div class="builder-layout">
@@ -870,7 +870,7 @@
         <form id="revealForm">
           <section id="scratchArtworkSection" class="field" aria-labelledby="scratchArtworkLabel">
             <label id="scratchArtworkLabel" for="scratchArtwork">Choose your scratch-card artwork</label>
-            <p class="field-help">Select one of the 20 final Reveal designs. Your chosen image will be the surface the recipient scratches away.</p>
+            <p class="field-help">Select a Reveal scratch-cover design. Your chosen image will be the surface the recipient scratches away.</p>
             <select id="scratchArtwork" name="scratchArtwork" required aria-describedby="scratchArtworkHelp"></select>
             <p id="scratchArtworkHelp" class="field-help" style="margin-top:8px">The preview updates when you select an image. Artwork can be changed before payment.</p>
           </section>
@@ -1269,7 +1269,7 @@
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
     import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=required-highlight-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
-    import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
+    import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=managed-covers-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
     import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=layout-flow-1';
@@ -1479,7 +1479,7 @@
         ? "Reveal the <em>big gig.</em>"
         : "Make the moment <em>unforgettable.</em>";
       if(isConcert) $("creatorIntro").textContent = "Choose Gold, Silver, Midnight or Rose. The entire ticket changes colour.";
-      else $("creatorIntro").innerHTML = '<span class="full-intro">Choose one of our 20 final scratch-card images and personalise the surprise. Checkout is disabled in this staging test.</span><span class="compact-intro">Choose from 20 designs and personalise your reveal.</span>';
+      else $("creatorIntro").innerHTML = '<span class="full-intro">Choose one of our scratch-card images and personalise the surprise. Checkout is disabled in this staging test.</span><span class="compact-intro">Choose a cover and personalise your reveal.</span>';
       // Foil swatches and the separate concert cover choices are concert-only.
       // The portrait Scratch Ticket uses its approved 20-image dropdown.
       $("scratchFoilLabel").hidden = !isConcert;
@@ -1539,13 +1539,20 @@
       scratchPreview.resize();
       concertLivePreview.render();
     });
-    for(const artwork of SCRATCH_ARTWORKS){
-      const option=document.createElement("option");
-      option.value=artwork.id;
-      option.textContent=artwork.label;
-      $("scratchArtwork").append(option);
+    let coverCatalogue=SCRATCH_ARTWORKS;
+    function appendCover(artwork){
+      const option=document.createElement('option');option.value=artwork.id;option.textContent=artwork.label;$('scratchArtwork').append(option);
     }
-    $("scratchArtwork").value=scratchArtworkId;
+    function fillCoverOptions(){
+      $('scratchArtwork').replaceChildren();
+      for(const artwork of coverCatalogue.filter(a=>!a.archived))appendCover(artwork);
+      if(!Array.from($('scratchArtwork').options).some(o=>o.value===scratchArtworkId))scratchArtworkId=$('scratchArtwork').options[0]?.value||DEFAULT_SCRATCH_ARTWORK;
+      $('scratchArtwork').value=scratchArtworkId;
+    }
+    async function refreshCoverCatalogue(){
+      try{const response=await fetch('/api/scratch-artwork',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.artworks)&&data.artworks.some(a=>!a.archived)){coverCatalogue=data.artworks;fillCoverOptions();}}}catch{}
+    }
+    fillCoverOptions();
     function selectConcertOption(group,selected){
       for(const button of $(group).querySelectorAll('button'))
         button.setAttribute('aria-pressed',String(button.dataset.value===selected));
@@ -2030,6 +2037,7 @@
       try {
         storageCheck();
         await refreshStudioCatalogue();
+        await refreshCoverCatalogue();
 
         if (!id) {
           await setScratchPreview();
@@ -2090,7 +2098,11 @@
           }
           selectConcertOption('concertTemplateChoices',concertTemplateId);
         }
-        scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || DEFAULT_SCRATCH_ARTWORK;
+        scratchArtworkId = getScratchArtwork(savedSurface.surface.artworkId)?.id || scratchArtworkId;
+        if(!Array.from($('scratchArtwork').options).some(o=>o.value===scratchArtworkId)){
+          const saved=coverCatalogue.find(a=>a.id===scratchArtworkId)||getScratchArtwork(scratchArtworkId);
+          if(saved)appendCover({...saved,label:saved.label+' (previously selected)'});
+        }
         $("scratchArtwork").value = scratchArtworkId;
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         // Incorrect old dual-use uploads return to the catalogue on amend.

@@ -9,6 +9,7 @@ import { genderOwnerResponse,genderAudienceResponse } from './gender-reveal.js';
 import { questResponse } from './quest.js';
 import { questStripeTestResponse } from './quest-stripe-test.js';
 import { templateDesignResponse } from './template-designs.js';
+import { scratchArtworkResponse } from './scratch-artwork-admin.js';
 
 const textError = (message, status) => new Response(message, {
   status,
@@ -24,6 +25,7 @@ export default {
   async fetch(request, env, ctx) {
     const url = new URL(request.url);
     const path = url.pathname;
+    const coverArtwork=await scratchArtworkResponse(request,env);if(coverArtwork)return coverArtwork;
     const design=await templateDesignResponse(request,env);if(design)return design;
     if(/^\/admin-template-designer(?:\.html)?\/?$/.test(path)){
       if(env.STAGING_DISABLE_CHECKOUT!=='true')return textError('Not available.',404);

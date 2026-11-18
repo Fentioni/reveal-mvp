@@ -43,7 +43,7 @@ async function mutateCatalogue(request,env,url){
  if(!written)return json({error:'The catalogue changed. Reload and try again.'},409);
  return json({success:true,id},request.method==='POST'?201:200);
 }
-async function authorised(request,env){
+export async function authorised(request,env){
  const secret=env.TEMPLATE_ADMIN_TOKEN;
  if(typeof secret!=='string'||secret.length<24)return null;
  const auth=request.headers.get('Authorization')||'';
