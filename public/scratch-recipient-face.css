@@ -71,3 +71,8 @@
 .inline-ticket-photo{cursor:pointer;border-radius:4px}
 .inline-ticket-photo:focus-visible{outline:3px solid #35b6e6;outline-offset:1px}
 @media(max-width:520px){.scratch-inline-creator main{padding-inline:0}}
+
+/* Validation is only shown on creator controls, never on exported or paid art. */
+.inline-ticket-field[data-invalid],.inline-ticket-field[data-invalid]:hover,.inline-ticket-field[data-invalid]:focus-within{outline:2px solid #ff636b;outline-offset:0;box-shadow:0 0 0 1px #47121b,inset 0 0 0 2px #ff636b;background:#e63b4620}
+.inline-ticket-field[data-invalid]::after{content:attr(data-error-label);position:absolute;right:0;top:0;transform:translateY(-100%);padding:1px 4px;background:#a51e32;color:#fff;font:700 10px/1.25 system-ui,sans-serif;white-space:nowrap;border-radius:3px 3px 0 0;pointer-events:none;z-index:7}
+.inline-ticket-field[data-invalid] input:focus,.inline-ticket-field[data-invalid] textarea:focus{background:#fff4f4}

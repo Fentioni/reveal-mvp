@@ -821,6 +821,10 @@
     /* Personalisation is on the ticket itself. Original controls are kept as
        private form state for the established API and Concert Ticket creator. */
     body[data-ticket-variant="ticket"] [data-inline-backing]{display:none!important}
+    body[data-ticket-variant="ticket"] [data-inline-backing][data-inline-fallback]{display:block!important}
+    #scratchCreatorActual .inline-validation{max-width:490px;margin:8px auto;padding:9px 12px;border:1px solid #ff8585;border-radius:9px;background:#48252e;color:#ffe2e2;font-weight:650;text-align:center}
+    body[data-ticket-variant="ticket"] [data-creator-invalid="true"]{outline:2px solid #ff7676!important;outline-offset:3px}
+    #scratchImageUpload[data-creator-invalid="true"]{border-color:#ff7676!important}
     #scratchCreatorActual .inline-hint{margin:6px auto 10px;max-width:490px;text-align:center;color:#f3e3b9;font-weight:600}
     #scratchCreatorActual[data-preview-mode="covered"] .inline-hint{display:none}
     #scratchCreatorActual[data-preview-mode="revealed"] .cover-hint{display:none}
@@ -1170,6 +1174,7 @@
             <button type="button" data-scratch-preview-mode="revealed" aria-pressed="true" aria-controls="scratchActualRevealed">After scratching</button>
           </div>
           <p class="inline-hint">Tap any field on the ticket to edit it. Title, recipient and sender are required.</p><p class="cover-hint">This is what the recipient sees before scratching.</p>
+          <p id="inlineValidation" class="inline-validation" role="status" aria-live="polite" hidden></p>
           <div class="scratch-preview-stack">
             <div id="scratchActualCovered" class="scratch-preview-panel" data-preview-panel="covered" aria-hidden="true" inert></div>
             <div id="scratchActualRevealed" class="scratch-preview-panel" data-preview-panel="revealed"></div>
@@ -1262,7 +1267,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=amend-visible-1';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=required-highlight-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1333,7 +1338,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
@@ -1348,27 +1353,73 @@
       const reveal=Object.fromEntries(fields.map(key=>[key,$(key).value.trim()]));
       reveal.hasImage=Boolean(objectUrl);return {reveal,settings:postSettings()};
     }
+    let validationAttempted=false,validationMessage='';
+    const requiredInline={recipient:'Recipient',sender:'From / sender',eventName:'Surprise title'};
+    function inlineErrors(){
+      const errors=new Map();
+      for(const [key,label] of Object.entries(requiredInline))if(!$(key).value.trim())errors.set(key,{label,message:'Enter '+(key==='recipient'?'the recipient’s name.':key==='sender'?'who the surprise is from.':'the surprise title.')});
+      for(const key of inlineIds){
+        if(errors.has(key))continue;
+        const field=$(key),value=field.value.trim();
+        let invalid=!field.checkValidity();
+        if(key==='ticketUrl'&&value){try{const u=new URL(value);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();}catch{invalid=true;}}
+        if(invalid)errors.set(key,{label:key==='ticketUrl'?'Event link':key==='eventDate'?'Date':key==='eventTime'?'Time':'Field',message:key==='ticketUrl'?'Enter a valid event link starting with https:// or http://.':'Check the entered value.'});
+      }
+      if(!$('scratchArtwork').value)errors.set('scratchArtwork',{label:'Scratch cover',message:'Choose a scratch cover.'});
+      if(!$('postTemplate').value)errors.set('postTemplate',{label:'Revealed template',message:'Choose a revealed template.'});
+      if($('postTemplate').value==='custom-image'&&!objectUrl)errors.set('image',{label:'Photo',message:'Upload a full-card image for the Custom Image template.'});
+      return errors;
+    }
+    function updateInlineValidation({focus=false}={}){
+      if(currentVariant!=='ticket'||!validationAttempted)return true;
+      const errors=inlineErrors(),root=$('scratchActualRevealed').shadowRoot;
+      for(const control of root?.querySelectorAll('[data-edit-field]')||[]){
+        const invalid=errors.has(control.dataset.editField);
+        control.setAttribute('aria-invalid',String(invalid));
+        const wrap=control.closest('.inline-ticket-field');
+        wrap?.toggleAttribute('data-invalid',invalid);
+        if(wrap)wrap.dataset.errorLabel=invalid?(requiredInline[control.dataset.editField]?'Required':'Check field'):'';
+      }
+      // A Studio template may deliberately hide a mandatory data zone. In
+      // that exceptional case make only its original field accessible.
+      for(const key of Object.keys(requiredInline)){
+        const backing=$(key),wrapper=backing.closest('.field');
+        const absent=Boolean(root?.querySelector('.inline-ticket-editor'))&&!root.querySelector('[data-edit-field="'+key+'"]');
+        wrapper.toggleAttribute('data-inline-fallback',absent);
+        if(absent&&errors.has(key)){backing.dataset.creatorInvalid='true';backing.setAttribute('aria-invalid','true');}
+        else{delete backing.dataset.creatorInvalid;backing.removeAttribute('aria-invalid');}
+      }
+      for(const key of ['scratchArtwork','postTemplate','image']){
+        const control=$(key),invalid=errors.has(key);
+        if(invalid)control.dataset.creatorInvalid='true';else delete control.dataset.creatorInvalid;
+        control.setAttribute('aria-invalid',String(invalid));
+      }
+      if(errors.has('image'))$('scratchImageUpload').dataset.creatorInvalid='true';else delete $('scratchImageUpload').dataset.creatorInvalid;
+      const summary=$('inlineValidation');
+      const next=errors.size?'Complete or correct the highlighted fields: '+[...errors.values()].map(e=>e.label).join(', ')+'.':'';
+      summary.textContent=next;summary.hidden=!next;
+      if(next){
+        if(focus||message.textContent===validationMessage||!message.textContent)show(next);
+      }else if(message.textContent===validationMessage)hide();
+      validationMessage=next;
+      if(focus&&errors.size){
+        const [key]=errors.keys();
+        $('scratchCreatorActual').querySelector('[data-scratch-preview-mode="revealed"]').click();
+        const target=root?.querySelector('[data-edit-field="'+key+'"]')||$(key);
+        if(target){target.scrollIntoView({block:'center',inline:'nearest'});target.focus({preventScroll:true});}
+      }
+      return !errors.size;
+    }
     function inlineWarning(overflow){$('postTemplateWarning').textContent=overflow?'Shorten text that does not fit: '+overflow:'';}
     const creatorInlineEditor={
       value:key=>$(key).value,
-      write:(key,value)=>{if(!ready||busy)return;$(key).value=value;pendingReview=false;preview(false);},
+      write:(key,value)=>{if(!ready||busy)return;$(key).value=value;pendingReview=false;preview(false);updateInlineValidation();},
       read:currentPortraitData,onOverflow:inlineWarning,
       chooseImage:()=>{if(ready&&!busy)$('image').click();}
     };
     function validateInlineFields(){
-      if(!$('scratchArtwork').value||!$('postTemplate').value){show('Choose a scratch cover and revealed template.');return false;}
-      const required={recipient:'Enter the recipient’s name.',sender:'Enter who the surprise is from.',eventName:'Enter the surprise title.'};
-      for(const key of inlineIds){
-        const field=$(key),value=field.value.trim();
-        let error=required[key]&&!value?required[key]:!field.checkValidity()?'Check the '+(key==='ticketUrl'?'event link':key==='eventDate'?'date':key==='eventTime'?'time':'field')+'.':'';
-        if(key==='ticketUrl'&&value){try{const u=new URL(value);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();}catch{error='Enter a valid event link starting with https:// or http://.';}}
-        if(error){
-          show(error);$('scratchCreatorActual').querySelector('[data-scratch-preview-mode="revealed"]').click();
-          const target=$('scratchActualRevealed').shadowRoot?.querySelector('[data-edit-field="'+key+'"]');
-          if(target){target.scrollIntoView({block:'center'});target.focus({preventScroll:true});}return false;
-        }
-      }
-      return true;
+      validationAttempted=true;
+      return updateInlineValidation({focus:true});
     }
     let portraitPreviewQueue=Promise.resolve();
     let portraitPreviewTimer;
@@ -1390,6 +1441,7 @@
         });
         const overflow=$('scratchActualRevealed').shadowRoot?.querySelector('.post-scratch-card')?.dataset.textOverflow;
         inlineWarning(overflow);
+        updateInlineValidation();
       };
       portraitPreviewQueue=portraitPreviewQueue.catch(()=>{}).then(run);
       return portraitPreviewQueue.catch(error=>{
@@ -1808,8 +1860,8 @@
     });
 
     for (const key of fields) {
-      $(key).addEventListener("input", preview);
-      $(key).addEventListener("change", preview);
+      $(key).addEventListener("input", ()=>{preview();updateInlineValidation();});
+      $(key).addEventListener("change", ()=>{preview();updateInlineValidation();});
     }
 
     $("image").addEventListener("change", async () => {
@@ -1825,7 +1877,7 @@
         showImage(file, file.name);
         await setScratchPreview();
         showImageEditingPreview();
-        hide();
+        if(!validationAttempted||updateInlineValidation())hide();
       } catch (error) {
         $("image").value = "";
         show(error.message || "Choose JPEG, PNG or WebP artwork no larger than 10 MB.");
@@ -1841,7 +1893,7 @@
 
       clearImage();
       setScratchPreview().catch(error => show(error.message));
-      hide();
+      if(!validationAttempted||updateInlineValidation())hide();
     });
 
     form.addEventListener("submit", async event => {
@@ -1853,7 +1905,7 @@
         try{await refreshPortraitPreview();}catch(error){return show(error.message);}
         const overflow=$('scratchActualRevealed').shadowRoot?.querySelector('.post-scratch-card')?.dataset.textOverflow;
         if(overflow)return show('Please shorten text that does not fit: '+overflow);
-        if(postSettings().templateId==='custom-image'&&!objectUrl)return show('Upload a full-card image for the Custom Image template.');
+        if(!updateInlineValidation({focus:true}))return;
       }
       busy = true;
       lock(true);
