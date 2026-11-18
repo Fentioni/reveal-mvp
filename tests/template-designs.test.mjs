@@ -120,4 +120,5 @@ test('all template person headings are canonical; legacy saved designs retain ge
  const id='travel-collage',d=defaultDesign(id);const p=d.panels.find(p=>p.key==='recipient');p.label='Recipient';const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
  await env.IMAGES.put('admin-template-designs/v1/'+id+'.json',JSON.stringify({revision:'legacy-revision',template:d}),{});
  const saved=await (await templateDesignResponse(req(id),env)).json();assert.equal(saved.revision,'legacy-revision');assert.equal(saved.template.panels.find(p=>p.key==='recipient').label,'For You');assert.deepEqual(saved.template.photo,validateDesign(id,d).photo);
+ const custom=clone(d);custom.panels.find(p=>p.key==='recipient').label='Guest of honour';assert.equal(validateDesign(id,custom).panels.find(p=>p.key==='recipient').label,'Guest of honour');
 });

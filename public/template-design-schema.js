@@ -49,7 +49,7 @@ function personWording(key,value){const name=personLabel(key);if(!name||typeof v
 }
 function panel(p,keys){obj(p);if(!keys.has(p.key))fail();const b=box(p);const out={key:p.key,...b,fill:color(p.fill),stroke:color(p.stroke),sw:num(p.sw,0,30),rx:num(p.rx,0,200),ink:color(p.ink)};
  if(p.key==='image')return out;
- return {...out,label:personLabel(p.key)&&p.labelH>0?(str(p.label,80),personLabel(p.key)):str(p.label,80),icon:choice(p.icon,['','date','time','venue','venueAddress','sender','recipient']),accent:color(p.accent),gutter:num(p.gutter,0,b.w-1),labelH:num(p.labelH,0,b.h-1),align:choice(p.align,['left','center','right']),family:font(p.family),iconBg:p.iconBg?color(p.iconBg):'',labelInk:color(p.labelInk),variant:choice(p.variant,['standard','paper-entry','comic-metric','comic-value']),valueBox:p.valueBox?box(p.valueBox):null,divider:color(p.divider)};
+ return {...out,label:personWording(p.key,str(p.label,80)),icon:choice(p.icon,['','date','time','venue','venueAddress','sender','recipient']),accent:color(p.accent),gutter:num(p.gutter,0,b.w-1),labelH:num(p.labelH,0,b.h-1),align:choice(p.align,['left','center','right']),family:font(p.family),iconBg:p.iconBg?color(p.iconBg):'',labelInk:color(p.labelInk),variant:choice(p.variant,['standard','paper-entry','comic-metric','comic-value']),valueBox:p.valueBox?box(p.valueBox):null,divider:color(p.divider)};
 }
 function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line','path','text']);
  if(kind==='text')return {kind,...box(d),...style(d),text:str(d.text,300)};

@@ -82,7 +82,9 @@ function drawIcon(svg,key,cx,cy,size,ink){
 }
 function drawPanels(svg,panels,values,src,guides){
  for(const original of panels||[]){
-  const p=personLabel(original.key)&&original.labelH>0?{...original,label:personLabel(original.key)}:original;
+  const canonical=personLabel(original.key);
+  const old=original.key==='recipient'?/^(recipient|for you|to)$/i:/^(sender|from|host|from\s*(?:\/|or)\s*(?:host|sender)|from me)$/i;
+  const p=canonical&&old.test((original.label||'').trim())?{...original,label:canonical}:original;
   if(!guides&&(p.key==='image'?!src:!val(values[p.key])))continue;
   const g=mk('g',{'data-layout-panel':p.key},svg);
   const special=p.variant==='paper-entry';
