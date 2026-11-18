@@ -26,7 +26,7 @@ export function defaultDesign(id,entry){
  const t=clone(base);
  t.decor=t.decor||[];t.panels=t.panels||[];t.showBackground=true;t.backgroundFill='#ffffff';t.artworkSource='original';t.artworkData='';t.artworkFit='contain';
  t.illustration=['pop-panels','doodle-party'].includes(baseId)?{x:baseId==='pop-panels'?40:110,y:baseId==='pop-panels'?220:320,w:baseId==='pop-panels'?236:340,h:baseId==='pop-panels'?260:300}:null;
- if(custom){Object.assign(t,{id,baseId,name:entry.name,collection:'Studio templates',description:'Custom Template Studio design.'});if(entry.blank){t.showBackground=false;t.backgroundFill='#ffffff';t.decor=[];t.illustration=null;}}
+ if(custom){Object.assign(t,{id,baseId,name:entry.name,collection:'Studio templates',description:'Custom Template Studio design.'});if(entry.blank){t.showBackground=false;t.backgroundFill='#ffffff';t.decor=[];t.illustration=null;t.zones=t.zones.map(z=>{const {glow,outline,...rest}=z;return {...rest,ink:'#222222'};});t.panels=t.panels.map(p=>({...p,fill:'#f3f4f6',stroke:'#d1d5db',ink:'#222222',...(p.key==='image'?{}:{labelInk:'#222222',accent:'#374151',iconBg:'none',divider:'#d1d5db'})}));if(!t.photo.full)t.photo.frame='#f3f4f6';}}
  return t;
 }
 const fail=()=>{throw Error('Invalid template design. Check geometry and style values.');};

@@ -10,7 +10,7 @@ const bucket={async get(k){const x=objects.get(k);return x?{etag:x.etag,json:asy
 const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:bucket};
 const server=createServer(async(req,res)=>{try{
  const url=new URL(req.url,'http://'+req.headers.host);
- if(url.pathname.startsWith('/api/template-designs/')||url.pathname==='/api/admin/template-designer'){
+ if(url.pathname.startsWith('/api/template-designs/')||url.pathname==='/api/admin/template-designer'||url.pathname==='/api/template-catalogue'){
   const chunks=[];for await(const c of req)chunks.push(c);
   const request=new Request(url,{method:req.method,headers:req.headers,...(!['GET','HEAD'].includes(req.method)?{body:Buffer.concat(chunks)}:{})});
   const response=await templateDesignResponse(request,env);res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));return;
@@ -86,6 +86,27 @@ try{
   await page.locator('#sample').selectOption('normal');
  }
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:'test-output/template-designer/mobile.png',fullPage:true});
+ // New template management, including persistence and protected deletion.
+ await page.locator('#newTemplate').click();
+ await page.locator('#newTemplateName').fill('New blank studio template');
+ await page.locator('#newTemplateBase').selectOption('candlelight');
+ await page.locator('#createTemplateForm button[type=submit]').click();
+ await page.locator('#token').fill(secret);await page.locator('#authSave').click();
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('New template created.'));
+ const newId=await page.locator('#template').inputValue();
+ assert.match(newId,/^studio-/);assert.equal(await page.locator('#template option').count(),80);
+ assert.equal(await page.locator('[data-layer^="zone:"]').count(),10);
+ assert.equal(await page.locator('[data-template-artwork]').count(),0);
+ await page.locator('#prop-ink').fill('#445566');await page.locator('#prop-ink').dispatchEvent('change');
+ await page.locator('#save').click();await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Saved.'));
+ page.once('dialog',dialog=>dialog.accept());
+ await page.locator('#deleteTemplate').click();
+ await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Template deleted'));
+ assert.equal(await page.locator('#template option').count(),79);
+ const archived=await (await page.request.get(base+'/api/template-designs/'+newId)).json();
+ assert.equal(archived.template.zones[0].ink,'#445566');
+ await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
+ assert.equal(await page.locator('#template option').count(),79);
  assert.deepEqual(errors,[]);
  await page.close();console.log('Visual designer: drag, resize, typography, borders, add/remove, undo/redo, save, reload, public renderer and mobile passed.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

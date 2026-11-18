@@ -1,5 +1,5 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=template-management-1';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=template-management-2';
 import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=template-management-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
@@ -16,7 +16,7 @@ let catalogue=[],catalogueReady=false,pendingAdmin=null;
 const baseDesign=id=>defaultDesign(id,catalogue.find(t=>t.id===id));
 const validate=(id,design)=>validateDesign(id,design,catalogue.find(t=>t.id===id));
 function clean(){return JSON.stringify(model)===saved;}
-function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;$('newTemplate').disabled=busy||!catalogueReady;$('deleteTemplate').disabled=busy||!model||!catalogueReady||catalogue.filter(t=>!t.archived).length<=1;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
+function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;$('newTemplate').disabled=busy||!catalogueReady;$('deleteTemplate').disabled=busy||!model||!catalogueReady||catalogue.filter(t=>!t.archived).length<=1;if(!model){$('save').disabled=true;$('template').disabled=true;return;}$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
 function remember(){undo.push(clone(model));if(undo.length>75)undo.shift();redo=[];}
 function changed(full=true){mark();paint();if(full){layers();inspector();}}
 function apiHeaders(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'};}

@@ -1286,7 +1286,10 @@
     let pendingReview = false;
     const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
     const postGroups=new Map();
-    let studioCatalogue=POST_TEMPLATES;try{const r=await fetch('/api/template-catalogue',{cache:'no-store'});if(r.ok)studioCatalogue=(await r.json()).templates;}catch{}
+    let studioCatalogue=POST_TEMPLATES;
+    async function refreshStudioCatalogue(){
+      try{const r=await fetch('/api/template-catalogue',{cache:'no-store'});if(!r.ok)return;const next=(await r.json()).templates;if(!Array.isArray(next)||!next.some(t=>!t.archived))return;studioCatalogue=next;const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived))addPostOption(t);if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;postGuidance();}catch{}
+    }
     function addPostOption(t){const label=t.collection||'Existing templates';if(!postGroups.has(label)){const group=document.createElement('optgroup');group.label=label;$('postTemplate').append(group);postGroups.set(label,group);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;postGroups.get(label).append(o);}
     for(const t of studioCatalogue.filter(t=>!t.archived))addPostOption(t);
     function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageOrientation:$('postImageOrientation').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
@@ -1926,6 +1929,7 @@
 
       try {
         storageCheck();
+        await refreshStudioCatalogue();
         await setScratchPreview();
 
         if (!id) {
