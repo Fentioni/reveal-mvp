@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=inline-edit-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=amend-visible-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal

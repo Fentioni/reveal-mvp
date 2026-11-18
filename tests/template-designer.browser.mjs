@@ -137,5 +137,44 @@ try{
   assert.equal(await creator.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   assert.deepEqual(errors,[]);await creator.close();
  }
- console.log('Visual designer and direct creator editing on desktop/mobile passed.');
+ // Regression: stored values are not enough; each rendered glyph must
+ // actually lie inside its clipping rectangle immediately after Amend.
+ for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
+  for(const [templateId,hasImage] of [['candlelight',false],['custom-image',true]]){
+   const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
+   const data={recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special night',ticketUrl:'https://example.org',hasImage,status:'draft',revision:2,id:'amend-test'};
+   const settings={templateId,subtitle:'Just for you',venueAddress:'London'};
+   await creator.addInitScript(()=>localStorage.setItem('reveal_edit_amend-test','test-owner'));
+   await creator.route('**/api/reveals/amend-test',route=>route.fulfill({json:{success:true,reveal:data}}));
+   await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:settings},audio:{enabled:false}}}));
+   if(hasImage)await creator.route('**/api/reveals/amend-test/image',route=>route.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
+   await creator.goto(base+'/legacy-create.html?edit=amend-test');
+   await creator.locator('#reviewButton:enabled').waitFor();
+   assert.equal(await creator.locator('#savedRevealLoadStatus:visible').count(),0);
+   const host=creator.locator('#scratchActualRevealed');
+   for(const key of ['recipient','sender','eventName','eventDate','eventTime','venue','personalMessage','ticketUrl','postSubtitle','postVenueAddress']){
+    const value=key==='postSubtitle'?settings.subtitle:key==='postVenueAddress'?settings.venueAddress:data[key];
+    assert.equal(await host.locator('[data-edit-field="'+key+'"]').inputValue(),value);
+   }
+   const measured=await host.evaluate(el=>{
+    const svg=el.shadowRoot.querySelector('svg[data-post-template]');
+    return [...svg.querySelectorAll('[data-slot]')].map(slot=>{
+     const text=slot.querySelector('[data-field]'),zone=slot.querySelector(':scope > rect');
+     if(!text||!zone)return {key:slot.dataset.slot,ok:false};
+     const b=text.getBBox(),m=text.transform.baseVal.consolidate()?.matrix||new DOMMatrix();
+     const points=[[b.x,b.y],[b.x+b.width,b.y],[b.x,b.y+b.height],[b.x+b.width,b.y+b.height]].map(([x,y])=>new DOMPoint(x,y).matrixTransform(m));
+     const x=Number(zone.getAttribute('x')),y=Number(zone.getAttribute('y')),w=Number(zone.getAttribute('width')),h=Number(zone.getAttribute('height'));
+     const xs=points.map(p=>p.x),ys=points.map(p=>p.y);
+     return {key:slot.dataset.slot,ok:b.width>0&&b.height>0&&Math.min(...xs)>=x-1&&Math.max(...xs)<=x+w+1&&Math.min(...ys)>=y-1&&Math.max(...ys)<=y+h+1};
+    });
+   });
+   assert.equal(measured.length,10);assert.deepEqual(measured.filter(x=>!x.ok),[],'All saved text must be inside its visible field after Amend: '+templateId+' / '+viewport.width);
+   await host.locator('[data-edit-field="recipient"]').fill('Chloe Rose');
+   await creator.locator('#postTemplate').focus();
+   assert.match(await host.locator('[data-field=recipient]').textContent(),/Chloe Rose/i);
+   await creator.screenshot({path:'test-output/template-designer/amend-'+templateId+'-'+viewport.width+'.png',fullPage:true});
+   assert.deepEqual(errors,[]);await creator.close();
+  }
+ }
+ console.log('Visual designer, direct creator editing and visible Amend text on desktop/mobile passed.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

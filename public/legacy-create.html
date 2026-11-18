@@ -38,7 +38,10 @@
     #savedRevealLoadStatus strong{display:block;font:500 1.5rem/1.2 Georgia,serif;margin-bottom:10px}
     #retrySavedReveal{margin-top:16px;border:1px solid #e7c587;border-radius:9px;
       background:#e7c587;color:#1c1a1e;font-weight:700;padding:12px 16px;cursor:pointer}
-    html[data-saved-reveal-loading="true"] .page{display:none!important}
+    /* Keep a measurable layout during draft hydration. display:none makes
+       SVG getBBox() return zeros, which used to displace saved text off-card.
+       The loading page is visually hidden and inert until restoration finishes. */
+    html[data-saved-reveal-loading="true"] .page{position:absolute;inset:0 0 auto;opacity:0;visibility:hidden;pointer-events:none}
     html[data-saved-reveal-loading="true"] #savedRevealLoadStatus{display:block}
 
     .page {
@@ -1259,7 +1262,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=inline-edit-2';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=amend-visible-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1969,14 +1972,15 @@
 
     async function initialise() {
       lock(true);
+      if(id)document.querySelector('.page').inert=true;
       preview();
 
       try {
         storageCheck();
         await refreshStudioCatalogue();
-        await setScratchPreview();
 
         if (!id) {
+          await setScratchPreview();
           ready = true;
           lock(false);
           return;
@@ -2040,7 +2044,6 @@
         // Incorrect old dual-use uploads return to the catalogue on amend.
         // Existing paid tickets are not rewritten.
         const replacedLegacyCover=currentVariant==='ticket'&&savedSurface.surface.hasImage;
-        await setScratchPreview();
 
         for (const key of fields) {
           $(key).value = reveal[key] || "";
@@ -2090,12 +2093,14 @@
         }
 
         if(replacedLegacyCover)show("Your previous draft used the uploaded surprise image as its scratch cover. Choose your preferred scratch-card artwork above; the photo now appears only after scratching.","info");
+        // Render only after all saved fields and the optional photo are hydrated.
+        // Reposition the correct variant before the final SVG/Canvas measurements.
+        positionScratchSurface();
         await setScratchPreview();
         ready = true;
-        lock(false);
-        // Display the correct product only AFTER the saved configuration
-        // and all fields have been restored. Repaint after becoming visible.
         delete document.documentElement.dataset.savedRevealLoading;
+        document.querySelector('.page').inert=false;
+        lock(false);
         positionScratchSurface();
         requestAnimationFrame(()=>{
           scratchPreview.resize();

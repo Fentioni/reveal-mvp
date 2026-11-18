@@ -223,6 +223,10 @@ export function renderPostScratchTemplate(container,template,data={},options={})
  for(const {node,zone} of checks){
   if(!container.isConnected)continue;
   let b=node.getBBox();
+  // A hidden/detached layout or a not-yet-ready font can report zero bounds.
+  // The canvas-fitted text is already clipped to the zone; never translate it
+  // using bogus measurements (especially when restoring a saved draft).
+  if(!Number.isFinite(b.x)||!Number.isFinite(b.y)||!Number.isFinite(b.width)||!Number.isFinite(b.height)||b.width<=0||b.height<=0)continue;
   if(b.width>zone.w-6||b.height>zone.h-6){
    const scale=Math.min((zone.w-8)/b.width,(zone.h-8)/b.height);
    const size=Number(node.getAttribute('font-size'))*scale;

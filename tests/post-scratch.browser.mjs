@@ -123,6 +123,12 @@ try{
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
  assert.equal(await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').inputValue(),'Saved subtitle');
  assert.equal(await page.locator('#scratchActualRevealed [data-edit-field="postVenueAddress"]').inputValue(),'Saved address');
+ const visibleSaved=await page.locator('#scratchActualRevealed').evaluate(host=>{
+  const root=host.shadowRoot,slot=root.querySelector('[data-slot="eventName"]'),t=slot.querySelector('[data-field]'),z=slot.querySelector(':scope > rect'),b=t.getBBox(),m=t.transform.baseVal.consolidate()?.matrix||new DOMMatrix();
+  const a=new DOMPoint(b.x,b.y).matrixTransform(m),c=new DOMPoint(b.x+b.width,b.y+b.height).matrixTransform(m);
+  const x=Number(z.getAttribute('x')),y=Number(z.getAttribute('y')),w=Number(z.getAttribute('width')),h=Number(z.getAttribute('height'));
+  return b.width>0&&b.height>0&&a.x>=x-1&&a.y>=y-1&&c.x<=x+w+1&&c.y<=y+h+1;
+ });assert.equal(visibleSaved,true,'Saved title is visibly inside its field on Amend');
  await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').focus();
  await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').fill('Edited on ticket');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Edited on ticket');
