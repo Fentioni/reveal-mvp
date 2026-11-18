@@ -224,11 +224,9 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.locator('#scratchArtwork:enabled').waitFor();
    await page.locator('#scratchArtwork').selectOption(art);
    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
-   await page.locator('#recipient').fill('Chloe');
-   await page.locator('#sender').fill('Mick');
-   await page.locator('#eventName').fill('Jesus Christ Superstar');
-   await page.locator('#venue').fill('Theatre Royal, Drury Lane');
-   await page.locator('#personalMessage').fill('A special night');
+   for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Mick',eventName:'Jesus Christ Superstar',venue:'Theatre Royal, Drury Lane',personalMessage:'A special night'})){
+    const input=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');await input.focus();await input.fill(value);
+   }
    const data=await page.evaluate(()=>{
      const c=document.createElement('canvas');c.width=800;c.height=1000;
      const ctx=c.getContext('2d');ctx.fillStyle='#f12b34';ctx.fillRect(0,0,800,1000);
@@ -319,7 +317,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    assert.equal(await page.locator('#scratchArtwork option').count(),20);
    assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
-   assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'covered');
+   assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
+   await page.locator('[data-scratch-preview-mode="covered"]').click();
    assert.equal(await page.locator('#scratchActualCovered h1,#scratchActualRevealed h1,#scratchActualCovered .eyebrow,#scratchActualRevealed .eyebrow,#scratchActualCovered .intro,#scratchActualRevealed .intro').count(),0);
    assert.equal(await page.locator('#scratchActualCovered main').evaluate(el=>getComputedStyle(el).paddingTop),'0px');
     assert.equal(await page.locator('#scratchActualCovered').evaluate(x=>getComputedStyle(x).opacity),'1');

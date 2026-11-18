@@ -11,8 +11,12 @@ export async function renderPostScratchFace(card,reveal,settings,imageSrc='',{gu
  if(!face){face=document.createElement('div');face.id='underlay';card.prepend(face);}
  face.className='ticket-underlay post-scratch-underlay';
  card.classList.add('post-scratch-card');
- const result=renderPostScratchTemplate(face,template,{...reveal,subtitle:s.subtitle,venueAddress:s.venueAddress},{...s,imageSrc,guides,preview:guides});
- card.dataset.postTemplate=s.templateId;
- card.dataset.textOverflow=result.errors.join(',');
- return result;
+ // Redraw the vector face without rebuilding the stable creator input layer.
+ const redraw=(nextReveal,nextSettings=s)=>{
+  const result=renderPostScratchTemplate(face,template,{...nextReveal,subtitle:nextSettings.subtitle,venueAddress:nextSettings.venueAddress},{...nextSettings,imageSrc,guides,preview:guides});
+  card.dataset.postTemplate=s.templateId;
+  card.dataset.textOverflow=result.errors.join(',');
+  return result;
+ };
+ return {...redraw(reveal),redraw};
 }

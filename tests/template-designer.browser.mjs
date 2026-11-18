@@ -108,5 +108,33 @@ try{
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),79);
  assert.deepEqual(errors,[]);
- await page.close();console.log('Visual designer: drag, resize, typography, borders, add/remove, undo/redo, save, reload, public renderer and mobile passed.');
+ await page.close();
+ for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
+  const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
+  await creator.goto(base+'/legacy-create.html?variant=ticket');
+  await creator.locator('#reviewButton:enabled').waitFor();
+  assert.equal(await creator.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
+  assert.equal(await creator.locator('#recipient:visible,#sender:visible,#eventName:visible,#ticketUrl:visible').count(),0);
+  assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field]').count(),10);
+  assert.equal(await creator.locator('#scratchActualCovered [data-edit-field]').count(),0);
+  await creator.locator('#reviewButton').click();
+  assert.match(await creator.locator('#messageBox').textContent(),/recipient/);
+  for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',postSubtitle:'Just for you',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'London',personalMessage:'A special night',ticketUrl:'https://example.org'})){
+   const input=creator.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
+   await input.focus();await input.fill(value);
+   assert.equal(await creator.locator('#'+key).inputValue(),value);
+  }
+  await creator.locator('[data-scratch-preview-mode="covered"]').click();
+  assert.equal(await creator.locator('#scratchActualRevealed').getAttribute('aria-hidden'),'true');
+  await creator.locator('[data-scratch-preview-mode="revealed"]').click();
+  assert.match(await creator.locator('#scratchActualRevealed [data-field=eventName]').textContent(),/THEATRE NIGHT/i);
+  assert.match(await creator.locator('#scratchActualRevealed [data-field=recipient]').textContent(),/Chloe/i);
+  await creator.locator('#postTemplate').selectOption('blue-ink');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='blue-ink');
+  assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field="eventName"]').inputValue(),'Theatre Night');
+  await creator.screenshot({path:'test-output/template-designer/inline-'+viewport.width+'.png',fullPage:true});
+  assert.equal(await creator.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  assert.deepEqual(errors,[]);await creator.close();
+ }
+ console.log('Visual designer and direct creator editing on desktop/mobile passed.');
 }finally{await browser.close();await new Promise(r=>server.close(r));}

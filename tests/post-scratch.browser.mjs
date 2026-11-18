@@ -113,7 +113,7 @@ try{
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
  assert.equal(await page.locator('#postTemplate option').count(),79);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
- assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
+ assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible,#postVenueAddress:visible').count(),0);assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
  for(const [id,value] of Object.entries({postImageFit:'cover',postImageOrientation:'portrait',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
@@ -121,6 +121,12 @@ try{
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('aria-hidden'),'true');
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
+ assert.equal(await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').inputValue(),'Saved subtitle');
+ assert.equal(await page.locator('#scratchActualRevealed [data-edit-field="postVenueAddress"]').inputValue(),'Saved address');
+ await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').focus();
+ await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').fill('Edited on ticket');
+ assert.equal(await page.locator('#postSubtitle').inputValue(),'Edited on ticket');
+ await page.locator('#postTemplate').focus();
  await page.locator('#postImageZoom').fill('200');
  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='1800');
  await page.locator('#postImageReset').click();
@@ -128,10 +134,10 @@ try{
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
  assert.equal(await page.locator('#postImageOrientation').inputValue(),'auto');
  assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Upload immediately precedes image editor with exact label');
- assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&Boolean(link.compareDocumentPosition(editor)&Node.DOCUMENT_POSITION_FOLLOWING)&&Boolean(editor.compareDocumentPosition(review)&Node.DOCUMENT_POSITION_FOLLOWING)&&link.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor follows all details and precedes review');
+ assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
  assert.equal(await page.locator('#postShade').inputValue(),'70');
- assert.equal(await page.evaluate(()=>{const a=document.querySelector('#venue'),b=document.querySelector('#postVenueAddress');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Address directly follows venue');
+ assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
  for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
   await page.locator('#postTemplate').selectOption(option);
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
