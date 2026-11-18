@@ -1,6 +1,6 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=layout-flow-1';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-1';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=layout-flow-2';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-2';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -23,7 +23,7 @@ async function load(id,force=false){
  const run=++requestId;busy=true;mark();status('Loading '+POST_TEMPLATES.find(t=>t.id===id)?.name+'…');
  try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||defaultDesign(id);revision=d.revision||'base';status('Template loaded.');}
  catch(e){if(run!==requestId)return;model=defaultDesign(id);revision='base';status('Using original template: '+e.message,true);}
- if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);selected='zone:eventName';busy=false;$('template').value=id;changed();
+ if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
 }
 function allLayers(){
  const a=[...model.zones.map(z=>({key:'zone:'+z.key,title:names[z.key]||z.key,type:'Text',off:z.hidden})),{key:'photo',title:'Image area',type:'Image'}];
@@ -143,7 +143,7 @@ function inspector(){
  if(o.kind==='path')$('inspectorHint').textContent='This existing vector shape can be moved and recoloured. Its original path is retained.';
 }
 function selection(){
- const overlay=$('overlay');overlay.replaceChildren();if(!model||!$('guides').checked)return;const b=bounds();if(!b)return;
+ const overlay=$('overlay');overlay.replaceChildren();if(!model||!$('guides').checked)return;for(const layer of allLayers().filter(l=>l.key.startsWith('zone:')||l.key==='photo')){const q=bounds(layer.key);if(!q||layer.key===selected)continue;const guide=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:q.x,y:q.y,width:q.w,height:q.h,fill:'none',stroke:'#32d7ff','stroke-opacity':'.4','stroke-width':1.5,'stroke-dasharray':'5 5','vector-effect':'non-scaling-stroke'}))guide.setAttribute(k,v);overlay.append(guide);}const b=bounds();if(!b)return;
  const r=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x,y:b.y,width:b.w,height:b.h,fill:'none',stroke:'#32d7ff','stroke-width':3,'stroke-dasharray':'8 5','vector-effect':'non-scaling-stroke'}))r.setAttribute(k,v);overlay.append(r);
  if(element()?.kind!=='path'){const handle=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x+b.w-10,y:b.y+b.h-10,width:20,height:20,rx:4,fill:'#32d7ff',stroke:'#102b41','stroke-width':2}))handle.setAttribute(k,v);overlay.append(handle);}
 }
@@ -168,7 +168,7 @@ async function prepareArtwork(file){
 }
 function paint(){
  if(!model)return;const data=$('sample').value==='blank'?{}:$('sample').value==='long'?longer:typical;
- try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:false,shade:45,textContrast:'light'});const warning=[];if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
+ try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:$('sample').value==='blank',imageOrientation:$('photoOrientation').value,shade:45,textContrast:'light'});const warning=[];try{assertTemplateLayout(model);}catch(e){warning.push(e.message);}if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
  catch(e){$('warnings').textContent=e.message;}
  selection();
 }
@@ -204,7 +204,7 @@ function reorder(delta){if(!selected.startsWith('decor:'))return;const i=Number(
 $('layerUp').onclick=()=>reorder(1);$('layerDown').onclick=()=>reorder(-1);
 function history(from,to){if(!from.length)return;to.push(clone(model));model=from.pop();if(!element())selected='zone:eventName';changed();}
 $('undo').onclick=()=>history(undo,redo);$('redo').onclick=()=>history(redo,undo);
-$('guides').onchange=selection;$('sample').onchange=paint;$('showSampleImage').onchange=paint;
+$('guides').onchange=selection;$('sample').onchange=paint;$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
 $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=defaultDesign(model.id);selected='zone:eventName';changed();};
