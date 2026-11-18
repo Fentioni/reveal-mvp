@@ -481,7 +481,7 @@ test('invalid scratch themes are rejected, and absent theme preserves the previo
  assert.equal(surface.style,'classic');
 });
 
-test('all 300 cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
+test('all cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
  const {POST_TEMPLATES}=await import('../public/post-scratch-catalogue.js');
  const {SCRATCH_ARTWORKS}=await import('../public/scratch-artwork-catalogue.js');
  const {state,env,legacy}=makeMocks();
@@ -496,7 +496,7 @@ test('all 300 cover/template combinations persist and restore with image appeara
   assert.deepEqual(surface.postScratch,postScratch);assert.equal(surface.artworkId,cover.id);
   assert.deepEqual(JSON.parse(state.config.fields_json).unrelated,{keep:true});count++;
  }
- assert.equal(count,300);
+ assert.equal(count,POST_TEMPLATES.length*SCRATCH_ARTWORKS.length);
 });
 
 test('template settings reject malformed input and custom image without upload, preserving saved config',async()=>{

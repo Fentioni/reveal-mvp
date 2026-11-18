@@ -14,7 +14,7 @@ try{
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   const page=await browser.newPage({viewport});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/admin-template-designer?check='+Date.now());await page.locator('[data-layer="zone:eventName"]').waitFor();
-  assert.equal(await page.locator('#template option').count(),15);
+  assert.equal(await page.locator('#template option').count(),79);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('#artworkShortcut').click();assert.equal(await page.locator('#artworkUpload').isVisible(),true);assert.equal(await page.locator('#restoreArtwork').isVisible(),true);
   await page.locator('#prop-artworkSource').selectOption('spotlight');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/spotlight.webp');await page.locator('#undo').click();

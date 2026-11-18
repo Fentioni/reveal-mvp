@@ -24,7 +24,7 @@ try{
    for(const field of expectedFields)if(!template.zones.some(z=>z.key===field))throw Error(template.id+' missing '+field);
    if(!template.zones.some(z=>['sender','senderLine'].includes(z.key)))throw Error(template.id+' missing sender');
    if(template.id!=='custom-image'){
-    if(!template.structured||!template.panels||template.panels.length<8)throw Error(template.id+' missing structured layout');
+    if(!template.structured||!template.panels||(!template.approvedArtwork&&template.panels.length<8))throw Error(template.id+' missing structured layout');
     const all=[...template.zones,template.photo];
     for(const zone of all)if(zone.x<0||zone.y<0||zone.x+zone.w>900||zone.y+zone.h>1200)throw Error(template.id+' outside card');
     for(const [i,a] of all.entries())for(const b of all.slice(i+1)){
@@ -55,11 +55,11 @@ try{
    if(normalize(recipient.querySelector('svg'))!==normalize(b.querySelector('svg'))){const x=normalize(recipient.querySelector('svg')),y=normalize(b.querySelector('svg')),i=[...x].findIndex((c,i)=>c!==y[i]);issues.push(template.id+' renderer mismatch: '+x.slice(i-70,i+100)+' vs '+y.slice(i-70,i+100));}
    recipient.remove();count++;
   }
-  return {count,issues};
+  return {count,expected:POST_TEMPLATES.length*SCRATCH_ARTWORKS.length,issues};
  });
- assert.equal(report.count,300);assert.deepEqual(report.issues,[]);assert.deepEqual(errors,[]);
+ assert.equal(report.count,report.expected);assert.deepEqual(report.issues,[]);assert.deepEqual(errors,[]);
  await mkdir('test-output/post-scratch',{recursive:true});await page.screenshot({path:'test-output/post-scratch/matrix-'+viewport.width+'.png'});
- console.log(viewport.width+'px: all 300 combinations passed');await page.close();
+ console.log(viewport.width+'px: all '+report.count+' combinations passed');await page.close();
  // One actual, populated recipient-side card per design at this viewport.
  const gallery=await browser.newPage({viewport});
  await gallery.goto(base+'/matrix');
@@ -95,7 +95,7 @@ try{
     const label=document.createElement('p');label.textContent=card.id.replace('template-','');label.style.cssText='margin:3px 0 8px;text-align:center;font:600 12px Arial;color:#202020';card.append(label);
    }
   });
-  const image=await gallery.locator('#preview').screenshot({path:'test-output/post-scratch/all-15-designs.jpg',type:'jpeg',quality:82});
+  const image=await gallery.locator('#preview').screenshot({path:'test-output/post-scratch/all-designs.jpg',type:'jpeg',quality:82});
   // Log small chunks so the visual audit can inspect the actual render,
   // without depending on access to binary workflow artifacts.
   const encoded=image.toString('base64');
@@ -111,7 +111,7 @@ try{
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
  await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),15);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
+ assert.equal(await page.locator('#postTemplate option').count(),79);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');

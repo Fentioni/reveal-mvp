@@ -1254,7 +1254,7 @@
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=final-20-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
-    import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=reference-panels-1';
+    import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=approved-backgrounds-1';
     import {loadPublishedDesign} from '/published-template-designs.js?v=artwork-2';
     import {cleanPostSettings} from '/post-scratch-settings.js?v=image-editor-1';
     const $ = id => document.getElementById(id);
@@ -1282,7 +1282,8 @@
     let objectUrl = null;
     let pendingReview = false;
     const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
-    for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('postTemplate').append(o);}
+    const postGroups=new Map();
+    for(const t of POST_TEMPLATES){const label=t.collection||'Existing templates';if(!postGroups.has(label)){const group=document.createElement('optgroup');group.label=label;$('postTemplate').append(group);postGroups.set(label,group);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;postGroups.get(label).append(o);}
     function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
     function restorePostSettings(value){const p=cleanPostSettings(value);for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
     function syncPostImageEditor(){
@@ -1313,7 +1314,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(imageEditIds.has(key))showImageEditingPreview();postGuidance();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }

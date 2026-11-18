@@ -227,5 +227,5 @@ $('save').onclick=save;$('authSave').onclick=async e=>{e.preventDefault();const 
  try{await response(await fetch('/api/admin/template-designer',{headers:apiHeaders(),cache:'no-store'}));$('auth').close();await save();}
  catch(err){token='';$('authMessage').textContent=err.message;}finally{$('authSave').disabled=false;}};
 window.addEventListener('beforeunload',e=>{if(model&&!clean()){e.preventDefault();e.returnValue='';}});
-for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('template').append(o);}
+const groups=new Map();for(const t of POST_TEMPLATES){const label=t.collection||'Existing templates';if(!groups.has(label)){const g=document.createElement('optgroup');g.label=label;$('template').append(g);groups.set(label,g);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;groups.get(label).append(o);}
 load(POST_TEMPLATES[0].id,true);
