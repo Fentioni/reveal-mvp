@@ -107,3 +107,17 @@ test('scratch cover admin upload, authorization, catalogue removal and restorati
 });
 
 test('saved wording validates and older customer-driven templates remain unchanged',()=>{const id='candlelight',d=defaultDesign(id);assert.equal(validateDesign(id,d).zones[0].textMode,undefined);const z=d.zones[0];z.templateText='My permanent title';z.textMode='fixed';assert.equal(validateDesign(id,d).zones[0].templateText,z.templateText);z.textMode='customer';assert.equal(validateDesign(id,d).zones[0].templateText,z.templateText);z.textMode='fixed';z.templateText='';assert.throws(()=>validateDesign(id,d));z.templateText='a'.repeat(1001);assert.throws(()=>validateDesign(id,d));});
+
+test('all template person headings are canonical; legacy saved designs retain geometry and personalised values',async()=>{
+ const {templateFieldText}=await import('../public/post-scratch-renderer.js');
+ for(const t of POST_TEMPLATES){
+  const d=defaultDesign(t.id);
+  for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'For You':'From Me',t.id);
+  const old=clone(d);for(const p of old.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))p.label=p.key==='recipient'?'RECIPIENT':'FROM / HOST';
+  const v=validateDesign(t.id,old);for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'For You':'From Me',t.id);
+  for(const z of v.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key))){const name=z.key==='recipient'?'Chloe':'Michael';const heading=z.key==='recipient'?'For You':'From Me';const hasLabel=v.panels.some(p=>p.key===z.key&&p.labelH>0&&p.label);assert.equal(templateFieldText(v,z.key,{recipient:'Chloe',sender:'Michael'}),hasLabel?name:heading+': '+name,t.id);}
+ }
+ const id='travel-collage',d=defaultDesign(id);const p=d.panels.find(p=>p.key==='recipient');p.label='Recipient';const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
+ await env.IMAGES.put('admin-template-designs/v1/'+id+'.json',JSON.stringify({revision:'legacy-revision',template:d}),{});
+ const saved=await (await templateDesignResponse(req(id),env)).json();assert.equal(saved.revision,'legacy-revision');assert.equal(saved.template.panels.find(p=>p.key==='recipient').label,'For You');assert.deepEqual(saved.template.photo,validateDesign(id,d).photo);
+});

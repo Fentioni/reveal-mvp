@@ -41,9 +41,15 @@ const list=(x,max)=>{if(!Array.isArray(x)||x.length>max)fail();return x;};
 function box(o){obj(o);const x=num(o.x,0,900),y=num(o.y,0,1200),w=num(o.w,12,900),h=num(o.h,12,1200);if(x+w>900.01||y+h>1200.01)fail();return {x,y,w,h};}
 const opt=(o,key,fn,d)=>o[key]===undefined?d:fn(o[key]);
 function style(z){return {size:num(z.size,12,200),family:font(z.family),weight:num(z.weight,100,900),ink:color(z.ink),align:choice(z.align,['left','center','right']),italic:opt(z,'italic',bool,false),upper:opt(z,'upper',bool,false),noWordSplit:opt(z,'noWordSplit',bool,true),spacing:opt(z,'spacing',x=>num(x,0,20),0),hidden:opt(z,'hidden',bool,false),useTemplateInk:opt(z,'useTemplateInk',bool,false),...(z.glow?{glow:color(z.glow)}:{}),...(z.outline?{outline:color(z.outline)}:{})};}
+// Normalize persisted legacy headings on read and write without changing their geometry or personal values.
+const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
+function personWording(key,value){const name=personLabel(key);if(!name||typeof value!=='string')return value;
+ const legacy=key==='recipient'?/^(recipient|for you|to)$/i:/^(sender|from|host|from\s*(?:\/|or)\s*(?:host|sender)|from me)$/i;
+ return legacy.test(value.trim())?name:value;
+}
 function panel(p,keys){obj(p);if(!keys.has(p.key))fail();const b=box(p);const out={key:p.key,...b,fill:color(p.fill),stroke:color(p.stroke),sw:num(p.sw,0,30),rx:num(p.rx,0,200),ink:color(p.ink)};
  if(p.key==='image')return out;
- return {...out,label:str(p.label,80),icon:choice(p.icon,['','date','time','venue','venueAddress','sender','recipient']),accent:color(p.accent),gutter:num(p.gutter,0,b.w-1),labelH:num(p.labelH,0,b.h-1),align:choice(p.align,['left','center','right']),family:font(p.family),iconBg:p.iconBg?color(p.iconBg):'',labelInk:color(p.labelInk),variant:choice(p.variant,['standard','paper-entry','comic-metric','comic-value']),valueBox:p.valueBox?box(p.valueBox):null,divider:color(p.divider)};
+ return {...out,label:personLabel(p.key)&&p.labelH>0?(str(p.label,80),personLabel(p.key)):str(p.label,80),icon:choice(p.icon,['','date','time','venue','venueAddress','sender','recipient']),accent:color(p.accent),gutter:num(p.gutter,0,b.w-1),labelH:num(p.labelH,0,b.h-1),align:choice(p.align,['left','center','right']),family:font(p.family),iconBg:p.iconBg?color(p.iconBg):'',labelInk:color(p.labelInk),variant:choice(p.variant,['standard','paper-entry','comic-metric','comic-value']),valueBox:p.valueBox?box(p.valueBox):null,divider:color(p.divider)};
 }
 function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line','path','text']);
  if(kind==='text')return {kind,...box(d),...style(d),text:str(d.text,300)};
@@ -56,7 +62,7 @@ function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line',
 export function validateDesign(id,input,entry){
  const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();
  const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
- const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...(z.templateText!==undefined?{templateText:str(z.templateText,1000)}:{}),...(z.textMode!==undefined?{textMode:choice(z.textMode,['customer','fixed'])}:{})};});
+ const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...(z.templateText!==undefined?{templateText:personWording(z.key,str(z.templateText,1000))}:{}),...(z.textMode!==undefined?{textMode:choice(z.textMode,['customer','fixed'])}:{})};});
  if(seen.size!==keys.size)fail();
  const allowed=new Set(base.panels.map(p=>p.key)),ps=new Set();
  const panels=list(input.panels,15).map(p=>{if(ps.has(p.key))fail();ps.add(p.key);return panel(p,allowed);});

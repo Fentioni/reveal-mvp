@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=saved-text-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=person-labels-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
@@ -46,9 +46,9 @@ function make(tag,text,cls){
 const inlineFields={
  eventName:['eventName','Surprise title','textarea',160,true],
  subtitle:['postSubtitle','Subtitle','text',100,false],
- recipient:['recipient','Recipient','text',80,true],
- sender:['sender','From / host','text',80,true],
- senderLine:['sender','From / host','text',80,true],
+ recipient:['recipient','For You','text',80,true],
+ sender:['sender','From Me','text',80,true],
+ senderLine:['sender','From Me','text',80,true],
  date:['eventDate','Date','date',0,false],
  time:['eventTime','Time','time',0,false],
  venue:['venue','Venue / destination','text',200,false],

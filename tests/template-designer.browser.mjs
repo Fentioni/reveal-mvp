@@ -30,6 +30,10 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),79);
+ assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
+ assert.equal(await page.locator('[data-layer="zone:sender"] span').first().textContent(),'From Me');
+ assert.equal(await page.locator('#render [data-layout-label="recipient"]').textContent(),'For You');
+ assert.equal(await page.locator('#render [data-layout-label="sender"]').textContent(),'From Me');
  // Fixed wording updates instantly, marks the template dirty, and supports undo/redo.
  await page.locator('#editText').click();await page.locator('#prop-templateText').fill('Preview title');
  assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);

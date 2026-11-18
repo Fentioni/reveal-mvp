@@ -8,16 +8,21 @@ const safeLink=s=>{try{const u=new URL(s);return ['http:','https:'].includes(u.p
 function date(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return val(s);return new Intl.DateTimeFormat('en-GB',{day:'numeric',month:'long',year:'numeric',timeZone:'UTC'}).format(new Date(s+'T12:00:00Z'));}
 function time(s){if(!/^\d\d:\d\d$/.test(s||''))return val(s);const [h,m]=s.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');}
 function join(...items){return items.map(val).filter(Boolean).join(' · ');}
-function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender)?'From '+val(data.sender):'',message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Open event link':''};}
-export function templateFieldText(template,key,data={}){
+function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender),message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Open event link':''};}
+const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
+function displayFields(template,data){
  const values=fields(data);
- if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);
- return val(values[key]);
+ for(const key of ['recipient','sender','senderLine']){
+  const value=val(values[key]);
+  if(value&&!template.panels?.some(p=>p.key===key&&p.label&&p.labelH>0))values[key]=personLabel(key)+': '+value;
+ }
+ return values;
 }
+export function templateFieldText(template,key,data={}){return val(displayFields(template,data)[key]);}
 const canvas=typeof document==='undefined'?null:document.createElement('canvas');
 const ctx=canvas?.getContext('2d');
 let uid=0;
-const labels={sender:'From / host',eventName:'Reveal title',subtitle:'Subtitle',recipient:'Recipient',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From / host',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
+const labels={sender:'From Me',eventName:'Reveal title',subtitle:'Subtitle',recipient:'For You',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From Me',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
 function fitText(value,zone){
  const {family,weight,w,h}=zone;const max=Math.min(zone.size,Math.floor(h*.84));
  const min=Math.min(max,Math.max(20,Math.round(max*.42)));
@@ -76,7 +81,8 @@ function drawIcon(svg,key,cx,cy,size,ink){
  mk('path',{d:paths[key]},g);
 }
 function drawPanels(svg,panels,values,src,guides){
- for(const p of panels||[]){
+ for(const original of panels||[]){
+  const p=personLabel(original.key)&&original.labelH>0?{...original,label:personLabel(original.key)}:original;
   if(!guides&&(p.key==='image'?!src:!val(values[p.key])))continue;
   const g=mk('g',{'data-layout-panel':p.key},svg);
   const special=p.variant==='paper-entry';
@@ -154,7 +160,7 @@ function drawArtwork(svg,template,options){
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
  template=orientTemplate(template,options.imageOrientation);
- const values=fields(data);if(template.approvedArtwork&&val(values.recipient))values.recipient='For '+val(values.recipient);
+ const values=displayFields(template,data);
  for(const zone of template.zones){
   if(zone.textMode==='fixed'&&typeof zone.templateText==='string'&&(zone.key!=='link'||safeLink(data.ticketUrl)||options.preview))values[zone.key]=zone.templateText;
  }

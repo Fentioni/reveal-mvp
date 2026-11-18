@@ -95,7 +95,7 @@ const names={
     "description": "Scalloped red outline, black hand-drawn party illustrations and playful typography."
   }
 };
-const labels={eventName:'',subtitle:'',recipient:'RECIPIENT',date:'DATE',time:'TIME',venue:'VENUE / DESTINATION',venueAddress:'ADDRESS / LOCATION',sender:'FROM',message:'PERSONAL MESSAGE',link:'EVENT LINK'};
+const labels={eventName:'',subtitle:'',recipient:'For You',date:'DATE',time:'TIME',venue:'VENUE / DESTINATION',venueAddress:'ADDRESS / LOCATION',sender:'From Me',message:'PERSONAL MESSAGE',link:'EVENT LINK'};
 function build(id,fn){
  const c=configs[id],zones=[],panels=[],decor=[];
  let photo;
