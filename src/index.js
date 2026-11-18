@@ -30,7 +30,11 @@ export default {
     if(/^\/admin-template-designer(?:\.html)?\/?$/.test(path)){
       if(env.STAGING_DISABLE_CHECKOUT!=='true')return textError('Not available.',404);
       if(!['GET','HEAD'].includes(request.method))return textError('Method not allowed.',405);
-      return env.ASSETS.fetch(new Request(new URL('/admin-template-designer',url),request));
+      const assetURL=new URL('/admin-template-designer',url);assetURL.search=url.search;
+      const headers=new Headers(request.headers);headers.delete('If-None-Match');headers.delete('If-Modified-Since');
+      const asset=await env.ASSETS.fetch(new Request(assetURL,{method:request.method,headers}));
+      const responseHeaders=new Headers(asset.headers);responseHeaders.set('Cache-Control','no-store, max-age=0');responseHeaders.delete('ETag');responseHeaders.delete('Last-Modified');
+      return new Response(asset.body,{status:asset.status,statusText:asset.statusText,headers:responseHeaders});
     }
 
     // Stripe remains disabled unless separate TEST secrets and an explicit
