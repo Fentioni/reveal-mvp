@@ -1,3 +1,4 @@
+import {normalizeBookingLink} from './booking-link.js?v=1';
 import {renderPostScratchFace} from './post-scratch-face.js?v=clean-template-text-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
@@ -74,6 +75,7 @@ function mountInlineEditor(card,face,edit){
   wrap.dataset.inlineZone=slot.dataset.slot;control.dataset.editField=id;
   if(type!=='textarea')control.type=type;else control.rows=2;
   control.setAttribute('aria-label',label+(required?' (required)':' (optional)'));
+  if(id==='ticketUrl')control.inputMode='url';
   control.title=slot.dataset.fixedText==='true'?'Template wording is fixed; enter customer details separately.':'Edit '+label;control.value=edit.value(id);control.placeholder=label;
   if(max)control.maxLength=max;if(required)control.required=true;
   control.autocomplete='off';
@@ -81,7 +83,9 @@ function mountInlineEditor(card,face,edit){
   const text=slot.querySelector('[data-field]');const align=text?.getAttribute('text-anchor');
   control.style.textAlign=align==='start'?'left':align==='end'?'right':'center';
   control.addEventListener('input',()=>update(id,control.value));
-  control.addEventListener('change',()=>{if(edit.value(id)!==control.value)update(id,control.value);});
+  const commit=()=>{if(id==='ticketUrl'){const normalized=normalizeBookingLink(control.value);if(normalized!==null)control.value=normalized;}if(edit.value(id)!==control.value)update(id,control.value);};
+  control.addEventListener('change',commit);
+  if(id==='ticketUrl')control.addEventListener('blur',commit);
   control.addEventListener('keydown',e=>{if(e.key==='Enter'&&id!=='personalMessage'&&!e.isComposing){e.preventDefault();control.blur();}if(e.key==='Escape'){e.preventDefault();control.blur();}});
   wrap.append(control);overlay.append(wrap);
  }

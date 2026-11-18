@@ -186,6 +186,16 @@ try{
    if(['eventDate','eventTime'].includes(key))await input.focus();else await input.click();await input.fill(value);
    assert.equal(await creator.locator('#'+key).inputValue(),value);
   }
+  const link=host.locator('[data-edit-field="ticketUrl"]');
+  for(const [raw,expected] of [['www.example.org/show?ref=1','https://www.example.org/show?ref=1'],['example.org','https://example.org'],['http://example.org/show','http://example.org/show'],['https://example.org/show','https://example.org/show'],['','']]){
+   await link.fill(raw);await creator.locator('#postTemplate').focus();
+   assert.equal(await link.inputValue(),expected);assert.equal(await creator.locator('#ticketUrl').inputValue(),expected);
+   assert.equal(await link.getAttribute('aria-invalid'),'false');
+  }
+  await link.fill('javascript:alert(1)');await creator.locator('#postTemplate').focus();
+  assert.equal(await link.getAttribute('aria-invalid'),'true');
+  assert.equal(await creator.locator('#ticketUrl').inputValue(),'javascript:alert(1)');
+  await link.fill('https://example.org');await creator.locator('#postTemplate').focus();
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),0);
   assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
   await creator.locator('#postTemplate').selectOption('custom-image');
@@ -207,6 +217,18 @@ try{
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.screenshot({path:'test-output/template-designer/inline-'+viewport.width+'.png',fullPage:true});
   assert.equal(await creator.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
+  // Submit directly while the URL field is still focused: the actual save
+  // request must contain the corrected address, even without a blur event.
+  let submittedLink;
+  await creator.route('**/api/reveals',async route=>{
+   const form=await new Response(route.request().postDataBuffer(),{headers:{'Content-Type':route.request().headers()['content-type']}}).formData();
+   submittedLink=form.get('ticketUrl');
+   await route.fulfill({status:400,json:{error:'Test intercepted save.'}});
+  });
+  await host.locator('[data-edit-field="ticketUrl"]').fill('example.org/booking?ref=2');
+  await creator.evaluate(()=>document.querySelector('#revealForm').requestSubmit());
+  await creator.waitForFunction(()=>document.querySelector('#messageBox').textContent.includes('Test intercepted save.'));
+  assert.equal(submittedLink,'https://example.org/booking?ref=2');
   assert.deepEqual(errors,[]);await creator.close();
  }
  // Regression: stored values are not enough; each rendered glyph must

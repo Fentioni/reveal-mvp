@@ -1049,12 +1049,12 @@
             <label for="ticketUrl" id="ticketUrlLabel">Official ticket or booking link</label>
             <p class="field-help">
               Optional. If entered, this link will appear on the recipient's
-              paid scratch card. Avoid links that expose private booking codes.
+              paid scratch card. We add https:// automatically if needed. Avoid links that expose private booking codes.
             </p>
             <input
               id="ticketUrl"
               type="url"
-              placeholder="https://..."
+              placeholder="www.example.com"
               maxlength="2048"
             >
           </div>
@@ -1267,7 +1267,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=clean-template-text-1';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=booking-link-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=managed-covers-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1276,6 +1276,7 @@
     import {loadPublishedDesign} from '/published-template-designs.js?v=template-management-1';
     import {cleanPostSettings} from '/post-scratch-settings.js?v=template-management-1';
     import {photoFrame} from '/post-scratch-renderer.js?v=clean-template-text-1';
+    import {normalizeBookingLink} from '/booking-link.js?v=1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1361,9 +1362,8 @@
       for(const key of inlineIds){
         if(errors.has(key))continue;
         const field=$(key),value=field.value.trim();
-        let invalid=!field.checkValidity();
-        if(key==='ticketUrl'&&value){try{const u=new URL(value);if(!['http:','https:'].includes(u.protocol)||u.username||u.password)throw Error();}catch{invalid=true;}}
-        if(invalid)errors.set(key,{label:key==='ticketUrl'?'Event link':key==='eventDate'?'Date':key==='eventTime'?'Time':'Field',message:key==='ticketUrl'?'Enter a valid event link starting with https:// or http://.':'Check the entered value.'});
+        const invalid=key==='ticketUrl'?normalizeBookingLink(value)===null:!field.checkValidity();
+        if(invalid)errors.set(key,{label:key==='ticketUrl'?'Event link':key==='eventDate'?'Date':key==='eventTime'?'Time':'Field',message:key==='ticketUrl'?'Enter a valid web address, for example www.example.com.':'Check the entered value.'});
       }
       if(!$('scratchArtwork').value)errors.set('scratchArtwork',{label:'Scratch cover',message:'Choose a scratch cover.'});
       if(!$('postTemplate').value)errors.set('postTemplate',{label:'Revealed template',message:'Choose a revealed template.'});
@@ -1417,6 +1417,17 @@
       read:currentPortraitData,onOverflow:inlineWarning,
       chooseImage:()=>{if(ready&&!busy)$('image').click();}
     };
+    function correctTicketUrl(){
+      const field=$('ticketUrl'),normalized=normalizeBookingLink(field.value);
+      if(normalized===null)return false;
+      if(normalized!==field.value){
+        field.value=normalized;pendingReview=false;
+        const inline=$('scratchActualRevealed').shadowRoot?.querySelector('[data-edit-field="ticketUrl"]');
+        if(inline)inline.value=normalized;
+        preview(false);updateInlineValidation();
+      }
+      return true;
+    }
     function validateInlineFields(){
       validationAttempted=true;
       return updateInlineValidation({focus:true});
@@ -1461,7 +1472,8 @@
       currentVariant = variant === "concert" ? "concert" : "ticket";
       document.body.dataset.ticketVariant = currentVariant;
       const isConcert = currentVariant === "concert";
-      form.noValidate=!isConcert;
+      // Normalize the optional booking link before native validation in both variants.
+      form.noValidate=true;
       if(!isConcert){$('formHeading').textContent='Choose and personalise your ticket';}
       $("concertZoomButton").hidden=!isConcert;
       if(!isConcert){
@@ -1867,9 +1879,10 @@
     });
 
     for (const key of fields) {
-      $(key).addEventListener("input", ()=>{preview();updateInlineValidation();});
-      $(key).addEventListener("change", ()=>{preview();updateInlineValidation();});
+      $(key).addEventListener("input", ()=>{if(key==='ticketUrl')$('ticketUrl').setCustomValidity('');preview();updateInlineValidation();});
+      $(key).addEventListener("change", ()=>{if(key==='ticketUrl')correctTicketUrl();preview();updateInlineValidation();});
     }
+    $('ticketUrl').addEventListener('blur',()=>{if(ready&&!busy)correctTicketUrl();});
 
     $("image").addEventListener("change", async () => {
       if (!ready || busy) return;
@@ -1907,6 +1920,8 @@
       event.preventDefault();
 
       if (!ready || busy) return;
+      const linkValid=correctTicketUrl();
+      if(currentVariant==='concert')$('ticketUrl').setCustomValidity(linkValid?'':'Enter a valid web address, for example www.example.com.');
       if(currentVariant==='ticket'?!validateInlineFields():!form.reportValidity())return;
       if(currentVariant==='ticket'){
         try{await refreshPortraitPreview();}catch(error){return show(error.message);}
