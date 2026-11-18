@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 import {defaultDesign,validateDesign,clone} from '../public/template-design-schema.js';
 import {templateDesignResponse} from '../src/template-designs.js';
+import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 class Bucket{
  constructor(){this.map=new Map();this.n=0;}
  async get(key){const o=this.map.get(key);return o?{etag:o.etag,json:async()=>JSON.parse(o.value)}:null;}
@@ -81,7 +82,7 @@ test('scratch cover admin upload, authorization, catalogue removal and restorati
  const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:bucket};
  const request=(method='GET',body,auth=secret,origin='https://stage.example')=>new Request('https://stage.example/api/scratch-artwork',{method,headers:{Authorization:'Bearer '+auth,Origin:origin,...(typeof body==='string'?{'Content-Type':'application/json'}:{})},...(body?{body}:{})});
  const list=async()=> (await (await scratchArtworkResponse(request(),env)).json()).artworks;
- assert.equal((await list()).length,20);
+ assert.equal((await list()).length,SCRATCH_ARTWORKS.length);
  // Use an original real raster cover, preserving its actual bytes.
  const source=await readFile(new URL('../public/scratch-artwork/Azure_Kaleidoscope.jpg',import.meta.url));
  const {dimensions}=await import('../src/image-dimensions.js');
@@ -93,7 +94,7 @@ test('scratch cover admin upload, authorization, catalogue removal and restorati
  assert.equal((await scratchArtworkResponse(request('POST',form(),'wrong'),env)).status,401);
  assert.equal((await scratchArtworkResponse(request('POST',form(),secret,'https://evil.example'),env)).status,403);
  const created=await scratchArtworkResponse(request('POST',form()),env);assert.equal(created.status,201);const {id}=await created.json();
- assert.equal((await list()).filter(a=>!a.archived).length,21);
+ assert.equal((await list()).filter(a=>!a.archived).length,SCRATCH_ARTWORKS.length+1);
  assert.ok(await availableScratchArtwork(env,id));assert.equal((await scratchArtworkResponse(request('POST',form()),env)).status,409);
  const drop=JSON.stringify({id});
  assert.equal((await scratchArtworkResponse(request('DELETE',drop),env)).status,200);

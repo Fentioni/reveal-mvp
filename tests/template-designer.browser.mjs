@@ -5,6 +5,7 @@ import {resolve,extname} from 'node:path';
 import {chromium} from 'playwright';
 import {templateDesignResponse} from '../src/template-designs.js';
 import {scratchArtworkResponse} from '../src/scratch-artwork-admin.js';
+import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 const root=resolve('public'),secret='browser-test-admin-secret-2026';
 const objects=new Map();let etag=0;
 const bucket={async get(k){const x=objects.get(k);return x?{etag:x.etag,json:async()=>JSON.parse(x.value),body:x.value}:null;},async put(k,value,opts){const old=objects.get(k),c=opts.onlyIf;if(c?.etagMatches&&old?.etag!==c.etagMatches||c?.etagDoesNotMatch==='*'&&old)return null;const next={etag:String(++etag),value};objects.set(k,next);return next;},async delete(k){objects.delete(k);}};
@@ -118,7 +119,7 @@ try{
  assert.equal(await page.locator('#template option').count(),79);
  assert.deepEqual(errors,[]);
  await page.locator('#coverManager').click();
- await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),20);
+ await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);
  const coverBytes=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');g.fillStyle='#b88c35';g.fillRect(0,0,900,1200);return c.toDataURL('image/png').split(',')[1];});
  await page.locator('#coverFile').setInputFiles({name:'Test Gold.png',mimeType:'image/png',buffer:Buffer.from(coverBytes,'base64')});
  await page.locator('#coverName').fill('Test Gold');await page.locator('#addCover').click();
@@ -131,7 +132,7 @@ try{
  await customer.close();
  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
- assert.equal(await page.locator('#coverList .cover-item').count(),20);assert.equal(await page.locator('#archivedCoverList .cover-item').count(),1);
+ assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);assert.equal(await page.locator('#archivedCoverList .cover-item').count(),1);
  await page.locator('#deletedCovers summary').click();await page.getByRole('button',{name:'Restore Test Gold',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork restored'));
  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
