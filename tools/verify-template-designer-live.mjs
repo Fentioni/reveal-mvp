@@ -4,7 +4,7 @@ import {mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 let ready=false;
 for(let n=0;n<35;n++){
- try{const r=await fetch(origin+'/admin-template-designer?v=1',{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('id="artworkShortcut"')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
+ try{const r=await fetch(origin+'/admin-template-designer?v=1',{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('id="photoOrientation"')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
  await new Promise(r=>setTimeout(r,7000));
 }
 assert.ok(ready,'Template Studio is not deployed yet');
@@ -14,7 +14,8 @@ try{
  for(const viewport of [{width:1440,height:1000},{width:390,height:844}]){
   const page=await browser.newPage({viewport});const errors=[];page.on('pageerror',e=>errors.push(e.message));
   await page.goto(origin+'/admin-template-designer?check='+Date.now());await page.locator('[data-layer="zone:eventName"]').waitFor();
-  assert.equal(await page.locator('#template option').count(),15);
+  assert.equal(await page.locator('#template option').count(),79);
+  assert.equal(await page.locator('#photoOrientation').isVisible(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('#artworkShortcut').click();assert.equal(await page.locator('#artworkUpload').isVisible(),true);assert.equal(await page.locator('#restoreArtwork').isVisible(),true);
   await page.locator('#prop-artworkSource').selectOption('spotlight');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/spotlight.webp');await page.locator('#undo').click();

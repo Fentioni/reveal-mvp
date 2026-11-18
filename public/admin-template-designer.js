@@ -1,6 +1,6 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=2';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=artwork-2';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=layout-flow-2';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-2';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -23,7 +23,7 @@ async function load(id,force=false){
  const run=++requestId;busy=true;mark();status('Loading '+POST_TEMPLATES.find(t=>t.id===id)?.name+'…');
  try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||defaultDesign(id);revision=d.revision||'base';status('Template loaded.');}
  catch(e){if(run!==requestId)return;model=defaultDesign(id);revision='base';status('Using original template: '+e.message,true);}
- if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);selected='zone:eventName';busy=false;$('template').value=id;changed();
+ if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
 }
 function allLayers(){
  const a=[...model.zones.map(z=>({key:'zone:'+z.key,title:names[z.key]||z.key,type:'Text',off:z.hidden})),{key:'photo',title:'Image area',type:'Image'}];
@@ -68,7 +68,7 @@ function layers(){
   const b=document.createElement('button');b.type='button';b.className='layer'+(l.key===selected?' selected':'')+(l.off?' off':'');b.dataset.layer=l.key;b.setAttribute('aria-pressed',String(l.key===selected));
   const text=document.createElement('span');text.textContent=l.title;const type=document.createElement('span');type.className='type';type.textContent=l.type;b.append(text,type);$('layers').append(b);
  }
- const o=element();$('remove').disabled=!o||selected==='background';$('remove').textContent=o?.hidden?'Show field':'Remove / hide';
+ const o=element();$('remove').disabled=!o||selected==='background'||selected==='photo'||selected.startsWith('zone:');$('remove').textContent=o?.hidden?'Show field':'Remove / hide';
  const index=selected.startsWith('decor:')?Number(selected.split(':')[1]):-1;
  $('layerUp').disabled=index<0||index===model.decor.length-1;$('layerDown').disabled=index<=0;
  $('restoreArt').hidden=!!model.illustration||!defaultDesign(model.id).illustration;
@@ -127,7 +127,7 @@ function inspector(){
   paintColor('Text colour','ink',o);control('Alignment','align','select',o.align,{choices:[['left','Left'],['center','Centre'],['right','Right']]});
   number('Letter spacing','spacing',{spacing:o.spacing||0},0,20,.5);
   control('Italic','italic','checkbox',o.italic);control('Uppercase','upper','checkbox',o.upper);
-  if(selected.startsWith('zone:'))control('Hide field','hidden','checkbox',o.hidden);
+  
   if(model.id==='custom-image'&&selected.startsWith('zone:'))control('Use this colour instead of customer contrast','useTemplateInk','checkbox',o.useTemplateInk);
  }
  if(selected.startsWith('panel:')||['rect','ellipse','path','line'].includes(o.kind)){
@@ -143,7 +143,7 @@ function inspector(){
  if(o.kind==='path')$('inspectorHint').textContent='This existing vector shape can be moved and recoloured. Its original path is retained.';
 }
 function selection(){
- const overlay=$('overlay');overlay.replaceChildren();if(!model||!$('guides').checked)return;const b=bounds();if(!b)return;
+ const overlay=$('overlay');overlay.replaceChildren();if(!model||!$('guides').checked)return;for(const layer of allLayers().filter(l=>l.key.startsWith('zone:')||l.key==='photo')){const q=bounds(layer.key);if(!q||layer.key===selected)continue;const guide=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:q.x,y:q.y,width:q.w,height:q.h,fill:'none',stroke:'#32d7ff','stroke-opacity':'.4','stroke-width':1.5,'stroke-dasharray':'5 5','vector-effect':'non-scaling-stroke'}))guide.setAttribute(k,v);overlay.append(guide);}const b=bounds();if(!b)return;
  const r=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x,y:b.y,width:b.w,height:b.h,fill:'none',stroke:'#32d7ff','stroke-width':3,'stroke-dasharray':'8 5','vector-effect':'non-scaling-stroke'}))r.setAttribute(k,v);overlay.append(r);
  if(element()?.kind!=='path'){const handle=document.createElementNS(NS,'rect');for(const [k,v] of Object.entries({x:b.x+b.w-10,y:b.y+b.h-10,width:20,height:20,rx:4,fill:'#32d7ff',stroke:'#102b41','stroke-width':2}))handle.setAttribute(k,v);overlay.append(handle);}
 }
@@ -168,7 +168,7 @@ async function prepareArtwork(file){
 }
 function paint(){
  if(!model)return;const data=$('sample').value==='blank'?{}:$('sample').value==='long'?longer:typical;
- try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:false,shade:45,textContrast:'light'});const warning=[];if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
+ try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:$('sample').value==='blank',imageOrientation:$('photoOrientation').value,shade:45,textContrast:'light'});const warning=[];try{assertTemplateLayout(model);}catch(e){warning.push(e.message);}if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
  catch(e){$('warnings').textContent=e.message;}
  selection();
 }
@@ -195,7 +195,7 @@ $('addMenu').addEventListener('click',e=>{
  else{const base={kind,x:275,y:520,w:350,h:100,fill:'#fff4d7',stroke:'#b58442',sw:3,rx:12};model.decor.push(kind==='line'?{kind,x1:270,y1:570,x2:630,y2:570,stroke:'#b58442',sw:3}:kind==='text'?{kind,x:220,y:520,w:460,h:100,text:'Your text',size:42,family:'Georgia, serif',weight:700,ink:'#222222',align:'center',spacing:0,noWordSplit:false}:base);selected='decor:'+(model.decor.length-1);}
  $('addMenu').hidden=true;$('add').setAttribute('aria-expanded','false');changed();
 });
-$('remove').addEventListener('click',()=>{const o=element();if(!o||selected==='background')return;remember();if(selected.startsWith('zone:'))o.hidden=!o.hidden;
+$('remove').addEventListener('click',()=>{const o=element();if(!o||selected==='background'||selected==='photo'||selected.startsWith('zone:'))return;remember();if(selected.startsWith('zone:'))o.hidden=false;
  else if(selected.startsWith('decor:')){model.decor.splice(Number(selected.split(':')[1]),1);selected='zone:eventName';}
  else if(selected.startsWith('panel:')){model.panels=model.panels.filter(x=>x!==o);selected='zone:eventName';}
  else if(selected==='illustration'){model.illustration=null;selected='zone:eventName';}
@@ -204,7 +204,7 @@ function reorder(delta){if(!selected.startsWith('decor:'))return;const i=Number(
 $('layerUp').onclick=()=>reorder(1);$('layerDown').onclick=()=>reorder(-1);
 function history(from,to){if(!from.length)return;to.push(clone(model));model=from.pop();if(!element())selected='zone:eventName';changed();}
 $('undo').onclick=()=>history(undo,redo);$('redo').onclick=()=>history(redo,undo);
-$('guides').onchange=selection;$('sample').onchange=paint;$('showSampleImage').onchange=paint;
+$('guides').onchange=selection;$('sample').onchange=paint;$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
 $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=defaultDesign(model.id);selected='zone:eventName';changed();};
@@ -213,7 +213,7 @@ $('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),ur
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validateDesign(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
 async function save(){
  if(busy||!model)return;
- let valid;try{valid=validateDesign(model.id,model);}catch(e){status(e.message,true);return;}
+ let valid;try{valid=assertTemplateLayout(validateDesign(model.id,model));}catch(e){status(e.message,true);return;}
  if(!token){$('authMessage').textContent='';$('auth').showModal();return;}
  busy=true;mark();status('Saving template…');
  try{
@@ -227,5 +227,5 @@ $('save').onclick=save;$('authSave').onclick=async e=>{e.preventDefault();const 
  try{await response(await fetch('/api/admin/template-designer',{headers:apiHeaders(),cache:'no-store'}));$('auth').close();await save();}
  catch(err){token='';$('authMessage').textContent=err.message;}finally{$('authSave').disabled=false;}};
 window.addEventListener('beforeunload',e=>{if(model&&!clean()){e.preventDefault();e.returnValue='';}});
-for(const t of POST_TEMPLATES){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('template').append(o);}
+const groups=new Map();for(const t of POST_TEMPLATES){const label=t.collection||'Existing templates';if(!groups.has(label)){const g=document.createElement('optgroup');g.label=label;$('template').append(g);groups.set(label,g);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;groups.get(label).append(o);}
 load(POST_TEMPLATES[0].id,true);

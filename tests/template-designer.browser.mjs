@@ -27,11 +27,11 @@ try{
  await mkdir('test-output/template-designer',{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),15);
+ assert.equal(await page.locator('#template option').count(),79);
  const initial=Number(await page.locator('#prop-x').inputValue());
  // Move the title by dragging its actual visual area.
  const stage=await page.locator('#stage').boundingBox(),x=Number(await page.locator('#prop-x').inputValue()),y=Number(await page.locator('#prop-y').inputValue()),w=Number(await page.locator('#prop-w').inputValue()),h=Number(await page.locator('#prop-h').inputValue());
- await page.mouse.move(stage.x+(x+w/2)*stage.width/900,stage.y+(y+h/2)*stage.height/1200);await page.mouse.down();await page.mouse.move(stage.x+(x+w/2+25)*stage.width/900,stage.y+(y+h/2+15)*stage.height/1200,{steps:8});await page.mouse.up();
+ await page.mouse.move(stage.x+(x+w/2)*stage.width/900,stage.y+(y+h/2)*stage.height/1200);await page.mouse.down();await page.mouse.move(stage.x+(x+w/2+25)*stage.width/900,stage.y+(y+h/2-15)*stage.height/1200,{steps:8});await page.mouse.up();
  assert.ok(Number(await page.locator('#prop-x').inputValue())>initial);
  await page.locator('#prop-family').selectOption('Verdana, sans-serif');
  await page.locator('#prop-size').fill('55');await page.locator('#prop-size').press('Tab');
@@ -69,6 +69,22 @@ try{
  assert.deepEqual(actual,{font:'Verdana, sans-serif',fill:'#99ccee',artwork:api.template.artworkData,fit:'xMidYMid slice'});
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();await page.locator('#artworkShortcut').click();await page.screenshot({path:'test-output/template-designer/desktop.png',fullPage:true});
  await page.locator('#restoreArtwork').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/candlelight.webp');await page.locator('#undo').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
+ await page.locator('#reload').click();await page.waitForFunction(()=>document.querySelector('#status').textContent==='Template loaded.');
+ // Check every approved design has ten editable text layers and an image frame.
+ for(const templateId of await page.locator('#template option[value^="bg-"]').evaluateAll(opts=>opts.map(o=>o.value))){
+  await page.locator('#template').selectOption(templateId);
+  await page.waitForFunction(id=>document.querySelector('#render svg')?.dataset.postTemplate===id,templateId);
+  assert.equal(await page.locator('[data-layer^="zone:"]').count(),10);
+  assert.equal(await page.locator('[data-layer="photo"]').count(),1);
+  await page.locator('#sample').selectOption('blank');
+  assert.equal(await page.locator('#render [data-slot]').count(),10);
+  for(const orientation of ['portrait','landscape']){
+   await page.locator('#photoOrientation').selectOption(orientation);
+   const ratio=await page.locator('#render [data-photo-slot] rect').first().evaluate(el=>Number(el.getAttribute('width'))/Number(el.getAttribute('height')));
+   assert.ok(Math.abs(ratio-(orientation==='portrait'?.75:4/3))<.001);
+  }
+  await page.locator('#sample').selectOption('normal');
+ }
  await page.setViewportSize({width:390,height:844});assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);await page.screenshot({path:'test-output/template-designer/mobile.png',fullPage:true});
  assert.deepEqual(errors,[]);
  await page.close();console.log('Visual designer: drag, resize, typography, borders, add/remove, undo/redo, save, reload, public renderer and mobile passed.');

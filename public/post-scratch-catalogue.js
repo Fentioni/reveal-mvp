@@ -1,3 +1,4 @@
+import {APPROVED_POST_TEMPLATES} from './approved-post-scratch-catalogue.js?v=layout-flow-1';
 /* Fixed 900 x 1200 design coordinates (export 1800 x 2400).
  * Layout geometry is authored per design from the approved references.
  * No user data is embedded in the artwork. All ten values are editable.
@@ -477,6 +478,7 @@ export const POST_TEMPLATES=[
   "source": "Customer upload",
   "image": "/post-scratch-artwork/custom-image.webp"
 }
+ ,...APPROVED_POST_TEMPLATES
 ];
 function decorDisco(path){
  path('M135 39 V61 M66 130 A68 68 0 1 0 202 130 A68 68 0 1 0 66 130 Z','#f8f4e5','#111',4);

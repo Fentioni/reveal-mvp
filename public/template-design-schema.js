@@ -1,4 +1,4 @@
-import {getPostTemplate,POST_TEMPLATES} from './post-scratch-catalogue.js';
+import {getPostTemplate,POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
 export const ARTWORK_CHOICES=POST_TEMPLATES.filter(t=>t.id!=='custom-image').map(t=>({id:t.id,name:t.name}));
 export const MAX_ARTWORK_DATA=2400000;
 export const artworkSources=['original','upload',...ARTWORK_CHOICES.map(t=>t.id)];
@@ -64,3 +64,16 @@ export function validateDesign(id,input){
  const artworkFit=opt(input,'artworkFit',x=>choice(x,['contain','cover']),'contain');
  return {...base,zones,panels,photo,decor:list(input.decor,100).map(decoration),illustration,showBackground:bool(input.showBackground),backgroundFill:color(input.backgroundFill),artworkSource,artworkData,artworkFit};
 }
+
+ // Required layout elements cannot be removed, concealed or placed on top of one another.
+ // Custom Image is intentionally a full-card background, not a competing foreground image.
+ export function assertTemplateLayout(t){
+  const keys=['eventName','subtitle','recipient','date','time','venue','venueAddress','message','link'];
+  if(t.zones.length!==10||!keys.every(k=>t.zones.some(z=>z.key===k&&!z.hidden))||!t.zones.some(z=>['sender','senderLine'].includes(z.key)&&!z.hidden))throw Error('All ten editable fields must remain visible in the template layout.');
+  const boxes=[...t.zones,...(t.photo.full?[]:[{...t.photo,key:'image'}])];
+  for(const [i,a] of boxes.entries()){
+   if(a.x<0||a.y<0||a.x+a.w>900.01||a.y+a.h>1200.01)throw Error('Field outside the card: '+a.key);
+   for(const b of boxes.slice(i+1))if(a.x<b.x+b.w-.01&&a.x+a.w>b.x+.01&&a.y<b.y+b.h-.01&&a.y+a.h>b.y+.01)throw Error('Layout overlap: '+a.key+' / '+b.key+'. Move or resize these elements before publishing.');
+  }
+  return t;
+ }

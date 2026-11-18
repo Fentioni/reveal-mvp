@@ -1,4 +1,4 @@
-import {defaultDesign,validateDesign,MAX_ARTWORK_DATA} from '../public/template-design-schema.js';
+import {defaultDesign,validateDesign,assertTemplateLayout,MAX_ARTWORK_DATA} from '../public/template-design-schema.js';
 const MAX_DESIGN_BYTES=MAX_ARTWORK_DATA+120000;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const prefix='admin-template-designs/v1/';
@@ -41,7 +41,7 @@ export async function templateDesignResponse(request,env){
   for(;;){const {done,value}=await reader.read();if(done)break;length+=value.byteLength;if(length>MAX_DESIGN_BYTES){await reader.cancel();return json({error:'Design or artwork is too large.'},413);}chunks.push(value);}
   const bytes=new Uint8Array(length);let offset=0;for(const chunk of chunks){bytes.set(chunk,offset);offset+=chunk.byteLength;}
   const raw=new TextDecoder().decode(bytes);
-  let body,template;try{body=JSON.parse(raw);template=validateDesign(id,body.template);}catch(e){return json({error:e.message||'Invalid design.'},400);}
+  let body,template;try{body=JSON.parse(raw);template=assertTemplateLayout(validateDesign(id,body.template));}catch(e){return json({error:e.message||'Invalid design.'},400);}
   const current=await env.IMAGES.get(key),saved=current?await current.json():null;
   if(body.revision!==(saved?.revision||'base'))return json({error:'This design has changed since you opened it. Reload before saving.'},409);
   const revision=crypto.randomUUID(),value={revision,template,savedAt:new Date().toISOString()};

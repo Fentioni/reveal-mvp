@@ -481,7 +481,7 @@ test('invalid scratch themes are rejected, and absent theme preserves the previo
  assert.equal(surface.style,'classic');
 });
 
-test('all 300 cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
+test('all cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
  const {POST_TEMPLATES}=await import('../public/post-scratch-catalogue.js');
  const {SCRATCH_ARTWORKS}=await import('../public/scratch-artwork-catalogue.js');
  const {state,env,legacy}=makeMocks();
@@ -489,19 +489,19 @@ test('all 300 cover/template combinations persist and restore with image appeara
  const withImage={fetch:async req=>{const res=await legacy.fetch(req);if(!res.ok)return res;const data=await res.json();data.reveal.hasImage=true;return Response.json(data);}};
  let count=0;
  for(const template of POST_TEMPLATES)for(const cover of SCRATCH_ARTWORKS){
-  const postScratch={templateId:template.id,subtitle:'Saved subtitle',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45};
+  const postScratch={templateId:template.id,subtitle:'Saved subtitle',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45};
   const body=new FormData();for(const [k,v] of Object.entries({style:'classic',foil:'gold',variant:'ticket',artworkId:cover.id,postScratch:JSON.stringify(postScratch)}))body.set(k,v);
   const saved=await scratchSurfaceResponse(request('PUT',body),env,{},withImage);assert.equal(saved.status,200);
   const got=await scratchSurfaceResponse(request(),env,{},withImage);const {surface}=await got.json();
   assert.deepEqual(surface.postScratch,postScratch);assert.equal(surface.artworkId,cover.id);
   assert.deepEqual(JSON.parse(state.config.fields_json).unrelated,{keep:true});count++;
  }
- assert.equal(count,300);
+ assert.equal(count,POST_TEMPLATES.length*SCRATCH_ARTWORKS.length);
 });
 
 test('template settings reject malformed input and custom image without upload, preserving saved config',async()=>{
  const {state,env,legacy}=makeMocks();
- for(const post of ['{bad',JSON.stringify({templateId:'missing'}),JSON.stringify({templateId:'custom-image'}),JSON.stringify({shade:91}),JSON.stringify({imageZoom:301}),JSON.stringify({imagePanX:-101}),JSON.stringify({imagePanY:'0'}),JSON.stringify({imageFit:'stretch'}),JSON.stringify({imagePosition:'javascript:bad'}),JSON.stringify({subtitle:'x'.repeat(101)})]){
+ for(const post of ['{bad',JSON.stringify({templateId:'missing'}),JSON.stringify({templateId:'custom-image'}),JSON.stringify({shade:91}),JSON.stringify({imageZoom:301}),JSON.stringify({imagePanX:-101}),JSON.stringify({imagePanY:'0'}),JSON.stringify({imageFit:'stretch'}),JSON.stringify({imageOrientation:'diagonal'}),JSON.stringify({imagePosition:'javascript:bad'}),JSON.stringify({subtitle:'x'.repeat(101)})]){
   const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch',post);
   assert.equal((await scratchSurfaceResponse(request('PUT',body),env,{},legacy)).status,400);assert.equal(state.config,null);
  }

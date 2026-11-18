@@ -13,7 +13,7 @@
  <div class="layer-actions"><button id="layerUp">Bring forward</button><button id="layerDown">Send backward</button><button id="remove" class="danger">Remove / hide</button></div>
  </aside>
  <section class="workspace">
- <div class="canvas-tools"><label><input id="guides" type="checkbox" checked> Selection guides</label><label><input id="showSampleImage" type="checkbox" checked> Show customer photo</label><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
+ <div class="canvas-tools"><label><input id="guides" type="checkbox" checked> Selection guides</label><label><input id="showSampleImage" type="checkbox" checked> Show customer photo</label><label for="photoOrientation">Photo orientation</label><select id="photoOrientation"><option value="auto">Template default</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
  <div class="canvas-area"><div id="stage" tabindex="0" aria-label="Template canvas. Use arrow keys to move selected layers."><div id="render"></div><svg id="overlay" viewBox="0 0 900 1200" aria-hidden="true"></svg></div></div>
  <div id="warnings" class="muted" role="status"></div>
  <div class="canvas-footer"><span>900 × 1200 design units · 1800 × 2400 export</span><label class="upload-label">Test customer photo <input id="sampleImage" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
@@ -22,5 +22,5 @@
 </main>
 <footer class="bottom"><span>Changes remain local until you save. Saved designs are used by the staging creator, review and recipient.</span><button id="import" class="secondary">Import JSON</button><input id="importFile" type="file" accept=".json,application/json" hidden></footer>
 <dialog id="auth"><form method="dialog"><h2>Administrator access</h2><p>Enter your private Template Studio token to save this design. The token stays in this tab only.</p><label for="token">Admin token</label><input id="token" type="password" autocomplete="off"><p id="authMessage" role="status"></p><div class="dialog-actions"><button value="cancel">Cancel</button><button id="authSave" class="primary" value="default">Unlock and save</button></div></form></dialog>
-<script type="module" src="/admin-template-designer.js?v=2"></script>
+<script type="module" src="/admin-template-designer.js?v=layout-flow-2"></script>
 </body></html>
