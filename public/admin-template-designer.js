@@ -1,6 +1,6 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=blank-person-1';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=blank-person-1';
-import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=blank-person-1';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=clean-template-text-1';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA,purgeTemplateDemoText} from './template-design-schema.js?v=clean-template-text-1';
+import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=clean-template-text-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'For You',sender:'From Me',senderLine:'From Me',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'',sender:'',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -29,7 +29,7 @@ async function response(r){const body=await r.json().catch(()=>({}));if(!r.ok)th
 async function load(id,force=false){
  if(model&&!clean()&&!force&&!confirm('Discard your unsaved changes?')){$('template').value=model.id;return;}
  const run=++requestId;busy=true;mark();status('Loading '+catalogue.find(t=>t.id===id)?.name+'…');
- try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||baseDesign(id);revision=d.revision||'base';status('Template loaded.');}
+ try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=purgeTemplateDemoText(d.template||baseDesign(id));revision=d.revision||'base';status('Template loaded.');}
  catch(e){if(run!==requestId)return;model=baseDesign(id);revision='base';status('Using original template: '+e.message,true);}
  if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
 }
@@ -250,7 +250,7 @@ $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)documen
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=baseDesign(model.id);selected='zone:eventName';changed();};
 $('reload').onclick=()=>load(model.id);$('template').onchange=e=>load(e.target.value);
-$('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(model,null,2)],{type:'application/json'}));a.href=url;a.download=model.id+'-design.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+$('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(purgeTemplateDemoText(model),null,2)],{type:'application/json'}));a.href=url;a.download=model.id+'-design.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 $('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validate(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
 async function save(){
  if(busy||!model)return;

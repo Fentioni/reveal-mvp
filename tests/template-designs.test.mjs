@@ -1,7 +1,7 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,clone} from '../public/template-design-schema.js';
+import {defaultDesign,validateDesign,clone,purgeTemplateDemoText} from '../public/template-design-schema.js';
 import {templateDesignResponse} from '../src/template-designs.js';
 import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 class Bucket{
@@ -133,4 +133,26 @@ test('legacy demo names are removed from saved person fields without modifying r
  assert.deepEqual(v.photo,validateDesign(t.id,defaultDesign(t.id)).photo);
  }
  const id='travel-collage',d=defaultDesign(id),z=d.zones.find(z=>z.key==='recipient');z.templateText='Chloe';z.textMode='fixed';const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};await env.IMAGES.put('admin-template-designs/v1/'+id+'.json',JSON.stringify({revision:'old-names',template:d}),{});const {template}=await (await templateDesignResponse(req(id),env)).json();assert.equal(template.zones.find(z=>z.key==='recipient').templateText,undefined);assert.equal(template.zones.find(z=>z.key==='recipient').textMode,'customer');
+});
+
+test('complete contaminated text entries are removed from every field and decoration; existing R2 records are rewritten once',async()=>{
+ const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
+ const id='candlelight',d=defaultDesign(id);
+ const text=(value)=>({kind:'text',x:50,y:60,w:300,h:100,size:40,family:'Arial, sans-serif',weight:600,ink:'#ff0000',align:'center',text:value});
+ d.zones.forEach(z=>{z.templateText='A special night for chLOE and MICHAEL';z.textMode='fixed';});
+ d.panels.filter(p=>p.key!=='image').forEach(p=>{p.label='Happy birthday Michael';});
+ d.decor.push(text('With love from Chloe'),text('A clean heading'),text('Michael’s surprise'));
+ const clean=purgeTemplateDemoText(d);assert.notEqual(clean,d);assert.equal(purgeTemplateDemoText(clean),clean);
+ assert.equal(clean.decor.length,d.decor.length-2);assert.equal(clean.decor.at(-1).text,'A clean heading');
+ assert.deepEqual(clean.photo,d.photo);assert.equal(clean.zones.length,d.zones.length);
+ assert.ok(clean.zones.every(z=>z.textMode==='customer'&&z.templateText===undefined));
+ assert.ok(clean.panels.filter(p=>!['image','recipient','sender','senderLine'].includes(p.key)).every(p=>p.label===''));
+ const key='admin-template-designs/v1/'+id+'.json';await env.IMAGES.put(key,JSON.stringify({revision:'old-demo',template:d}),{});
+ const first=await (await templateDesignResponse(req(id),env)).json();assert.notEqual(first.revision,'old-demo');
+ const stored=await (await env.IMAGES.get(key)).json();assert.equal(stored.revision,first.revision);assert.deepEqual(stored.template,clean);
+ assert.doesNotMatch(JSON.stringify(stored.template),/michael|chloe/i);
+ const second=await (await templateDesignResponse(req(id),env)).json();assert.equal(second.revision,first.revision);
+ assert.equal((await templateDesignResponse(req(id,'PUT',{revision:'old-demo',template:d}),env)).status,409);
+ const saved=await (await templateDesignResponse(req(id,'PUT',{revision:first.revision,template:d}),env)).json();assert.ok(saved.success);assert.doesNotMatch(JSON.stringify(saved.template),/michael|chloe/i);
+ for(const t of POST_TEMPLATES){const base=defaultDesign(t.id);assert.equal(purgeTemplateDemoText(base),base,t.id);}
 });

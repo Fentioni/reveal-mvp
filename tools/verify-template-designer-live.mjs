@@ -4,10 +4,27 @@ import {mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 let ready=false;
 for(let n=0;n<35;n++){
- try{const r=await fetch(origin+'/admin-template-designer?v=blank-person-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('blank-person-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
+ try{const r=await fetch(origin+'/admin-template-designer?v=clean-template-text-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('clean-template-text-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
  await new Promise(r=>setTimeout(r,7000));
 }
 assert.ok(ready,'Template Studio is not deployed yet');
+// Visit every stored template, including archived/custom entries, to apply and verify the migration.
+const catalogueResponse=await fetch(origin+'/api/template-catalogue',{cache:'no-store'});assert.ok(catalogueResponse.ok);
+const entries=(await catalogueResponse.json()).templates;
+const hasDemo=value=>typeof value==='string'&&/michael|chloe/iu.test(value.normalize('NFKC'));
+let inspected=0,stored=0;
+for(let i=0;i<entries.length;i+=5){
+ await Promise.all(entries.slice(i,i+5).map(async entry=>{
+  const response=await fetch(origin+'/api/template-designs/'+encodeURIComponent(entry.id),{cache:'no-store',signal:AbortSignal.timeout(15000)});
+  assert.ok(response.ok,entry.id+' returned '+response.status);
+  const {template}=await response.json();inspected++;
+  if(!template)return;stored++;
+  assert.ok(!template.zones.some(z=>hasDemo(z.templateText)),entry.id+' zone text');
+  assert.ok(!template.panels.some(p=>hasDemo(p.label)),entry.id+' panel text');
+  assert.ok(!template.decor.some(d=>d.kind==='text'&&hasDemo(d.text)),entry.id+' decorative text');
+ }));
+}
+console.log('Template text migration verified:',inspected,'catalogue entries;',stored,'stored/custom designs.');
 const browser=await chromium.launch({headless:true});
 try{
  await mkdir('test-output/template-designer-live',{recursive:true});
@@ -36,6 +53,6 @@ try{
   await page.locator('#undo').click();assert.equal(Number(await page.locator('#prop-x').inputValue()),x);
   const noAuth=await page.request.put(origin+'/api/template-designs/candlelight',{data:{revision:'base'}});assert.ok([401,503].includes(noAuth.status()),'Unauthenticated writes must be blocked');
   assert.deepEqual(errors,[]);await page.close();
-  console.log('LIVE Template Studio',viewport.width,'passed; no changes published.');
+  console.log('LIVE Template Studio',viewport.width,'passed; no manual design edits published.');
  }
 }finally{await browser.close();}

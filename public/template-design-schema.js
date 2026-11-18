@@ -43,24 +43,32 @@ const opt=(o,key,fn,d)=>o[key]===undefined?d:fn(o[key]);
 function style(z){return {size:num(z.size,12,200),family:font(z.family),weight:num(z.weight,100,900),ink:color(z.ink),align:choice(z.align,['left','center','right']),italic:opt(z,'italic',bool,false),upper:opt(z,'upper',bool,false),noWordSplit:opt(z,'noWordSplit',bool,true),spacing:opt(z,'spacing',x=>num(x,0,20),0),hidden:opt(z,'hidden',bool,false),useTemplateInk:opt(z,'useTemplateInk',bool,false),...(z.glow?{glow:color(z.glow)}:{}),...(z.outline?{outline:color(z.outline)}:{})};}
 // Normalize persisted legacy headings on read and write without changing their geometry or personal values.
 const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
-const samplePersonName=/\b(?:Michael|Chloe)\b/iu;
-function removeSamplePersonNames(value){
- return value.replace(/\b(?:Michael|Chloe)\b/giu,'').replace(/\s{2,}/g,' ').replace(/^[\s:;,/–—-]+|[\s:;,/–—-]+$/g,'').trim();
+export const containsDemoName=value=>typeof value==='string'&&/michael|chloe/iu.test(value.normalize('NFKC'));
+// Remove complete contaminated text entries, not just the matching words.
+// Required customer input zones remain available, and only their preset text is cleared.
+export function purgeTemplateDemoText(input){
+ if(!input||typeof input!=='object')return input;
+ let changed=false;
+ const zones=Array.isArray(input.zones)?input.zones.map(z=>{
+  if(!z||!containsDemoName(z.templateText))return z;
+  changed=true;const {templateText,...rest}=z;return {...rest,textMode:'customer'};
+ }):input.zones;
+ const panels=Array.isArray(input.panels)?input.panels.map(p=>{
+  if(!p||!containsDemoName(p.label))return p;
+  changed=true;return {...p,label:personLabel(p.key)||''};
+ }):input.panels;
+ const decor=Array.isArray(input.decor)?input.decor.filter(d=>{
+  if(d?.kind==='text'&&containsDemoName(d.text)){changed=true;return false;}return true;
+ }):input.decor;
+ return changed?{...input,zones,panels,decor}:input;
 }
 function personWording(key,value){const name=personLabel(key);if(!name||typeof value!=='string')return value;
  const legacy=key==='recipient'?/^(recipient|for you|to)$/i:/^(sender|from|host|from\s*(?:\/|or)\s*(?:host|sender)|from me)$/i;
- if(samplePersonName.test(value)){const cleaned=removeSamplePersonNames(value);return !cleaned||legacy.test(cleaned)?name:cleaned;}
  return legacy.test(value.trim())?name:value;
 }
 function zoneWording(z){
  const mode=z.textMode===undefined?undefined:choice(z.textMode,['customer','fixed']);
- let wording=z.templateText===undefined?undefined:str(z.templateText,1000);
- if(personLabel(z.key)&&wording!==undefined&&samplePersonName.test(wording)){
-  const cleaned=removeSamplePersonNames(wording);
-  // Old demo names must never become permanent customer names.
-  if(!cleaned||/^(for|to|from|recipient|sender|host|for you|from me|from\s*\/\s*host)$/i.test(cleaned))return {textMode:'customer'};
-  wording=personWording(z.key,cleaned);
- }
+ const wording=z.templateText===undefined?undefined:str(z.templateText,1000);
  return {...(wording!==undefined?{templateText:personWording(z.key,wording)}:{}),...(mode!==undefined?{textMode:mode}:{})};
 }
 function panel(p,keys){obj(p);if(!keys.has(p.key))fail();const b=box(p);const out={key:p.key,...b,fill:color(p.fill),stroke:color(p.stroke),sw:num(p.sw,0,30),rx:num(p.rx,0,200),ink:color(p.ink)};
@@ -76,7 +84,7 @@ function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line',
  return {kind,...box(d),fill,stroke,sw,...(kind==='rect'?{rx:num(d.rx,0,200)}:{})};
 }
 export function validateDesign(id,input,entry){
- const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();
+ const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();input=purgeTemplateDemoText(input);
  const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
  const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...zoneWording(z)};});
  if(seen.size!==keys.size)fail();

@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=blank-person-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=clean-template-text-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal

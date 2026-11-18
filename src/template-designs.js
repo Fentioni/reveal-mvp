@@ -1,5 +1,5 @@
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
-import {defaultDesign,validateDesign,assertTemplateLayout,MAX_ARTWORK_DATA,isStudioTemplateId} from '../public/template-design-schema.js';
+import {defaultDesign,validateDesign,assertTemplateLayout,MAX_ARTWORK_DATA,isStudioTemplateId,purgeTemplateDemoText} from '../public/template-design-schema.js';
 const MAX_DESIGN_BYTES=MAX_ARTWORK_DATA+120000;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 const prefix='admin-template-designs/v1/';
@@ -75,9 +75,19 @@ export async function templateDesignResponse(request,env){
   if(!entry||!base)return json({error:'Template not found.'},404);
   const key=prefix+id+'.json';
   if(request.method==='GET'){
-   const object=await env.IMAGES.get(key);
-   if(!object)return json({revision:'base',template:isStudioTemplateId(id)?base:null});
-   const value=await object.json();return json({revision:value.revision,template:validateDesign(id,value.template,entry)});
+   // One-time content migration, scoped to template storage only. Compare-and-swap
+   // protects concurrent editing, and bump the revision so stale drafts cannot reintroduce names.
+   for(let attempt=0;attempt<3;attempt++){
+    const object=await env.IMAGES.get(key);
+    if(!object)return json({revision:'base',template:isStudioTemplateId(id)?base:null});
+    const value=await object.json(),cleaned=purgeTemplateDemoText(value.template);
+    const template=validateDesign(id,cleaned,entry);
+    if(cleaned===value.template)return json({revision:value.revision,template});
+    const revision=crypto.randomUUID();
+    const written=await env.IMAGES.put(key,JSON.stringify({...value,revision,template:cleaned,savedAt:new Date().toISOString()}),{httpMetadata:{contentType:'application/json'},onlyIf:{etagMatches:object.etag}});
+    if(written)return json({revision,template});
+   }
+   return json({error:'The template is being updated. Reload and try again.'},409);
   }
   if(request.method!=='PUT')return json({error:'Method not allowed.'},405);
   const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)return json({error:'Cross-origin update denied.'},403);
