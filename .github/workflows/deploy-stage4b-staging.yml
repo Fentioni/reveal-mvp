@@ -8,6 +8,7 @@ on:
       - 'src/**'
       - 'wrangler.jsonc'
       - 'package.json'
+      - 'tests/**'
       - '.github/workflows/deploy-stage4b-staging.yml'
 permissions:
   contents: read
