@@ -632,7 +632,7 @@ const approved=[
   ],
   "retro-vinyl": [
     210,
-    240,
+    260,
     710,
     970
   ],
@@ -674,15 +674,15 @@ const approved=[
   ],
   "tropical-getaway": [
     210,
-    255,
+    245,
     690,
-    845
+    870
   ],
   "around-the-world": [
-    235,
-    220,
-    665,
-    940
+    250,
+    240,
+    650,
+    920
   ],
   "neon-night-flight": [
     155,
@@ -697,76 +697,76 @@ const approved=[
     930
   ],
   "bangkok": [
-    255,
-    190,
-    660,
+    265,
+    245,
+    650,
     910
   ],
   "cairo": [
-    255,
-    205,
-    660,
+    265,
+    235,
+    650,
     915
   ],
   "lisbon": [
-    255,
-    185,
-    690,
+    265,
+    225,
+    675,
     930
   ],
   "london": [
-    270,
-    210,
-    660,
-    935
+    280,
+    265,
+    650,
+    930
   ],
   "madrid": [
-    270,
-    220,
-    660,
+    280,
+    260,
+    650,
     930
   ],
   "mexico-city": [
-    255,
-    205,
-    660,
+    280,
+    250,
+    640,
     930
   ],
   "paris": [
-    270,
-    210,
-    670,
-    935
+    280,
+    235,
+    650,
+    930
   ],
   "rome": [
-    265,
-    220,
-    655,
-    900
+    280,
+    250,
+    645,
+    890
   ],
   "tokyo": [
-    250,
-    220,
-    660,
+    260,
+    235,
+    650,
     855
   ],
   "weathered-stencil": [
-    155,
-    300,
+    205,
+    325,
     710,
-    905
+    945
   ],
   "gritty-collage": [
     120,
     240,
-    620,
-    940
+    600,
+    910
   ],
   "gritty-wall": [
     155,
     230,
-    680,
-    920
+    665,
+    890
   ],
   "acid-urban": [
     260,
@@ -786,14 +786,17 @@ const approved=[
   const expressive=['Modern art','Neon and fluorescent','Urban street art'].includes(a.collection);
   const heading=elegant?serif:expressive?bold:sans;
   const family=elegant?serif:sans;
-  const gap=8,weights=[96,52,46,207,55,62,64,125,43,39],total=weights.reduce((s,n)=>s+n,0);
-  const available=h-gap*(weights.length-1);
+  const gap=8,weights=[96,52,46,207,55,62,64,125],total=weights.reduce((s,n)=>s+n,0);
+  // Reserve independently sized footer rows: sender and link must not disappear on smaller backgrounds.
+  const available=h-gap*9-78;
+  const heights=[...weights.map(n=>available*n/total),40,38];
   let y=top;
-  const slots=weights.map(n=>{const height=available*n/total;const box={x,y,w,h:height};y+=height+gap;return box;});
+  const slots=heights.map(height=>{const box={x,y,w,h:height};y+=height+gap;return box;});
   const z=(key,i,size,weight=500,extra={})=>({key,...slots[i],size,weight,family,ink,align:'center',noWordSplit:false,...extra});
   const dateW=Math.floor((w-12)*.59);
+  const headingInset=['circus-carnival','garden-tea','funfair-days','roller-disco','confetti-ribbons'].includes(a.id.slice(3))?28:0;
   const zones=[
-   z('eventName',0,Math.min(64,Math.round(w/8)),700,{family:heading}),
+   z('eventName',0,Math.min(64,Math.round(w/8)),700,{family:heading,x:x+headingInset,w:w-2*headingInset}),
    z('subtitle',1,34,500,{italic:elegant}),
    z('recipient',2,33,700),
    z('date',4,30,600,{w:dateW}),
