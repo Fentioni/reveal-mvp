@@ -244,7 +244,7 @@ document.addEventListener('keydown',e=>{
  }
  if(e.key==='Enter'&&e.target===$('stage')&&textEditable()){e.preventDefault();editSelectedText();}
 });
-$('guides').onchange=selection;$('sample').onchange=()=>changed();;$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
+$('guides').onchange=selection;$('sample').onchange=()=>changed();$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
 $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
 $('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=baseDesign(model.id);selected='zone:eventName';changed();};

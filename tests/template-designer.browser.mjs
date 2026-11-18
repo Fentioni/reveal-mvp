@@ -139,6 +139,11 @@ try{
  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
  await page.locator('#closeCoverManager').click();
+ // Restore customer-driven text in the mock test storage before existing creator scenarios.
+ const entry=objects.get('admin-template-designs/v1/candlelight.json');
+ const stored=JSON.parse(entry.value);
+ stored.template.zones[0].textMode='customer';
+ entry.value=JSON.stringify(stored);
  await page.close();
  for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
   const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));

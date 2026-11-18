@@ -213,7 +213,7 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   if(zone.hidden)continue;
   const value=val(values[zone.key]);const ghost=!value&&options.guides===true;
   if(!value&&!ghost)continue;
-  const slot=mk('g',{'data-slot':zone.key},svg);
+  const slot=mk('g',{'data-slot':zone.key,'data-fixed-text':zone.textMode==='fixed'?'true':undefined},svg);
   const clip=mk('clipPath',{id:id+'-'+zone.key},defs);
   mk('rect',{x:zone.x,y:zone.y,width:zone.w,height:zone.h},clip);
   if(options.guides)mk('rect',{x:zone.x,y:zone.y,width:zone.w,height:zone.h,fill:'none',stroke:zone.ink,'stroke-opacity':'.65','stroke-width':1.2,'stroke-dasharray':'5 4'},slot);

@@ -1,4 +1,4 @@
-import {renderPostScratchFace} from './post-scratch-face.js?v=amend-visible-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=saved-text-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
@@ -74,7 +74,7 @@ function mountInlineEditor(card,face,edit){
   wrap.dataset.inlineZone=slot.dataset.slot;control.dataset.editField=id;
   if(type!=='textarea')control.type=type;else control.rows=2;
   control.setAttribute('aria-label',label+(required?' (required)':' (optional)'));
-  control.title='Edit '+label;control.value=edit.value(id);control.placeholder=label;
+  control.title=slot.dataset.fixedText==='true'?'Template wording is fixed; enter customer details separately.':'Edit '+label;control.value=edit.value(id);control.placeholder=label;
   if(max)control.maxLength=max;if(required)control.required=true;
   control.autocomplete='off';
   if(!['date','time'].includes(type)){control.enterKeyHint=id==='personalMessage'?'enter':'done';}
