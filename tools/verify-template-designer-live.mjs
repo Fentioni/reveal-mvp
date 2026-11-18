@@ -4,7 +4,7 @@ import {mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 let ready=false;
 for(let n=0;n<35;n++){
- try{const r=await fetch(origin+'/admin-template-designer?v=person-labels-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('person-labels-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
+ try{const r=await fetch(origin+'/admin-template-designer?v=blank-person-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('blank-person-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
  await new Promise(r=>setTimeout(r,7000));
 }
 assert.ok(ready,'Template Studio is not deployed yet');

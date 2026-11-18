@@ -80,12 +80,13 @@ function drawIcon(svg,key,cx,cy,size,ink){
  const g=mk('g',{transform:'translate('+(cx-size/2)+' '+(cy-size/2)+') scale('+(size/24)+')','data-layout-icon':key,fill:'none',stroke:ink,'stroke-width':1.8,'stroke-linecap':'round','stroke-linejoin':'round'},svg);
  mk('path',{d:paths[key]},g);
 }
-function drawPanels(svg,panels,values,src,guides){
+function drawPanels(svg,panels,values,src,guides,studio=false){
  for(const original of panels||[]){
   const canonical=personLabel(original.key);
   const old=original.key==='recipient'?/^(recipient|for you|to)$/i:/^(sender|from|host|from\s*(?:\/|or)\s*(?:host|sender)|from me)$/i;
   const p=canonical&&old.test((original.label||'').trim())?{...original,label:canonical}:original;
-  if(!guides&&(p.key==='image'?!src:!val(values[p.key])))continue;
+  const emptyPerson=studio&&!!personLabel(p.key);
+  if(!guides&&!emptyPerson&&(p.key==='image'?!src:!val(values[p.key])))continue;
   const g=mk('g',{'data-layout-panel':p.key},svg);
   const special=p.variant==='paper-entry';
   if(!special)mk('rect',{x:p.x,y:p.y,width:p.w,height:p.h,rx:p.rx,fill:p.fill,stroke:p.stroke,'stroke-width':p.sw},g);
@@ -93,7 +94,7 @@ function drawPanels(svg,panels,values,src,guides){
   if(p.valueBox)mk('rect',{...Object.fromEntries(Object.entries(p.valueBox).map(([k,v])=>[k==='w'?'width':k==='h'?'height':k,v])),rx:Math.min(13,p.rx),fill:special?p.fill:'#fff9e8',stroke:p.stroke,'stroke-width':special?1.5:3},g);
   if(p.variant==='comic-metric'){
    drawIcon(g,p.key,p.x+p.w/2,p.y+40,55,p.ink);
-   if(val(values[p.key])||guides){
+   if(val(values[p.key])||guides||emptyPerson){
     const label=mk('text',{x:p.x+p.w/2,y:p.y+88,fill:p.labelInk,'font-family':p.family,'font-size':25,'font-weight':800,'text-anchor':'middle','data-layout-label':p.key},g);label.textContent=p.label;
    }
    continue;
@@ -105,7 +106,7 @@ function drawPanels(svg,panels,values,src,guides){
   }
   // The title and personal values remain editable. Field headings are part
   // of the layout, only printed for populated details (or editor guides).
-  if(p.label&&(val(values[p.key])||guides)){
+  if(p.label&&(val(values[p.key])||guides||emptyPerson)){
    const center=p.align==='center'&&!p.icon,start=p.x+p.gutter+13;
    const comic=p.variant==='comic-value';
    const label=mk('text',{x:center?p.x+p.w/2:start,y:special?p.y+p.h/2+7:comic?p.y+Math.min(28,p.h*.27):p.y+Math.min(22,p.labelH),fill:p.labelInk,'font-family':p.family,'font-size':special?Math.min(19,68/(p.label.length*.57)):comic?Math.min(22,(p.w-p.gutter-25)/(p.label.length*.65)):Math.min(18,p.labelH*.78,Math.max(11,(p.w-p.gutter-26)/(p.label.length*.64))),'font-weight':700,'text-anchor':center?'middle':'start','letter-spacing':special?0:.65,'data-layout-label':p.key},g);
@@ -195,12 +196,12 @@ export function renderPostScratchTemplate(container,template,data={},options={})
    mk('rect',{'data-background-shading':'true',x:0,y:0,width:900,height:1200,fill:'url(#'+id+'-contrast)'},svg);
   }
   drawDecor(svg,template.decor);
-  drawPanels(svg,template.panels,values,src,options.guides===true);
+  drawPanels(svg,template.panels,values,src,options.guides===true,options.templateStudio===true);
  }else{
  drawArtwork(svg,template,options);
  if(template.structured){
   drawDecor(svg,template.decor);
-  drawPanels(svg,template.panels,values,src,options.guides===true);
+  drawPanels(svg,template.panels,values,src,options.guides===true,options.templateStudio===true);
   const comic=(template.baseId||template.id)==='pop-panels';
   const illustration=template.illustration===undefined?(['pop-panels','doodle-party'].includes(template.id)?{x:comic?40:110,y:comic?220:320,w:comic?236:340,h:comic?260:300}:null):template.illustration;
   if(illustration){
@@ -219,14 +220,16 @@ export function renderPostScratchTemplate(container,template,data={},options={})
  const errors=[],tiny=[],checks=[];
  for(const zone of zones){
   if(zone.hidden)continue;
-  const value=val(values[zone.key]);const ghost=!value&&options.guides===true;
+  const hasPersonPanel=personLabel(zone.key)&&template.panels?.some(p=>p.key===zone.key&&p.label&&p.labelH>0);
+  const studioPerson=options.templateStudio===true&&!!personLabel(zone.key);
+  const value=val(values[zone.key])||(studioPerson&&!hasPersonPanel?personLabel(zone.key):'');const ghost=!value&&options.guides===true;
   if(!value&&!ghost)continue;
   const slot=mk('g',{'data-slot':zone.key,'data-fixed-text':zone.textMode==='fixed'?'true':undefined},svg);
   const clip=mk('clipPath',{id:id+'-'+zone.key},defs);
   mk('rect',{x:zone.x,y:zone.y,width:zone.w,height:zone.h},clip);
   if(options.guides)mk('rect',{x:zone.x,y:zone.y,width:zone.w,height:zone.h,fill:'none',stroke:zone.ink,'stroke-opacity':'.65','stroke-width':1.2,'stroke-dasharray':'5 4'},slot);
   const inside=mk('g',{'clip-path':'url(#'+id+'-'+zone.key+')'},slot);
-  const error=text(inside,zone,value||labels[zone.key]||zone.key,ghost);
+  const error=text(inside,zone,value||(studioPerson&&hasPersonPanel?'':labels[zone.key]||zone.key),ghost);
   if(error&&!ghost){errors.push(zone.key);continue;}
   const node=inside.querySelector('text');if(node&&!ghost){checks.push({node,zone});if(Number(node.getAttribute('font-size'))<22)tiny.push(zone.key);}
  }

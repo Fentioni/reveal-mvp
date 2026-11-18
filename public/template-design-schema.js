@@ -43,9 +43,25 @@ const opt=(o,key,fn,d)=>o[key]===undefined?d:fn(o[key]);
 function style(z){return {size:num(z.size,12,200),family:font(z.family),weight:num(z.weight,100,900),ink:color(z.ink),align:choice(z.align,['left','center','right']),italic:opt(z,'italic',bool,false),upper:opt(z,'upper',bool,false),noWordSplit:opt(z,'noWordSplit',bool,true),spacing:opt(z,'spacing',x=>num(x,0,20),0),hidden:opt(z,'hidden',bool,false),useTemplateInk:opt(z,'useTemplateInk',bool,false),...(z.glow?{glow:color(z.glow)}:{}),...(z.outline?{outline:color(z.outline)}:{})};}
 // Normalize persisted legacy headings on read and write without changing their geometry or personal values.
 const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
+const samplePersonName=/\b(?:Michael|Chloe)\b/iu;
+function removeSamplePersonNames(value){
+ return value.replace(/\b(?:Michael|Chloe)\b/giu,'').replace(/\s{2,}/g,' ').replace(/^[\s:;,/–—-]+|[\s:;,/–—-]+$/g,'').trim();
+}
 function personWording(key,value){const name=personLabel(key);if(!name||typeof value!=='string')return value;
  const legacy=key==='recipient'?/^(recipient|for you|to)$/i:/^(sender|from|host|from\s*(?:\/|or)\s*(?:host|sender)|from me)$/i;
+ if(samplePersonName.test(value)){const cleaned=removeSamplePersonNames(value);return !cleaned||legacy.test(cleaned)?name:cleaned;}
  return legacy.test(value.trim())?name:value;
+}
+function zoneWording(z){
+ const mode=z.textMode===undefined?undefined:choice(z.textMode,['customer','fixed']);
+ let wording=z.templateText===undefined?undefined:str(z.templateText,1000);
+ if(personLabel(z.key)&&wording!==undefined&&samplePersonName.test(wording)){
+  const cleaned=removeSamplePersonNames(wording);
+  // Old demo names must never become permanent customer names.
+  if(!cleaned||/^(for|to|from|recipient|sender|host|for you|from me|from\s*\/\s*host)$/i.test(cleaned))return {textMode:'customer'};
+  wording=personWording(z.key,cleaned);
+ }
+ return {...(wording!==undefined?{templateText:personWording(z.key,wording)}:{}),...(mode!==undefined?{textMode:mode}:{})};
 }
 function panel(p,keys){obj(p);if(!keys.has(p.key))fail();const b=box(p);const out={key:p.key,...b,fill:color(p.fill),stroke:color(p.stroke),sw:num(p.sw,0,30),rx:num(p.rx,0,200),ink:color(p.ink)};
  if(p.key==='image')return out;
@@ -62,7 +78,7 @@ function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line',
 export function validateDesign(id,input,entry){
  const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();
  const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
- const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...(z.templateText!==undefined?{templateText:personWording(z.key,str(z.templateText,1000))}:{}),...(z.textMode!==undefined?{textMode:choice(z.textMode,['customer','fixed'])}:{})};});
+ const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);if(z.textMode==='fixed'&&(typeof z.templateText!=='string'||!z.templateText.trim()))fail();return {key:z.key,...box(z),...style(z),...zoneWording(z)};});
  if(seen.size!==keys.size)fail();
  const allowed=new Set(base.panels.map(p=>p.key)),ps=new Set();
  const panels=list(input.panels,15).map(p=>{if(ps.has(p.key))fail();ps.add(p.key);return panel(p,allowed);});

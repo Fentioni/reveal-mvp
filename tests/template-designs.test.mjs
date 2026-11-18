@@ -122,3 +122,15 @@ test('all template person headings are canonical; legacy saved designs retain ge
  const saved=await (await templateDesignResponse(req(id),env)).json();assert.equal(saved.revision,'legacy-revision');assert.equal(saved.template.panels.find(p=>p.key==='recipient').label,'For You');assert.deepEqual(saved.template.photo,validateDesign(id,d).photo);
  const custom=clone(d);custom.panels.find(p=>p.key==='recipient').label='Guest of honour';assert.equal(validateDesign(id,custom).panels.find(p=>p.key==='recipient').label,'Guest of honour');
 });
+
+test('legacy demo names are removed from saved person fields without modifying real reveal data or other fields',async()=>{
+ const {templateFieldText}=await import('../public/post-scratch-renderer.js');
+ for(const t of POST_TEMPLATES){const d=defaultDesign(t.id);const people=d.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key));
+ for(const z of people){z.templateText=z.key==='recipient'?'For You: Chloe':'From Me: Michael';z.textMode='fixed';}
+ for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))p.label=p.key==='recipient'?'For You: Chloe':'From Me: Michael';
+ const v=validateDesign(t.id,d);for(const z of v.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key))){assert.equal(z.textMode,'customer');assert.equal(z.templateText,undefined);assert.equal(templateFieldText(v,z.key,{}),'');assert.match(templateFieldText(v,z.key,{recipient:'Chloe',sender:'Michael'}),/Chloe|Michael/);}
+ for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))assert.equal(p.label,p.key==='recipient'?'For You':'From Me');
+ assert.deepEqual(v.photo,validateDesign(t.id,defaultDesign(t.id)).photo);
+ }
+ const id='travel-collage',d=defaultDesign(id),z=d.zones.find(z=>z.key==='recipient');z.templateText='Chloe';z.textMode='fixed';const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};await env.IMAGES.put('admin-template-designs/v1/'+id+'.json',JSON.stringify({revision:'old-names',template:d}),{});const {template}=await (await templateDesignResponse(req(id),env)).json();assert.equal(template.zones.find(z=>z.key==='recipient').templateText,undefined);assert.equal(template.zones.find(z=>z.key==='recipient').textMode,'customer');
+});

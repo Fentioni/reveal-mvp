@@ -34,6 +34,12 @@ try{
  assert.equal(await page.locator('[data-layer="zone:sender"] span').first().textContent(),'From Me');
  assert.equal(await page.locator('#render [data-layout-label="recipient"]').textContent(),'For You');
  assert.equal(await page.locator('#render [data-layout-label="sender"]').textContent(),'From Me');
+ assert.doesNotMatch(await page.locator('#render').textContent(),/\b(?:Michael|Chloe)\b/i);
+ await page.locator('[data-layer="zone:recipient"]').click();
+ assert.equal(await page.locator('#prop-templateText').inputValue(),'');
+ await page.locator('[data-layer="zone:sender"]').click();
+ assert.equal(await page.locator('#prop-templateText').inputValue(),'');
+ await page.locator('[data-layer="zone:eventName"]').click();
  // Fixed wording updates instantly, marks the template dirty, and supports undo/redo.
  await page.locator('#editText').click();await page.locator('#prop-templateText').fill('Preview title');
  assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);
@@ -162,7 +168,7 @@ try{
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
   await creator.locator('#reviewButton').click();
   const host=creator.locator('#scratchActualRevealed');
-  assert.match(await creator.locator('#messageBox').textContent(),/recipient/i);
+  assert.match(await creator.locator('#messageBox').textContent(),/for you|recipient/i);
   assert.equal(await creator.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
   assert.deepEqual((await host.locator('[data-edit-field][aria-invalid="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.editField))).sort(),['eventName','recipient','sender']);
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),3);

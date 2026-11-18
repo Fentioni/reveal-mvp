@@ -1,9 +1,9 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=person-labels-1';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=person-labels-1';
-import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=person-labels-1';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=blank-person-1';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=blank-person-1';
+import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=blank-person-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'For You',sender:'From Me',senderLine:'From Me',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
-const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
+const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'',sender:'',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
 const longer={...typical,eventName:'Jesus Christ Superstar — a very special evening',subtitle:'An unforgettable experience for a wonderful birthday',venue:'Theatre Royal, Drury Lane',venueAddress:'Catherine Street, Covent Garden, London',personalMessage:'Happy birthday! I hope you have a wonderful time. We are going to enjoy a special evening together.'};
 const fontLabels=['Georgia / serif','Arial / sans serif','Arial Black','Script','Georgia','Arial','Verdana','Trebuchet','Courier New','Times New Roman','Impact'];
 const min=(v,a,b)=>Math.max(a,Math.min(b,v)),round=v=>Math.round(v*10)/10;
@@ -138,8 +138,9 @@ function inspector(){
  if(selected.startsWith('zone:')||o.kind==='text'||(selected.startsWith('panel:')&&o.key!=='image')){
    group('Edit text');
    if(selected.startsWith('zone:')){
-    const current=()=>templateFieldText(model,o.key,sampleData())||names[o.key]||o.key;
-    control('Text source','textMode','select',o.textMode||'customer',{choices:[['customer','Customer-entered text'],['fixed','Saved template wording']],apply:v=>{if(v==='fixed'&&!o.templateText?.trim())o.templateText=current();o.textMode=v;}});
+    const isPerson=['recipient','sender','senderLine'].includes(o.key);
+    const current=()=>templateFieldText(model,o.key,sampleData())||(isPerson?'':names[o.key]||o.key);
+    control('Text source','textMode','select',o.textMode||'customer',{choices:[['customer','Customer-entered text'],['fixed','Saved template wording']],apply:v=>{if(v==='fixed'&&!o.templateText?.trim())o.templateText=current()||names[o.key];o.textMode=v;}});
     control('Text to save','templateText','textarea',o.templateText??current(),{live:true,maxLength:1000,apply:v=>{o.templateText=v;o.textMode='fixed';$('prop-textMode').value='fixed';}});
     const note=document.createElement('p');note.className='muted text-help';note.textContent='Changing this wording switches the field to saved template text. Save template to publish it. Choose Customer-entered text to let the customer personalise this field instead.';p.append(note);
     const reset=document.createElement('button');reset.type='button';reset.id='resetTemplateText';reset.textContent='Restore customer text';reset.onclick=()=>{if(o.textMode!=='fixed'&&o.templateText===undefined)return;remember();delete o.templateText;delete o.textMode;changed();};p.append(reset);
@@ -196,7 +197,7 @@ async function prepareArtwork(file){
 }
 function paint(){
  if(!model)return;const data=sampleData();
- try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,guides:$('sample').value==='blank',imageOrientation:$('photoOrientation').value,shade:45,textContrast:'light'});const warning=[];try{assertTemplateLayout(model);}catch(e){warning.push(e.message);}if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
+ try{lastResult=renderPostScratchTemplate($('render'),model,data,{imageSrc:$('showSampleImage').checked?(imageUrl||sampleImage):'',preview:true,templateStudio:true,guides:$('sample').value==='blank',imageOrientation:$('photoOrientation').value,shade:45,textContrast:'light'});const warning=[];try{assertTemplateLayout(model);}catch(e){warning.push(e.message);}if(lastResult.errors.length)warning.push('Text does not fit: '+lastResult.errors.map(k=>names[k]||k).join(', '));if(lastResult.tiny.length)warning.push('Small text: '+lastResult.tiny.map(k=>names[k]||k).join(', '));$('warnings').textContent=warning.join(' · ')||'Drag a layer to move it. Drag the blue corner to resize.';}
  catch(e){$('warnings').textContent=e.message;}
  selection();
 }
