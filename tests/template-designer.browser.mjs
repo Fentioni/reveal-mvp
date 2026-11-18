@@ -29,6 +29,14 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),79);
+ // Dynamic field sample text updates instantly, and can be undone/redone without publishing customer data.
+ await page.locator('#editText').click();await page.locator('#prop-sampleText').fill('Preview title');
+ assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);
+ assert.equal(await page.locator('#save').isDisabled(),true);
+ await page.locator('#undo').click();assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/A night to remember/i);
+ await page.locator('#redo').click();assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/Preview title/i);
+ await page.locator('#prop-sampleText').press('Control+z');assert.match(await page.locator('#render [data-field="eventName"]').textContent(),/A night to remember/i);
+ await page.locator('#stage').focus();
  const initial=Number(await page.locator('#prop-x').inputValue());
  // Move the title by dragging its actual visual area.
  const stage=await page.locator('#stage').boundingBox(),x=Number(await page.locator('#prop-x').inputValue()),y=Number(await page.locator('#prop-y').inputValue()),w=Number(await page.locator('#prop-w').inputValue()),h=Number(await page.locator('#prop-h').inputValue());
@@ -44,7 +52,7 @@ try{
  const originalDecor=await page.locator('[data-layer^="decor:"]').count();await page.locator('#add').click();await page.locator('[data-add="ellipse"]').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor+1);
  await page.locator('#remove').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor);await page.locator('#undo').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor+1);
  await page.locator('#redo').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor);
- await page.locator('#add').click();await page.locator('[data-add="text"]').click();await page.locator('#prop-text').fill('Special occasion');await page.locator('#prop-text').press('Tab');
+ await page.locator('#add').click();await page.locator('[data-add="text"]').click();await page.locator('#prop-text').fill('Special occasion');assert.match(await page.locator('#render [data-decor-index]').last().textContent(),/Special occasion/i);await page.locator('#undo').click();assert.equal(await page.locator('#prop-text').inputValue(),'Your text');await page.locator('#redo').click();assert.equal(await page.locator('#prop-text').inputValue(),'Special occasion');
  await page.locator('#artworkShortcut').click();
  await page.locator('#prop-artworkSource').selectOption('spotlight');
  assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/spotlight.webp');

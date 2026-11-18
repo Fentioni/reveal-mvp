@@ -15,3 +15,5 @@
 .cover-item button{width:100%}
 #deletedCovers{margin-top:20px}#deletedCovers summary{cursor:pointer;padding:8px 0}
 #coverStatus{min-height:20px;color:var(--accent)}#coverStatus.cover-error{color:#ffb3b3}
+
+.top{position:sticky;top:0;z-index:10}#editText{border-color:var(--accent);color:var(--accent);font-weight:700}#resetSampleText{width:100%;margin:0 0 8px}.text-help{margin:0 0 8px}@media(max-width:850px){.text-help,#resetSampleText{grid-column:1/-1}}

@@ -1,19 +1,19 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=cover-manager-1"></head>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow"><title>Reveal · Template studio</title><link rel="stylesheet" href="/admin-template-designer.css?v=text-history-1"></head>
 <body>
 <header class="top">
  <div class="brand"><span class="mark">R</span><div><strong>Reveal / Template Studio</strong><small>Administration · Scratch Ticket · Staging</small></div></div>
- <div class="toolbar"><button id="undo" disabled>Undo</button><button id="redo" disabled>Redo</button><button id="export">Export JSON</button><button id="save" class="primary">Save template</button></div>
+ <div class="toolbar"><button id="undo" type="button" title="Undo (Ctrl/Cmd + Z)" aria-keyshortcuts="Control+Z Meta+Z" disabled>↶ Undo</button><button id="redo" type="button" title="Redo (Ctrl/Cmd + Shift + Z)" aria-keyshortcuts="Control+Shift+Z Meta+Shift+Z Control+Y" disabled>↷ Redo</button><button id="export">Export JSON</button><button id="save" class="primary">Save template</button></div>
 </header>
 <section class="setup"><div><label for="template">Template</label><select id="template"></select></div><div class="status-wrap"><div id="status" role="status">Loading templates…</div><span id="revision"></span></div><button id="newTemplate" class="primary">+ New template</button><button id="deleteTemplate" class="danger">Delete template</button><button id="reload">Reload saved</button><button id="coverManager" class="primary">Manage scratch cover artwork</button><button id="artworkShortcut">Change template artwork</button><button id="defaults">Restore original</button></section>
 <main class="studio">
  <aside class="layers"><div class="section-head"><h2>Layers</h2><button id="add" aria-expanded="false">+ Add</button></div>
  <div id="addMenu" hidden><button data-add="rect">Rectangle</button><button data-add="ellipse">Ellipse</button><button data-add="line">Line</button><button data-add="text">Text</button><button data-add="panel">Restore field panel</button><button data-add="illustration" id="restoreArt" hidden>Restore illustration</button></div>
- <p class="muted">Select a layer to move or style it. Text and its surrounding panel can be edited separately.</p><div id="layers"></div>
+ <p class="muted">Select a text layer and click Edit text, or double-click the layer. Text and its surrounding panel can be edited separately.</p><div id="layers"></div>
  <div class="layer-actions"><button id="layerUp">Bring forward</button><button id="layerDown">Send backward</button><button id="remove" class="danger">Remove / hide</button></div>
  </aside>
  <section class="workspace">
- <div class="canvas-tools"><label><input id="guides" type="checkbox" checked> Selection guides</label><label><input id="showSampleImage" type="checkbox" checked> Show customer photo</label><label for="photoOrientation">Photo orientation</label><select id="photoOrientation"><option value="auto">Template default</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
+ <div class="canvas-tools"><button id="editText" type="button" disabled>Edit text</button><label><input id="guides" type="checkbox" checked> Selection guides</label><label><input id="showSampleImage" type="checkbox" checked> Show customer photo</label><label for="photoOrientation">Photo orientation</label><select id="photoOrientation"><option value="auto">Template default</option><option value="portrait">Portrait</option><option value="landscape">Landscape</option></select><label for="sample">Sample</label><select id="sample"><option value="normal">Typical reveal</option><option value="long">Longer text</option><option value="blank">Empty fields</option></select></div>
  <div class="canvas-area"><div id="stage" tabindex="0" aria-label="Template canvas. Use arrow keys to move selected layers."><div id="render"></div><svg id="overlay" viewBox="0 0 900 1200" aria-hidden="true"></svg></div></div>
  <div id="warnings" class="muted" role="status"></div>
  <div class="canvas-footer"><span>900 × 1200 design units · 1800 × 2400 export</span><label class="upload-label">Test customer photo <input id="sampleImage" type="file" accept="image/png,image/jpeg,image/webp"></label></div>
@@ -30,5 +30,5 @@
  <p id="coverStatus" role="status" aria-live="polite"></p><div id="coverList"></div>
  <details id="deletedCovers"><summary>Deleted artwork</summary><div id="archivedCoverList"></div></details>
 </dialog>
-<script type="module" src="/admin-template-designer.js?v=cover-manager-1"></script>
+<script type="module" src="/admin-template-designer.js?v=text-history-1"></script>
 </body></html>
