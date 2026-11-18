@@ -243,6 +243,9 @@ try{
   assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
   await design.getByRole('button',{name:'Undo',exact:true}).click();assert.equal(await zone.evaluate(e=>e.style.width),previous);
   await design.getByRole('button',{name:'Redo',exact:true}).click();assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
+  const beforeMove=await zone.evaluate(e=>e.style.left);await zone.scrollIntoViewIfNeeded();const rect=await zone.boundingBox();const cardRect=await host.locator('#card').boundingBox();
+  await creator.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await creator.mouse.down();await creator.mouse.move(rect.x+rect.width/2+8*cardRect.width/900,rect.y+rect.height/2,{steps:4});await creator.mouse.up();
+  assert.notEqual(await zone.evaluate(e=>e.style.left),beforeMove,'Direct drag moves field');
   await creator.locator('#personaliseMode').click();assert.equal(await host.locator('.inline-ticket-editor').isVisible(),true);
   assert.equal(await host.locator('[data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.screenshot({path:'test-output/template-designer/inline-'+viewport.width+'.png',fullPage:true});

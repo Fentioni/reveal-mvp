@@ -56,7 +56,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
   renderBoxes();syncControls();
  }
  function commit(next,history=true){
-  try{validateCustomerLayout(face.template,next,settings().imageOrientation);}
+  try{if(Object.keys(next).length)validateCustomerLayout(face.template,next,settings().imageOrientation);}
   catch(error){report(error.message);renderBoxes();syncControls();return false;}
   if(JSON.stringify(next)===JSON.stringify(layout()))return true;
   if(history){state.undo.push(copy(layout()));if(state.undo.length>50)state.undo.shift();state.redo=[];}

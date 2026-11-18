@@ -1272,7 +1272,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=customer-design-1';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=customer-design-2';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=managed-covers-1';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1282,6 +1282,7 @@
     import {cleanPostSettings} from '/post-scratch-settings.js?v=customer-design-1';
     import {photoFrame} from '/post-scratch-renderer.js?v=customer-design-1';
     import {normalizeBookingLink} from '/booking-link.js?v=1';
+    import {validateCustomerLayout} from '/customer-ticket-layout.js?v=1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1951,7 +1952,7 @@
       if(currentVariant==='concert')$('ticketUrl').setCustomValidity(linkValid?'':'Enter a valid web address, for example www.example.com.');
       if(currentVariant==='ticket'?!validateInlineFields():!form.reportValidity())return;
       if(currentVariant==='ticket'){
-        try{await refreshPortraitPreview();}catch(error){return show(error.message);}
+        try{const settings=postSettings();if(settings.layout){const {template}=await loadPublishedDesign(settings.templateId);validateCustomerLayout(template,settings.layout,settings.imageOrientation);}await refreshPortraitPreview();}catch(error){return show(error.message);}
         const overflow=$('scratchActualRevealed').shadowRoot?.querySelector('.post-scratch-card')?.dataset.textOverflow;
         if(overflow)return show('Please shorten text that does not fit: '+overflow);
         if(!updateInlineValidation({focus:true}))return;
