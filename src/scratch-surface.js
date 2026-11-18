@@ -1,4 +1,5 @@
-import {getTemplateCatalogue} from './template-designs.js';
+import {getTemplateCatalogue,getPublishedTemplate} from './template-designs.js';
+import {validateCustomerLayout} from '../public/customer-ticket-layout.js';
 import {checkPostSettings,cleanPostSettings} from '../public/post-scratch-settings.js';
 /**
  * Stage 4D private scratch-surface preferences and uploaded covers.
@@ -194,9 +195,10 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     let postScratch=cleanPostSettings(current.surface.postScratch);
     if(variant!=='concert'&&body.has('postScratch')){
       const raw=body.get('postScratch');
-      if(typeof raw!=='string'||raw.length>2000)return error('Invalid revealed template settings.');
+      if(typeof raw!=='string'||raw.length>12000)return error('Invalid revealed template settings.');
       try{postScratch=checkPostSettings(JSON.parse(raw));}catch{return error('Invalid revealed template settings.');}
       if(!postScratch)return error('Invalid revealed template settings.');
+      if(postScratch.layout){try{const master=await getPublishedTemplate(env,postScratch.templateId);if(!master)return error('Template unavailable.');validateCustomerLayout(master,postScratch.layout,postScratch.imageOrientation);}catch(e){return error(e.message||'Invalid customised layout.');}}
       if(postScratch.templateId!==current.surface.postScratch?.templateId){const entries=await getTemplateCatalogue(env);if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');}
     }
     if(variant!=='concert'&&postScratch.templateId==='custom-image'&&!reveal.hasImage)return error('Upload an image for the Custom Image template.');

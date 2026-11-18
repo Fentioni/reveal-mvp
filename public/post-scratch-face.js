@@ -1,6 +1,6 @@
 import {loadPublishedDesign} from './published-template-designs.js?v=template-management-1';
-import {cleanPostSettings} from './post-scratch-settings.js?v=template-management-1';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=clean-template-text-1';
+import {cleanPostSettings} from './post-scratch-settings.js?v=customer-design-1';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=customer-design-1';
 export async function renderPostScratchFace(card,reveal,settings,imageSrc='',{guides=false}={}){
  const s=cleanPostSettings(settings),{template}=await loadPublishedDesign(s.templateId);
  // Load before showing the underlay, including authenticated blob images.
@@ -18,5 +18,5 @@ export async function renderPostScratchFace(card,reveal,settings,imageSrc='',{gu
   card.dataset.textOverflow=result.errors.join(',');
   return result;
  };
- return {...redraw(reveal),redraw};
+ return {...redraw(reveal),redraw,template};
 }

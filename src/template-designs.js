@@ -12,6 +12,12 @@ export async function getTemplateCatalogue(env){
  const {value}=await manifest(env);
  return [...POST_TEMPLATES.map(({id,name,collection})=>({id,name,collection:collection||'Existing templates'})),...value.custom].map(t=>({...t,archived:value.archived.includes(t.id)}));
 }
+export async function getPublishedTemplate(env,id){
+ const entry=(await getTemplateCatalogue(env)).find(t=>t.id===id),base=defaultDesign(id,entry);
+ if(!entry||!base)return null;
+ const object=env.IMAGES?await env.IMAGES.get(prefix+id+'.json'):null;
+ return object?validateDesign(id,(await object.json()).template,entry):base;
+}
 async function mutateCatalogue(request,env,url){
  const origin=request.headers.get('Origin');if(origin&&origin!==url.origin)return json({error:'Cross-origin update denied.'},403);
  const access=await authorised(request,env);if(access===null)return json({error:'Set TEMPLATE_ADMIN_TOKEN as a Cloudflare Worker secret (at least 24 characters).'},503);

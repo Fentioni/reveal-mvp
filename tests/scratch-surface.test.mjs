@@ -508,3 +508,20 @@ test('template settings reject malformed input and custom image without upload, 
  const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch','{}');
  assert.equal((await scratchSurfaceResponse(request('PUT',body,'wrong'),env,{},legacy)).status,403);assert.equal(state.config,null);
 });
+
+test('customer layout is validated, persisted and restored without mutating the shared template',async()=>{
+ const {env,legacy,state}=makeMocks();
+ const {getPostTemplate}=await import('../public/post-scratch-catalogue.js');
+ const master=getPostTemplate('candlelight'),z=master.zones.find(z=>z.key==='eventName');
+ const layout={eventName:{size:32,ink:'#abc123',family:'Arial, sans-serif',weight:700,italic:true,align:'left',x:z.x,y:z.y,w:z.w,h:z.h}};
+ const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch',JSON.stringify({templateId:'candlelight',layout}));
+ const result=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+ assert.equal(result.status,200);assert.deepEqual((await result.json()).surface.postScratch.layout,layout);
+ assert.deepEqual(JSON.parse(state.config.fields_json).scratchSurface.postScratch.layout,layout);
+ const read=await scratchSurfaceResponse(request(),env,{},legacy);assert.deepEqual((await read.json()).surface.postScratch.layout,layout);
+ assert.equal(master.zones.find(z=>z.key==='eventName').ink,z.ink);
+ for(const invalid of [{eventName:{x:899,w:100}},{eventName:{family:'url(javascript:bad)'}},{eventName:{hidden:true}},{image:{x:0,y:0,w:900,h:1200}}]){
+  const bad=new FormData();bad.set('style','classic');bad.set('foil','gold');bad.set('postScratch',JSON.stringify({templateId:'candlelight',layout:invalid}));
+  const response=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);assert.equal(response.status,400);
+ }
+});

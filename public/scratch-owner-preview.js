@@ -1,5 +1,6 @@
+import {mountCustomerDesigner} from './customer-ticket-designer.js?v=1';
 import {normalizeBookingLink} from './booking-link.js?v=1';
-import {renderPostScratchFace} from './post-scratch-face.js?v=clean-template-text-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=customer-design-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
@@ -9,7 +10,7 @@ import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';
-const stylesheet='/scratch-recipient-face.css?v=inline-photo-1';
+const stylesheet='/scratch-recipient-face.css?v=customer-design-1';
 const active=new WeakMap();
 const boundSwitches=new WeakSet();
 function setupPreviewSwitch(section,covered,revealed){
@@ -107,7 +108,7 @@ function mountInlineEditor(card,face,edit){
    }
   }
  }
- card.append(overlay);
+ card.append(overlay);return overlay;
 }
 async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,guides=false,edit=null,creator=false}){
  const root=host.shadowRoot||host.attachShadow({mode:'open'});
@@ -143,7 +144,9 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,g
   card.classList.add('foil-ready');
   card.dataset.previewState='revealed';
 
-  if(edit)mountInlineEditor(card,face,edit);
+  if(edit){let inline=mountInlineEditor(card,face,edit);
+   if(edit.design)mountCustomerDesigner(card,main,face,edit,()=>inline,(result)=>{inline.remove();inline=mountInlineEditor(card,{...face,...result},edit);return inline;});
+  }
   if(model.ticketUrl&&!edit){
    const action=make('span','Open your booking link');
    action.id='bookingAction';action.setAttribute('aria-disabled','true');

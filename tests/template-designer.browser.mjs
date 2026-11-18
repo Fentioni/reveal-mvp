@@ -229,6 +229,22 @@ try{
   await creator.locator('#postTemplate').selectOption('blue-ink');
   await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='blue-ink');
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field="eventName"]').inputValue(),'Theatre Night');
+  await creator.locator('#customiseMode').click();
+  const design=host.locator('.customer-design-tools');await design.waitFor({state:'visible'});
+  assert.equal(await host.locator('.inline-ticket-editor').isVisible(),false);
+  await design.locator('select[aria-label="Select field to customise"]').selectOption('eventName');
+  await design.locator('[data-style-control="family"]').selectOption('Arial, sans-serif');
+  await design.locator('[data-style-control="size"]').fill('30');await design.locator('[data-style-control="size"]').press('Tab');
+  await design.locator('[data-style-control="ink"]').fill('#ab1234');await design.locator('[data-style-control="ink"]').dispatchEvent('change');
+  assert.equal(await host.locator('[data-field=eventName]').getAttribute('fill'),'#ab1234');
+  const zone=host.locator('.customer-zone[data-zone="eventName"]');
+  const previous=await zone.evaluate(e=>e.style.width);
+  await design.locator('[data-style-control="w"]').fill(String(Number(await design.locator('[data-style-control="w"]').inputValue())-20));await design.locator('[data-style-control="w"]').press('Tab');
+  assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
+  await design.getByRole('button',{name:'Undo',exact:true}).click();assert.equal(await zone.evaluate(e=>e.style.width),previous);
+  await design.getByRole('button',{name:'Redo',exact:true}).click();assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
+  await creator.locator('#personaliseMode').click();assert.equal(await host.locator('.inline-ticket-editor').isVisible(),true);
+  assert.equal(await host.locator('[data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.screenshot({path:'test-output/template-designer/inline-'+viewport.width+'.png',fullPage:true});
   assert.equal(await creator.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   // Submit directly while the URL field is still focused: the actual save
@@ -251,7 +267,7 @@ try{
   for(const [templateId,hasImage] of [['candlelight',false],['custom-image',true]]){
    const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
    const data={recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special night',ticketUrl:'https://example.org',hasImage,status:'draft',revision:2,id:'amend-test'};
-   const settings={templateId,subtitle:'Just for you',venueAddress:'London'};
+   const settings={templateId,subtitle:'Just for you',venueAddress:'London',layout:{eventName:{ink:'#ab1234',size:30,family:'Arial, sans-serif'}}};
    await creator.addInitScript(()=>localStorage.setItem('reveal_edit_amend-test','test-owner'));
    await creator.route('**/api/reveals/amend-test',route=>route.fulfill({json:{success:true,reveal:data}}));
    await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:settings},audio:{enabled:false}}}));
@@ -264,6 +280,7 @@ try{
     const value=key==='postSubtitle'?settings.subtitle:key==='postVenueAddress'?settings.venueAddress:data[key];
     assert.equal(await host.locator('[data-edit-field="'+key+'"]').inputValue(),value);
    }
+   assert.equal(await host.locator('[data-field=eventName]').getAttribute('fill'),'#ab1234');
    const measured=await host.evaluate(el=>{
     const svg=el.shadowRoot.querySelector('svg[data-post-template]');
     return [...svg.querySelectorAll('[data-slot]')].map(slot=>{
