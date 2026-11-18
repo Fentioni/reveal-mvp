@@ -1,6 +1,6 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=layout-flow-2';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=layout-flow-2';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA} from './template-design-schema.js?v=template-management-1';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=template-management-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
 const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'Recipient',sender:'From / host',senderLine:'From / host',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'Chloe',sender:'Michael',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
@@ -12,17 +12,20 @@ const sampleCanvas=document.createElement('canvas');sampleCanvas.width=900;sampl
 const ctx=sampleCanvas.getContext('2d');const gradient=ctx.createLinearGradient(0,0,900,1200);gradient.addColorStop(0,'#152747');gradient.addColorStop(1,'#954766');ctx.fillStyle=gradient;ctx.fillRect(0,0,900,1200);ctx.strokeStyle='#f8d285';ctx.lineWidth=8;ctx.strokeRect(40,40,820,1120);ctx.fillStyle='#f6d08d';ctx.textAlign='center';ctx.font='bold 75px Georgia';ctx.fillText('THEATRE',450,360);ctx.fillText('NIGHT',450,445);ctx.font='37px Arial';ctx.fillText('20 MARCH 2027',450,875);
 const sampleImage=sampleCanvas.toDataURL('image/png');
 function status(s,error=false){$('status').textContent=s;$('status').style.color=error?'#ffb3b3':'';}
+let catalogue=[],catalogueReady=false,pendingAdmin=null;
+const baseDesign=id=>defaultDesign(id,catalogue.find(t=>t.id===id));
+const validate=(id,design)=>validateDesign(id,design,catalogue.find(t=>t.id===id));
 function clean(){return JSON.stringify(model)===saved;}
-function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
+function mark(){document.querySelector('.studio').inert=busy;$('reload').disabled=busy;$('artworkShortcut').disabled=busy;$('defaults').disabled=busy;$('export').disabled=busy;$('import').disabled=busy;$('newTemplate').disabled=busy||!catalogueReady;$('deleteTemplate').disabled=busy||!model||!catalogueReady||catalogue.filter(t=>!t.archived).length<=1;if(!model)return;$('revision').textContent=(revision==='base'?'Original template':'Saved version '+revision.slice(0,8))+(clean()?' · No unsaved changes':' · Unsaved changes');$('undo').disabled=!undo.length||busy;$('redo').disabled=!redo.length||busy;$('save').disabled=busy||clean();$('template').disabled=busy;}
 function remember(){undo.push(clone(model));if(undo.length>75)undo.shift();redo=[];}
 function changed(full=true){mark();paint();if(full){layers();inspector();}}
 function apiHeaders(){return {'Authorization':'Bearer '+token,'Content-Type':'application/json'};}
 async function response(r){const body=await r.json().catch(()=>({}));if(!r.ok)throw Error(body.error||'Request failed ('+r.status+')');return body;}
 async function load(id,force=false){
  if(model&&!clean()&&!force&&!confirm('Discard your unsaved changes?')){$('template').value=model.id;return;}
- const run=++requestId;busy=true;mark();status('Loading '+POST_TEMPLATES.find(t=>t.id===id)?.name+'…');
- try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||defaultDesign(id);revision=d.revision||'base';status('Template loaded.');}
- catch(e){if(run!==requestId)return;model=defaultDesign(id);revision='base';status('Using original template: '+e.message,true);}
+ const run=++requestId;busy=true;mark();status('Loading '+catalogue.find(t=>t.id===id)?.name+'…');
+ try{const d=await response(await fetch('/api/template-designs/'+id,{cache:'no-store'}));if(run!==requestId)return;model=d.template||baseDesign(id);revision=d.revision||'base';status('Template loaded.');}
+ catch(e){if(run!==requestId)return;model=baseDesign(id);revision='base';status('Using original template: '+e.message,true);}
  if(run!==requestId)return;undo=[];redo=[];saved=JSON.stringify(model);$('photoOrientation').value='auto';selected='zone:eventName';busy=false;$('template').value=id;changed();
 }
 function allLayers(){
@@ -71,7 +74,7 @@ function layers(){
  const o=element();$('remove').disabled=!o||selected==='background'||selected==='photo'||selected.startsWith('zone:');$('remove').textContent=o?.hidden?'Show field':'Remove / hide';
  const index=selected.startsWith('decor:')?Number(selected.split(':')[1]):-1;
  $('layerUp').disabled=index<0||index===model.decor.length-1;$('layerDown').disabled=index<=0;
- $('restoreArt').hidden=!!model.illustration||!defaultDesign(model.id).illustration;
+ $('restoreArt').hidden=!!model.illustration||!baseDesign(model.id).illustration;
 }
 function select(key){if(!element(key))return;selected=key;layers();inspector();selection();}
 function group(label){const e=document.createElement('div');e.className='group-title';e.textContent=label;$('properties').append(e);}
@@ -114,7 +117,7 @@ function inspector(){
   control('Artwork fit','artworkFit','select',model.artworkFit||'contain',{choices:[['contain','Fit whole artwork'],['cover','Fill entire card']]});
   control('Show background artwork','showBackground','checkbox',model.showBackground);
   paintColor('Background colour','backgroundFill',model);
-  const restore=document.createElement('button');restore.id='restoreArtwork';restore.textContent='Restore original artwork';restore.className='restore-artwork';restore.onclick=()=>{remember();Object.assign(model,{artworkSource:'original',artworkData:'',artworkFit:'contain',showBackground:true,backgroundFill:defaultDesign(model.id).backgroundFill});changed();status('Original artwork restored. Save to publish.');};p.append(restore);
+  const restore=document.createElement('button');restore.id='restoreArtwork';restore.textContent='Restore original artwork';restore.className='restore-artwork';restore.onclick=()=>{remember();Object.assign(model,{artworkSource:'original',artworkData:'',artworkFit:'contain',showBackground:true,backgroundFill:baseDesign(model.id).backgroundFill});changed();status('Original artwork restored. Save to publish.');};p.append(restore);
   $('inspectorHint').textContent=model.id==='custom-image'?'The customer’s full-card photo sits above the background. Disable Show customer photo to inspect the artwork by itself.':'Artwork replacement leaves all editable positions and panels unchanged. Select a panel to change its fill or transparency.';
   return;
  }
@@ -190,8 +193,8 @@ $('layers').addEventListener('click',e=>{const b=e.target.closest('[data-layer]'
 $('add').addEventListener('click',()=>{$('addMenu').hidden=!$('addMenu').hidden;$('add').setAttribute('aria-expanded',String(!$('addMenu').hidden));});
 $('addMenu').addEventListener('click',e=>{
  const kind=e.target.closest('[data-add]')?.dataset.add;if(!kind)return;remember();
- if(kind==='panel'){const base=defaultDesign(model.id);const missing=base.panels.find(x=>!model.panels.some(p=>p.key===x.key));if(!missing){undo.pop();status('All original panels are present.');return;}model.panels.push(missing);selected='panel:'+missing.key;}
- else if(kind==='illustration'){model.illustration=defaultDesign(model.id).illustration;selected='illustration';}
+ if(kind==='panel'){const base=baseDesign(model.id);const missing=base.panels.find(x=>!model.panels.some(p=>p.key===x.key));if(!missing){undo.pop();status('All original panels are present.');return;}model.panels.push(missing);selected='panel:'+missing.key;}
+ else if(kind==='illustration'){model.illustration=baseDesign(model.id).illustration;selected='illustration';}
  else{const base={kind,x:275,y:520,w:350,h:100,fill:'#fff4d7',stroke:'#b58442',sw:3,rx:12};model.decor.push(kind==='line'?{kind,x1:270,y1:570,x2:630,y2:570,stroke:'#b58442',sw:3}:kind==='text'?{kind,x:220,y:520,w:460,h:100,text:'Your text',size:42,family:'Georgia, serif',weight:700,ink:'#222222',align:'center',spacing:0,noWordSplit:false}:base);selected='decor:'+(model.decor.length-1);}
  $('addMenu').hidden=true;$('add').setAttribute('aria-expanded','false');changed();
 });
@@ -207,25 +210,54 @@ $('undo').onclick=()=>history(undo,redo);$('redo').onclick=()=>history(redo,undo
 $('guides').onchange=selection;$('sample').onchange=paint;$('photoOrientation').onchange=paint;$('showSampleImage').onchange=paint;
 $('artworkShortcut').onclick=()=>{select('background');if(innerWidth<850)document.querySelector('.inspector').scrollIntoView({block:'start',behavior:'smooth'});};
 $('sampleImage').onchange=()=>{const f=$('sampleImage').files[0];if(!f)return;if(imageUrl)URL.revokeObjectURL(imageUrl);imageUrl=URL.createObjectURL(f);paint();};
-$('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=defaultDesign(model.id);selected='zone:eventName';changed();};
+$('defaults').onclick=()=>{if(!model||!confirm('Restore the original design? You can undo before saving.'))return;remember();model=baseDesign(model.id);selected='zone:eventName';changed();};
 $('reload').onclick=()=>load(model.id);$('template').onchange=e=>load(e.target.value);
 $('export').onclick=()=>{if(!model)return;const a=document.createElement('a'),url=URL.createObjectURL(new Blob([JSON.stringify(model,null,2)],{type:'application/json'}));a.href=url;a.download=model.id+'-design.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
-$('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validateDesign(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
+$('import').onclick=()=>$('importFile').click();$('importFile').onchange=async()=>{try{const f=$('importFile').files[0];if(!f)return;const incoming=validate(model.id,JSON.parse(await f.text()));remember();model=incoming;selected='zone:eventName';changed();status('Design imported. Save to publish.');}catch(e){status(e.message,true);}finally{$('importFile').value='';}};
 async function save(){
  if(busy||!model)return;
- let valid;try{valid=assertTemplateLayout(validateDesign(model.id,model));}catch(e){status(e.message,true);return;}
- if(!token){$('authMessage').textContent='';$('auth').showModal();return;}
+ let valid;try{valid=assertTemplateLayout(validate(model.id,model));}catch(e){status(e.message,true);return;}
+ if(!token){requireAdmin(save);return;}
  busy=true;mark();status('Saving template…');
  try{
   const d=await response(await fetch('/api/template-designs/'+model.id,{method:'PUT',headers:apiHeaders(),body:JSON.stringify({revision,template:valid})}));
   model=d.template;revision=d.revision;saved=JSON.stringify(model);status('Saved. New staging page loads will use this design.');
- }catch(e){status(e.message,true);if(/token|secret/i.test(e.message)){token='';$('authMessage').textContent=e.message;$('auth').showModal();}}
+ }catch(e){status(e.message,true);if(/token|secret/i.test(e.message)){token='';requireAdmin(save,e.message);}}
  finally{busy=false;changed();}
 }
 $('save').onclick=save;$('authSave').onclick=async e=>{e.preventDefault();const input=$('token');token=input.value.trim();input.value='';if(!token){$('authMessage').textContent='Enter your admin token.';return;}
  $('authSave').disabled=true;
- try{await response(await fetch('/api/admin/template-designer',{headers:apiHeaders(),cache:'no-store'}));$('auth').close();await save();}
+ try{await response(await fetch('/api/admin/template-designer',{headers:apiHeaders(),cache:'no-store'}));$('auth').close();const action=pendingAdmin;pendingAdmin=null;if(action)await action();}
  catch(err){token='';$('authMessage').textContent=err.message;}finally{$('authSave').disabled=false;}};
 window.addEventListener('beforeunload',e=>{if(model&&!clean()){e.preventDefault();e.returnValue='';}});
-const groups=new Map();for(const t of POST_TEMPLATES){const label=t.collection||'Existing templates';if(!groups.has(label)){const g=document.createElement('optgroup');g.label=label;$('template').append(g);groups.set(label,g);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;groups.get(label).append(o);}
-load(POST_TEMPLATES[0].id,true);
+function requireAdmin(action,message=''){pendingAdmin=action;$('authMessage').textContent=message;$('auth').showModal();}
+async function refreshCatalogue(){
+ const result=await response(await fetch('/api/template-catalogue',{cache:'no-store'}));
+ catalogue=result.templates;catalogueReady=true;
+ const groups=new Map();$('template').replaceChildren();
+ for(const t of catalogue.filter(t=>!t.archived)){const label=t.collection||'Existing templates';if(!groups.has(label)){const g=document.createElement('optgroup');g.label=label;$('template').append(g);groups.set(label,g);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;groups.get(label).append(o);}
+ return catalogue.filter(t=>!t.archived);
+}
+async function changeCatalogue(method,body){
+ if(!token){requireAdmin(()=>changeCatalogue(method,body));return;}
+ busy=true;mark();status(method==='POST'?'Creating template…':'Deleting template…');
+ try{
+  const result=await response(await fetch('/api/template-catalogue',{method,headers:apiHeaders(),body:JSON.stringify(body)}));
+  const active=await refreshCatalogue();
+  await load(method==='POST'?result.id:active[0].id,true);
+  status(method==='POST'?'New template created. Edit the design and save changes.':'Template deleted from the catalogue. Existing reveals are preserved.');
+ }catch(e){status(e.message,true);if(/token|secret/i.test(e.message)){token='';requireAdmin(()=>changeCatalogue(method,body),e.message);}}
+ finally{busy=false;mark();}
+}
+const startingLayouts=POST_TEMPLATES.filter(t=>t.id!=='custom-image');
+for(const t of startingLayouts){const o=document.createElement('option');o.value=t.id;o.textContent=t.name;$('newTemplateBase').append(o);}
+$('newTemplate').onclick=()=>{
+ if(model&&!clean()&&!confirm('Discard unsaved changes and create a new template?'))return;
+ $('newTemplateName').value='';$('newTemplateBlank').checked=true;
+ const base=model?.baseId||model?.id;$('newTemplateBase').value=startingLayouts.some(t=>t.id===base)?base:startingLayouts[0].id;
+ $('createTemplateDialog').showModal();$('newTemplateName').focus();
+};
+$('cancelNewTemplate').onclick=()=>$('createTemplateDialog').close();
+$('createTemplateForm').onsubmit=e=>{e.preventDefault();const body={name:$('newTemplateName').value.trim(),baseId:$('newTemplateBase').value,blank:$('newTemplateBlank').checked};if(!body.name)return;$('createTemplateDialog').close();changeCatalogue('POST',body);};
+$('deleteTemplate').onclick=()=>{if(!model||busy)return;const id=model.id;if(confirm('Delete "'+model.name+'" from the template catalogue? Existing reveals will retain their design.'+(!clean()?' Your unsaved edits will be discarded.':'')))changeCatalogue('DELETE',{id});};
+(async()=>{busy=true;mark();try{const active=await refreshCatalogue();await load(active[0].id,true);}catch(e){catalogueReady=false;status('Could not load catalogue: '+e.message,true);busy=false;mark();}})();

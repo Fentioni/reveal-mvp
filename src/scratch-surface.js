@@ -1,3 +1,4 @@
+import {getTemplateCatalogue} from './template-designs.js';
 import {checkPostSettings,cleanPostSettings} from '../public/post-scratch-settings.js';
 /**
  * Stage 4D private scratch-surface preferences and uploaded covers.
@@ -247,6 +248,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if(typeof raw!=='string'||raw.length>2000)return error('Invalid revealed template settings.');
       try{postScratch=checkPostSettings(JSON.parse(raw));}catch{return error('Invalid revealed template settings.');}
       if(!postScratch)return error('Invalid revealed template settings.');
+      if(postScratch.templateId!==current.surface.postScratch?.templateId){const entries=await getTemplateCatalogue(env);if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');}
     }
     if(variant!=='concert'&&postScratch.templateId==='custom-image'&&!reveal.hasImage)return error('Upload an image for the Custom Image template.');
     const uploaded = body.get('coverImage');

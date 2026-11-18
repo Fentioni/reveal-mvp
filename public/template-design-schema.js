@@ -19,11 +19,14 @@ export const FONTS=[
  'Verdana, sans-serif','"Trebuchet MS", sans-serif','"Courier New", monospace','"Times New Roman", serif','Impact, sans-serif'
 ];
 export const clone=x=>JSON.parse(JSON.stringify(x));
-export function defaultDesign(id){
- const base=getPostTemplate(id);if(!base)return null;
+export const isStudioTemplateId=id=>typeof id==='string'&&/^studio-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);
+export function defaultDesign(id,entry){
+ const custom=isStudioTemplateId(id),baseId=custom?entry?.baseId:id;
+ const base=getPostTemplate(baseId);if(!base||custom&&(!entry||entry.id!==id||baseId==='custom-image'))return null;
  const t=clone(base);
  t.decor=t.decor||[];t.panels=t.panels||[];t.showBackground=true;t.backgroundFill='#ffffff';t.artworkSource='original';t.artworkData='';t.artworkFit='contain';
- t.illustration=['pop-panels','doodle-party'].includes(id)?{x:id==='pop-panels'?40:110,y:id==='pop-panels'?220:320,w:id==='pop-panels'?236:340,h:id==='pop-panels'?260:300}:null;
+ t.illustration=['pop-panels','doodle-party'].includes(baseId)?{x:baseId==='pop-panels'?40:110,y:baseId==='pop-panels'?220:320,w:baseId==='pop-panels'?236:340,h:baseId==='pop-panels'?260:300}:null;
+ if(custom){Object.assign(t,{id,baseId,name:entry.name,collection:'Studio templates',description:'Custom Template Studio design.'});if(entry.blank){t.showBackground=false;t.backgroundFill='#ffffff';t.decor=[];t.illustration=null;}}
  return t;
 }
 const fail=()=>{throw Error('Invalid template design. Check geometry and style values.');};
@@ -50,8 +53,8 @@ function decoration(d){obj(d);const kind=choice(d.kind,['rect','ellipse','line',
  if(kind==='path'){const path=str(d.d,4000);if(!/^[MmLlHhVvCcSsQqTtAaZz0-9eE+.,\s-]+$/.test(path))fail();return {kind,d:path,fill,stroke,sw,tx:opt(d,'tx',x=>num(x,-900,900),0),ty:opt(d,'ty',x=>num(x,-1200,1200),0)};}
  return {kind,...box(d),fill,stroke,sw,...(kind==='rect'?{rx:num(d.rx,0,200)}:{})};
 }
-export function validateDesign(id,input){
- const base=defaultDesign(id);if(!base)fail();obj(input);if(input.id!==id)fail();
+export function validateDesign(id,input,entry){
+ const base=defaultDesign(id,entry);if(!base)fail();obj(input);if(input.id!==id)fail();
  const keys=new Set(base.zones.map(z=>z.key)),seen=new Set();
  const zones=list(input.zones,10).map(z=>{obj(z);if(!keys.has(z.key)||seen.has(z.key))fail();seen.add(z.key);return {key:z.key,...box(z),...style(z)};});
  if(seen.size!==keys.size)fail();

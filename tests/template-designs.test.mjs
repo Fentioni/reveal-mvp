@@ -50,3 +50,25 @@ test('published artwork is raster-only, template-specific and backwards-compatib
  const old=clone(d);delete old.artworkSource;delete old.artworkData;delete old.artworkFit;assert.equal(validateDesign(id,old).artworkSource,'original');
  const restore=await templateDesignResponse(req(id,'PUT',{revision:read.revision,template:{...d,artworkSource:'original',artworkData:''}}),env);assert.equal(restore.status,200);
 });
+
+test('studio templates can be created, edited and deleted while existing designs remain readable',async()=>{
+ const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
+ const catalogue=(method='GET',body,auth=secret)=>new Request('https://stage.example/api/template-catalogue',{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+auth},...(body?{body:JSON.stringify(body)}:{})});
+ const args={name:'My new design',baseId:'candlelight',blank:true};
+ assert.equal((await templateDesignResponse(catalogue('POST',args,'wrong'),env)).status,401);
+ const created=await templateDesignResponse(catalogue('POST',args),env);assert.equal(created.status,201);
+ const {id}=await created.json();
+ const list=async()=> (await (await templateDesignResponse(catalogue(),env)).json()).templates;
+ assert.equal((await list()).length,POST_TEMPLATES.length+1);
+ const initial=await (await templateDesignResponse(req(id),env)).json();assert.equal(initial.template.name,args.name);assert.equal(initial.template.showBackground,false);
+ initial.template.zones[0].ink='#123456';
+ const saved=await templateDesignResponse(req(id,'PUT',initial),env);assert.equal(saved.status,200);
+ assert.equal((await templateDesignResponse(catalogue('DELETE',{id},'wrong'),env)).status,401);
+ assert.equal((await templateDesignResponse(catalogue('DELETE',{id}),env)).status,200);
+ assert.equal((await list()).find(t=>t.id===id).archived,true);
+ assert.equal((await (await templateDesignResponse(req(id),env)).json()).template.zones[0].ink,'#123456');
+ assert.equal((await templateDesignResponse(catalogue('DELETE',{id:'candlelight'}),env)).status,200);
+ assert.equal((await list()).find(t=>t.id==='candlelight').archived,true);
+ assert.equal((await templateDesignResponse(req('candlelight'),env)).status,200);
+ assert.equal((await templateDesignResponse(catalogue('POST',args),{...env,STAGING_DISABLE_CHECKOUT:'false'})).status,404);
+});
