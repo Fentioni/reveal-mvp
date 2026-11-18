@@ -35,7 +35,7 @@ test('scratch theme applies the selected environment without changing card foil 
  assert.equal(properties.get('--scratch-highlight'),elegant.highlight);
 });
 
-test('the creator lists exactly the 20 approved scratch images, with no thematic picker',async()=>{
+test('the creator retains the 20 original covers and loads managed artwork without a thematic picker',async()=>{
  const paths=['public/legacy-create.html','public/reveal.html','public/recipient-scratch.html','src/scratch-surface.js','src/scratch-recipient.js'];
  const [creator,review,recipient,owner,paid]=await Promise.all(paths.map(p=>readFile(resolve(root,p),'utf8')));
  const names=['Azure Kaleidoscope','Birthday Opulence','Champagne Currents','Champagne Ribbons',
@@ -59,8 +59,11 @@ test('the creator lists exactly the 20 approved scratch images, with no thematic
  assert.match(review,/setCoverImage\(artwork\.src\)/);
  assert.match(recipient,/getScratchArtwork\(data\.scratchSurface\.artworkId\)/);
  assert.match(recipient,/setCoverImage\(artwork\.src\)/);
- assert.match(owner,/getScratchArtwork\(artworkId\)/);
- assert.match(paid,/getScratchArtwork\(settings\.artworkId\)/);
+ assert.match(owner,/availableScratchArtwork\(env,artworkId\)/);
+ assert.match(owner,/resolveStoredArtwork\(env,artworkId\)/);
+ assert.match(creator,/fetch\('\/api\/scratch-artwork'/);
+ assert.match(creator,/coverCatalogue\.filter\(a=>!a\.archived\)/);
+ assert.match(paid,/resolveStoredArtwork\(env,settings\.artworkId\)/);
  const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
  assert.match(engine,/if \(!this\.artworkId && !this\.coverImage && w <= h\*1\.4\)/);
  assert.match(engine,/destination-out/);
