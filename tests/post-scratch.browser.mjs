@@ -40,7 +40,7 @@ try{
   const image='/post-scratch-artwork/editorial.webp';
   const issues=[];let count=0;
   for(const template of POST_TEMPLATES)for(const artwork of SCRATCH_ARTWORKS){
-   const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
+   const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'landscape',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
    const scratch=await renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage:image,audio:{enabled:false},hosts:{covered:document.querySelector('#covered'),revealed:document.querySelector('#revealed'),sound:document.querySelector('#sound')}});
    const a=document.querySelector('#covered').shadowRoot.querySelector('#card'),b=document.querySelector('#revealed').shadowRoot.querySelector('#card');
    for(const card of [a,b]){const r=card.getBoundingClientRect();if(Math.abs(r.width/r.height-.75)>.001)issues.push(template.id+' ratio '+r.width/r.height);if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);if(card.querySelectorAll('svg [data-field]:not([data-field="image-placeholder"])').length!==10)issues.push(template.id+' incomplete ten fields');}
@@ -105,7 +105,7 @@ try{
  }
  // Actual creator page: all 15 options, custom controls and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:{templateId:'custom-image',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:{templateId:'custom-image',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
  await page.addInitScript(()=>localStorage.setItem('reveal_edit_saved','owner'));
  await page.route('**/api/reveals/saved',r=>r.fulfill({json:{success:true,reveal:{id:'saved',recipient:'Chloe',sender:'Michael',eventName:'Saved surprise',hasImage:true,status:'draft',revision:1}}}));
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
@@ -115,7 +115,7 @@ try{
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.evaluate(()=>{const a=document.querySelector('#eventName'),b=document.querySelector('#postSubtitle');return a.closest('.field').nextElementSibling===b.closest('.field')&&!b.closest('.field').hidden&&a.getBoundingClientRect().bottom<=b.getBoundingClientRect().top;}),true,'Surprise field directly precedes subtitle');assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
- for(const [id,value] of Object.entries({postImageFit:'cover',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
+ for(const [id,value] of Object.entries({postImageFit:'cover',postImageOrientation:'portrait',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
  await page.locator('#scratchActualRevealed svg[data-post-template="custom-image"]').waitFor({state:'attached'});
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
@@ -126,6 +126,7 @@ try{
  await page.locator('#postImageReset').click();
  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
+ assert.equal(await page.locator('#postImageOrientation').inputValue(),'auto');
  assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Upload immediately precedes image editor with exact label');
  assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&Boolean(link.compareDocumentPosition(editor)&Node.DOCUMENT_POSITION_FOLLOWING)&&Boolean(editor.compareDocumentPosition(review)&Node.DOCUMENT_POSITION_FOLLOWING)&&link.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor follows all details and precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
@@ -135,6 +136,9 @@ try{
   await page.locator('#postTemplate').selectOption(option);
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
+   assert.equal(await page.locator('#postImageOrientation').isEnabled(),true);
+   await page.locator('#postImageOrientation').selectOption('landscape');
+   await page.locator('#postImageOrientation').selectOption('portrait');
   assert.equal(await page.locator('#postImageReset').isVisible(),true);
   assert.equal(await page.locator('#postImageReset').isEnabled(),true);
  }

@@ -399,13 +399,13 @@ export const APPROVED_POST_TEMPLATES=approved.map(a=>{
   z('eventName',255,95,52,700,{family:heading}),
   z('subtitle',350,48,29),
   z('recipient',400,45,28,600),
-  z('date',602,48,30,600),
-  z('time',652,45,28),
-  z('venue',700,48,30,600),
-  z('venueAddress',750,46,26),
-  z('message',800,105,28),
-  z('senderLine',908,43,26),
-  z('link',954,38,24,600)
+  z('date',675,48,26,600,{w:(w-12)/2}),
+  z('time',675,48,26,500,{x:x+(w+12)/2,w:(w-12)/2}),
+  z('venue',728,45,30,600),
+  z('venueAddress',776,43,26),
+  z('message',822,105,28),
+  z('senderLine',930,40,26),
+  z('link',974,38,24,600)
  ];
- return {...a,description:a.collection+' · '+a.name,image:'/post-scratch-artwork/'+a.id+'.webp',photo:{x:x+20,y:453,w:w-40,h:140,radius:8,frame:a.dark?'#10131b':'#f6f3ed',primary:true},zones,panels:[],decor:[],structured:true,approvedArtwork:true};
+ return {...a,description:a.collection+' · '+a.name,image:'/post-scratch-artwork/'+a.id+'.webp',photo:{x:x+20,y:453,w:w-40,h:214,radius:8,frame:a.dark?'#10131b':'#f6f3ed',primary:true},zones,panels:[],decor:[],structured:true,approvedArtwork:true};
 });

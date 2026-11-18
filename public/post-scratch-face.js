@@ -1,6 +1,6 @@
 import {loadPublishedDesign} from './published-template-designs.js?v=artwork-2';
-import {cleanPostSettings} from './post-scratch-settings.js?v=image-editor-1';
-import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=artwork-2';
+import {cleanPostSettings} from './post-scratch-settings.js?v=orientation-1';
+import {renderPostScratchTemplate,templateArtworkSource} from './post-scratch-renderer.js?v=orientation-1';
 export async function renderPostScratchFace(card,reveal,settings,imageSrc=''){
  const s=cleanPostSettings(settings),{template}=await loadPublishedDesign(s.templateId);
  // Load before showing the underlay, including authenticated blob images.

@@ -99,6 +99,21 @@ function drawPanels(svg,panels,values,src,guides){
   }
  }
 }
+// Fit a requested frame aspect ratio inside the reserved photo bounds.
+// Never expand into adjacent text, distort the photo or rotate the card.
+export function photoFrame(p,orientation='auto'){
+ if(!['portrait','landscape'].includes(orientation))return {...p};
+ const ratio=orientation==='portrait'?3/4:4/3;
+ const w=Math.min(p.w,p.h*ratio),h=w/ratio;
+ return {...p,x:p.x+(p.w-w)/2,y:p.y+(p.h-h)/2,w,h};
+}
+function orientTemplate(template,orientation){
+ if(!template.photo||!['portrait','landscape'].includes(orientation))return template;
+ const old=template.photo,photo=photoFrame(old,orientation);
+ // The existing decorative photo panel follows the same frame, preserving padding.
+ const panels=(template.panels||[]).map(p=>p.key!=='image'?p:{...p,x:photo.x-(old.x-p.x),y:photo.y-(old.y-p.y),w:photo.w+(p.w-old.w),h:photo.h+(p.h-old.h)});
+ return {...template,photo,panels};
+}
 // Scale and move the image viewport inside its fixed template clip.
 export function photoGeometry(p,options={}){
  const bound=(value,min,max,fallback)=>typeof value==='number'&&Number.isFinite(value)?Math.max(min,Math.min(max,value)):fallback;
@@ -132,6 +147,7 @@ function drawArtwork(svg,template,options){
 }
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
+ template=orientTemplate(template,options.imageOrientation);
  const values=fields(data);const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
  const svg=mk('svg',{viewBox:'0 0 900 1200',width:1800,height:2400,role:'img','aria-label':values.eventName||'Personalised reveal',xmlns:NS,'data-post-template':template.id,style:'display:block;width:100%;height:auto;aspect-ratio:3/4;overflow:hidden;'});
  const defs=mk('defs',{},svg);

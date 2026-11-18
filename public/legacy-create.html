@@ -1090,6 +1090,8 @@
             </div>
             <p id="postImageEditorHelp" class="field-help">Upload an image to activate the editing controls.</p>
             <fieldset id="postImageAdjustments" disabled>
+            <label for="postImageOrientation">Image orientation</label>
+            <select id="postImageOrientation"><option value="auto">Template default</option><option value="portrait">Portrait (3:4)</option><option value="landscape">Landscape (4:3)</option></select>
             <label for="postImageFit">Image fit</label>
             <select id="postImageFit"><option value="auto">Template default</option><option value="contain">Fit whole image</option><option value="cover">Fill image frame</option></select>
             <label for="postImageZoom">Zoom <output id="postImageZoomValue" for="postImageZoom">100%</output></label>
@@ -1256,7 +1258,8 @@
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
     import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=approved-backgrounds-1';
     import {loadPublishedDesign} from '/published-template-designs.js?v=artwork-2';
-    import {cleanPostSettings} from '/post-scratch-settings.js?v=image-editor-1';
+    import {cleanPostSettings} from '/post-scratch-settings.js?v=orientation-1';
+    import {photoFrame} from '/post-scratch-renderer.js?v=orientation-1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1281,11 +1284,11 @@
     let removeImage = false;
     let objectUrl = null;
     let pendingReview = false;
-    const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
+    const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
     const postGroups=new Map();
     for(const t of POST_TEMPLATES){const label=t.collection||'Existing templates';if(!postGroups.has(label)){const group=document.createElement('optgroup');group.label=label;$('postTemplate').append(group);postGroups.set(label,group);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;postGroups.get(label).append(o);}
-    function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
-    function restorePostSettings(value){const p=cleanPostSettings(value);for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
+    function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageOrientation:$('postImageOrientation').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value)};}
+    function restorePostSettings(value){const p=cleanPostSettings(value);for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageOrientation:'imageOrientation',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
     function syncPostImageEditor(){
       const available=currentVariant==='ticket',hasImage=Boolean(objectUrl);
       $('postImageControls').hidden=!available;
@@ -1303,11 +1306,11 @@
       $('postTemplateDescription').textContent=t.description;
       $('postShadeValue').textContent=$('postShade').value+'%';
       $('imageUploadLabel').textContent='Add Image (Optional)';
-      const describe=p=>{ $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.round(p.w*2)+' × '+Math.round(p.h*2)+' px. '+(p.full?'Use image fit, zoom and position to compose your full-card image.':'Adjust the size and position within the fixed image frame.')+' Only appears after scratching.'; };
+      const describe=base=>{ const p=photoFrame(base,$('postImageOrientation').value); $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.round(p.w*2)+' × '+Math.round(p.h*2)+' px. '+(p.full?'Use image fit, zoom and position to compose your full-card image.':'Adjust the size and position within the selected portrait or landscape image frame.')+' Only appears after scratching.'; };
       describe(p);
       loadPublishedDesign(t.id).then(({template})=>{if(currentVariant==='ticket'&&$('postTemplate').value===t.id)describe(template.photo);}).catch(()=>{});
     }
-    const imageEditIds=new Set(['postImagePosition','postImageFit','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade']);
+    const imageEditIds=new Set(['postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade']);
     function showImageEditingPreview(){
       if(currentVariant==='ticket'&&objectUrl){
         const section=$('scratchCreatorActual');
@@ -1316,7 +1319,7 @@
     }
     for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();schedulePortraitPreview();});
     function resetPostImageGeometry(){
-      for(const [id,value] of Object.entries({postImageFit:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
+      for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
     $('postImageReset').addEventListener('click',()=>{resetPostImageGeometry();$('postTextContrast').value='light';$('postShade').value=70;pendingReview=false;showImageEditingPreview();postGuidance();schedulePortraitPreview();});
     let portraitPreviewQueue=Promise.resolve();
