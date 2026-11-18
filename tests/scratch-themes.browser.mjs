@@ -344,13 +344,13 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
     await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art.id);
     paintings.add(await page.locator('#scratchActualCovered canvas').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
-   assert.equal(paintings.size,20,'Each approved artwork must actually repaint the surface Canvas');
+   assert.equal(paintings.size,SCRATCH_ARTWORKS.length,'Each approved artwork must actually repaint the surface Canvas');
     assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed','Updating artwork preserves the selected preview side');
     await page.locator('[data-scratch-preview-mode="covered"]').click();
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:resolve(output,size.name+'-final-20-dropdown.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,size.name+'-final-40-dropdown.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
@@ -866,7 +866,7 @@ test('paid recipient uses selected artwork as scratch foil while hiding surprise
    assert.equal((await page.locator('.eyebrow').textContent()).trim(),'A special scratch reveal');
    paintings.add(await page.locator('#foilCanvas').evaluate(canvas=>canvas.toDataURL('image/png')));
   }
-  assert.equal(paintings.size,20,'The paid recipient must see each saved artwork image');
+  assert.equal(paintings.size,SCRATCH_ARTWORKS.length,'The paid recipient must see each saved artwork image');
   assert.deepEqual(errors,[]);
   await page.screenshot({path:resolve(output,'recipient-approved-artwork.png'),fullPage:true});
   await page.close();

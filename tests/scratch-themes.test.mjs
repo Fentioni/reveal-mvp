@@ -41,14 +41,15 @@ test('the creator retains the 20 original covers and loads managed artwork witho
  const names=['Azure Kaleidoscope','Birthday Opulence','Champagne Currents','Champagne Ribbons',
  'Compass Journey','Copper Petals','Crimson Vortex','Emerald Elegance','Festive Midnight',
  'Fuchsia Prism','Gilded Archways','Golden Spotlight','Lunar Lullaby','Metallic Spirals',
- 'Midnight Romance','Ruby Diamonds','Sapphire Geometry','Sapphire Weave','Scarlet Waves','Silver Apex'];
+ 'Midnight Romance','Ruby Diamonds','Sapphire Geometry','Sapphire Weave','Scarlet Waves','Silver Apex',
+ "Ruby Labyrinth","Neon Apex","Lime Vortex","Neon Fuchsia","Violet Currents","Coral Prism","Emerald Splash","Sunset Geometry","Sapphire Mosaic","Graffiti Luxe","Emerald Facets","Copper Orbit","Gilded Ribbons","Magenta Spires","Sapphire Trefoil","Midnight Chevron","Chromatic Weave","Imperial Clover","Rainbow Prism","Violet Tunnel"];
  assert.deepEqual(SCRATCH_ARTWORKS.map(i=>i.label),names);
- assert.equal(SCRATCH_ARTWORKS.length,20);
- assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,20);
+ assert.equal(SCRATCH_ARTWORKS.length,40);
+ assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,40);
  assert.equal(DEFAULT_SCRATCH_ARTWORK,'azure-kaleidoscope');
  assert.equal(getScratchArtwork('missing'),null);
  for(const art of SCRATCH_ARTWORKS) {
-   assert.match(art.file,/^[A-Za-z_]+\.jpg$/);
+   assert.match(art.file,/^[A-Za-z_]+\.(jpg|webp)$/);
    assert.equal(art.src,'/scratch-artwork/'+art.file);
  }
  assert.match(creator,/id="scratchArtwork"/);
