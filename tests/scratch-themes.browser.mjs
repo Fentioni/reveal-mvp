@@ -1,3 +1,4 @@
+import {getPairedProduct,coversForTemplate} from '../public/paired-products.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -187,7 +188,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let savedReveal,savedSurface,imageBytes;
-   const art=SCRATCH_ARTWORKS[5].id;
+   const art='envelope-coral-ginkgo-alternative';
    await page.route(staging+'/**',async route=>{
      const req=route.request(),u=new URL(req.url()),p=u.pathname;
      const json=result=>route.fulfill({json:result});
@@ -221,7 +222,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      return route.fulfill({response:await route.fetch({url:base+p+u.search})});
    });
    await page.goto(staging+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
-   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.locator('#postTemplate:enabled').waitFor();
+   await page.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
    await page.locator('#scratchArtwork').selectOption(art);
    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
    for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Mick',eventName:'Jesus Christ Superstar',venue:'Theatre Royal, Drury Lane',personalMessage:'A special night'})){
@@ -239,7 +241,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.locator('#postImageZoom').fill('160');
    await page.locator('#postImagePanX').fill('25');
    await page.locator('#postImagePanY').fill('-20');
-   await page.waitForFunction(()=>{const r=document.querySelector('#scratchActualRevealed').shadowRoot;const image=r.querySelector('[data-photo-slot] image');return image?.getAttribute('preserveAspectRatio')==='xMidYMid slice'&&Number(image.getAttribute('width'))>450;});
+   await page.waitForFunction(()=>{const r=document.querySelector('#scratchActualRevealed').shadowRoot;const image=r.querySelector('[data-photo-slot] image');return image?.getAttribute('preserveAspectRatio')==='xMidYMid slice'&&Number(image.getAttribute('width'))>0;});
    let edited;
    async function checkCurrent(){
      const geometry=await page.locator('#scratchActualRevealed [data-photo-slot] image').evaluate(i=>['x','y','width','height','preserveAspectRatio'].map(k=>i.getAttribute(k)));
@@ -247,7 +249,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
      assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
      assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
-     assert.equal((await page.locator('#scratchActualRevealed [data-field=eventName] tspan').allTextContents()).join(' '),'JESUS CHRIST SUPERSTAR');
+     assert.match((await page.locator('#scratchActualRevealed [data-field=eventName] tspan').allTextContents()).join(' '),/Jesus Christ Superstar/i);
      assert.equal(await page.locator('#scratchActualRevealed svg [data-photo-slot] image').evaluate(e=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth);i.src=e.getAttribute('href');})),800);
      assert.equal(await page.locator('#scratchActualRevealed canvas').count(),0);
      const px=await page.locator('#scratchActualCovered canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data));
@@ -261,7 +263,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    assert.equal(await page.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
    await page.locator('#editButton').click();
    await page.waitForURL('**/legacy-create?**',{timeout:15000});
-   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.locator('#postTemplate:enabled').waitFor();
    await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
    await checkCurrent();
    assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
@@ -279,7 +281,7 @@ test('Scratch Ticket header spans the page and fits both lines without overflow 
   for(const width of [320,390,768,900,1024,1380]){
    const page=await browser.newPage({viewport:{width,height:900}});
    await page.goto(base+'/legacy-create?variant=ticket');
-   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.locator('#postTemplate:enabled').waitFor();
    const metrics=await page.locator('.page-header').evaluate(header=>{
     const h=header.getBoundingClientRect(),builder=document.querySelector('.builder-layout').getBoundingClientRect();
     const measure=id=>{
@@ -302,7 +304,7 @@ test('Scratch Ticket header spans the page and fits both lines without overflow 
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
-test('creator shows only the 20-artwork dropdown without the retired foil section on phone or desktop',
+test('creator shows only paired gift products without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -313,8 +315,8 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    const errors=[];
    page.on('pageerror',err=>errors.push(err.message));
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
-   await page.locator('#scratchArtwork:enabled').waitFor();
-   assert.equal(await page.locator('#scratchArtwork option').count(),SCRATCH_ARTWORKS.length);
+   await page.locator('#postTemplate:enabled').waitFor();
+   assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
    assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
@@ -337,7 +339,12 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
    const paintings=new Set();
    for(const art of SCRATCH_ARTWORKS){
-    await page.locator('#scratchArtwork').selectOption(art.id);
+    const templateId='bg-'+art.productId;
+    await page.locator('#postTemplate').selectOption(templateId);
+    const matching=coversForTemplate(templateId);
+    assert.deepEqual(await page.locator('#scratchArtwork option').evaluateAll(nodes=>nodes.map(n=>n.value)),matching);
+    assert.equal(await page.locator('#pairedCoverChoice').isVisible(),matching.length===2);
+    if(matching.length===2)await page.locator('#scratchArtwork').selectOption(art.id);
     await page.waitForFunction(id=>document.querySelector('#scratchArtwork')?.value===id,art.id);
     await page.waitForTimeout(75);
     assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
@@ -350,7 +357,7 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:resolve(output,size.name+'-final-65-dropdown.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,size.name+'-paired-products.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}

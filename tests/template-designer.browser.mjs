@@ -29,15 +29,15 @@ try{
  await mkdir('test-output/template-designer',{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),79);
+ assert.equal(await page.locator('#template option').count(),26);
  assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
- assert.equal(await page.locator('[data-layer="zone:sender"] span').first().textContent(),'From Me');
- assert.equal(await page.locator('#render [data-layout-label="recipient"]').textContent(),'For You');
- assert.equal(await page.locator('#render [data-layout-label="sender"]').textContent(),'From Me');
+ assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From Me');
+ assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'For You');
+ assert.equal(await page.locator('#render [data-field="senderLine"]').textContent(),'From Me');
  assert.doesNotMatch(await page.locator('#render').textContent(),/\b(?:Michael|Chloe)\b/i);
  await page.locator('[data-layer="zone:recipient"]').click();
  assert.equal(await page.locator('#prop-templateText').inputValue(),'');
- await page.locator('[data-layer="zone:sender"]').click();
+ await page.locator('[data-layer="zone:senderLine"]').click();
  assert.equal(await page.locator('#prop-templateText').inputValue(),'');
  await page.locator('[data-layer="zone:eventName"]').click();
  // Fixed wording updates instantly, marks the template dirty, and supports undo/redo.
@@ -60,16 +60,16 @@ try{
  await page.locator('[data-layer="photo"]').click();const oldW=Number(await page.locator('#prop-w').inputValue());
  await page.locator('#prop-w').fill(String(oldW-25));await page.locator('#prop-w').press('Tab');
  assert.equal(Number(await page.locator('#prop-w').inputValue()),oldW-25);
- await page.locator('[data-layer="panel:image"]').click();await page.locator('#prop-sw').fill('5');await page.locator('#prop-sw').press('Tab');
+ assert.equal(await page.locator('[data-layer^="panel:"]').count(),0,'Text-free backgrounds have no baked panel presets');
  const originalDecor=await page.locator('[data-layer^="decor:"]').count();await page.locator('#add').click();await page.locator('[data-add="ellipse"]').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor+1);
  await page.locator('#remove').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor);await page.locator('#undo').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor+1);
  await page.locator('#redo').click();assert.equal(await page.locator('[data-layer^="decor:"]').count(),originalDecor);
  await page.locator('#add').click();await page.locator('[data-add="text"]').click();await page.locator('#prop-text').fill('Special occasion');assert.match(await page.locator('#render [data-decor-index]').last().textContent(),/Special occasion/i);await page.locator('#undo').click();assert.equal(await page.locator('#prop-text').inputValue(),'Your text');await page.locator('#redo').click();assert.equal(await page.locator('#prop-text').inputValue(),'Special occasion');
  await page.locator('#artworkShortcut').click();
- await page.locator('#prop-artworkSource').selectOption('spotlight');
- assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/spotlight.webp');
+ await page.locator('#prop-artworkSource').selectOption('bg-luxury-sapphire-gold');
+ assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/bg-luxury-sapphire-gold.webp');
  await page.locator('#undo').click();
- assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/candlelight.webp');
+ assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/bg-luxury-champagne-gold.webp');
  const artwork=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=900;c.height=1200;const g=c.getContext('2d');g.fillStyle='#176b74';g.fillRect(0,0,900,1200);g.fillStyle='#f2db91';g.fillRect(0,0,900,220);return c.toDataURL('image/png').split(',')[1]});
  await page.locator('#artworkUpload').setInputFiles({name:'new-template.png',mimeType:'image/png',buffer:Buffer.from(artwork,'base64')});
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('New artwork ready'));
@@ -80,16 +80,16 @@ try{
  await page.locator('#showSampleImage').check();assert.equal(await page.locator('[data-photo-slot] image').count(),1);
  await page.locator('#save').click();await page.locator('#token').fill(secret);await page.locator('#authSave').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Saved.'));
- const api=await (await page.request.get(base+'/api/template-designs/candlelight')).json();
+ const api=await (await page.request.get(base+'/api/template-designs/bg-luxury-champagne-gold')).json();
  assert.equal(api.template.artworkSource,'upload');assert.equal(api.template.artworkFit,'cover');assert.match(api.template.artworkData,/^data:image\//);
  assert.equal(api.template.zones[0].templateText,'A saved title');assert.equal(api.template.zones[0].textMode,'fixed');assert.equal(api.template.zones[0].family,'Verdana, sans-serif');assert.equal(api.template.zones[0].ink,'#99ccee');assert.equal(api.template.photo.w,oldW-25);assert.equal(api.template.decor.at(-1).text,'Special occasion');
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();assert.equal(await page.locator('#prop-templateText').inputValue(),'A saved title');assert.equal(await page.locator('#prop-textMode').inputValue(),'fixed');assert.equal(await page.locator('#prop-family').inputValue(),'Verdana, sans-serif');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
  // The same published design is loaded by the actual customer-facing renderer.
  await page.goto(base+'/matrix');
- const actual=await page.evaluate(async()=>{const {renderPostScratchFace}=await import('/post-scratch-face.js?v=artwork-2');const card=document.querySelector('#card');await renderPostScratchFace(card,{eventName:'A special night'},{templateId:'candlelight'});return {wording:card.querySelector('[data-field="eventName"]').textContent,font:card.querySelector('[data-field="eventName"]').getAttribute('font-family'),fill:card.querySelector('[data-field="eventName"]').getAttribute('fill'),artwork:card.querySelector('[data-template-artwork]').getAttribute('href'),fit:card.querySelector('[data-template-artwork]').getAttribute('preserveAspectRatio')};});
+ const actual=await page.evaluate(async()=>{const {renderPostScratchFace}=await import('/post-scratch-face.js?v=artwork-2');const card=document.querySelector('#card');await renderPostScratchFace(card,{eventName:'A special night'},{templateId:'bg-luxury-champagne-gold'});return {wording:card.querySelector('[data-field="eventName"]').textContent,font:card.querySelector('[data-field="eventName"]').getAttribute('font-family'),fill:card.querySelector('[data-field="eventName"]').getAttribute('fill'),artwork:card.querySelector('[data-template-artwork]').getAttribute('href'),fit:card.querySelector('[data-template-artwork]').getAttribute('preserveAspectRatio')};});
  assert.match(actual.wording,/A\s*saved\s*title/i);delete actual.wording;assert.deepEqual(actual,{font:'Verdana, sans-serif',fill:'#99ccee',artwork:api.template.artworkData,fit:'xMidYMid slice'});
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();await page.locator('#artworkShortcut').click();await page.screenshot({path:'test-output/template-designer/desktop.png',fullPage:true});
- await page.locator('#restoreArtwork').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/candlelight.webp');await page.locator('#undo').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
+ await page.locator('#restoreArtwork').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/bg-luxury-champagne-gold.webp');await page.locator('#undo').click();assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),api.template.artworkData);
  await page.locator('#reload').click();await page.waitForFunction(()=>document.querySelector('#status').textContent==='Template loaded.');
  // Check every approved design has ten editable text layers and an image frame.
  for(const templateId of await page.locator('#template option[value^="bg-"]').evaluateAll(opts=>opts.map(o=>o.value))){
@@ -110,12 +110,12 @@ try{
  // New template management, including persistence and protected deletion.
  await page.locator('#newTemplate').click();
  await page.locator('#newTemplateName').fill('New blank studio template');
- await page.locator('#newTemplateBase').selectOption('candlelight');
+ await page.locator('#newTemplateBase').selectOption('bg-luxury-champagne-gold');
  await page.locator('#createTemplateForm button[type=submit]').click();
  await page.locator('#token').fill(secret);await page.locator('#authSave').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('New template created.'));
  const newId=await page.locator('#template').inputValue();
- assert.match(newId,/^studio-/);assert.equal(await page.locator('#template option').count(),80);
+ assert.match(newId,/^studio-/);assert.equal(await page.locator('#template option').count(),27);
  assert.equal(await page.locator('[data-layer^="zone:"]').count(),10);
  assert.equal(await page.locator('[data-template-artwork]').count(),0);
  await page.locator('#prop-ink').fill('#445566');await page.locator('#prop-ink').dispatchEvent('change');
@@ -123,11 +123,11 @@ try{
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#deleteTemplate').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Template deleted'));
- assert.equal(await page.locator('#template option').count(),79);
+ assert.equal(await page.locator('#template option').count(),26);
  const archived=await (await page.request.get(base+'/api/template-designs/'+newId)).json();
  assert.equal(archived.template.zones[0].ink,'#445566');
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),79);
+ assert.equal(await page.locator('#template option').count(),26);
  assert.deepEqual(errors,[]);
  await page.locator('#coverManager').click();
  await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);
@@ -138,8 +138,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork added.'));
  const coverId=await page.locator('#coverList .cover-item').last().getAttribute('data-cover-id');assert.match(coverId,/^cover-/);
  const customer=await browser.newPage();await customer.goto(base+'/legacy-create.html?variant=ticket');await customer.locator('#reviewButton:enabled').waitFor();
- await customer.locator('#scratchArtwork').selectOption(coverId);
- await customer.waitForFunction(id=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork===id,coverId);
+ assert.equal(await customer.locator('#scratchArtwork option[value="'+coverId+'"]').count(),0,'Unpaired admin uploads must not enter customer catalogue');
  await customer.close();
  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
@@ -150,7 +149,7 @@ try{
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
  await page.locator('#closeCoverManager').click();
  // Restore customer-driven text in the mock test storage before existing creator scenarios.
- const entry=objects.get('admin-template-designs/v1/candlelight.json');
+ const entry=objects.get('admin-template-designs/v2/bg-luxury-champagne-gold.json');
  const stored=JSON.parse(entry.value);
  stored.template.zones[0].textMode='customer';
  entry.value=JSON.stringify(stored);
@@ -188,10 +187,10 @@ try{
   await host.locator('[data-edit-field="recipient"]').fill('Chloe');
   assert.equal(await host.locator('[data-edit-field="recipient"]').getAttribute('aria-invalid'),'false');
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),2);
-  await creator.locator('#postTemplate').selectOption('blue-ink');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='blue-ink'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
-  await creator.locator('#postTemplate').selectOption('candlelight');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='candlelight'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
+  await creator.locator('#postTemplate').selectOption('bg-luxury-sapphire-gold');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-sapphire-gold'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
+  await creator.locator('#postTemplate').selectOption('bg-luxury-champagne-gold');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
   for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',postSubtitle:'Just for you',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'London',personalMessage:'A special night',ticketUrl:'https://example.org'})){
    const input=creator.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
    if(['eventDate','eventTime'].includes(key))await input.focus();else await input.click();await input.fill(value);
@@ -209,25 +208,24 @@ try{
   await link.fill('https://example.org');await creator.locator('#postTemplate').focus();
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),0);
   assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
-  await creator.locator('#postTemplate').selectOption('custom-image');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='custom-image');
-  assert.equal(await creator.locator('#scratchImageUpload').isVisible(),true);
-  assert.equal(await creator.locator('#postImageControls').isVisible(),false);
-  assert.match(await creator.locator('#imageUploadLabel').textContent(),/required/);
-  await creator.locator('#reviewButton').click();
-  assert.equal(await creator.locator('#image').getAttribute('aria-invalid'),'true');
-  assert.equal(await creator.locator('#scratchImageUpload').getAttribute('data-creator-invalid'),'true');
-  assert.equal(await creator.locator('#image').evaluate(e=>document.activeElement===e),true);
-  await creator.locator('#postTemplate').selectOption('candlelight');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='candlelight');
-  assert.equal(await creator.locator('#image').getAttribute('aria-invalid'),'false');
+  assert.equal(await creator.locator('#postTemplate option[value="custom-image"]').count(),0);
+  await creator.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-envelope-coral-ginkgo');
+  assert.equal(await creator.locator('#scratchImageUpload').isVisible(),false);
+  assert.equal(await creator.locator('#scratchArtwork option').count(),2);
+  await creator.locator('#scratchArtwork').selectOption('envelope-coral-ginkgo-alternative');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork==='envelope-coral-ginkgo-alternative');
+  await creator.locator('#postTemplate').selectOption('bg-luxury-champagne-gold');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold');
+  assert.equal(await creator.locator('#scratchArtwork').inputValue(),'luxury-champagne-gold-primary');
+  assert.equal(await creator.locator('#pairedCoverChoice').isVisible(),false);
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
   assert.equal(await creator.locator('#scratchActualRevealed').getAttribute('aria-hidden'),'true');
   await creator.locator('[data-scratch-preview-mode="revealed"]').click();
   assert.match(await creator.locator('#scratchActualRevealed [data-field=eventName]').textContent(),/THEATRE NIGHT/i);
   assert.match(await creator.locator('#scratchActualRevealed [data-field=recipient]').textContent(),/Chloe/i);
-  await creator.locator('#postTemplate').selectOption('blue-ink');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='blue-ink');
+  await creator.locator('#postTemplate').selectOption('bg-luxury-sapphire-gold');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-sapphire-gold');
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.locator('#customiseMode').click();
   const design=host.locator('.customer-design-tools');await design.waitFor({state:'visible'});
@@ -273,14 +271,14 @@ try{
  // Regression: stored values are not enough; each rendered glyph must
  // actually lie inside its clipping rectangle immediately after Amend.
  for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
-  for(const [templateId,hasImage] of [['candlelight',false],['custom-image',true]]){
+  for(const [templateId,hasImage] of [['bg-luxury-champagne-gold',false],['bg-envelope-coral-ginkgo',true]]){
    const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
    const data={recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special night',ticketUrl:'https://example.org',hasImage,status:'draft',revision:2,id:'amend-test'};
    const settings={templateId,subtitle:'Just for you',venueAddress:'London',layout:{eventName:{ink:'#ab1234',size:30,family:'Arial, sans-serif'}}};
    await creator.addInitScript(()=>localStorage.setItem('reveal_edit_amend-test','test-owner'));
    await creator.route('**/api/reveals/amend-test',route=>route.fulfill({json:{success:true,reveal:data}}));
-   await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:settings},audio:{enabled:false}}}));
-   if(hasImage)await creator.route('**/api/reveals/amend-test/image',route=>route.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
+   await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:templateId.slice(3)+'-primary',postScratch:settings},audio:{enabled:false}}}));
+   if(hasImage)await creator.route('**/api/reveals/amend-test/image',route=>route.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
    await creator.goto(base+'/legacy-create.html?edit=amend-test');
    await creator.locator('#reviewButton:enabled').waitFor();
    assert.equal(await creator.locator('#savedRevealLoadStatus:visible').count(),0);

@@ -1281,7 +1281,7 @@
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
     import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=paired-products-1';
-    import {getPairedProduct,coversForTemplate,isMatchingPair} from '/paired-products.js?v=1';
+    import {getPairedProduct,coversForTemplate,isMatchingPair} from '/paired-products.js?v=2';
     import {loadPublishedDesign} from '/published-template-designs.js?v=template-management-1';
     import {cleanPostSettings} from '/post-scratch-settings.js?v=customer-design-1';
     import {photoFrame} from '/post-scratch-renderer.js?v=customer-design-1';
@@ -1593,7 +1593,7 @@
       $('pairedCoverChoice').hidden=$('scratchArtwork').options.length<2;
     }
     async function refreshCoverCatalogue(){
-      try{const response=await fetch('/api/scratch-artwork',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.artworks)&&data.artworks.some(a=>!a.archived)){coverCatalogue=data.artworks;fillCoverOptions();}}}catch{}
+      try{const response=await fetch('/api/scratch-artwork',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.artworks)){coverCatalogue=data.artworks;const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;fillCoverOptions();postGuidance();}}}catch{}
     }
     fillCoverOptions();
     function selectConcertOption(group,selected){

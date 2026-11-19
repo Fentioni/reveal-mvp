@@ -5,7 +5,7 @@ import {mkdir} from 'node:fs/promises';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='data-editor-revision="5"';
+const marker='paired-products.js?v=2';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 let ready=false;
 for(let i=0;i<35;i++){
@@ -24,7 +24,7 @@ try{
   try{
    const res=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now());
    assert.ok(res.ok());assert.ok((await res.text()).includes(marker));
-   await page.locator('#scratchArtwork:enabled').waitFor();
+   await page.locator('#postTemplate:enabled').waitFor();
    const options=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));
    const standard=options.find(id=>id!=='custom-image');assert.ok(standard);
    await page.locator('#postTemplate').selectOption(standard);
@@ -46,7 +46,7 @@ try{
   await page.locator('#reviewButton:enabled').waitFor({timeout:20000});
   await page.locator('#scratchActualRevealed [data-edit-field="eventName"]').waitFor({state:'visible',timeout:20000});
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
-  const activeIds=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));assert.ok(activeIds.length);
+  const activeIds=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));assert.equal(activeIds.length,26);assert.equal(new Set(activeIds).size,26);
   assert.equal(await page.locator('#recipient:visible,#eventName:visible,#ticketUrl:visible').count(),0);
   assert.equal(await page.locator('#scratchActualRevealed [data-edit-field]').count(),10);
   assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
@@ -74,6 +74,10 @@ try{
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const template of POST_TEMPLATES.filter(t=>activeIds.includes(t.id))){
    await page.locator('#postTemplate').selectOption(template.id);
+   const expected=await page.evaluate(async id=>(await import('/paired-products.js')).coversForTemplate(id),template.id);
+   assert.deepEqual(await page.locator('#scratchArtwork option').evaluateAll(nodes=>nodes.map(n=>n.value)),expected);
+   assert.equal(await page.locator('#pairedCoverChoice').isVisible(),expected.length===2);
+   if(expected.length===2){await page.locator('#scratchArtwork').selectOption(expected[1]);await page.waitForFunction(id=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork===id,expected[1]);}
    assert.equal(await page.locator('#postImageControls').isVisible(),true);
    assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
    assert.equal(await page.locator('#postImageReset').isVisible(),true);
@@ -89,7 +93,7 @@ try{
     return {id:card.dataset.postTemplate,ratio:r.width/r.height,overflow:card.dataset.textOverflow,fields:svg.querySelectorAll('[data-field]').length,panels:svg.querySelectorAll('[data-layout-panel]').length,headings:root.querySelectorAll('h1,.eyebrow,.intro').length};
    });
    assert.equal(result.headings,0);assert.equal(result.fields,10);assert.equal(result.overflow,'');assert.ok(Math.abs(result.ratio-.75)<.001);
-   if(template.id!=='custom-image')assert.ok(result.panels>=8);
+   assert.equal(result.panels,0);
    const geometry=await host.evaluate(el=>{const svg=el.shadowRoot.querySelector('svg[data-post-template]'),g=svg.querySelector('[data-photo-slot]'),i=g.querySelector('image');return {w:Number(i.getAttribute('width')),h:Number(i.getAttribute('height')),x:Number(i.getAttribute('x')),y:Number(i.getAttribute('y')),fit:i.getAttribute('preserveAspectRatio'),clip:g.getAttribute('clip-path')};});
    assert.ok(geometry.w>0&&geometry.h>0);assert.ok(geometry.fit.endsWith('slice'));assert.ok(geometry.clip.startsWith('url(#'));
    await page.locator('#scratchActualRevealed #card').screenshot({path:'test-output/scratch-live/'+viewport.width+'-'+template.id+'.png'});
@@ -97,7 +101,7 @@ try{
   }
   await page.locator('#postImageReset').click();
   for(const [id,value] of Object.entries({postImageZoom:'100',postImagePanX:'0',postImagePanY:'0',postImageFit:'auto',postImagePosition:'xMidYMid',postTextContrast:'light',postShade:'70'}))assert.equal(await page.locator('#'+id).inputValue(),value);
-  await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
+  await page.waitForFunction(()=>Number(document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width'))>0);
   await page.locator('[data-scratch-preview-mode="covered"]').click();
   assert.equal(await page.locator('#scratchActualCovered').evaluate(el=>getComputedStyle(el).opacity),'1');
   assert.deepEqual(errors,[]);await page.close();

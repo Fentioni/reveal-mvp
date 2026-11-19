@@ -1,4 +1,4 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=clean-template-text-1';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=paired-products-2';
 import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA,purgeTemplateDemoText} from './template-design-schema.js?v=clean-template-text-1';
 import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=clean-template-text-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
@@ -332,7 +332,7 @@ async function changeCover(method,body){
   const headers=method==='POST'?{'Authorization':'Bearer '+token}:apiHeaders();
   await response(await fetch('/api/scratch-artwork',{method,headers,body:method==='POST'?body:JSON.stringify(body)}));
   if(method==='POST'){$('coverUploadForm').reset();clearCoverPreview();}
-  await refreshCovers();coverStatus(method==='POST'?'Artwork added. It is available to new creators.':method==='PATCH'?'Artwork restored.':'Artwork deleted from customer selection. Existing reveals are preserved.');
+  await refreshCovers();coverStatus(method==='POST'?'Artwork added to Studio. Only covers linked to a gift product are available to customers.':method==='PATCH'?'Artwork restored.':'Artwork deleted from customer selection. Existing reveals are preserved.');
  }catch(e){coverStatus(e.message,true);if(/token|secret/i.test(e.message)){token='';requireAdmin(()=>changeCover(method,body),e.message);}}
  finally{lockCovers(false);const cards=$('coverList').querySelectorAll('.cover-item');if(cards.length===1)cards[0].querySelector('button').disabled=true;}
 }

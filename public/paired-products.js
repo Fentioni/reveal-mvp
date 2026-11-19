@@ -496,8 +496,8 @@ export const PAIRED_COVERS=Object.freeze(PAIRED_PRODUCTS.flatMap(p=>[p.primary,p
 export const PAIRED_TEMPLATES=Object.freeze(PAIRED_PRODUCTS.map(p=>{
  const [x,top,right,bottom]=p.bounds,w=right-x,h=bottom-top;
  const kid=p.id.startsWith('kids-'),heading=kid?'"Trebuchet MS", sans-serif':'Georgia, "Times New Roman", serif',family=kid?'"Trebuchet MS", sans-serif':'Arial, Helvetica, sans-serif';
- const gap=7,weights=[100,52,48,230,52,60,64,135,46,42],total=weights.reduce((a,b)=>a+b,0),available=h-9*gap;
- let y=top;const slots=weights.map(weight=>{const height=available*weight/total;const s={x,y,w,h:height};y+=height+gap;return s;});
+ const gap=6,minima=[60,34,34,110,34,34,36,75,34,32],weights=[20,5,4,100,6,8,9,55,4,0],total=weights.reduce((a,b)=>a+b,0),extra=h-9*gap-minima.reduce((a,b)=>a+b,0);
+ let y=top;const slots=weights.map((weight,i)=>{const height=minima[i]+extra*weight/total;const s={x,y,w,h:height};y+=height+gap;return s;});
  const z=(key,i,size,weight=500,extra={})=>({key,...slots[i],size,weight,family,ink:p.ink,align:'center',noWordSplit:false,...extra});
  const dateW=Math.floor((w-12)*.59),q=slots[3],photoW=Math.min(w-16,q.h*1.6);
  const zones=[z('eventName',0,Math.min(64,w/9),700,{family:heading}),z('subtitle',1,34),z('recipient',2,33,700),z('date',4,30,600,{w:dateW}),z('time',4,30,600,{x:x+dateW+12,w:w-dateW-12}),z('venue',5,34,700),z('venueAddress',6,29),z('message',7,32),z('senderLine',8,29,600),z('link',9,26,700)];

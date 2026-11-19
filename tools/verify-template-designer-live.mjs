@@ -4,13 +4,13 @@ import {mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 let ready=false;
 for(let n=0;n<35;n++){
- try{const r=await fetch(origin+'/admin-template-designer?v=clean-template-text-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('clean-template-text-1')){const api=await fetch(origin+'/api/template-designs/candlelight',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
+ try{const r=await fetch(origin+'/admin-template-designer?v=clean-template-text-1&check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});if(r.ok&&(await r.text()).includes('clean-template-text-1')){const api=await fetch(origin+'/api/template-designs/bg-luxury-champagne-gold',{cache:'no-store'});if(api.ok){await api.json();ready=true;break;}}}catch{}
  await new Promise(r=>setTimeout(r,7000));
 }
 assert.ok(ready,'Template Studio is not deployed yet');
 // Visit every stored template, including archived/custom entries, to apply and verify the migration.
 const catalogueResponse=await fetch(origin+'/api/template-catalogue',{cache:'no-store'});assert.ok(catalogueResponse.ok);
-const entries=(await catalogueResponse.json()).templates;
+const entries=(await catalogueResponse.json()).templates;assert.equal(entries.filter(t=>!t.archived).length,26);assert.ok(entries.every(t=>t.id.startsWith('bg-')));
 const hasDemo=value=>typeof value==='string'&&/michael|chloe/iu.test(value.normalize('NFKC'));
 let inspected=0,stored=0;
 for(let i=0;i<entries.length;i+=5){
@@ -44,14 +44,14 @@ try{
   assert.equal(await page.locator('#photoOrientation').isVisible(),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   await page.locator('#artworkShortcut').click();assert.equal(await page.locator('#artworkUpload').isVisible(),true);assert.equal(await page.locator('#restoreArtwork').isVisible(),true);
-  await page.locator('#prop-artworkSource').selectOption('spotlight');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/spotlight.webp');await page.locator('#undo').click();
+  await page.locator('#prop-artworkSource').selectOption('bg-luxury-sapphire-gold');assert.equal(await page.locator('[data-template-artwork]').getAttribute('href'),'/post-scratch-artwork/bg-luxury-sapphire-gold.webp');await page.locator('#undo').click();
   await page.screenshot({path:'test-output/template-designer-live/'+viewport.width+'.png',fullPage:true});
   await page.locator('[data-layer="zone:eventName"]').click();
   const x=Number(await page.locator('#prop-x').inputValue());
   await page.locator('#prop-x').fill(String(x+15));await page.locator('#prop-x').press('Tab');
   assert.equal(Number(await page.locator('#prop-x').inputValue()),x+15);assert.equal(await page.locator('#save').isEnabled(),true);
   await page.locator('#undo').click();assert.equal(Number(await page.locator('#prop-x').inputValue()),x);
-  const noAuth=await page.request.put(origin+'/api/template-designs/candlelight',{data:{revision:'base'}});assert.ok([401,503].includes(noAuth.status()),'Unauthenticated writes must be blocked');
+  const noAuth=await page.request.put(origin+'/api/template-designs/bg-luxury-champagne-gold',{data:{revision:'base'}});assert.ok([401,503].includes(noAuth.status()),'Unauthenticated writes must be blocked');
   assert.deepEqual(errors,[]);await page.close();
   console.log('LIVE Template Studio',viewport.width,'passed; no manual design edits published.');
  }

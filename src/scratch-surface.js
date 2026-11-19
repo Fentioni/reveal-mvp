@@ -204,7 +204,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     }
     if(variant!=='concert'&&(body.has('postScratch')||body.has('artworkId'))){
       const product=getPairedProduct(postScratch.templateId);
-      if(!product)return error('Choose a complete gift design.');
+      if(!product||!(await getTemplateCatalogue(env)).some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available complete gift design.');
       if(requestedArtwork===null&&!isMatchingPair(postScratch.templateId,artworkId))artworkId=product.primary.id;
       if(!isMatchingPair(postScratch.templateId,artworkId))return error('The scratch cover must belong to the selected gift design.');
       if(!await availableScratchArtwork(env,artworkId))return error('The matching scratch cover is unavailable.');

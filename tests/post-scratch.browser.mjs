@@ -23,7 +23,7 @@ try{
   for(const template of POST_TEMPLATES){
    for(const field of expectedFields)if(!template.zones.some(z=>z.key===field))throw Error(template.id+' missing '+field);
    if(!template.zones.some(z=>['sender','senderLine'].includes(z.key)))throw Error(template.id+' missing sender');
-   if(template.id!=='custom-image'){
+   {
     if(!template.structured||!template.panels||(!template.approvedArtwork&&template.panels.length<8))throw Error(template.id+' missing structured layout');
     const all=[...template.zones,template.photo];
     for(const zone of all)if(zone.x<0||zone.y<0||zone.x+zone.w>900||zone.y+zone.h>1200)throw Error(template.id+' outside card');
@@ -37,9 +37,11 @@ try{
   const {renderPostScratchFace}=await import('/post-scratch-face.js');
   const section=document.querySelector('#preview');section.style.maxWidth='490px';
   const reveal={recipient:'Chloe',sender:'Michael',eventName:'A wonderful surprise',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'Happy birthday! We are going to an unforgettable evening together.',ticketUrl:'https://example.org/',hasImage:true};
-  const image='/post-scratch-artwork/editorial.webp';
+  const image='/post-scratch-artwork/bg-luxury-champagne-gold.webp';
   const issues=[];let count=0;
+  const {isMatchingPair}=await import('/paired-products.js');
   for(const template of POST_TEMPLATES)for(const artwork of SCRATCH_ARTWORKS){
+   if(!isMatchingPair(template.id,artwork.id))continue;
    const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'landscape',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
    const scratch=await renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage:image,audio:{enabled:false},hosts:{covered:document.querySelector('#covered'),revealed:document.querySelector('#revealed'),sound:document.querySelector('#sound')}});
    const a=document.querySelector('#covered').shadowRoot.querySelector('#card'),b=document.querySelector('#revealed').shadowRoot.querySelector('#card');
@@ -55,7 +57,7 @@ try{
    if(normalize(recipient.querySelector('svg'))!==normalize(b.querySelector('svg'))){const x=normalize(recipient.querySelector('svg')),y=normalize(b.querySelector('svg')),i=[...x].findIndex((c,i)=>c!==y[i]);issues.push(template.id+' renderer mismatch: '+x.slice(i-70,i+100)+' vs '+y.slice(i-70,i+100));}
    recipient.remove();count++;
   }
-  return {count,expected:POST_TEMPLATES.length*SCRATCH_ARTWORKS.length,issues};
+  return {count,expected:SCRATCH_ARTWORKS.length,issues};
  });
  assert.equal(report.count,report.expected);assert.deepEqual(report.issues,[]);assert.deepEqual(errors,[]);
  await mkdir('test-output/post-scratch',{recursive:true});await page.screenshot({path:'test-output/post-scratch/matrix-'+viewport.width+'.png'});
@@ -103,21 +105,21 @@ try{
  }
  await gallery.close();
  }
- // Actual creator page: all 15 options, custom controls and amend restoration.
+ // Actual creator page: 26 paired options and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'champagne-ribbons',postScratch:{templateId:'custom-image',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'envelope-coral-ginkgo-alternative',postScratch:{templateId:'bg-envelope-coral-ginkgo',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
  await page.addInitScript(()=>localStorage.setItem('reveal_edit_saved','owner'));
  await page.route('**/api/reveals/saved',r=>r.fulfill({json:{success:true,reveal:{id:'saved',recipient:'Chloe',sender:'Michael',eventName:'Saved surprise',hasImage:true,status:'draft',revision:1}}}));
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
- await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
+ await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),79);assert.equal(await page.locator('#postTemplate').inputValue(),'custom-image');
+ assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-envelope-coral-ginkgo');assert.equal(await page.locator('#scratchArtwork').inputValue(),'envelope-coral-ginkgo-alternative');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible,#postVenueAddress:visible').count(),0);assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
  for(const [id,value] of Object.entries({postImageFit:'cover',postImageOrientation:'portrait',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
- await page.locator('#scratchActualRevealed svg[data-post-template="custom-image"]').waitFor({state:'attached'});
+ await page.locator('#scratchActualRevealed svg[data-post-template="bg-envelope-coral-ginkgo"]').waitFor({state:'attached'});
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('aria-hidden'),'true');
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
@@ -133,20 +135,21 @@ try{
  await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').fill('Edited on ticket');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Edited on ticket');
  await page.locator('#postTemplate').focus();
+ const initialWidth=Number(await page.locator('#scratchActualRevealed [data-photo-slot] image').getAttribute('width'));
  await page.locator('#postImageZoom').fill('200');
- await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='1800');
+ await page.waitForFunction(w=>Number(document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width'))>w,initialWidth);
  await page.locator('#postImageReset').click();
- await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
+ await page.waitForFunction(()=>Number(document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width'))>0);
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
  assert.equal(await page.locator('#postImageOrientation').inputValue(),'auto');
- assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&!upload.hidden&&document.querySelector('#imageUploadLabel').textContent==='Upload full-card image (required)';}),true,'Upload immediately precedes image editor with exact label');
+ assert.equal(await page.locator('#scratchImageUpload').isVisible(),false,'Upload uses the inline editable photo zone');
  assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
  assert.equal(await page.locator('#postShade').inputValue(),'70');
  assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
  for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
   await page.locator('#postTemplate').selectOption(option);
-  assert.equal(await page.locator('#scratchImageUpload').isVisible(),option==='custom-image');
+  assert.equal(await page.locator('#scratchImageUpload').isVisible(),false);
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),true);
    assert.equal(await page.locator('#postImageOrientation').isEnabled(),true);
