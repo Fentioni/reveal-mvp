@@ -44,11 +44,14 @@ test('the creator uses product-bound covers without a thematic picker',async()=>
  assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,31);
  assert.equal(DEFAULT_SCRATCH_ARTWORK,'luxury-champagne-gold-primary');
  assert.equal(PAIRED_PRODUCTS.filter(p=>coversForTemplate(p.templateId).length===2).length,5);
+ const productsById=new Map(PAIRED_PRODUCTS.map(product=>[product.id,product]));
  assert.equal(getScratchArtwork('azure-kaleidoscope'),null);
  assert.equal(getScratchArtwork('missing'),null);
  for(const art of SCRATCH_ARTWORKS) {
    assert.match(art.file,/^[a-z-]+\.webp$/);
-   assert.equal(art.src,'/scratch-artwork/'+art.file);
+   const product=productsById.get(art.productId);
+   assert.ok(product);
+   assert.equal(art.src,product.id.startsWith('kids-')?'/scratch-artwork/'+art.file:product.image);
  }
  assert.doesNotMatch(creator,/id="scratchArtwork"/);
  assert.match(creator,/selectPairedCover/);
@@ -66,7 +69,11 @@ test('the creator uses product-bound covers without a thematic picker',async()=>
  assert.match(paid,/resolveStoredArtwork\(env,settings\.artworkId\)/);
  const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
  assert.match(engine,/if \(!this\.artworkId && !this\.coverImage && w <= h\*1\.4\)/);
+ assert.match(engine,/drawScratchCoverTypography\(ctx,w,h,getPairedProductByCoverId\(this\.artworkId\),this\.artworkId\)/);
  assert.match(engine,/destination-out/);
+ const type=await readFile(resolve(root,'public/scratch-cover-typography.js'),'utf8');
+ assert.match(type,/SCRATCH  TO/);
+ assert.match(type,/product\.id\.startsWith\('kids-'\)/);
 });
 test('ScratchCard constructor and theme setter preserve existing foil and uploaded-image choice',()=>{
  const data={};

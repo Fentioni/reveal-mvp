@@ -7,6 +7,8 @@
 import {getScratchTheme, DEFAULT_SCRATCH_THEME, SCRATCH_THEMES} from './scratch-themes.js';
 import {drawScratchThemeArtwork} from './scratch-theme-art.js';
 import {DEFAULT_CONCERT_TEMPLATE,isConcertTemplate,drawConcertTicketPath,isConcertStubLeft} from './concert-ticket-options.js';
+import {getPairedProductByCoverId} from './paired-products.js?v=paired-cover-typography-1';
+import {drawScratchCoverTypography} from './scratch-cover-typography.js';
 const FOILS = Object.freeze({
   gold: ['#654114', '#F8E3A0', '#BD8430', '#FFF3BF', '#9A6420'],
   silver: ['#687382', '#F2F6FA', '#A3B0BE', '#FFFFFF', '#778697'],
@@ -165,6 +167,7 @@ export class ScratchCard {
         ctx.fillStyle = gradient;
         ctx.fillRect(0,0,w,h);
         ctx.restore();
+        drawScratchCoverTypography(ctx,w,h,getPairedProductByCoverId(this.artworkId),this.artworkId);
       }
     }
 

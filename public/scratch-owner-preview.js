@@ -6,7 +6,7 @@ import {renderPostScratchFace} from './post-scratch-face.js?v=customer-design-1'
  * once completely covered and once completely revealed. No public reveal
  * requests, no scratch hooks or audio playback, no unlocking interaction.
  */
-import {ScratchCard} from './scratchcard.js?v=concert-professional-8';
+import {ScratchCard} from './scratchcard.js?v=paired-cover-typography-1';
 import {setPortraitFaceTheme} from './scratch-recipient-face.js?v=post-templates-1';
 import {recipientCardModel} from './scratch-recipient-fields.js?v=complete-card-1';
 import {getScratchTheme,DEFAULT_SCRATCH_THEME} from './scratch-themes.js?v=themes-13-1';

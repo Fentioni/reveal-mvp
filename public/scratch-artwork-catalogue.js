@@ -1,4 +1,4 @@
-import {PAIRED_COVERS} from './paired-products.js';
+import {PAIRED_COVERS} from './paired-products.js?v=paired-cover-typography-1';
 export const SCRATCH_ARTWORKS=PAIRED_COVERS;
 export const DEFAULT_SCRATCH_ARTWORK=SCRATCH_ARTWORKS[0].id;
 export const isStudioScratchArtwork=id=>typeof id==='string'&&/^cover-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id);

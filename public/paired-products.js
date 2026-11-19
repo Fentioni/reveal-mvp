@@ -492,7 +492,8 @@ export const PAIRED_PRODUCTS=Object.freeze([
 export const getPairedProduct=templateId=>PAIRED_PRODUCTS.find(p=>p.templateId===templateId)||null;
 export const coversForTemplate=templateId=>{const p=getPairedProduct(templateId);return p?[p.primary,p.alternative].filter(Boolean).map(c=>c.id):[];};
 export const isMatchingPair=(templateId,artworkId)=>coversForTemplate(templateId).includes(artworkId);
-export const PAIRED_COVERS=Object.freeze(PAIRED_PRODUCTS.flatMap(p=>[p.primary,p.alternative].filter(Boolean).map((c,i)=>Object.freeze({...c,productId:p.id,label:p.name+' – '+(i?'alternative':'primary'),src:'/scratch-artwork/'+c.file}))));
+export const getPairedProductByCoverId=coverId=>PAIRED_PRODUCTS.find(p=>p.primary.id===coverId||p.alternative?.id===coverId)||null;
+export const PAIRED_COVERS=Object.freeze(PAIRED_PRODUCTS.flatMap(p=>[p.primary,p.alternative].filter(Boolean).map((c,i)=>Object.freeze({...c,productId:p.id,label:p.name+' – '+(i?'alternative':'primary'),src:p.id.startsWith('kids-')?'/scratch-artwork/'+c.file:p.image}))));
 export const PAIRED_TEMPLATES=Object.freeze(PAIRED_PRODUCTS.map(p=>{
  const [x,top,right,bottom]=p.bounds,w=right-x,h=bottom-top;
  const kid=p.id.startsWith('kids-'),heading=kid?'"Trebuchet MS", sans-serif':'Georgia, "Times New Roman", serif',family=kid?'"Trebuchet MS", sans-serif':'Arial, Helvetica, sans-serif';

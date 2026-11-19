@@ -67,7 +67,7 @@ async function startServer(){
   const file=path==='/reveal'?'/reveal.html':path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!['/published-template-designs.js','/template-design-schema.js','/approved-post-scratch-catalogue.js'].includes(file)&&!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  if(!['/published-template-designs.js','/template-design-schema.js','/approved-post-scratch-catalogue.js'].includes(file)&&!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|paired-products\.js|scratch-cover-typography\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
