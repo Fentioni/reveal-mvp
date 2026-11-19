@@ -495,7 +495,7 @@ export const isMatchingPair=(templateId,artworkId)=>coversForTemplate(templateId
 export const PAIRED_COVERS=Object.freeze(PAIRED_PRODUCTS.flatMap(p=>[p.primary,p.alternative].filter(Boolean).map((c,i)=>Object.freeze({...c,productId:p.id,label:p.name+' – '+(i?'alternative':'primary'),src:'/scratch-artwork/'+c.file}))));
 export const PAIRED_TEMPLATES=Object.freeze(PAIRED_PRODUCTS.map(p=>{
  const [x,top,right,bottom]=p.bounds,w=right-x,h=bottom-top;
- const kid=p.id.startsWith('kids-'),heading=kid?'Trebuchet MS, sans-serif':'Georgia, "Times New Roman", serif',family=kid?'Trebuchet MS, sans-serif':'Arial, Helvetica, sans-serif';
+ const kid=p.id.startsWith('kids-'),heading=kid?'"Trebuchet MS", sans-serif':'Georgia, "Times New Roman", serif',family=kid?'"Trebuchet MS", sans-serif':'Arial, Helvetica, sans-serif';
  const gap=7,weights=[100,52,48,230,52,60,64,135,46,42],total=weights.reduce((a,b)=>a+b,0),available=h-9*gap;
  let y=top;const slots=weights.map(weight=>{const height=available*weight/total;const s={x,y,w,h:height};y+=height+gap;return s;});
  const z=(key,i,size,weight=500,extra={})=>({key,...slots[i],size,weight,family,ink:p.ink,align:'center',noWordSplit:false,...extra});

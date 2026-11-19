@@ -4,7 +4,7 @@ import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 import {defaultDesign,validateDesign,assertTemplateLayout} from '../public/template-design-schema.js';
 import {photoFrame} from '../public/post-scratch-renderer.js';
 test('every template retains all ten visible fields with non-overlapping geometry',()=>{
- assert.equal(POST_TEMPLATES.length,79);
+ assert.equal(POST_TEMPLATES.length,26);
  for(const t of POST_TEMPLATES){
   const d=assertTemplateLayout(validateDesign(t.id,defaultDesign(t.id)));
   for(const orientation of ['auto','portrait','landscape'])assertTemplateLayout({...d,photo:photoFrame(d.photo,orientation)});
@@ -17,7 +17,7 @@ test('every template retains all ten visible fields with non-overlapping geometr
  }
 });
 test('publishing rejects hidden fields and overlaps',()=>{
- const t=defaultDesign('bg-classic-celebration');
+ const t=defaultDesign('bg-luxury-champagne-gold');
  t.zones[0].hidden=true;assert.throws(()=>assertTemplateLayout(t),/ten editable fields/);
  t.zones[0].hidden=false;Object.assign(t.zones[1],{x:t.zones[0].x,y:t.zones[0].y});
  assert.throws(()=>assertTemplateLayout(t),/overlap/);

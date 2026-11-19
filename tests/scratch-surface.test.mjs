@@ -109,25 +109,25 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
 });
 
-test('20-image artwork selection is validated and persisted without exposing uploads', async () => {
+test('Paired cover selection is validated and persisted without exposing uploads', async () => {
  const {env,legacy,state}=makeMocks();
  const body=new FormData();
- body.append('style','classic');body.append('foil','silver');body.append('artworkId','sapphire-weave');
+ body.append('style','classic');body.append('foil','silver');body.append('artworkId','luxury-champagne-gold-primary');
  const saved=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
  assert.equal(saved.status,200);
  const surface=(await saved.json()).surface;
- assert.equal(surface.artworkId,'sapphire-weave');
+ assert.equal(surface.artworkId,'luxury-champagne-gold-primary');
  assert.equal(surface.foil,'silver');
  assert.equal(surface.hasImage,false);
- assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'sapphire-weave');
+ assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'luxury-champagne-gold-primary');
  const restored=await scratchSurfaceResponse(request(),env,{},legacy);
- assert.equal((await restored.json()).surface.artworkId,'sapphire-weave');
+ assert.equal((await restored.json()).surface.artworkId,'luxury-champagne-gold-primary');
  const invalid=new FormData();
  invalid.append('style','classic');invalid.append('foil','gold');
  invalid.append('artworkId','../../private-file');
  const rejected=await scratchSurfaceResponse(request('PUT',invalid),env,{},legacy);
  assert.equal(rejected.status,400);
- assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'sapphire-weave');
+ assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,'luxury-champagne-gold-primary');
 });
 
 test('owner can store a custom scratch image privately and retrieve it with a token', async () => {
@@ -481,14 +481,16 @@ test('invalid scratch themes are rejected, and absent theme preserves the previo
  assert.equal(surface.style,'classic');
 });
 
-test('all cover/template combinations persist and restore with image appearance, without overwriting other config',async()=>{
+test('all valid cover/template pairs persist and restore with image appearance, without overwriting other config',async()=>{
  const {POST_TEMPLATES}=await import('../public/post-scratch-catalogue.js');
  const {SCRATCH_ARTWORKS}=await import('../public/scratch-artwork-catalogue.js');
  const {state,env,legacy}=makeMocks();
  state.config={fields_json:JSON.stringify({unrelated:{keep:true}})};
  const withImage={fetch:async req=>{const res=await legacy.fetch(req);if(!res.ok)return res;const data=await res.json();data.reveal.hasImage=true;return Response.json(data);}};
  let count=0;
+ const {isMatchingPair}=await import('../public/paired-products.js');
  for(const template of POST_TEMPLATES)for(const cover of SCRATCH_ARTWORKS){
+  if(!isMatchingPair(template.id,cover.id))continue;
   const postScratch={templateId:template.id,subtitle:'Saved subtitle',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45};
   const body=new FormData();for(const [k,v] of Object.entries({style:'classic',foil:'gold',variant:'ticket',artworkId:cover.id,postScratch:JSON.stringify(postScratch)}))body.set(k,v);
   const saved=await scratchSurfaceResponse(request('PUT',body),env,{},withImage);assert.equal(saved.status,200);
@@ -496,7 +498,9 @@ test('all cover/template combinations persist and restore with image appearance,
   assert.deepEqual(surface.postScratch,postScratch);assert.equal(surface.artworkId,cover.id);
   assert.deepEqual(JSON.parse(state.config.fields_json).unrelated,{keep:true});count++;
  }
- assert.equal(count,POST_TEMPLATES.length*SCRATCH_ARTWORKS.length);
+ assert.equal(count,31);
+ const invalid=new FormData();for(const [k,v] of Object.entries({style:'classic',foil:'gold',variant:'ticket',artworkId:'luxury-sapphire-gold-primary',postScratch:JSON.stringify({templateId:'bg-luxury-champagne-gold'})}))invalid.set(k,v);
+ assert.equal((await scratchSurfaceResponse(request('PUT',invalid),env,{},withImage)).status,400,'Cross-product cover rejected server-side');
 });
 
 test('template settings reject malformed input and custom image without upload, preserving saved config',async()=>{
@@ -512,16 +516,16 @@ test('template settings reject malformed input and custom image without upload, 
 test('customer layout is validated, persisted and restored without mutating the shared template',async()=>{
  const {env,legacy,state}=makeMocks();
  const {getPostTemplate}=await import('../public/post-scratch-catalogue.js');
- const master=getPostTemplate('candlelight'),z=master.zones.find(z=>z.key==='eventName');
+ const master=getPostTemplate('bg-luxury-champagne-gold'),z=master.zones.find(z=>z.key==='eventName');
  const layout={eventName:{size:32,ink:'#abc123',family:'Arial, sans-serif',weight:700,italic:true,align:'left',x:z.x,y:z.y,w:z.w,h:z.h}};
- const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch',JSON.stringify({templateId:'candlelight',layout}));
+ const body=new FormData();body.set('style','classic');body.set('foil','gold');body.set('postScratch',JSON.stringify({templateId:'bg-luxury-champagne-gold',layout}));
  const result=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
  assert.equal(result.status,200);assert.deepEqual((await result.json()).surface.postScratch.layout,layout);
  assert.deepEqual(JSON.parse(state.config.fields_json).scratchSurface.postScratch.layout,layout);
  const read=await scratchSurfaceResponse(request(),env,{},legacy);assert.deepEqual((await read.json()).surface.postScratch.layout,layout);
  assert.equal(master.zones.find(z=>z.key==='eventName').ink,z.ink);
  for(const invalid of [{eventName:{x:899,w:100}},{eventName:{family:'url(javascript:bad)'}},{eventName:{hidden:true}},{image:{x:0,y:0,w:900,h:1200}}]){
-  const bad=new FormData();bad.set('style','classic');bad.set('foil','gold');bad.set('postScratch',JSON.stringify({templateId:'candlelight',layout:invalid}));
+  const bad=new FormData();bad.set('style','classic');bad.set('foil','gold');bad.set('postScratch',JSON.stringify({templateId:'bg-luxury-champagne-gold',layout:invalid}));
   const response=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);assert.equal(response.status,400);
  }
 });

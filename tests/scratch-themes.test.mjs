@@ -35,22 +35,19 @@ test('scratch theme applies the selected environment without changing card foil 
  assert.equal(properties.get('--scratch-highlight'),elegant.highlight);
 });
 
-test('the creator retains the 20 original covers and loads managed artwork without a thematic picker',async()=>{
+test('the creator uses product-bound covers without a thematic picker',async()=>{
  const paths=['public/legacy-create.html','public/reveal.html','public/recipient-scratch.html','src/scratch-surface.js','src/scratch-recipient.js'];
  const [creator,review,recipient,owner,paid]=await Promise.all(paths.map(p=>readFile(resolve(root,p),'utf8')));
- const names=['Azure Kaleidoscope','Birthday Opulence','Champagne Currents','Champagne Ribbons',
- 'Compass Journey','Copper Petals','Crimson Vortex','Emerald Elegance','Festive Midnight',
- 'Fuchsia Prism','Gilded Archways','Golden Spotlight','Lunar Lullaby','Metallic Spirals',
- 'Midnight Romance','Ruby Diamonds','Sapphire Geometry','Sapphire Weave','Scarlet Waves','Silver Apex',
- "Ruby Labyrinth","Neon Apex","Lime Vortex","Neon Fuchsia","Violet Currents","Coral Prism","Emerald Splash","Sunset Geometry","Sapphire Mosaic","Graffiti Luxe","Emerald Facets","Copper Orbit","Gilded Ribbons","Magenta Spires","Sapphire Trefoil","Midnight Chevron","Chromatic Weave","Imperial Clover","Rainbow Prism","Violet Tunnel",
- "Opal Tessellation","Coral Rosettes","Lime Mosaic","Spectrum Weave","Prismatic Wash","Copper Tides","Coral Flow","Jade Ribbons","Platinum Waters","Violet Cascade","Coral Bloom","Jade Diamonds","Ocean Currents","Rose Cascades","Violet Tides","Scarlet Currents","Jade Fans","Fuchsia Spirals","Chromatic Engraving","Coastal Weave","Aquamarine Facets","Jewel Petals","Turquoise Swirls","Sunrise Ribbons","Gilded Mosaic"];
- assert.deepEqual(SCRATCH_ARTWORKS.map(i=>i.label),names);
- assert.equal(SCRATCH_ARTWORKS.length,65);
- assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,65);
- assert.equal(DEFAULT_SCRATCH_ARTWORK,'azure-kaleidoscope');
+ const {PAIRED_PRODUCTS,coversForTemplate}=await import('../public/paired-products.js');
+ assert.equal(PAIRED_PRODUCTS.length,26);
+ assert.equal(SCRATCH_ARTWORKS.length,31);
+ assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,31);
+ assert.equal(DEFAULT_SCRATCH_ARTWORK,'luxury-champagne-gold-primary');
+ assert.equal(PAIRED_PRODUCTS.filter(p=>coversForTemplate(p.templateId).length===2).length,5);
+ assert.equal(getScratchArtwork('azure-kaleidoscope'),null);
  assert.equal(getScratchArtwork('missing'),null);
  for(const art of SCRATCH_ARTWORKS) {
-   assert.match(art.file,/^[A-Za-z_]+\.(jpg|webp)$/);
+   assert.match(art.file,/^[a-z-]+\.webp$/);
    assert.equal(art.src,'/scratch-artwork/'+art.file);
  }
  assert.match(creator,/id="scratchArtwork"/);
@@ -64,7 +61,7 @@ test('the creator retains the 20 original covers and loads managed artwork witho
  assert.match(owner,/availableScratchArtwork\(env,artworkId\)/);
  assert.match(owner,/resolveStoredArtwork\(env,artworkId\)/);
  assert.match(creator,/fetch\('\/api\/scratch-artwork'/);
- assert.match(creator,/coverCatalogue\.filter\(a=>!a\.archived\)/);
+ assert.match(creator,/coverCatalogue\.filter\(a=>!a\.archived&&matching\.includes\(a\.id\)\)/);
  assert.match(paid,/resolveStoredArtwork\(env,settings\.artworkId\)/);
  const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
  assert.match(engine,/if \(!this\.artworkId && !this\.coverImage && w <= h\*1\.4\)/);
