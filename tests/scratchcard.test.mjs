@@ -135,7 +135,8 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   assert.ok(!demo.includes('setCoverImage('));
   const creator = fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   assert.ok(!creator.includes('data-scratch-style='));
-  assert.ok(creator.includes('id="scratchArtwork"'));
+  assert.ok(!creator.includes('id="scratchArtwork"'));
+  assert.ok(creator.includes('id="postTemplate"'));
   assert.ok(creator.includes('id="scratchFoilGrid"'));
   for (const foil of ['gold','silver','midnight','rose'])
     assert.ok(creator.includes('data-scratch-foil="' + foil + '"'));

@@ -1,4 +1,3 @@
-import {getPairedProduct,coversForTemplate} from '../public/paired-products.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -7,6 +6,7 @@ import {fileURLToPath} from 'node:url';
 import {resolve,extname} from 'node:path';
 import {chromium,webkit} from 'playwright';
 import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK} from '../public/scratch-artwork-catalogue.js';
+import {PAIRED_PRODUCTS} from '../public/paired-products.js';
 
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)),'public');
 const browserType=process.env.SCRATCH_BROWSER==='webkit'?webkit:chromium;
@@ -179,7 +179,7 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
 });
 
 
-test('Scratch Ticket creator upload, save, purchaser review and amend retain independent artwork and surprise image',
+test('Scratch Ticket creator keeps product artwork paired through save, review and amend',
  {timeout:90000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -188,7 +188,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    let savedReveal,savedSurface,imageBytes;
-   const art='envelope-coral-ginkgo-alternative';
+   const product=PAIRED_PRODUCTS[5],art=product.primary.id;
    await page.route(staging+'/**',async route=>{
      const req=route.request(),u=new URL(req.url()),p=u.pathname;
      const json=result=>route.fulfill({json:result});
@@ -223,8 +223,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    });
    await page.goto(staging+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
-   await page.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
-   await page.locator('#scratchArtwork').selectOption(art);
+   assert.equal(await page.locator('#scratchArtwork').count(),0,'No independent artwork selector');
+   await page.locator('#postTemplate').selectOption(product.templateId);
    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
    for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Mick',eventName:'Jesus Christ Superstar',venue:'Theatre Royal, Drury Lane',personalMessage:'A special night'})){
     const input=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');await input.focus();await input.fill(value);
@@ -241,7 +241,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.locator('#postImageZoom').fill('160');
    await page.locator('#postImagePanX').fill('25');
    await page.locator('#postImagePanY').fill('-20');
-   await page.waitForFunction(()=>{const r=document.querySelector('#scratchActualRevealed').shadowRoot;const image=r.querySelector('[data-photo-slot] image');return image?.getAttribute('preserveAspectRatio')==='xMidYMid slice'&&Number(image.getAttribute('width'))>0;});
+   await page.waitForFunction(()=>{const r=document.querySelector('#scratchActualRevealed').shadowRoot;const image=r.querySelector('[data-photo-slot] image');return image?.getAttribute('preserveAspectRatio')==='xMidYMid slice'&&Number(image.getAttribute('width'))>450;});
    let edited;
    async function checkCurrent(){
      const geometry=await page.locator('#scratchActualRevealed [data-photo-slot] image').evaluate(i=>['x','y','width','height','preserveAspectRatio'].map(k=>i.getAttribute(k)));
@@ -249,7 +249,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
      assert.equal(await page.locator('#scratchActualCovered #underlay').evaluate(e=>getComputedStyle(e).visibility),'hidden');
      assert.equal(await page.locator('#scratchActualRevealed #underlay').evaluate(e=>getComputedStyle(e).visibility),'visible');
-     assert.match((await page.locator('#scratchActualRevealed [data-field=eventName] tspan').allTextContents()).join(' '),/Jesus Christ Superstar/i);
+     assert.equal((await page.locator('#scratchActualRevealed [data-field=eventName] tspan').allTextContents()).join(' '),'JESUS CHRIST SUPERSTAR');
      assert.equal(await page.locator('#scratchActualRevealed svg [data-photo-slot] image').evaluate(e=>new Promise(resolve=>{const i=new Image();i.onload=()=>resolve(i.naturalWidth);i.src=e.getAttribute('href');})),800);
      assert.equal(await page.locator('#scratchActualRevealed canvas').count(),0);
      const px=await page.locator('#scratchActualCovered canvas').evaluate(c=>Array.from(c.getContext('2d').getImageData(Math.floor(c.width/2),Math.floor(c.height/2),1,1).data));
@@ -266,7 +266,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.locator('#postTemplate:enabled').waitFor();
    await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
    await checkCurrent();
-   assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
+   assert.equal(await page.locator('#postTemplate').inputValue(),product.templateId);
+   assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
    for(const [id,value] of Object.entries({postImageZoom:'160',postImagePanX:'25',postImagePanY:'-20',postImageFit:'cover'}))assert.equal(await page.locator('#'+id).inputValue(),value);
    assert.equal(await page.locator('.preview-details-toggle:visible').count(),0);
    assert.deepEqual(errors,[]);
@@ -304,7 +305,7 @@ test('Scratch Ticket header spans the page and fits both lines without overflow 
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
-test('creator shows only paired gift products without the retired foil section on phone or desktop',
+test('creator exposes 26 paired products without an independent artwork picker on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -316,7 +317,8 @@ test('creator shows only paired gift products without the retired foil section o
    page.on('pageerror',err=>errors.push(err.message));
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
-   assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
+   assert.equal(await page.locator('#postTemplate option').count(),PAIRED_PRODUCTS.length);
+   assert.equal(await page.locator('#scratchArtwork').count(),0);
    assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
@@ -335,29 +337,26 @@ test('creator shows only paired gift products without the retired foil section o
    assert.equal(await page.locator('#scratchFoilLabel:visible').count(),0);
    assert.equal(await page.locator('#scratchFoilGrid:visible').count(),0);
    assert.equal(await page.locator('#image').count(),1);
-   assert.equal(await page.locator('#scratchArtwork').inputValue(),DEFAULT_SCRATCH_ARTWORK);
+   assert.equal(await page.locator('#postTemplate').inputValue(),PAIRED_PRODUCTS[0].templateId);
+   assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),DEFAULT_SCRATCH_ARTWORK);
    assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
    const paintings=new Set();
-   for(const art of SCRATCH_ARTWORKS){
-    const templateId='bg-'+art.productId;
-    await page.locator('#postTemplate').selectOption(templateId);
-    const matching=coversForTemplate(templateId);
-    assert.deepEqual(await page.locator('#scratchArtwork option').evaluateAll(nodes=>nodes.map(n=>n.value)),matching);
-    assert.equal(await page.locator('#pairedCoverChoice').isVisible(),matching.length===2);
-    if(matching.length===2)await page.locator('#scratchArtwork').selectOption(art.id);
-    await page.waitForFunction(id=>document.querySelector('#scratchArtwork')?.value===id,art.id);
+   for(const product of PAIRED_PRODUCTS){
+    const art=product.primary.id;
+    await page.locator('#postTemplate').selectOption(product.templateId);
+    await page.waitForFunction(id=>document.querySelector('#postTemplate')?.value===id,product.templateId);
     await page.waitForTimeout(75);
     assert.equal(await page.locator('#scratchFoil').inputValue(),'gold');
-    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art.id);
+    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
     paintings.add(await page.locator('#scratchActualCovered canvas').evaluate(canvas=>canvas.toDataURL('image/png')));
    }
-   assert.equal(paintings.size,SCRATCH_ARTWORKS.length,'Each approved artwork must actually repaint the surface Canvas');
+   assert.equal(paintings.size,PAIRED_PRODUCTS.length,'Each paired product must actually repaint its scratch surface');
     assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed','Updating artwork preserves the selected preview side');
     await page.locator('[data-scratch-preview-mode="covered"]').click();
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:resolve(output,size.name+'-paired-products.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,size.name+'-final-26-products.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
@@ -394,7 +393,7 @@ test('Concert Ticket exclusively shows four foil finishes with no redundant head
    assert.equal(await page.locator('#ticketUrl:visible').count(),1,'Optional clickable link remains');
    assert.equal(await page.locator('#concertEventUploadDock:visible').count(),1);
    assert.equal(await page.locator('#image').count(),1);
-   assert.equal(await page.locator('#scratchArtwork').getAttribute('required'),null);
+   assert.equal(await page.locator('#scratchArtwork').count(),0);
    assert.equal(await page.locator('#concertPreviewTabsDesktop:visible').count(),1);
    assert.equal(await page.locator('#concertPreviewTabsMobile:visible').count(),0);
    const layout=await page.evaluate(()=>{

@@ -29,7 +29,7 @@ try{
  await mkdir('test-output/template-designer',{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
  assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
  assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From Me');
  assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'For You');
@@ -123,11 +123,11 @@ try{
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#deleteTemplate').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Template deleted'));
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
  const archived=await (await page.request.get(base+'/api/template-designs/'+newId)).json();
  assert.equal(archived.template.zones[0].ink,'#445566');
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
  assert.deepEqual(errors,[]);
  await page.locator('#coverManager').click();
  await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);
@@ -138,7 +138,8 @@ try{
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork added to Studio.'));
  const coverId=await page.locator('#coverList .cover-item').last().getAttribute('data-cover-id');assert.match(coverId,/^cover-/);
  const customer=await browser.newPage();await customer.goto(base+'/legacy-create.html?variant=ticket');await customer.locator('#reviewButton:enabled').waitFor();
- assert.equal(await customer.locator('#scratchArtwork option[value="'+coverId+'"]').count(),0,'Unpaired admin uploads must not enter customer catalogue');
+ assert.equal(await customer.locator('#scratchArtwork').count(),0);
+ await customer.waitForFunction(()=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork==='luxury-champagne-gold-primary');
  await customer.close();
  page.once('dialog',dialog=>dialog.accept());await page.getByRole('button',{name:'Delete Test Gold',exact:true}).click();
  await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork deleted'));
@@ -208,17 +209,13 @@ try{
   await link.fill('https://example.org');await creator.locator('#postTemplate').focus();
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),0);
   assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
-  assert.equal(await creator.locator('#postTemplate option[value="custom-image"]').count(),0);
-  await creator.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-envelope-coral-ginkgo');
+  await creator.locator('#postTemplate').selectOption('bg-bow-champagne');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-bow-champagne');
   assert.equal(await creator.locator('#scratchImageUpload').isVisible(),false);
-  assert.equal(await creator.locator('#scratchArtwork option').count(),2);
-  await creator.locator('#scratchArtwork').selectOption('envelope-coral-ginkgo-alternative');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork==='envelope-coral-ginkgo-alternative');
+  assert.equal(await creator.locator('#postImageControls').isVisible(),false);
   await creator.locator('#postTemplate').selectOption('bg-luxury-champagne-gold');
   await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold');
-  assert.equal(await creator.locator('#scratchArtwork').inputValue(),'luxury-champagne-gold-primary');
-  assert.equal(await creator.locator('#pairedCoverChoice').isVisible(),false);
+  assert.equal(await creator.locator('#image').getAttribute('aria-invalid'),'false');
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
   assert.equal(await creator.locator('#scratchActualRevealed').getAttribute('aria-hidden'),'true');
   await creator.locator('[data-scratch-preview-mode="revealed"]').click();
@@ -271,14 +268,14 @@ try{
  // Regression: stored values are not enough; each rendered glyph must
  // actually lie inside its clipping rectangle immediately after Amend.
  for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
-  for(const [templateId,hasImage] of [['bg-luxury-champagne-gold',false],['bg-envelope-coral-ginkgo',true]]){
+  for(const [templateId,hasImage] of [['bg-luxury-champagne-gold',false],['bg-bow-champagne',true]]){
    const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
    const data={recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special night',ticketUrl:'https://example.org',hasImage,status:'draft',revision:2,id:'amend-test'};
    const settings={templateId,subtitle:'Just for you',venueAddress:'London',layout:{eventName:{ink:'#ab1234',size:30,family:'Arial, sans-serif'}}};
    await creator.addInitScript(()=>localStorage.setItem('reveal_edit_amend-test','test-owner'));
    await creator.route('**/api/reveals/amend-test',route=>route.fulfill({json:{success:true,reveal:data}}));
-   await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:templateId.slice(3)+'-primary',postScratch:settings},audio:{enabled:false}}}));
-   if(hasImage)await creator.route('**/api/reveals/amend-test/image',route=>route.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
+   await creator.route('**/api/reveals/amend-test/scratch-surface',route=>route.fulfill({json:{success:true,surface:{variant:'ticket',style:'classic',foil:'gold',artworkId:templateId.replace(/^bg-/,'')+'-primary',postScratch:settings},audio:{enabled:false}}}));
+   if(hasImage)await creator.route('**/api/reveals/amend-test/image',route=>route.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-bow-champagne.webp')}));
    await creator.goto(base+'/legacy-create.html?edit=amend-test');
    await creator.locator('#reviewButton:enabled').waitFor();
    assert.equal(await creator.locator('#savedRevealLoadStatus:visible').count(),0);

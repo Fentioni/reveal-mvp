@@ -32,20 +32,24 @@ try{
     }
    }
   }
-  const {SCRATCH_ARTWORKS}=await import('/scratch-artwork-catalogue.js');
+  const {PAIRED_PRODUCTS}=await import('/paired-products.js');
+  const {getScratchArtwork}=await import('/scratch-artwork-catalogue.js');
   const {renderScratchOwnerPreview}=await import('/scratch-owner-preview.js');
   const {renderPostScratchFace}=await import('/post-scratch-face.js');
   const section=document.querySelector('#preview');section.style.maxWidth='490px';
   const reveal={recipient:'Chloe',sender:'Michael',eventName:'A wonderful surprise',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'Happy birthday! We are going to an unforgettable evening together.',ticketUrl:'https://example.org/',hasImage:true};
   const image='/post-scratch-artwork/bg-luxury-champagne-gold.webp';
   const issues=[];let count=0;
-  const {isMatchingPair}=await import('/paired-products.js');
-  for(const template of POST_TEMPLATES)for(const artwork of SCRATCH_ARTWORKS){
-   if(!isMatchingPair(template.id,artwork.id))continue;
+  for(const product of PAIRED_PRODUCTS){
+   const template=POST_TEMPLATES.find(t=>t.id===product.templateId),artwork=getScratchArtwork(product.primary.id);
+   if(!template||!artwork)throw Error(product.id+' is missing its paired product artwork or layout');
    const surface={style:'classic',foil:'gold',variant:'ticket',artworkId:artwork.id,postScratch:{templateId:template.id,subtitle:'Just for you',venueAddress:'London',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'landscape',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
    const scratch=await renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage:image,audio:{enabled:false},hosts:{covered:document.querySelector('#covered'),revealed:document.querySelector('#revealed'),sound:document.querySelector('#sound')}});
    const a=document.querySelector('#covered').shadowRoot.querySelector('#card'),b=document.querySelector('#revealed').shadowRoot.querySelector('#card');
-   for(const card of [a,b]){const r=card.getBoundingClientRect();if(Math.abs(r.width/r.height-.75)>.001)issues.push(template.id+' ratio '+r.width/r.height);if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);if(card.querySelectorAll('svg [data-field]:not([data-field="image-placeholder"])').length!==10)issues.push(template.id+' incomplete ten fields');}
+   const ar=a.getBoundingClientRect(),br=b.getBoundingClientRect();
+   if(Math.abs(ar.width/ar.height-.75)>.001||Math.abs(br.width/br.height-.75)>.001)issues.push(template.id+' preview ratio '+ar.width+'/'+ar.height+' vs '+br.width+'/'+br.height);
+   if(Math.abs(ar.width-br.width)>.5||Math.abs(ar.height-br.height)>.5)issues.push(template.id+' cover/reveal dimensions differ '+ar.width+'x'+ar.height+' vs '+br.width+'x'+br.height);
+   for(const card of [a,b]){if(card.dataset.textOverflow)issues.push(template.id+' overflow '+card.dataset.textOverflow);if(card.querySelectorAll('svg [data-field]:not([data-field="image-placeholder"])').length!==10)issues.push(template.id+' incomplete ten fields');}
    if(getComputedStyle(a.querySelector('#underlay')).visibility!=='hidden')issues.push('covered data visible');
    if(getComputedStyle(b.querySelector('#underlay')).visibility!=='visible')issues.push('reveal invisible');
    if(getComputedStyle(a.querySelector('canvas')).pointerEvents!=='none')issues.push('owner interactive');
@@ -57,7 +61,7 @@ try{
    if(normalize(recipient.querySelector('svg'))!==normalize(b.querySelector('svg'))){const x=normalize(recipient.querySelector('svg')),y=normalize(b.querySelector('svg')),i=[...x].findIndex((c,i)=>c!==y[i]);issues.push(template.id+' renderer mismatch: '+x.slice(i-70,i+100)+' vs '+y.slice(i-70,i+100));}
    recipient.remove();count++;
   }
-  return {count,expected:SCRATCH_ARTWORKS.length,issues};
+  return {count,expected:PAIRED_PRODUCTS.length,issues};
  });
  assert.equal(report.count,report.expected);assert.deepEqual(report.issues,[]);assert.deepEqual(errors,[]);
  await mkdir('test-output/post-scratch',{recursive:true});await page.screenshot({path:'test-output/post-scratch/matrix-'+viewport.width+'.png'});
@@ -89,7 +93,7 @@ try{
  });
  for(const id of templates)await gallery.locator('#template-'+id).screenshot({path:'test-output/post-scratch/'+viewport.width+'-'+id+'.png'});
  if(viewport.width===1380){
-  // A full 15-design visual proof, with the same sample data on each card.
+  // A full 26-design visual proof, with the same sample data on each card.
   await gallery.setViewportSize({width:1250,height:1150});
   await gallery.locator('#preview').evaluate(list=>{
    list.style.cssText='width:1220px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 auto;background:#e8e5dc';
@@ -105,21 +109,23 @@ try{
  }
  await gallery.close();
  }
- // Actual creator page: 26 paired options and amend restoration.
+ // Actual creator page: one paired product selector and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'envelope-coral-ginkgo-alternative',postScratch:{templateId:'bg-envelope-coral-ginkgo',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'luxury-champagne-gold-primary',postScratch:{templateId:'bg-luxury-champagne-gold',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
  await page.addInitScript(()=>localStorage.setItem('reveal_edit_saved','owner'));
  await page.route('**/api/reveals/saved',r=>r.fulfill({json:{success:true,reveal:{id:'saved',recipient:'Chloe',sender:'Michael',eventName:'Saved surprise',hasImage:true,status:'draft',revision:1}}}));
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
- await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
+ await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-envelope-coral-ginkgo');assert.equal(await page.locator('#scratchArtwork').inputValue(),'envelope-coral-ginkgo-alternative');
+ assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-champagne-gold');
+ assert.equal(await page.locator('#scratchArtwork').count(),0,'Scratch art and revealed layout are selected together as one product');
+ assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),'luxury-champagne-gold-primary');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible,#postVenueAddress:visible').count(),0);assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
  for(const [id,value] of Object.entries({postImageFit:'cover',postImageOrientation:'portrait',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
- await page.locator('#scratchActualRevealed svg[data-post-template="bg-envelope-coral-ginkgo"]').waitFor({state:'attached'});
+ await page.locator('#scratchActualRevealed svg[data-post-template="bg-luxury-champagne-gold"]').waitFor({state:'attached'});
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('aria-hidden'),'true');
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
@@ -135,20 +141,21 @@ try{
  await page.locator('#scratchActualRevealed [data-edit-field="postSubtitle"]').fill('Edited on ticket');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Edited on ticket');
  await page.locator('#postTemplate').focus();
- const initialWidth=Number(await page.locator('#scratchActualRevealed [data-photo-slot] image').getAttribute('width'));
  await page.locator('#postImageZoom').fill('200');
- await page.waitForFunction(w=>Number(document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width'))>w,initialWidth);
+ await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='1800');
  await page.locator('#postImageReset').click();
- await page.waitForFunction(()=>Number(document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width'))>0);
+ await page.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot.querySelector('[data-photo-slot] image')?.getAttribute('width')==='900');
  assert.equal(await page.locator('#postImageZoom').inputValue(),'100');
  assert.equal(await page.locator('#postImageOrientation').inputValue(),'auto');
- assert.equal(await page.locator('#scratchImageUpload').isVisible(),false,'Upload uses the inline editable photo zone');
+ assert.equal(await page.evaluate(()=>{const upload=document.querySelector('#scratchImageUpload'),editor=document.querySelector('#postImageControls'),link=document.querySelector('#ticketUrl');return upload.nextElementSibling===editor&&Boolean(link.compareDocumentPosition(upload)&Node.DOCUMENT_POSITION_FOLLOWING)&&upload.getBoundingClientRect().bottom<=editor.getBoundingClientRect().top&&upload.hidden&&document.querySelector('#imageUploadLabel').textContent==='Add Image (Optional)';}),true,'Product artwork remains paired while optional event images stay separate');
  assert.equal(await page.evaluate(()=>{const editor=document.querySelector('#postImageControls'),review=document.querySelector('#reviewButton');return editor.parentElement===review.parentElement&&editor.getBoundingClientRect().bottom<=review.getBoundingClientRect().top;}),true,'Image editor precedes review');
  assert.equal(await page.locator('#postTextContrast').inputValue(),'light');
  assert.equal(await page.locator('#postShade').inputValue(),'70');
  assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
  for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
   await page.locator('#postTemplate').selectOption(option);
+  await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork&&document.querySelector('#scratchActualRevealed')?.shadowRoot.querySelector('#card')?.dataset.postTemplate===id,option);
+  assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),option.replace(/^bg-/,'')+'-primary');
   assert.equal(await page.locator('#scratchImageUpload').isVisible(),false);
   assert.equal(await page.locator('#postImageControls').isVisible(),true);
   assert.equal(await page.locator('#postImageZoom').isEnabled(),true);

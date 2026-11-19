@@ -4,6 +4,7 @@ on:
     branches:
       - feature/scratch-template-integration
       - feature/stage4b-cloudflare-staging
+      - fix/scratch-browser-integration
 permissions:
   contents: read
 jobs:

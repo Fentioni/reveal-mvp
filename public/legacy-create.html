@@ -598,7 +598,7 @@
     .scratch-preview-switch button[aria-pressed="true"]{background:#f1d89d;color:#211b19;border-color:#f1d89d}
     .scratch-preview-switch button:focus-visible{outline:2px solid #d6a84c;outline-offset:2px}
     .scratch-preview-stack{display:grid;grid-template-columns:minmax(0,1fr);max-width:490px;margin-inline:auto;isolation:isolate}
-    .scratch-preview-stack>.scratch-preview-panel{grid-area:1/1;min-width:0;align-self:start;width:100%}
+    .scratch-preview-stack>.scratch-preview-panel{grid-area:1/1;min-width:0;align-self:start;width:100%;aspect-ratio:3/4;overflow:hidden}
     [data-preview-mode="covered"] .scratch-preview-panel[data-preview-panel="revealed"],
     [data-preview-mode="revealed"] .scratch-preview-panel[data-preview-panel="covered"]{opacity:0;visibility:hidden;pointer-events:none}
 
@@ -877,11 +877,6 @@
             <p class="field-help">Each gift design includes its own matching scratch artwork and editable revealed template.</p>
             <select id="postTemplate" aria-describedby="postTemplateDescription"></select>
             <p id="postTemplateDescription" class="field-help"></p>
-            <div id="pairedCoverChoice" hidden>
-              <label for="scratchArtwork">Scratch cover</label>
-              <select id="scratchArtwork" name="scratchArtwork" required aria-describedby="scratchArtworkHelp"></select>
-              <p id="scratchArtworkHelp" class="field-help">Choose the original or alternative cover for this design.</p>
-            </div>
           </section>
 
           <div id="concertPickers" class="concert-pickers">
@@ -1277,11 +1272,11 @@
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
     import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=customer-design-3';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
-    import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=paired-products-1';
+    import {DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=paired-products-2';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
     import {createConcertLivePreview} from '/concert-live-preview.js?v=8';
-    import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=paired-products-1';
-    import {getPairedProduct,coversForTemplate,isMatchingPair} from '/paired-products.js?v=2';
+    import {POST_TEMPLATES,getPostTemplate} from '/post-scratch-catalogue.js?v=paired-products-2';
+    import {getPairedProduct,isMatchingPair} from '/paired-products.js?v=2';
     import {loadPublishedDesign} from '/published-template-designs.js?v=template-management-1';
     import {cleanPostSettings} from '/post-scratch-settings.js?v=customer-design-1';
     import {photoFrame} from '/post-scratch-renderer.js?v=customer-design-1';
@@ -1362,7 +1357,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key='eventName';const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){selectPairedCover();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key='eventName';const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
@@ -1388,7 +1383,7 @@
         const invalid=key==='ticketUrl'?normalizeBookingLink(value)===null:!field.checkValidity();
         if(invalid)errors.set(key,{label:key==='ticketUrl'?'Event link':key==='eventDate'?'Date':key==='eventTime'?'Time':'Field',message:key==='ticketUrl'?'Enter a valid web address, for example www.example.com.':'Check the entered value.'});
       }
-      if(!isMatchingPair($('postTemplate').value,$('scratchArtwork').value))errors.set('scratchArtwork',{label:'Matching scratch cover',message:'Choose a gift design with an available cover.'});
+      if(!isMatchingPair($('postTemplate').value,scratchArtworkId))errors.set('postTemplate',{label:'Gift design',message:'Choose a gift design with its matching scratch cover.'});
       if(!$('postTemplate').value)errors.set('postTemplate',{label:'Revealed template',message:'Choose a revealed template.'});
       if($('postTemplate').value==='custom-image'&&!objectUrl)errors.set('image',{label:'Photo',message:'Upload a full-card image for the Custom Image template.'});
       return errors;
@@ -1412,7 +1407,7 @@
         if(absent&&errors.has(key)){backing.dataset.creatorInvalid='true';backing.setAttribute('aria-invalid','true');}
         else{delete backing.dataset.creatorInvalid;backing.removeAttribute('aria-invalid');}
       }
-      for(const key of ['scratchArtwork','postTemplate','image']){
+      for(const key of ['postTemplate','image']){
         const control=$(key),invalid=errors.has(key);
         if(invalid)control.dataset.creatorInvalid='true';else delete control.dataset.creatorInvalid;
         control.setAttribute('aria-invalid',String(invalid));
@@ -1540,7 +1535,6 @@
       $('postVenueAddressField').hidden=true;
       $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
-      $("scratchArtwork").required = !isConcert;
       $("concertTemplateSection").hidden = !isConcert;
       $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
@@ -1580,22 +1574,11 @@
       scratchPreview.resize();
       concertLivePreview.render();
     });
-    let coverCatalogue=SCRATCH_ARTWORKS;
-    function appendCover(artwork){
-      const option=document.createElement('option');option.value=artwork.id;option.textContent=artwork.label;$('scratchArtwork').append(option);
+    function selectPairedCover(){
+      const product=getPairedProduct($('postTemplate').value);
+      scratchArtworkId=product?.primary.id||'';
     }
-    function fillCoverOptions(){
-      $('scratchArtwork').replaceChildren();
-      const matching=coversForTemplate($('postTemplate').value);
-      for(const artwork of coverCatalogue.filter(a=>!a.archived&&matching.includes(a.id)))appendCover(artwork);
-      if(!Array.from($('scratchArtwork').options).some(o=>o.value===scratchArtworkId))scratchArtworkId=$('scratchArtwork').options[0]?.value||'';
-      $('scratchArtwork').value=scratchArtworkId;
-      $('pairedCoverChoice').hidden=$('scratchArtwork').options.length<2;
-    }
-    async function refreshCoverCatalogue(){
-      try{const response=await fetch('/api/scratch-artwork',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.artworks)){coverCatalogue=data.artworks;const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;fillCoverOptions();postGuidance();}}}catch{}
-    }
-    fillCoverOptions();
+    selectPairedCover();
     function selectConcertOption(group,selected){
       for(const button of $(group).querySelectorAll('button'))
         button.setAttribute('aria-pressed',String(button.dataset.value===selected));
@@ -1621,13 +1604,6 @@
       });
       $('concertTemplateChoices').append(button);
     }
-    $("scratchArtwork").addEventListener("change",()=>{
-      if(!ready||busy)return;
-      if(!isMatchingPair($('postTemplate').value,$('scratchArtwork').value))return show('Choose a matching cover for this gift design.');
-      scratchArtworkId=$("scratchArtwork").value;
-      if(currentVariant === "ticket") $("scratchStyle").value="classic";
-      setScratchPreview().then(hide).catch(error=>show(error.message));
-    });
     scratchPreview.canvas.style.pointerEvents = "none";
     function positionScratchSurface() {
       const mobile = currentVariant !== 'concert' && window.matchMedia("(max-width: 900px)").matches;
@@ -2086,7 +2062,6 @@
       try {
         storageCheck();
         await refreshStudioCatalogue();
-        await refreshCoverCatalogue();
 
         if (!id) {
           await setScratchPreview();
@@ -2147,8 +2122,7 @@
           }
           selectConcertOption('concertTemplateChoices',concertTemplateId);
         }
-        scratchArtworkId=isMatchingPair($('postTemplate').value,savedSurface.surface.artworkId)?savedSurface.surface.artworkId:'';
-        fillCoverOptions();
+        selectPairedCover();
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         // Incorrect old dual-use uploads return to the catalogue on amend.
         // Existing paid tickets are not rewritten.

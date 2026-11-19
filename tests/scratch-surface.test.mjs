@@ -229,7 +229,8 @@ test('legacy foil controls remain available only for the concert ticket variant,
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   assert.ok(!creator.includes('id="scratchArtGrid"'),'No theme tiles in either creator');
   assert.ok(!creator.includes('data-scratch-style='));
-  assert.ok(creator.includes('id="scratchArtwork"'),'Portrait Scratch Ticket must retain the 20-image dropdown');
+  assert.ok(!creator.includes('id="scratchArtwork"'),'Scratch art must not be selected independently of the product');
+  assert.ok(creator.includes('id="postTemplate"'),'The paired gift product is the sole customer selection');
   assert.ok(creator.includes('if (isConcert) $("scratchStyle").value = "concert";'));
   for (const foil of ['gold','silver','midnight','rose']) {
     assert.ok(creator.includes('data-scratch-foil="'+foil+'"'), 'missing foil '+foil);

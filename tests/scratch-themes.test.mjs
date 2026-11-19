@@ -50,8 +50,9 @@ test('the creator uses product-bound covers without a thematic picker',async()=>
    assert.match(art.file,/^[a-z-]+\.webp$/);
    assert.equal(art.src,'/scratch-artwork/'+art.file);
  }
- assert.match(creator,/id="scratchArtwork"/);
- assert.match(creator,/SCRATCH_ARTWORKS/);
+ assert.doesNotMatch(creator,/id="scratchArtwork"/);
+ assert.match(creator,/selectPairedCover/);
+ assert.match(creator,/getPairedProduct\(\$\('postTemplate'\)\.value\)/);
  assert.match(creator,/surfaceBody\.append\("artworkId"/);
  assert.doesNotMatch(creator,/makeScratchThemePicker|scratchThemeChoices/);
  assert.match(review,/getScratchArtwork\(result\.surface\.artworkId\)/);
@@ -60,8 +61,8 @@ test('the creator uses product-bound covers without a thematic picker',async()=>
  assert.match(recipient,/setCoverImage\(artwork\.src\)/);
  assert.match(owner,/availableScratchArtwork\(env,artworkId\)/);
  assert.match(owner,/resolveStoredArtwork\(env,artworkId\)/);
- assert.match(creator,/fetch\('\/api\/scratch-artwork'/);
- assert.match(creator,/coverCatalogue\.filter\(a=>!a\.archived&&matching\.includes\(a\.id\)\)/);
+ assert.doesNotMatch(creator,/fetch\('\/api\/scratch-artwork'/);
+ assert.doesNotMatch(creator,/coversForTemplate/);
  assert.match(paid,/resolveStoredArtwork\(env,settings\.artworkId\)/);
  const engine=await readFile(resolve(root,'public/scratchcard.js'),'utf8');
  assert.match(engine,/if \(!this\.artworkId && !this\.coverImage && w <= h\*1\.4\)/);

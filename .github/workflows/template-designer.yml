@@ -1,7 +1,7 @@
 name: Template Studio
 on:
   push:
-    branches: [feature/scratch-template-integration, feature/stage4b-cloudflare-staging, feature/approved-scratch-backgrounds]
+    branches: [feature/scratch-template-integration, feature/stage4b-cloudflare-staging, feature/approved-scratch-backgrounds, fix/scratch-browser-integration]
     paths: ['public/admin-template-designer.*', 'public/template-design-schema.js', 'public/published-template-designs.js', 'public/post-scratch-renderer.js', 'src/template-designs.js', 'tests/template-design*', 'tests/post-scratch-layout.test.mjs', 'public/approved-post-scratch-catalogue.js', 'public/post-scratch-artwork/**', '.github/workflows/template-designer.yml']
   workflow_dispatch:
 permissions:
