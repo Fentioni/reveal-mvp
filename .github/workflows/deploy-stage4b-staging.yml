@@ -1,4 +1,4 @@
-name: Deploy Reveal Stage 4B staging
+name: Verify Reveal Stage 4B staging
 on:
   workflow_dispatch:
   push:
@@ -19,6 +19,8 @@ jobs:
   staging:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Cloudflare Workers Builds deploys this branch directly to reveal-stage4b-test.
+    # GitHub Actions verifies only; no duplicate deploy or Cloudflare secrets.
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,20 +30,6 @@ jobs:
         run: npm test
       - name: Verify Cloudflare Worker build
         run: npx --yes wrangler deploy --dry-run --outdir /tmp/reveal-stage4b-worker
-      - name: Validate staging deployment credentials
-        env:
-          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - name: Confirm staging target configuration
         run: |
-          if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
-            echo "::error::Missing CLOUDFLARE_API_TOKEN or CLOUDFLARE_ACCOUNT_ID repository secret. Staging cannot be deployed automatically."
-            exit 1
-          fi
-      - name: Deploy to staging Worker (never production)
-        run: npx --yes wrangler deploy --config wrangler.jsonc
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-      - name: Confirm staging deployment
-        run: |
-          node -e "fetch('https://reveal-stage4b-test.michael-fenton9.workers.dev/admin-template-designer',{cache:'no-store'}).then(async r=>{if(!r.ok||!(await r.text()).includes('photoOrientation'))process.exit(1);console.log('Staging designer verified')}).catch(e=>{console.error(e);process.exit(1)})"
+          node --input-type=module -e "import fs from 'node:fs'; const c=JSON.parse(fs.readFileSync('wrangler.jsonc','utf8')); if(c.name!=='reveal-stage4b-test'||c.vars?.STAGING_DISABLE_CHECKOUT!=='true') process.exit(1); console.log('Staging-only target verified; deployment is managed by Cloudflare Workers Builds.')"
