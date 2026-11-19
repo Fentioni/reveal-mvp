@@ -1,8 +1,8 @@
 {
   "version": 1,
   "collectionDate": "2026-11-19",
-  "status": "artwork-ready",
-  "note": "26 primary-cover/background pairs; five have alternative artwork. Register editable layouts and finish alternative coverage before making live customer selections.",
+  "status": "paired-catalogue",
+  "note": "26 fixed primary-cover/background pairs; five include a genuine alternative. No unpaired cover is selectable in the customer creator.",
   "packages": [
     {
       "id": "luxury-champagne-gold",

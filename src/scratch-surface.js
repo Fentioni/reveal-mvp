@@ -1,3 +1,4 @@
+import {getPairedProduct,isMatchingPair} from '../public/paired-products.js';
 import {getTemplateCatalogue,getPublishedTemplate} from './template-designs.js';
 import {validateCustomerLayout} from '../public/customer-ticket-layout.js';
 import {checkPostSettings,cleanPostSettings} from '../public/post-scratch-settings.js';
@@ -174,7 +175,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     const requestedTheme=body.get('theme');
     const requestedArtwork=body.get('artworkId');
     // Missing artworkId preserves legacy card semantics. An empty ID clears it.
-    const artworkId=requestedArtwork === null ? current.surface.artworkId :
+    let artworkId=requestedArtwork === null ? current.surface.artworkId :
       requestedArtwork === '' ? null : requestedArtwork;
     if (artworkId != null && (typeof artworkId !== 'string' || !(artworkId===current.surface.artworkId?await resolveStoredArtwork(env,artworkId):await availableScratchArtwork(env,artworkId))))
       return error('Choose an artwork from the approved scratch-card collection.');
@@ -201,7 +202,13 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if(postScratch.layout){try{const master=await getPublishedTemplate(env,postScratch.templateId);if(!master)return error('Template unavailable.');validateCustomerLayout(master,postScratch.layout,postScratch.imageOrientation);}catch(e){return error(e.message||'Invalid customised layout.');}}
       if(postScratch.templateId!==current.surface.postScratch?.templateId){const entries=await getTemplateCatalogue(env);if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');}
     }
-    if(variant!=='concert'&&postScratch.templateId==='custom-image'&&!reveal.hasImage)return error('Upload an image for the Custom Image template.');
+    if(variant!=='concert'&&(body.has('postScratch')||body.has('artworkId'))){
+      const product=getPairedProduct(postScratch.templateId);
+      if(!product)return error('Choose a complete gift design.');
+      if(requestedArtwork===null&&!isMatchingPair(postScratch.templateId,artworkId))artworkId=product.primary.id;
+      if(!isMatchingPair(postScratch.templateId,artworkId))return error('The scratch cover must belong to the selected gift design.');
+      if(!await availableScratchArtwork(env,artworkId))return error('The matching scratch cover is unavailable.');
+    }
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {

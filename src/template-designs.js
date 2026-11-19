@@ -2,7 +2,7 @@ import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 import {defaultDesign,validateDesign,assertTemplateLayout,MAX_ARTWORK_DATA,isStudioTemplateId,purgeTemplateDemoText} from '../public/template-design-schema.js';
 const MAX_DESIGN_BYTES=MAX_ARTWORK_DATA+120000;
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
-const prefix='admin-template-designs/v1/';
+const prefix='admin-template-designs/v2/';
 const encoder=new TextEncoder(),manifestKey=prefix+'catalogue.json';
 async function manifest(env){
  const object=env.IMAGES?await env.IMAGES.get(manifestKey):null;

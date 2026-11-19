@@ -1,7 +1,7 @@
 import {SCRATCH_ARTWORKS,getScratchArtwork,isStudioScratchArtwork} from '../public/scratch-artwork-catalogue.js';
 import {authorised} from './template-designs.js';
 import {dimensions} from './image-dimensions.js';
-const prefix='admin-scratch-artwork/v1/',key=prefix+'catalogue.json',MAX=10*1024*1024;
+const prefix='admin-scratch-artwork/v2/',key=prefix+'catalogue.json',MAX=10*1024*1024;
 const types=new Set(['image/jpeg','image/png','image/webp']);
 const json=(data,status=200)=>new Response(JSON.stringify(data),{status,headers:{'content-type':'application/json; charset=utf-8','cache-control':'no-store','x-content-type-options':'nosniff'}});
 async function manifest(env){

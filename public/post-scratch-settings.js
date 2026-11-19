@@ -1,7 +1,7 @@
 import {getPostTemplate} from './post-scratch-catalogue.js';
 import {isStudioTemplateId} from './template-design-schema.js';
 import {checkCustomerLayout} from './customer-ticket-layout.js';
-export const DEFAULT_POST_SETTINGS=Object.freeze({templateId:'candlelight',subtitle:'',venueAddress:'',imagePosition:'xMidYMid',imageFit:'auto',imageOrientation:'auto',imageZoom:100,imagePanX:0,imagePanY:0,textContrast:'light',shade:70});
+export const DEFAULT_POST_SETTINGS=Object.freeze({templateId:'bg-luxury-champagne-gold',subtitle:'',venueAddress:'',imagePosition:'xMidYMid',imageFit:'auto',imageOrientation:'auto',imageZoom:100,imagePanX:0,imagePanY:0,textContrast:'light',shade:70});
 const validRange=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 export function checkPostSettings(input){
  if(!input||typeof input!=='object'||Array.isArray(input))return null;
