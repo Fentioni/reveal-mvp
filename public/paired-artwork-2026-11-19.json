@@ -2,8 +2,263 @@
   "version": 1,
   "collectionDate": "2026-11-19",
   "status": "artwork-ready",
-  "note": "Complete artwork packages only. Register editable layouts before publishing to the customer creator.",
+  "note": "26 primary-cover/background pairs; five have alternative artwork. Register editable layouts and finish alternative coverage before making live customer selections.",
   "packages": [
+    {
+      "id": "luxury-champagne-gold",
+      "name": "Champagne Gold",
+      "collection": "Luxury gift cards",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/luxury-champagne-gold-primary.webp",
+        "gitBlobSha": "17f01feeaf1a51be8be46084ea7ce85ddd2cfce8",
+        "bytes": 216432
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-luxury-champagne-gold.webp",
+        "gitBlobSha": "762c9685397670cbf0112f4c698b519201e581ae",
+        "bytes": 147070
+      }
+    },
+    {
+      "id": "luxury-sapphire-gold",
+      "name": "Sapphire Gold",
+      "collection": "Luxury gift cards",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/luxury-sapphire-gold-primary.webp",
+        "gitBlobSha": "ee879cedfd8164c7ca227a22cac2acf4e7c1111a",
+        "bytes": 330482
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-luxury-sapphire-gold.webp",
+        "gitBlobSha": "519b243e363b3dce579db7853dbe7db784c6b76b",
+        "bytes": 207606
+      }
+    },
+    {
+      "id": "luxury-platinum-spiral",
+      "name": "Platinum Spiral",
+      "collection": "Luxury gift cards",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/luxury-platinum-spiral-primary.webp",
+        "gitBlobSha": "e4ff8a1010e8d7b7c5311e2517bdb70793a9e8d8",
+        "bytes": 203330
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-luxury-platinum-spiral.webp",
+        "gitBlobSha": "01f73c563af7c4cdc4f61dc95359e47552cd799c",
+        "bytes": 180600
+      }
+    },
+    {
+      "id": "luxury-coral-ribbon",
+      "name": "Coral Ribbon",
+      "collection": "Luxury gift cards",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/luxury-coral-ribbon-primary.webp",
+        "gitBlobSha": "afe47c520e11cb27b7c4e8af55e74b5faefdd7fe",
+        "bytes": 377636
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-luxury-coral-ribbon.webp",
+        "gitBlobSha": "5b71d5c426441f975502950b41ae8b3486814a05",
+        "bytes": 159216
+      }
+    },
+    {
+      "id": "luxury-emerald-botanical",
+      "name": "Emerald Botanical",
+      "collection": "Luxury gift cards",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/luxury-emerald-botanical-primary.webp",
+        "gitBlobSha": "3ca38aee6e31a06e7038acf7286c87859cbda7f8",
+        "bytes": 391448
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-luxury-emerald-botanical.webp",
+        "gitBlobSha": "d0cea5f00cc9f60b4c2174b8493cc984defdf527",
+        "bytes": 214108
+      }
+    },
+    {
+      "id": "bow-champagne",
+      "name": "Champagne Bow",
+      "collection": "Gift boxes with bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/bow-champagne-primary.webp",
+        "gitBlobSha": "94dcbac58ee7ce89c5024742292ce6657cc00e55",
+        "bytes": 261410
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-bow-champagne.webp",
+        "gitBlobSha": "f8e2bcd2d6a5b8e2649d840c0513b33de4e0ea6c",
+        "bytes": 107232
+      }
+    },
+    {
+      "id": "bow-platinum",
+      "name": "Platinum Bow",
+      "collection": "Gift boxes with bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/bow-platinum-primary.webp",
+        "gitBlobSha": "72c22d0f332f31a55dc67ead06e7c66092f56676",
+        "bytes": 308028
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-bow-platinum.webp",
+        "gitBlobSha": "7ab2a1858751903fd921722ea4a7f73d27585ce3",
+        "bytes": 148794
+      }
+    },
+    {
+      "id": "bow-rose-gold",
+      "name": "Rose Gold Bow",
+      "collection": "Gift boxes with bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/bow-rose-gold-primary.webp",
+        "gitBlobSha": "1ebd1b22b9900a6d1f4bb54c708fbb24d1f0d8d9",
+        "bytes": 327238
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-bow-rose-gold.webp",
+        "gitBlobSha": "20643278865fd8259ee169008c4764fe11e6b3c7",
+        "bytes": 183460
+      }
+    },
+    {
+      "id": "bow-sapphire",
+      "name": "Sapphire Bow",
+      "collection": "Gift boxes with bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/bow-sapphire-primary.webp",
+        "gitBlobSha": "a218b609d57647cc1a746b393fce48b074fecf74",
+        "bytes": 386488
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-bow-sapphire.webp",
+        "gitBlobSha": "07bca67929f9f38b42f6fb5c4bf156fc24cfac17",
+        "bytes": 154838
+      }
+    },
+    {
+      "id": "bow-emerald",
+      "name": "Emerald Bow",
+      "collection": "Gift boxes with bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/bow-emerald-primary.webp",
+        "gitBlobSha": "757b6a9956c1c013987f3a2ed4dcb4164ecd1159",
+        "bytes": 526254
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-bow-emerald.webp",
+        "gitBlobSha": "52938e5d07853d727166a0995e43cecac5988899",
+        "bytes": 177316
+      }
+    },
+    {
+      "id": "wrap-champagne",
+      "name": "Champagne Wrap",
+      "collection": "Gift boxes without bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/wrap-champagne-primary.webp",
+        "gitBlobSha": "2462ff0887a609115ef58ca38423778a54303c14",
+        "bytes": 329728
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-wrap-champagne.webp",
+        "gitBlobSha": "0fee779645ca14dc01f2e2ebde839dbed0508816",
+        "bytes": 159466
+      }
+    },
+    {
+      "id": "wrap-sapphire",
+      "name": "Sapphire Wrap",
+      "collection": "Gift boxes without bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/wrap-sapphire-primary.webp",
+        "gitBlobSha": "f18c1a28a9934242586c1e9ef5ade31c95226a91",
+        "bytes": 356912
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-wrap-sapphire.webp",
+        "gitBlobSha": "cf965383d9f4915c44e4e3062b3093250d9adfa2",
+        "bytes": 153498
+      }
+    },
+    {
+      "id": "wrap-emerald",
+      "name": "Emerald Wrap",
+      "collection": "Gift boxes without bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/wrap-emerald-primary.webp",
+        "gitBlobSha": "f06422ec68862d77c5355c98b176851ead4ce5fc",
+        "bytes": 471634
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-wrap-emerald.webp",
+        "gitBlobSha": "453d5af35881f7aa7d07c228ce16eeca3e1aadb0",
+        "bytes": 174916
+      }
+    },
+    {
+      "id": "wrap-rose-gold",
+      "name": "Rose Gold Wrap",
+      "collection": "Gift boxes without bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/wrap-rose-gold-primary.webp",
+        "gitBlobSha": "92f4c1aa1f2cbdebe2abafc2bc206ac3e2c2ccd2",
+        "bytes": 591290
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-wrap-rose-gold.webp",
+        "gitBlobSha": "eea58827c950d3ca4dc271dabf273e2a4085e0e1",
+        "bytes": 141164
+      }
+    },
+    {
+      "id": "wrap-platinum",
+      "name": "Platinum Wrap",
+      "collection": "Gift boxes without bows",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/wrap-platinum-primary.webp",
+        "gitBlobSha": "16455f9bd1cbc027c5244a18ceb0279b6cccf546",
+        "bytes": 310550
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-wrap-platinum.webp",
+        "gitBlobSha": "31b79d39f8f385fc596bb348810a8b7f9d1aa6a3",
+        "bytes": 135478
+      }
+    },
     {
       "id": "envelope-coral-ginkgo",
       "name": "Coral Ginkgo",
@@ -12,15 +267,18 @@
       "height": 2400,
       "primary": {
         "path": "/scratch-artwork/envelope-coral-ginkgo-primary.webp",
-        "gitBlobSha": "d4c83616fc4adb962810c46c666a032b244aee6f"
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-coral-ginkgo-alternative.webp",
-        "gitBlobSha": "3d5a6b7b3ef6534608dfd85341ada66089e527e8"
+        "gitBlobSha": "d4c83616fc4adb962810c46c666a032b244aee6f",
+        "bytes": 818014
       },
       "revealBackground": {
         "path": "/post-scratch-artwork/bg-envelope-coral-ginkgo.webp",
-        "gitBlobSha": "e117ae9d959c5f027fdb0208ad3fa02e90cfddbc"
+        "gitBlobSha": "e117ae9d959c5f027fdb0208ad3fa02e90cfddbc",
+        "bytes": 539498
+      },
+      "alternative": {
+        "path": "/scratch-artwork/envelope-coral-ginkgo-alternative.webp",
+        "gitBlobSha": "3d5a6b7b3ef6534608dfd85341ada66089e527e8",
+        "bytes": 1250278
       }
     },
     {
@@ -31,15 +289,18 @@
       "height": 2400,
       "primary": {
         "path": "/scratch-artwork/envelope-emerald-deco-primary.webp",
-        "gitBlobSha": "a4c92c6f015e9fe5d83e0e396c3c847812af5cc6"
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-emerald-deco-alternative.webp",
-        "gitBlobSha": "2017a19dfe375e051f1e51507cc4895f0db162ae"
+        "gitBlobSha": "a4c92c6f015e9fe5d83e0e396c3c847812af5cc6",
+        "bytes": 550282
       },
       "revealBackground": {
         "path": "/post-scratch-artwork/bg-envelope-emerald-deco.webp",
-        "gitBlobSha": "3cba604d36b26c545fde47815e4ea642f62409cc"
+        "gitBlobSha": "3cba604d36b26c545fde47815e4ea642f62409cc",
+        "bytes": 311958
+      },
+      "alternative": {
+        "path": "/scratch-artwork/envelope-emerald-deco-alternative.webp",
+        "gitBlobSha": "2017a19dfe375e051f1e51507cc4895f0db162ae",
+        "bytes": 1315714
       }
     },
     {
@@ -50,15 +311,18 @@
       "height": 2400,
       "primary": {
         "path": "/scratch-artwork/envelope-ivory-laurel-primary.webp",
-        "gitBlobSha": "71a699ec9c1fb0969422b43a15085f347c6262ce"
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-ivory-laurel-alternative.webp",
-        "gitBlobSha": "e96aca08c7575ca61d02bb7fa226631f211acd5b"
+        "gitBlobSha": "71a699ec9c1fb0969422b43a15085f347c6262ce",
+        "bytes": 606406
       },
       "revealBackground": {
         "path": "/post-scratch-artwork/bg-envelope-ivory-laurel.webp",
-        "gitBlobSha": "858a2191515c02db26ea212186b9011bfe3e5afa"
+        "gitBlobSha": "858a2191515c02db26ea212186b9011bfe3e5afa",
+        "bytes": 402800
+      },
+      "alternative": {
+        "path": "/scratch-artwork/envelope-ivory-laurel-alternative.webp",
+        "gitBlobSha": "e96aca08c7575ca61d02bb7fa226631f211acd5b",
+        "bytes": 975976
       }
     },
     {
@@ -69,15 +333,18 @@
       "height": 2400,
       "primary": {
         "path": "/scratch-artwork/envelope-malachite-seal-primary.webp",
-        "gitBlobSha": "b25eb59061dcc3b23adb92cb6a316ec246fbc975"
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-malachite-seal-alternative.webp",
-        "gitBlobSha": "44ba38af1ba7dcf8c7994f400b19cdf960af515b"
+        "gitBlobSha": "b25eb59061dcc3b23adb92cb6a316ec246fbc975",
+        "bytes": 825084
       },
       "revealBackground": {
         "path": "/post-scratch-artwork/bg-envelope-malachite-seal.webp",
-        "gitBlobSha": "d10eb32cb54ca9347ec73fe15b0bc3857a62d17b"
+        "gitBlobSha": "d10eb32cb54ca9347ec73fe15b0bc3857a62d17b",
+        "bytes": 486200
+      },
+      "alternative": {
+        "path": "/scratch-artwork/envelope-malachite-seal-alternative.webp",
+        "gitBlobSha": "44ba38af1ba7dcf8c7994f400b19cdf960af515b",
+        "bytes": 917566
       }
     },
     {
@@ -88,15 +355,120 @@
       "height": 2400,
       "primary": {
         "path": "/scratch-artwork/envelope-sapphire-compass-primary.webp",
-        "gitBlobSha": "e0c520aff6d9c0a8fd20cf567e5f85360d1bb77b"
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-sapphire-compass-alternative.webp",
-        "gitBlobSha": "10ceb90a75b736ab4fc8dec0f7c2f9cf2d549e0f"
+        "gitBlobSha": "e0c520aff6d9c0a8fd20cf567e5f85360d1bb77b",
+        "bytes": 614928
       },
       "revealBackground": {
         "path": "/post-scratch-artwork/bg-envelope-sapphire-compass.webp",
-        "gitBlobSha": "8078c90415464857b9c39d179a123d16ad8cf4d5"
+        "gitBlobSha": "8078c90415464857b9c39d179a123d16ad8cf4d5",
+        "bytes": 347072
+      },
+      "alternative": {
+        "path": "/scratch-artwork/envelope-sapphire-compass-alternative.webp",
+        "gitBlobSha": "10ceb90a75b736ab4fc8dec0f7c2f9cf2d549e0f",
+        "bytes": 528904
+      }
+    },
+    {
+      "id": "kids-rainbow-party",
+      "name": "Rainbow Party",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-rainbow-party-primary.webp",
+        "gitBlobSha": "c73a86c6b8afc01ab543af96e7685e342847de0b",
+        "bytes": 300468
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-rainbow-party.webp",
+        "gitBlobSha": "522fd62c1cfccef9c1bbc8f1c68724ff6d08d931",
+        "bytes": 362392
+      }
+    },
+    {
+      "id": "kids-jungle-safari",
+      "name": "Jungle Safari",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-jungle-safari-primary.webp",
+        "gitBlobSha": "0b705ae9063e7886b79626a8c46ff5b692e005fa",
+        "bytes": 423038
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-jungle-safari.webp",
+        "gitBlobSha": "7a553e962ecf33d809edd31206f57b91749985f7",
+        "bytes": 325800
+      }
+    },
+    {
+      "id": "kids-magical-dreamland",
+      "name": "Magical Dreamland",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-magical-dreamland-primary.webp",
+        "gitBlobSha": "087e9d819cea2716aad9eabceb6fdc83b4375a37",
+        "bytes": 289842
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-magical-dreamland.webp",
+        "gitBlobSha": "2c34bf5eeded1450612f1ce46c5ba9adcfc220e7",
+        "bytes": 184030
+      }
+    },
+    {
+      "id": "kids-space-adventure",
+      "name": "Space Adventure",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-space-adventure-primary.webp",
+        "gitBlobSha": "5d33daf31518c7cefd8edf3f4e9a53372add1f19",
+        "bytes": 581214
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-space-adventure.webp",
+        "gitBlobSha": "2afb66ce1d6b3854a659f07201f46f213044ee00",
+        "bytes": 327476
+      }
+    },
+    {
+      "id": "kids-candy-swirl",
+      "name": "Candy Swirl",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-candy-swirl-primary.webp",
+        "gitBlobSha": "2401f15f0d2d4df7dd8e2bcab8ea3fb306c47080",
+        "bytes": 351928
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-candy-swirl.webp",
+        "gitBlobSha": "45042cf9338e4af2db7ef062228b608e5cecff87",
+        "bytes": 202648
+      }
+    },
+    {
+      "id": "kids-enchanted-magic",
+      "name": "Enchanted Magic",
+      "collection": "Children’s gift boxes",
+      "width": 1800,
+      "height": 2400,
+      "primary": {
+        "path": "/scratch-artwork/kids-enchanted-magic-primary.webp",
+        "gitBlobSha": "0518cf64f76d848d484798bc39465e0fe343dabf",
+        "bytes": 623668
+      },
+      "revealBackground": {
+        "path": "/post-scratch-artwork/bg-kids-enchanted-magic.webp",
+        "gitBlobSha": "fe64c1c1b824326395620f3ff98379807d7db159",
+        "bytes": 288596
       }
     }
   ]
