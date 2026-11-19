@@ -135,7 +135,7 @@ try{
  await page.locator('#coverFile').setInputFiles({name:'Test Gold.png',mimeType:'image/png',buffer:Buffer.from(coverBytes,'base64')});
  await page.locator('#coverName').fill('Test Gold');await page.locator('#addCover').click();
  await page.locator('#token').fill(secret);await page.locator('#authSave').click();
- await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork added.'));
+ await page.waitForFunction(()=>document.querySelector('#coverStatus').textContent.startsWith('Artwork added to Studio.'));
  const coverId=await page.locator('#coverList .cover-item').last().getAttribute('data-cover-id');assert.match(coverId,/^cover-/);
  const customer=await browser.newPage();await customer.goto(base+'/legacy-create.html?variant=ticket');await customer.locator('#reviewButton:enabled').waitFor();
  assert.equal(await customer.locator('#scratchArtwork option[value="'+coverId+'"]').count(),0,'Unpaired admin uploads must not enter customer catalogue');
