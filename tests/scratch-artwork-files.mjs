@@ -6,9 +6,9 @@ import {fileURLToPath} from 'node:url';
 import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 const root=resolve(dirname(fileURLToPath(import.meta.url)),'..','public','scratch-artwork');
 const actual=(await readdir(root)).filter(name=>/\.(jpe?g|webp)$/i.test(name));
-assert.equal(SCRATCH_ARTWORKS.length,40);
-assert.equal(new Set(SCRATCH_ARTWORKS.map(a=>a.id)).size,40);
-assert.equal(new Set(SCRATCH_ARTWORKS.map(a=>a.label)).size,40);
+assert.equal(SCRATCH_ARTWORKS.length,65);
+assert.equal(new Set(SCRATCH_ARTWORKS.map(a=>a.id)).size,65);
+assert.equal(new Set(SCRATCH_ARTWORKS.map(a=>a.label)).size,65);
 assert.deepEqual(new Set(actual),new Set(SCRATCH_ARTWORKS.map(a=>a.file)));
 for(const art of SCRATCH_ARTWORKS){
  const file=await readFile(resolve(root,art.file));
@@ -21,4 +21,4 @@ for(const art of SCRATCH_ARTWORKS){
   assert.equal(file.readUInt16LE(28)&0x3fff,2400,art.file);
  }else{assert.equal(file[0],0xff);assert.equal(file[1],0xd8);assert.equal(file[2],0xff);}
 }
-console.log('Verified all 40 approved cover assets.');
+console.log('Verified all 65 approved cover assets.');

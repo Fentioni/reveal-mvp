@@ -42,10 +42,11 @@ test('the creator retains the 20 original covers and loads managed artwork witho
  'Compass Journey','Copper Petals','Crimson Vortex','Emerald Elegance','Festive Midnight',
  'Fuchsia Prism','Gilded Archways','Golden Spotlight','Lunar Lullaby','Metallic Spirals',
  'Midnight Romance','Ruby Diamonds','Sapphire Geometry','Sapphire Weave','Scarlet Waves','Silver Apex',
- "Ruby Labyrinth","Neon Apex","Lime Vortex","Neon Fuchsia","Violet Currents","Coral Prism","Emerald Splash","Sunset Geometry","Sapphire Mosaic","Graffiti Luxe","Emerald Facets","Copper Orbit","Gilded Ribbons","Magenta Spires","Sapphire Trefoil","Midnight Chevron","Chromatic Weave","Imperial Clover","Rainbow Prism","Violet Tunnel"];
+ "Ruby Labyrinth","Neon Apex","Lime Vortex","Neon Fuchsia","Violet Currents","Coral Prism","Emerald Splash","Sunset Geometry","Sapphire Mosaic","Graffiti Luxe","Emerald Facets","Copper Orbit","Gilded Ribbons","Magenta Spires","Sapphire Trefoil","Midnight Chevron","Chromatic Weave","Imperial Clover","Rainbow Prism","Violet Tunnel",
+ "Opal Tessellation","Coral Rosettes","Lime Mosaic","Spectrum Weave","Prismatic Wash","Copper Tides","Coral Flow","Jade Ribbons","Platinum Waters","Violet Cascade","Coral Bloom","Jade Diamonds","Ocean Currents","Rose Cascades","Violet Tides","Scarlet Currents","Jade Fans","Fuchsia Spirals","Chromatic Engraving","Coastal Weave","Aquamarine Facets","Jewel Petals","Turquoise Swirls","Sunrise Ribbons","Gilded Mosaic"];
  assert.deepEqual(SCRATCH_ARTWORKS.map(i=>i.label),names);
- assert.equal(SCRATCH_ARTWORKS.length,40);
- assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,40);
+ assert.equal(SCRATCH_ARTWORKS.length,65);
+ assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,65);
  assert.equal(DEFAULT_SCRATCH_ARTWORK,'azure-kaleidoscope');
  assert.equal(getScratchArtwork('missing'),null);
  for(const art of SCRATCH_ARTWORKS) {

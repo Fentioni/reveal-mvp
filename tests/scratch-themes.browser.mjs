@@ -350,7 +350,7 @@ test('creator shows only the 20-artwork dropdown without the retired foil sectio
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:resolve(output,size.name+'-final-40-dropdown.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,size.name+'-final-65-dropdown.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}

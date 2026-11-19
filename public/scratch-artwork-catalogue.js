@@ -1,4 +1,4 @@
-/** Reveal-approved scratch surface artwork: approved artwork supplied on 16 and 18 November 2026. */
+/** Reveal-approved scratch surface artwork: approved artwork supplied on 16, 18 and 19 November 2026. */
 export const SCRATCH_ARTWORKS = Object.freeze([
   {
     "id": "azure-kaleidoscope",
@@ -119,7 +119,32 @@ export const SCRATCH_ARTWORKS = Object.freeze([
   {"id":"chromatic-weave","label":"Chromatic Weave","file":"Chromatic_Weave.webp"},
   {"id":"imperial-clover","label":"Imperial Clover","file":"Imperial_Clover.webp"},
   {"id":"rainbow-prism","label":"Rainbow Prism","file":"Rainbow_Prism.webp"},
-  {"id":"violet-tunnel","label":"Violet Tunnel","file":"Violet_Tunnel.webp"}
+  {"id":"violet-tunnel","label":"Violet Tunnel","file":"Violet_Tunnel.webp"},
+  {"id":"opal-tessellation","label":"Opal Tessellation","file":"Opal_Tessellation.webp"},
+  {"id":"coral-rosettes","label":"Coral Rosettes","file":"Coral_Rosettes.webp"},
+  {"id":"lime-mosaic","label":"Lime Mosaic","file":"Lime_Mosaic.webp"},
+  {"id":"spectrum-weave","label":"Spectrum Weave","file":"Spectrum_Weave.webp"},
+  {"id":"prismatic-wash","label":"Prismatic Wash","file":"Prismatic_Wash.webp"},
+  {"id":"copper-tides","label":"Copper Tides","file":"Copper_Tides.webp"},
+  {"id":"coral-flow","label":"Coral Flow","file":"Coral_Flow.webp"},
+  {"id":"jade-ribbons","label":"Jade Ribbons","file":"Jade_Ribbons.webp"},
+  {"id":"platinum-waters","label":"Platinum Waters","file":"Platinum_Waters.webp"},
+  {"id":"violet-cascade","label":"Violet Cascade","file":"Violet_Cascade.webp"},
+  {"id":"coral-bloom","label":"Coral Bloom","file":"Coral_Bloom.webp"},
+  {"id":"jade-diamonds","label":"Jade Diamonds","file":"Jade_Diamonds.webp"},
+  {"id":"ocean-currents","label":"Ocean Currents","file":"Ocean_Currents.webp"},
+  {"id":"rose-cascades","label":"Rose Cascades","file":"Rose_Cascades.webp"},
+  {"id":"violet-tides","label":"Violet Tides","file":"Violet_Tides.webp"},
+  {"id":"scarlet-currents","label":"Scarlet Currents","file":"Scarlet_Currents.webp"},
+  {"id":"jade-fans","label":"Jade Fans","file":"Jade_Fans.webp"},
+  {"id":"fuchsia-spirals","label":"Fuchsia Spirals","file":"Fuchsia_Spirals.webp"},
+  {"id":"chromatic-engraving","label":"Chromatic Engraving","file":"Chromatic_Engraving.webp"},
+  {"id":"coastal-weave","label":"Coastal Weave","file":"Coastal_Weave.webp"},
+  {"id":"aquamarine-facets","label":"Aquamarine Facets","file":"Aquamarine_Facets.webp"},
+  {"id":"jewel-petals","label":"Jewel Petals","file":"Jewel_Petals.webp"},
+  {"id":"turquoise-swirls","label":"Turquoise Swirls","file":"Turquoise_Swirls.webp"},
+  {"id":"sunrise-ribbons","label":"Sunrise Ribbons","file":"Sunrise_Ribbons.webp"},
+  {"id":"gilded-mosaic","label":"Gilded Mosaic","file":"Gilded_Mosaic.webp"}
 ].map(item=>Object.freeze({...item,src:'/scratch-artwork/'+item.file})));
 export const DEFAULT_SCRATCH_ARTWORK = 'azure-kaleidoscope';
 const byId=new Map(SCRATCH_ARTWORKS.map(item=>[item.id,item]));
