@@ -8,7 +8,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  const state=edit.design,layer=el('div','','customer-design-layer'),toolbar=el('section','','customer-design-tools');
  layer.setAttribute('aria-label','Adjust ticket field positions');toolbar.setAttribute('aria-label','Customise selected field');
  const top=el('div','','customer-design-actions'),undo=el('button','Undo'),redo=el('button','Redo'),reset=el('button','Reset design'),done=el('button','Done');
- for(const b of [undo,redo,reset,done])b.type='button';top.append(undo,redo,reset);toolbar.append(top);
+ for(const b of [undo,redo,reset,done])b.type='button';top.append(undo,redo,reset,done);toolbar.append(top);
  const info=el('p','Edit content directly on the ticket. Drag the move or resize handle to adjust the selected field.','customer-design-info');toolbar.append(info);
  const selected=el('p','','customer-field-name');selected.setAttribute('aria-live','polite');toolbar.append(selected);
  const grid=el('div','','customer-design-grid');toolbar.append(grid);

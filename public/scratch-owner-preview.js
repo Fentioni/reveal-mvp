@@ -1,4 +1,4 @@
-import {mountCustomerDesigner} from './customer-ticket-designer.js?v=integrated-editor-1';
+import {mountCustomerDesigner} from './customer-ticket-designer.js?v=integrated-editor-2';
 import {normalizeBookingLink} from './booking-link.js?v=1';
 import {renderPostScratchFace} from './post-scratch-face.js?v=customer-design-1';
 /**

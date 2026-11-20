@@ -14,12 +14,12 @@ try{
  let result;
  for(let i=0;i<25;i++){
   result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
-  if(result?.ok()&&(await result.text()).includes('data-customer-design="integrated"'))break;
+  if(result?.ok()&&(await result.text()).includes('data-customer-design="integrated-2"'))break;
   await new Promise(r=>setTimeout(r,5000));
  }
  assert.ok(result?.ok(),'Live staging creator responds');
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
- assert.match(await result.text(),/data-customer-design="integrated"/,'Integrated editor must be live');
+ assert.match(await result.text(),/data-customer-design="integrated-2"/,'Integrated editor must be live');
  assert.equal(await page.locator('#personaliseMode,#customiseMode').count(),0);
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
