@@ -15,19 +15,25 @@ async function liveCoverMatches(art){
  const response=await fetch(origin+art.src+'?asset-check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(15000)});
  return response.ok&&digest(Buffer.from(await response.arrayBuffer()))===coverHashes.get(art.id);
 }
-const sentinels=SCRATCH_ARTWORKS.filter(a=>['luxury-platinum-spiral-primary','luxury-champagne-gold-primary'].includes(a.id));
+const sentinels=SCRATCH_ARTWORKS.filter(a=>a.id.startsWith('luxury-'));
+let mismatches=[];
+async function allLiveCoversMatch(){
+ const results=await Promise.all(SCRATCH_ARTWORKS.map(async a=>[a.id,await liveCoverMatches(a).catch(()=>false)]));
+ mismatches=results.filter(([,matches])=>!matches).map(([id])=>id);
+ return mismatches.length===0;
+}
 let ready=false;
 for(let i=0;i<35;i++){
  try{
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(res.ok&&(await res.text()).includes(marker)){
    const module=await fetch(origin+'/scratch-owner-preview.js?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)){ready=true;break;}
+   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)&&await allLiveCoversMatch()){ready=true;break;}
   }
  }catch(e){console.log('Cloudflare request:',e.message);}
  await pause(7000);
 }
-assert.ok(ready,'Cloudflare has not published the expected preview and cover assets yet');
+assert.ok(ready,'Cloudflare has not published all expected assets; mismatches: '+mismatches.join(', '));
 for(const art of SCRATCH_ARTWORKS)assert.ok(await liveCoverMatches(art),'Live artwork differs from checked-in asset: '+art.id);
 console.log('LIVE ARTWORK: All '+SCRATCH_ARTWORKS.length+' cover hashes match the repository');
 const browser=await chromium.launch({headless:true});
