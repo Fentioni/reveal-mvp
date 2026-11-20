@@ -1593,7 +1593,23 @@
       $('pairedCoverChoice').hidden=$('scratchArtwork').options.length<2;
     }
     async function refreshCoverCatalogue(){
-      try{const response=await fetch('/api/scratch-artwork',{cache:'no-store'});if(response.ok){const data=await response.json();if(Array.isArray(data.artworks)){coverCatalogue=data.artworks;const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;fillCoverOptions();postGuidance();}}}catch{}
+      // Keep the selected product and cover in sync even when the artwork API
+      // is temporarily unavailable; the built-in catalogue remains usable.
+      try{
+        const response=await fetch('/api/scratch-artwork',{cache:'no-store'});
+        if(response.ok){
+          const data=await response.json();
+          if(Array.isArray(data.artworks))coverCatalogue=data.artworks;
+        }
+      }catch{}
+      const selected=$('postTemplate').value;
+      postGroups.clear();
+      $('postTemplate').replaceChildren();
+      for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);
+      if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;
+      fillCoverOptions();
+      postGuidance();
+      if(currentVariant==='ticket'&&!$('postTemplate').options.length)throw new Error('No gift designs are currently available. Please try again later.');
     }
     fillCoverOptions();
     function selectConcertOption(group,selected){
