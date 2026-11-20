@@ -112,10 +112,10 @@ test('all template person headings are canonical; legacy saved designs retain ge
  const {templateFieldText}=await import('../public/post-scratch-renderer.js');
  for(const t of POST_TEMPLATES){
   const d=defaultDesign(t.id);
-  for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'For You':'From Me',t.id);
+  for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'To':'From',t.id);
   const old=clone(d);for(const p of old.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))p.label=p.key==='recipient'?'RECIPIENT':'FROM / HOST';
-  const v=validateDesign(t.id,old);for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'For You':'From Me',t.id);
-  for(const z of v.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key))){const name=z.key==='recipient'?'Chloe':'Michael';const heading=z.key==='recipient'?'For You':'From Me';const hasLabel=v.panels.some(p=>p.key===z.key&&p.labelH>0&&p.label);assert.equal(templateFieldText(v,z.key,{recipient:'Chloe',sender:'Michael'}),hasLabel?name:heading+': '+name,t.id);}
+  const v=validateDesign(t.id,old);for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)&&p.labelH>0))assert.equal(p.label,p.key==='recipient'?'To':'From',t.id);
+  for(const z of v.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key))){const name=z.key==='recipient'?'Chloe':'Michael';const heading=z.key==='recipient'?'To':'From';const hasLabel=v.panels.some(p=>p.key===z.key&&p.labelH>0&&p.label);assert.equal(templateFieldText(v,z.key,{recipient:'Chloe',sender:'Michael'}),hasLabel?name:heading+': '+name,t.id);}
  }
  // The replacement artwork is text-free and uses no legacy labelled panels.
  for(const t of POST_TEMPLATES)assert.equal(t.panels.length,0,t.id);
@@ -130,10 +130,10 @@ test('all template person headings are canonical; legacy saved designs retain ge
 test('legacy demo names are removed from saved person fields without modifying real reveal data or other fields',async()=>{
  const {templateFieldText}=await import('../public/post-scratch-renderer.js');
  for(const t of POST_TEMPLATES){const d=defaultDesign(t.id);const people=d.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key));
- for(const z of people){z.templateText=z.key==='recipient'?'For You: Chloe':'From Me: Michael';z.textMode='fixed';}
- for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))p.label=p.key==='recipient'?'For You: Chloe':'From Me: Michael';
+ for(const z of people){z.templateText=z.key==='recipient'?'To: Chloe':'From: Michael';z.textMode='fixed';}
+ for(const p of d.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))p.label=p.key==='recipient'?'To: Chloe':'From: Michael';
  const v=validateDesign(t.id,d);for(const z of v.zones.filter(z=>['recipient','sender','senderLine'].includes(z.key))){assert.equal(z.textMode,'customer');assert.equal(z.templateText,undefined);assert.equal(templateFieldText(v,z.key,{}),'');assert.match(templateFieldText(v,z.key,{recipient:'Chloe',sender:'Michael'}),/Chloe|Michael/);}
- for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))assert.equal(p.label,p.key==='recipient'?'For You':'From Me');
+ for(const p of v.panels.filter(p=>['recipient','sender','senderLine'].includes(p.key)))assert.equal(p.label,p.key==='recipient'?'To':'From');
  assert.deepEqual(v.photo,validateDesign(t.id,defaultDesign(t.id)).photo);
  }
  const id='bg-kids-rainbow-party',d=defaultDesign(id),z=d.zones.find(z=>z.key==='recipient');z.templateText='Chloe';z.textMode='fixed';const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};await env.IMAGES.put('admin-template-designs/v2/'+id+'.json',JSON.stringify({revision:'old-names',template:d}),{});const {template}=await (await templateDesignResponse(req(id),env)).json();assert.equal(template.zones.find(z=>z.key==='recipient').templateText,undefined);assert.equal(template.zones.find(z=>z.key==='recipient').textMode,'customer');

@@ -1502,7 +1502,11 @@ async function createStripeCheckout(
     'required'
   );
 
-  // Activated only by the isolated Reveal Quest TEST checkout wrapper.
+  // Stripe's hosted autocomplete may return a street without a premise.
+  // Remind purchasers to confirm the actual billing address before paying.
+  form.set('custom_text[submit][message]', 'Check your billing address before paying, including your house or flat number or building name, if applicable.');
+
+  // Activated by the isolated TEST checkout wrapper.
   // Stripe determines tax from the purchaser's billing location. Never
   // advertise or hard-code a guessed tax-inclusive total in Reveal.
   if (env.STRIPE_AUTOMATIC_TAX === 'true') {

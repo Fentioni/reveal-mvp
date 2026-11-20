@@ -74,6 +74,7 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'true');
   assert.equal(form.get('billing_address_collection'),'required');
+  assert.match(form.get('custom_text[submit][message]'),/house or flat number or building name/);
   assert.equal(form.get('line_items[0][price]'),price);
   assert.equal(form.get('line_items[0][quantity]'),'1');
   assert.equal(form.get('mode'),'payment');
@@ -302,6 +303,7 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
   const form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'true');
   assert.equal(form.get('billing_address_collection'),'required');
+  assert.match(form.get('custom_text[submit][message]'),/house or flat number or building name/);
   assert.equal(form.get('line_items[0][price]'),price);
   const id='cs_test_scratch_'+(++count);
   session={id,url:'https://checkout.stripe.com/c/pay/'+id,object:'checkout.session',status:'open',mode:'payment',payment_status:'unpaid',

@@ -1,6 +1,6 @@
 import {FONTS} from './template-design-schema.js';
 export const CUSTOMER_FONTS=FONTS;
-export const FIELD_NAMES={eventName:'Surprise title',subtitle:'Subtitle',recipient:'For You',sender:'From Me',senderLine:'From Me',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link',image:'Image frame'};
+export const FIELD_NAMES={eventName:'Surprise title',subtitle:'Subtitle',recipient:'To',sender:'From',senderLine:'From',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link',image:'Image frame'};
 const geom=['x','y','w','h'],styles=['size','family','ink','weight','italic','align'];
 const num=(v,min,max)=>typeof v==='number'&&Number.isFinite(v)&&v>=min&&v<=max;
 const object=v=>v&&typeof v==='object'&&!Array.isArray(v);

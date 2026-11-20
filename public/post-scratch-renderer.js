@@ -1,4 +1,4 @@
-import {applyCustomerLayout,photoFrame,orientTemplate} from './customer-ticket-layout.js?v=1';
+import {applyCustomerLayout,photoFrame,orientTemplate} from './customer-ticket-layout.js?v=short-labels-1';
 export {photoFrame};
 
 /* 14 source-based editable portrait layouts and one full-image layout. Shared renderer for editor,
@@ -11,7 +11,7 @@ function date(s){if(!/^\d{4}-\d{2}-\d{2}$/.test(s||''))return val(s);return new 
 function time(s){if(!/^\d\d:\d\d$/.test(s||''))return val(s);const [h,m]=s.split(':').map(Number);return (h%12||12)+':'+String(m).padStart(2,'0')+(h<12?' am':' pm');}
 function join(...items){return items.map(val).filter(Boolean).join(' · ');}
 function fields(data){return {...data,eventName:val(data.eventName),date:date(data.eventDate),time:time(data.eventTime),dateTime:join(date(data.eventDate),time(data.eventTime)),venueLine:[val(data.venue),val(data.venueAddress)].filter(Boolean).join('\n'),senderLine:val(data.sender),message:val(data.personalMessage),link:safeLink(data.ticketUrl)?'Open event link':''};}
-const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
+const personLabel=key=>key==='recipient'?'To':['sender','senderLine'].includes(key)?'From':null;
 function displayFields(template,data){
  const values=fields(data);
  for(const key of ['recipient','sender','senderLine']){
@@ -24,7 +24,7 @@ export function templateFieldText(template,key,data={}){return val(displayFields
 const canvas=typeof document==='undefined'?null:document.createElement('canvas');
 const ctx=canvas?.getContext('2d');
 let uid=0;
-const labels={sender:'From Me',eventName:'Reveal title',subtitle:'Subtitle',recipient:'For You',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From Me',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
+const labels={sender:'From',eventName:'Reveal title',subtitle:'Subtitle',recipient:'To',date:'Date',time:'Time',dateTime:'Date · Time',venueLine:'Venue / address',senderLine:'From',message:'Personal message',link:'Event link',venue:'Venue / destination',venueAddress:'Address / location'};
 function fitText(value,zone){
  const {family,weight,w,h}=zone;const max=Math.min(zone.size,Math.floor(h*.84));
  const min=Math.min(max,Math.max(20,Math.round(max*.42)));

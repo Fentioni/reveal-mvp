@@ -42,7 +42,7 @@ function box(o){obj(o);const x=num(o.x,0,900),y=num(o.y,0,1200),w=num(o.w,12,900
 const opt=(o,key,fn,d)=>o[key]===undefined?d:fn(o[key]);
 function style(z){return {size:num(z.size,12,200),family:font(z.family),weight:num(z.weight,100,900),ink:color(z.ink),align:choice(z.align,['left','center','right']),italic:opt(z,'italic',bool,false),upper:opt(z,'upper',bool,false),noWordSplit:opt(z,'noWordSplit',bool,true),spacing:opt(z,'spacing',x=>num(x,0,20),0),hidden:opt(z,'hidden',bool,false),useTemplateInk:opt(z,'useTemplateInk',bool,false),...(z.glow?{glow:color(z.glow)}:{}),...(z.outline?{outline:color(z.outline)}:{})};}
 // Normalize persisted legacy headings on read and write without changing their geometry or personal values.
-const personLabel=key=>key==='recipient'?'For You':['sender','senderLine'].includes(key)?'From Me':null;
+const personLabel=key=>key==='recipient'?'To':['sender','senderLine'].includes(key)?'From':null;
 export const containsDemoName=value=>typeof value==='string'&&/michael|chloe/iu.test(value.normalize('NFKC'));
 // Remove complete contaminated text entries, not just the matching words.
 // Required customer input zones remain available, and only their preset text is cleared.

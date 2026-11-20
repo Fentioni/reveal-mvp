@@ -1,8 +1,8 @@
 import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=withdraw-13-20261120';
-import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA,purgeTemplateDemoText} from './template-design-schema.js?v=clean-template-text-1';
-import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=clean-template-text-1';
+import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA,purgeTemplateDemoText} from './template-design-schema.js?v=short-labels-1';
+import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=short-labels-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';
-const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'For You',sender:'From Me',senderLine:'From Me',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
+const names={eventName:'Surprise title',subtitle:'Subtitle',recipient:'To',sender:'From',senderLine:'From',date:'Date',time:'Time',venue:'Venue',venueAddress:'Address',message:'Personal message',link:'Event link'};
 const typical={eventName:'A night to remember',subtitle:'A special surprise',recipient:'',sender:'',eventDate:'2027-03-20',eventTime:'19:30',venue:'Theatre Royal',venueAddress:'Drury Lane, London',personalMessage:'A wonderful evening, just for you.',ticketUrl:'https://example.org'};
 const longer={...typical,eventName:'Jesus Christ Superstar — a very special evening',subtitle:'An unforgettable experience for a wonderful birthday',venue:'Theatre Royal, Drury Lane',venueAddress:'Catherine Street, Covent Garden, London',personalMessage:'Happy birthday! I hope you have a wonderful time. We are going to enjoy a special evening together.'};
 const fontLabels=['Georgia / serif','Arial / sans serif','Arial Black','Script','Georgia','Arial','Verdana','Trebuchet','Courier New','Times New Roman','Impact'];

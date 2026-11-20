@@ -14,12 +14,12 @@ try{
  let result;
  for(let i=0;i<25;i++){
   result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
-  if(result?.ok()&&(await result.text()).includes('data-customer-design="picker-handles-1"'))break;
+  if(result?.ok()&&(await result.text()).includes('data-customer-design="short-labels-1"'))break;
   await new Promise(r=>setTimeout(r,5000));
  }
  assert.ok(result?.ok(),'Live staging creator responds');
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
- assert.match(await result.text(),/data-customer-design="picker-handles-1"/,'Integrated editor must be live');
+ assert.match(await result.text(),/data-customer-design="short-labels-1"/,'Integrated editor must be live');
  assert.equal(await page.locator('#personaliseMode,#customiseMode').count(),0);
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
@@ -75,9 +75,11 @@ try{
  await toolbar.waitFor({state:'visible'});
  assert.equal(await toolbar.locator('.customer-field-name').textContent(),'Surprise title');
  assert.equal(await field('eventName').isVisible(),true);
- const zone=host.locator('[data-zone="eventName"]'),move=zone.locator('.customer-move-handle'),resize=zone.locator('.customer-resize-handle');
+ const zone=host.locator('.customer-zone[data-zone="eventName"]'),move=zone.locator('.customer-move-handle'),resize=zone.locator('.customer-resize-handle');
  assert.ok(await move.isVisible()&&await resize.isVisible());
  assert.equal(await host.locator('.customer-zone[data-selected="true"]').count(),1);
+ assert.match(await host.locator('[data-field="recipient"]').textContent(),/^To: Safari QA$/);
+ assert.match(await host.locator('[data-field="senderLine"]').textContent(),/^From: Reveal QA$/);
  const ink=toolbar.locator('[data-style-control="ink"]');
  await ink.fill('#d18b47');await ink.dispatchEvent('change');
  assert.equal(await field('eventName').inputValue(),'Automated upload test');

@@ -1,4 +1,4 @@
-import {CUSTOMER_FONTS,FIELD_NAMES,applyCustomerLayout,validateCustomerLayout} from './customer-ticket-layout.js?v=1';
+import {CUSTOMER_FONTS,FIELD_NAMES,applyCustomerLayout,validateCustomerLayout} from './customer-ticket-layout.js?v=short-labels-1';
 const el=(tag,text,cls)=>{const n=document.createElement(tag);if(text)n.textContent=text;if(cls)n.className=cls;return n;};
 const copy=o=>JSON.parse(JSON.stringify(o));
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -80,7 +80,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
     const handle=el('button',picker?(resize?'↘ Resize field':'✥ Move field'):(resize?'↘':'✥'),resize?'customer-resize-handle':'customer-move-handle');
     handle.type='button';handle.dataset.resize=resize?'1':'0';
     handle.setAttribute('aria-label',(resize?'Resize ':'Move ')+FIELD_NAMES[zone.key]);handle.title=handle.getAttribute('aria-label');
-    handle.dataset.zone=zone.key;
+    if(picker)handle.dataset.zone=zone.key;
     if(picker){handle.hidden=zone.key!==state.key;pickerHandles.append(handle);}else box.append(handle);
     let drag=null;
     handle.addEventListener('pointerdown',e=>{

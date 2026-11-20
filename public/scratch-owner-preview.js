@@ -1,6 +1,6 @@
-import {mountCustomerDesigner} from './customer-ticket-designer.js?v=picker-handles-1';
+import {mountCustomerDesigner} from './customer-ticket-designer.js?v=short-labels-1';
 import {normalizeBookingLink} from './booking-link.js?v=1';
-import {renderPostScratchFace} from './post-scratch-face.js?v=customer-design-1';
+import {renderPostScratchFace} from './post-scratch-face.js?v=short-labels-1';
 /**
  * Private owner preview; optional creator-only inline controls. Render the exact recipient face twice,
  * once completely covered and once completely revealed. No public reveal
@@ -48,9 +48,9 @@ function make(tag,text,cls){
 const inlineFields={
  eventName:['eventName','Surprise title','textarea',160,true],
  subtitle:['postSubtitle','Subtitle','text',100,false],
- recipient:['recipient','For You','text',80,true],
- sender:['sender','From Me','text',80,true],
- senderLine:['sender','From Me','text',80,true],
+ recipient:['recipient','To','text',80,true],
+ sender:['sender','From','text',80,true],
+ senderLine:['sender','From','text',80,true],
  date:['eventDate','Date','date',0,false],
  time:['eventTime','Time','time',0,false],
  venue:['venue','Venue / destination','text',200,false],

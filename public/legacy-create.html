@@ -933,7 +933,7 @@
             <input
               id="recipient"
               type="text"
-              placeholder="For You"
+              placeholder="To"
               maxlength="80"
               required
             >
@@ -944,7 +944,7 @@
             <input
               id="sender"
               type="text"
-              placeholder="From Me"
+              placeholder="From"
               maxlength="80"
               required
             >
@@ -1171,7 +1171,7 @@
           </div>
         </section>
         <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
-        <section id="scratchCreatorActual" hidden aria-label="Personalise your Scratch Ticket" data-preview-mode="revealed" data-inline-personalisation="1" data-customer-design="picker-handles-1">
+        <section id="scratchCreatorActual" hidden aria-label="Personalise your Scratch Ticket" data-preview-mode="revealed" data-inline-personalisation="1" data-customer-design="short-labels-1">
           <div class="scratch-preview-switch" role="group" aria-label="Scratch Ticket preview">
             <button type="button" data-scratch-preview-mode="covered" aria-pressed="false" aria-controls="scratchActualCovered">Before scratching</button>
             <button type="button" data-scratch-preview-mode="revealed" aria-pressed="true" aria-controls="scratchActualRevealed">After scratching</button>
@@ -1270,7 +1270,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=picker-handles-1';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=short-labels-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=withdraw-13-20261120';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1279,9 +1279,9 @@
     import {getPairedProduct,coversForTemplate,isMatchingPair} from '/paired-products.js?v=withdraw-13-20261120';
     import {loadPublishedDesign} from '/published-template-designs.js?v=template-management-1';
     import {cleanPostSettings} from '/post-scratch-settings.js?v=customer-design-1';
-    import {photoFrame} from '/post-scratch-renderer.js?v=customer-design-1';
+    import {photoFrame} from '/post-scratch-renderer.js?v=short-labels-1';
     import {normalizeBookingLink} from '/booking-link.js?v=1';
-    import {validateCustomerLayout} from '/customer-ticket-layout.js?v=1';
+    import {validateCustomerLayout} from '/customer-ticket-layout.js?v=short-labels-1';
     const $ = id => document.getElementById(id);
 
     const fields = [
@@ -1365,7 +1365,7 @@
       reveal.hasImage=Boolean(objectUrl);return {reveal,settings:postSettings()};
     }
     let validationAttempted=false,validationMessage='';
-    const requiredInline={recipient:'For You',sender:'From Me',eventName:'Surprise title'};
+    const requiredInline={recipient:'To',sender:'From',eventName:'Surprise title'};
     function inlineErrors(){
       const errors=new Map();
       for(const [key,label] of Object.entries(requiredInline))if(!$(key).value.trim())errors.set(key,{label,message:'Enter '+(key==='recipient'?'the recipient’s name.':key==='sender'?'who the surprise is from.':'the surprise title.')});

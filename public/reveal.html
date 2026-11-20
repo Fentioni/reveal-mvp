@@ -1058,7 +1058,7 @@
   <script defer src="/qr.js"></script>
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview} from '/scratch-owner-preview.js?v=customer-design-2';
+    import {renderScratchOwnerPreview} from '/scratch-owner-preview.js?v=short-labels-1';
     import {displayConcertTicketRows,cleanConcertTicketDetails} from '/concert-ticket-fields.js?v=2';
     import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout,isConcertTemplate,isConcertRevealTheme} from '/concert-ticket-options.js?v=2';
     import {renderConcertReference} from '/concert-reference-renderer.js?v=reference-6';
@@ -1656,7 +1656,7 @@
         elements.paymentHeading.textContent=reveal.status==='checkout'?'Continue test checkout':'Test your Scratch Ticket purchase';
         elements.paymentCopy.textContent='Test-mode payment only. One-off base price £1.99; Stripe calculates applicable tax based on billing location. No real charge or subscription.';
         elements.payButton.textContent='Continue to Stripe test checkout';
-        elements.paymentSecurityNote.textContent='Stripe TEST mode only. Your scratch reveal remains locked until a signed test webhook confirms payment.';
+        elements.paymentSecurityNote.textContent='Stripe TEST mode only. Check that your billing address includes your house name or number after postcode lookup. Your scratch reveal remains locked until a signed test webhook confirms payment.';
         return;
       }
 

@@ -30,10 +30,10 @@ try{
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
  assert.equal(await page.locator('#template option').count(),18);
- assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
- assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From Me');
- assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'For You');
- assert.equal(await page.locator('#render [data-field="senderLine"]').textContent(),'From Me');
+ assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'To');
+ assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From');
+ assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'To');
+ assert.equal(await page.locator('#render [data-field="senderLine"]').textContent(),'From');
  assert.doesNotMatch(await page.locator('#render').textContent(),/\b(?:Michael|Chloe)\b/i);
  await page.locator('[data-layer="zone:recipient"]').click();
  assert.equal(await page.locator('#prop-templateText').inputValue(),'');
@@ -178,7 +178,7 @@ try{
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
   await creator.locator('#reviewButton').click();
   const host=creator.locator('#scratchActualRevealed');
-  assert.match(await creator.locator('#messageBox').textContent(),/for you|recipient/i);
+  assert.match(await creator.locator('#messageBox').textContent(),/to|recipient/i);
   assert.equal(await creator.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
   assert.deepEqual((await host.locator('[data-edit-field][aria-invalid="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.editField))).sort(),['eventName','recipient','sender']);
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),3);
