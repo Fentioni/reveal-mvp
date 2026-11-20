@@ -230,12 +230,12 @@ try{
   assert.equal(await creator.locator('#scratchActualRevealed [data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.locator('#customiseMode').click();
   const design=host.locator('.customer-design-tools');await design.waitFor({state:'visible'});
-  assert.equal(await host.locator('.inline-ticket-editor').isVisible(),false);
+  assert.equal(await host.locator('.inline-ticket-editor').isVisible(),true);
   assert.equal(await design.locator('select[aria-label="Select field to customise"]').count(),0);
   assert.equal(await design.locator('[data-style-control="x"],[data-style-control="y"],[data-style-control="w"],[data-style-control="h"]').count(),0);
-  await host.locator('.customer-zone[data-zone="subtitle"]').click();
+  await host.locator('[data-edit-field="postSubtitle"]').focus();
   assert.equal(await design.locator('.customer-field-name').textContent(),'Subtitle');
-  await host.locator('.customer-zone[data-zone="eventName"]').click();
+  await host.locator('[data-edit-field="eventName"]').focus();
   assert.equal(await design.locator('.customer-field-name').textContent(),'Surprise title');
   await design.locator('[data-style-control="family"]').selectOption('Arial, sans-serif');
   await design.locator('[data-style-control="size"]').fill('30');await design.locator('[data-style-control="size"]').press('Tab');
@@ -248,10 +248,10 @@ try{
   assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
   await design.getByRole('button',{name:'Undo',exact:true}).click();assert.equal(await zone.evaluate(e=>e.style.width),previous);
   await design.getByRole('button',{name:'Redo',exact:true}).click();assert.notEqual(await zone.evaluate(e=>e.style.width),previous);
-  const beforeMove=await zone.evaluate(e=>e.style.left);await zone.scrollIntoViewIfNeeded();const rect=await zone.boundingBox();const cardRect=await host.locator('#card').boundingBox();
+  const beforeMove=await zone.evaluate(e=>e.style.left);const moveHandle=zone.locator('.customer-move-handle');await moveHandle.scrollIntoViewIfNeeded();const rect=await moveHandle.boundingBox();const cardRect=await host.locator('#card').boundingBox();
   await creator.mouse.move(rect.x+rect.width/2,rect.y+rect.height/2);await creator.mouse.down();await creator.mouse.move(rect.x+rect.width/2+8*cardRect.width/900,rect.y+rect.height/2,{steps:4});await creator.mouse.up();
   assert.notEqual(await zone.evaluate(e=>e.style.left),beforeMove,'Direct drag moves field');
-  await creator.locator('#personaliseMode').click();assert.equal(await host.locator('.inline-ticket-editor').isVisible(),true);
+  await design.getByRole('button',{name:'Done',exact:true}).click();assert.equal(await design.isVisible(),false);assert.equal(await host.locator('.inline-ticket-editor').isVisible(),true);
   assert.equal(await host.locator('[data-edit-field="eventName"]').inputValue(),'Theatre Night');
   await creator.screenshot({path:'test-output/template-designer/inline-'+viewport.width+'.png',fullPage:true});
   assert.equal(await creator.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);

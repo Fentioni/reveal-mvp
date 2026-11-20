@@ -5,12 +5,13 @@ import {createServer} from 'node:http';
 import {readFile,mkdir} from 'node:fs/promises';
 import {fileURLToPath} from 'node:url';
 import {resolve,extname} from 'node:path';
-import {chromium,webkit} from 'playwright';
+import {chromium,webkit,firefox} from 'playwright';
 import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK} from '../public/scratch-artwork-catalogue.js';
 
 const root=resolve(fileURLToPath(new URL('..',import.meta.url)),'public');
-const browserType=process.env.SCRATCH_BROWSER==='webkit'?webkit:chromium;
-const browserName=process.env.SCRATCH_BROWSER==='webkit'?'webkit':'chromium';
+const engines={chromium,webkit,firefox};
+const browserName=process.env.SCRATCH_BROWSER||'chromium';
+const browserType=engines[browserName];
 const output=resolve(fileURLToPath(new URL('..',import.meta.url)),'test-output','scratch-'+browserName);
 const type={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2'};
 const sample={
