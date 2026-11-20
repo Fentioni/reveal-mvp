@@ -11,9 +11,16 @@ const browser=await browserType.launch({headless:true});
 try{
  const page=await browser.newPage({viewport:browserType===webkit?{width:390,height:844}:{width:1380,height:900},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
+ let result;
+ for(let i=0;i<25;i++){
+  result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
+  if(result?.ok()&&(await result.text()).includes('data-customer-design="integrated"'))break;
+  await new Promise(r=>setTimeout(r,5000));
+ }
  assert.ok(result?.ok(),'Live staging creator responds');
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
+ assert.match(await result.text(),/data-customer-design="integrated"/,'Integrated editor must be live');
+ assert.equal(await page.locator('#personaliseMode,#customiseMode').count(),0);
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
  const art='luxury-coral-ribbon-primary';
@@ -33,6 +40,41 @@ try{
   const field=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
   await field.focus();await field.fill(value);
  }
+ // Editing text selects that exact field for formatting without any mode.
+ const host=page.locator('#scratchActualRevealed'),toolbar=host.locator('.customer-design-tools');
+ await field('eventName').focus();
+ await toolbar.waitFor({state:'visible'});
+ assert.equal(await toolbar.locator('.customer-field-name').textContent(),'Surprise title');
+ assert.equal(await field('eventName').isVisible(),true);
+ const zone=host.locator('[data-zone="eventName"]'),move=zone.locator('.customer-move-handle'),resize=zone.locator('.customer-resize-handle');
+ assert.ok(await move.isVisible()&&await resize.isVisible());
+ assert.equal(await host.locator('.customer-zone[data-selected="true"]').count(),1);
+ const ink=toolbar.locator('[data-style-control="ink"]');
+ await ink.fill('#d18b47');await ink.dispatchEvent('change');
+ assert.equal(await field('eventName').inputValue(),'Automated upload test');
+ const undo=toolbar.getByRole('button',{name:'Undo',exact:true}),redo=toolbar.getByRole('button',{name:'Redo',exact:true});
+ await undo.click();assert.notEqual(await ink.inputValue(),'#d18b47');
+ await redo.click();assert.equal(await ink.inputValue(),'#d18b47');
+ const bounds=async()=>zone.evaluate(z=>[z.style.left,z.style.top,z.style.width,z.style.height]);
+ const initialBounds=await bounds();
+ // Keyboard movement/resize uses the same commit/validation path as drag.
+ await move.focus();await move.press('ArrowRight');
+ assert.notDeepEqual(await bounds(),initialBounds,'field should move using its dedicated handle');
+ const moved=await bounds();
+ await resize.focus();await resize.press('ArrowLeft');
+ assert.notDeepEqual(await bounds(),moved,'field should resize independently of its text');
+ await undo.click();await undo.click();
+ assert.deepEqual(await bounds(),initialBounds);
+ // Check actual drag on a separately selected, narrow movement target.
+ await move.scrollIntoViewIfNeeded();const grip=await move.boundingBox();
+ await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);await page.mouse.down();
+ await page.mouse.move(grip.x+grip.width/2+2,grip.y+grip.height/2,{steps:3});await page.mouse.up();
+ assert.notDeepEqual(await bounds(),initialBounds,'drag must reposition selected field');
+ await undo.click();assert.deepEqual(await bounds(),initialBounds);
+ await field('venue').focus();assert.equal(await toolbar.locator('.customer-field-name').textContent(),'Venue');
+ await toolbar.getByRole('button',{name:'Done',exact:true}).click();assert.equal(await toolbar.isVisible(),false);
+ await field('eventName').focus();assert.equal(await ink.inputValue(),'#d18b47');
+ await toolbar.getByRole('button',{name:'Done',exact:true}).click();
  const source=Buffer.from(await page.evaluate(()=>{
   const c=document.createElement('canvas');c.width=800;c.height=1000;
   const g=c.getContext('2d');g.fillStyle='#f12b34';g.fillRect(0,0,800,1000);
@@ -67,6 +109,7 @@ try{
  assert.equal(surface.artworkId,art);assert.equal(surface.hasImage,false);
  assert.equal(surface.postScratch.imageZoom,160);assert.equal(surface.postScratch.imagePanX,25);assert.equal(surface.postScratch.imagePanY,-20);
  assert.equal(surface.postScratch.imageFit,'cover');
+ assert.equal(surface.postScratch.layout.eventName.ink,'#d18b47');
  assert.equal(reveal.recipient,'Safari QA');
  assert.equal(reveal.sender,'Reveal QA');
  assert.equal(reveal.eventName,'Automated upload test');
@@ -90,6 +133,8 @@ try{
  assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
  assert.equal(await field('recipient').inputValue(),'Safari QA');
  assert.equal(await field('eventName').inputValue(),'Automated upload test');
+ await field('eventName').focus();assert.equal(await ink.inputValue(),'#d18b47');
+ await toolbar.getByRole('button',{name:'Done',exact:true}).click();
  assert.equal(await page.locator('#postImageZoom').inputValue(),'160');
  const owner=async()=>{const response=await page.request.get(origin+'/api/reveals/'+saved.id,{headers});assert.ok(response.ok());return (await response.json()).reveal;};
  const savedSurface=async()=>{const response=await page.request.get(origin+'/api/reveals/'+saved.id+'/scratch-surface',{headers});assert.ok(response.ok());return (await response.json()).surface;};
@@ -113,6 +158,7 @@ try{
  const editedSurface=await savedSurface();
  assert.equal(editedSurface.artworkId,art);
  assert.equal(editedSurface.postScratch.imageZoom,175);
+ assert.equal(editedSurface.postScratch.layout.eventName.ink,'#d18b47');
  assert.equal(editedSurface.postScratch.imagePanX,25);
  const sameImage=await page.request.get(origin+'/api/reveals/'+saved.id+'/image',{headers});
  assert.deepEqual(await sameImage.body(),source,'Text/layout changes must not replace the image');

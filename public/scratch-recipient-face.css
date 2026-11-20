@@ -85,10 +85,12 @@
 /* Per-reveal design tools are mounted only in the customer creator. */
 .customer-design-layer{position:absolute;inset:0;pointer-events:none;z-index:8}
 .customer-design-layer[hidden],.customer-design-tools[hidden],.inline-ticket-editor[hidden]{display:none!important}
-.customer-zone{position:absolute;pointer-events:auto;touch-action:none;box-sizing:border-box;border:1px dashed #eee;background:#235fa318;padding:0;cursor:move;min-width:0;min-height:0}
-.customer-zone[data-selected=true]{border:2px solid #34acf4;background:#34acf414;outline:1px solid #13263e;z-index:2}
-.customer-resize-handle{position:absolute;right:-1px;bottom:-1px;width:18px;height:18px;background:#fff;border:2px solid #168ce0;border-radius:3px;cursor:nwse-resize;touch-action:none;display:none}
-.customer-zone[data-selected=true] .customer-resize-handle{display:block}
+.customer-zone{position:absolute;pointer-events:none;box-sizing:border-box;border:0;padding:0;min-width:0;min-height:0}
+.customer-zone[data-selected=true]{border:2px solid #34acf4;outline:1px solid #13263e;z-index:2}
+.customer-zone .customer-move-handle,.customer-zone .customer-resize-handle{position:absolute;pointer-events:auto;touch-action:none;display:none;width:24px;height:24px;min-width:0;min-height:0;padding:0;margin:0;border:1px solid #146eaa;border-radius:5px;background:#edf7ff;color:#164f7d;font:700 16px/1 system-ui,sans-serif;align-items:center;justify-content:center;box-shadow:0 1px 3px #0006}
+.customer-move-handle{left:-2px;top:-2px;cursor:move}.customer-resize-handle{right:-2px;bottom:-2px;cursor:nwse-resize}
+.customer-zone button:focus-visible{outline:2px solid #fff;outline-offset:2px}
+.customer-zone[data-selected=true] .customer-move-handle,.customer-zone[data-selected=true] .customer-resize-handle{display:flex}
 .customer-design-tools{margin:12px 0;padding:12px;border:1px solid #8e7956;border-radius:10px;background:#1d202b;color:#eee;text-align:left;font:14px/1.35 system-ui,sans-serif}
 .customer-design-actions{display:flex;gap:6px;flex-wrap:wrap}.customer-design-actions button{flex:1}
 .customer-design-tools button,.customer-design-tools select,.customer-design-tools input:not([type=checkbox]){box-sizing:border-box;max-width:100%;min-width:0;width:100%;background:#2c3241;color:#fff;border:1px solid #6c7384;border-radius:7px;padding:8px;font:16px system-ui,sans-serif}

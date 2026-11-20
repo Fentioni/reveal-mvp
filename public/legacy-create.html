@@ -828,10 +828,6 @@
     #scratchCreatorActual .inline-hint{margin:6px auto 10px;max-width:490px;text-align:center;color:#f3e3b9;font-weight:600}
     #scratchCreatorActual[data-preview-mode="covered"] .inline-hint{display:none}
     #scratchCreatorActual[data-preview-mode="revealed"] .cover-hint{display:none}
-    .customer-mode-switch{display:flex;gap:6px;margin:8px auto;max-width:490px}
-    .customer-mode-switch button{flex:1;min-width:0;border:1px solid #867352;border-radius:8px;padding:10px 6px;background:#27232e;color:#f5e9d0;font-size:.85rem;font-weight:700;cursor:pointer}
-    .customer-mode-switch button[aria-pressed="true"]{background:#e6c47a;color:#251c14}
-    #scratchCreatorActual[data-customer-mode="design"] .inline-hint{display:none}
     @media(max-width:900px){#scratchCreatorActual{scroll-margin-top:12px}}
   </style>
   
@@ -1175,13 +1171,12 @@
           </div>
         </section>
         <p class="preview-static-note" id="concertPreviewNote">Static preview — not scratchable</p>
-        <section id="scratchCreatorActual" hidden aria-label="Personalise your Scratch Ticket" data-preview-mode="revealed" data-inline-personalisation="1" data-customer-design="2">
+        <section id="scratchCreatorActual" hidden aria-label="Personalise your Scratch Ticket" data-preview-mode="revealed" data-inline-personalisation="1" data-customer-design="integrated">
           <div class="scratch-preview-switch" role="group" aria-label="Scratch Ticket preview">
             <button type="button" data-scratch-preview-mode="covered" aria-pressed="false" aria-controls="scratchActualCovered">Before scratching</button>
             <button type="button" data-scratch-preview-mode="revealed" aria-pressed="true" aria-controls="scratchActualRevealed">After scratching</button>
           </div>
-          <div class="customer-mode-switch" role="group" aria-label="Ticket editing mode"><button id="personaliseMode" type="button" aria-pressed="true">Personalise</button><button id="customiseMode" type="button" aria-pressed="false">Customise design</button></div>
-          <p class="inline-hint">Tap the ticket to edit its text or add an image. Title, recipient and sender are required.</p><p class="cover-hint">This is what the recipient sees before scratching.</p>
+          <p class="inline-hint">Tap text to personalise it and show its formatting controls. Use the selected field’s handles to move or resize it. Tap the photo to upload an image. Title, recipient and sender are required.</p><p class="cover-hint">This is what the recipient sees before scratching.</p>
           <p id="inlineValidation" class="inline-validation" role="status" aria-live="polite" hidden></p>
           <div class="scratch-preview-stack">
             <div id="scratchActualCovered" class="scratch-preview-panel" data-preview-panel="covered" aria-hidden="true" inert></div>
@@ -1275,7 +1270,7 @@
 
   <script type="module">
     import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
-    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=customer-design-3';
+    import {renderScratchOwnerPreview,disposeScratchOwnerPreview} from '/scratch-owner-preview.js?v=integrated-editor-1';
     import {CONCERT_TICKET_TEMPLATES,CONCERT_REVEAL_THEMES,DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=3';
     import {SCRATCH_ARTWORKS,DEFAULT_SCRATCH_ARTWORK,getScratchArtwork} from '/scratch-artwork-catalogue.js?v=withdraw-13-20261120';
     import {CONCERT_TICKET_FIELDS} from '/concert-ticket-fields.js?v=2';
@@ -1312,15 +1307,7 @@
     let objectUrl = null;
     let pendingReview = false;
     let customerLayout={};
-    const customerDesign={mode:false,key:'eventName',undo:[],redo:[]};
-    function setCustomerMode(mode){
-      customerDesign.mode=mode==='design';const section=$('scratchCreatorActual');section.dataset.customerMode=customerDesign.mode?'design':'personalise';
-      $('personaliseMode').setAttribute('aria-pressed',String(!customerDesign.mode));$('customiseMode').setAttribute('aria-pressed',String(customerDesign.mode));
-      if(customerDesign.mode)section.querySelector('[data-scratch-preview-mode="revealed"]').click();
-      $('scratchActualRevealed').shadowRoot?.querySelector('#card')?.dispatchEvent(new Event('customer-mode'));
-    }
-    $('personaliseMode').addEventListener('click',()=>setCustomerMode('personalise'));
-    $('customiseMode').addEventListener('click',()=>setCustomerMode('design'));
+    const customerDesign={key:null,undo:[],redo:[]};
     const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
     const postGroups=new Map();
     let studioCatalogue=POST_TEMPLATES;
@@ -1362,7 +1349,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key='eventName';const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
@@ -1458,7 +1445,6 @@
     }
     function validateInlineFields(){
       validationAttempted=true;
-      setCustomerMode('personalise');
       return updateInlineValidation({focus:true});
     }
     let portraitPreviewQueue=Promise.resolve();
