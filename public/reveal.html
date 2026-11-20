@@ -1117,6 +1117,8 @@
     let isGenderReview = false;
     let isQuestReview = Boolean(revealId && localStorage.getItem('reveal_quest_' + revealId) === '1');
     let questTestPaymentReady = false;
+    let scratchTestPaymentReady = false;
+    const stagingTestPaymentReady=()=> (isQuestReview && questTestPaymentReady)||scratchTestPaymentReady;
     const quizReviewImageUrls = [];
 
     if (isStagingTest) {
@@ -1208,13 +1210,17 @@
         }
         if (isStagingTest && !isQuestReview && !await loadQuizReview() && !await loadGenderReview()) await loadSurface();
 
+        if(isStagingTest && scratchTestPaymentReady){
+          elements.reviewNotice.textContent='Staging TEST mode only. This is a read-only purchaser review. Your recipient link stays locked until Stripe verifies test payment.';
+          elements.confirmButton.textContent='Confirm and continue';
+        }
         elements.loadingCard.hidden = true;
         elements.reviewContent.hidden = false;
         if (staticScratchCard) staticScratchCard.resize();
         renderState();
 
         if (
-          (!isStagingTest || (isQuestReview && questTestPaymentReady)) &&
+          (!isStagingTest || stagingTestPaymentReady()) &&
           paymentReturn === 'success' &&
           ['confirmed', 'checkout'].includes(reveal.status)
         ) {
@@ -1382,6 +1388,7 @@
       );
       const result = await readJson(response);
       const {style,foil,hasImage} = result.surface;
+      if(isStagingTest && result.surface.variant==='ticket' && result.surface.artworkId)await loadScratchPaymentStatus();
       const chosenTheme = result.surface.theme || DEFAULT_SCRATCH_THEME;
       const artwork = getScratchArtwork(result.surface.artworkId);
       if (!artwork && result.surface.variant !== 'concert') applyScratchTheme(document,chosenTheme,'review');
@@ -1557,7 +1564,7 @@
     }
 
     function showReturnNotice() {
-      if (isStagingTest && !questTestPaymentReady) {
+      if (isStagingTest && !stagingTestPaymentReady()) {
         elements.returnNotice.hidden = true;
         return;
       }
@@ -1600,11 +1607,21 @@
       }
     }
 
+    async function loadScratchPaymentStatus(){
+      scratchTestPaymentReady=false;
+      try{
+        const response=await fetch('/api/scratch/test-payment-status',{cache:'no-store'});
+        if(!response.ok)return;
+        const data=await response.json();
+        scratchTestPaymentReady=data.environment==='staging'&&data.mode==='test'&&data.enabled===true&&data.automaticTax===true;
+      }catch{}
+    }
+
     function showPaymentState() {
       elements.paymentStage.hidden = false;
       elements.paymentAmendButton.disabled = false;
 
-      if (isStagingTest && !questTestPaymentReady) {
+      if (isStagingTest && !stagingTestPaymentReady()) {
         elements.paymentBadge.textContent = 'Staging test';
         elements.paymentHeading.textContent = 'Your test draft is confirmed';
         elements.paymentCopy.textContent = 'Your details are saved. Checkout and the recipient reveal are disabled in this test environment. Select Amend details to return to your editor.';
@@ -1631,6 +1648,15 @@
         elements.payButton.textContent = 'Continue to Stripe test checkout';
         elements.paymentSecurityNote.textContent =
           'Stripe TEST mode only. Your Quest remains locked until a signed test webhook confirms payment.';
+        return;
+      }
+
+      if(isStagingTest && scratchTestPaymentReady){
+        elements.paymentBadge.textContent='Stripe TEST mode';
+        elements.paymentHeading.textContent=reveal.status==='checkout'?'Continue test checkout':'Test your Scratch Ticket purchase';
+        elements.paymentCopy.textContent='Test-mode payment only. One-off base price £1.99; Stripe calculates applicable tax based on billing location. No real charge or subscription.';
+        elements.payButton.textContent='Continue to Stripe test checkout';
+        elements.paymentSecurityNote.textContent='Stripe TEST mode only. Your scratch reveal remains locked until a signed test webhook confirms payment.';
         return;
       }
 
@@ -1699,12 +1725,12 @@
       } catch (error) {
         window.alert(error.message);
       } finally {
-        setButtonBusy(elements.confirmButton, false, isStagingTest && !questTestPaymentReady ? 'Confirm test draft' : 'Confirm and continue');
+        setButtonBusy(elements.confirmButton, false, isStagingTest && !stagingTestPaymentReady() ? 'Confirm test draft' : 'Confirm and continue');
       }
     }
 
     async function startPayment() {
-      if (isStagingTest && !(isQuestReview && questTestPaymentReady)) {
+      if (isStagingTest && !stagingTestPaymentReady()) {
         showPaymentError('Checkout is disabled in this staging environment.');
         return;
       }

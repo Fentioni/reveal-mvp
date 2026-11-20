@@ -38,7 +38,7 @@ export default {
     }
 
     // Stripe remains disabled unless separate TEST secrets and an explicit
-    // Quest-only feature flag are present. Never enable other product checkouts.
+    // product-specific test flags are present. Never enable other product checkouts.
     const questPayment=await questStripeTestResponse(request,env,ctx,originalWorker);
     if(questPayment)return questPayment;
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFileSync} from 'node:fs';
-import {questStripeTestReady,questStripeTestResponse} from '../src/quest-stripe-test.js';
+import {questStripeTestReady,scratchStripeTestReady,questStripeTestResponse} from '../src/quest-stripe-test.js';
 import worker from '../src/index.js';
 
 const origin='https://reveal-stage4b-test.example';
@@ -118,4 +118,27 @@ test('Checkout uses Stripe Automatic Tax and remains at £1.99 before location-s
  assert.ok(review.includes("isQuestReview && questTestPaymentReady"));
  assert.ok(review.includes('base price £1.99'));
  assert.ok(!review.includes('£2.39'));
+});
+
+
+test('Scratch test checkout is separate, requires test keys and permits only saved portrait Scratch Tickets',async()=>{
+ const scratch={...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false',SCRATCH_TEST_CHECKOUT_ENABLED:'true',
+ DB:{...envBase.DB,prepare(sql){return{bind(...args){this.args=args;return this;},async first(){
+ if(sql.includes('quest_configs'))return null;
+ if(this.args[0]==='scratch-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'ticket',style:'classic',artworkId:'luxury-coral-ribbon-primary'}})};
+ if(this.args[0]==='concert-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'concert',style:'concert'}})};
+ return null;
+ }}}}};
+ assert.equal(scratchStripeTestReady(scratch),true);
+ assert.equal(scratchStripeTestReady({...scratch,STRIPE_SECRET_KEY:'sk_live_bad'}),false);
+ assert.equal(scratchStripeTestReady({...scratch,SCRATCH_TEST_CHECKOUT_ENABLED:'false'}),false);
+ const status=await questStripeTestResponse(req('/api/scratch/test-payment-status'),scratch,{},legacy);
+ assert.equal((await status.json()).enabled,true);
+ const count=legacy.calls.length;
+ for(const id of ['concert-record','quiz-record','missing-record']){
+  assert.equal((await questStripeTestResponse(req('/api/reveals/'+id+'/checkout','POST'),scratch,{},legacy)).status,403);
+ }
+ assert.equal(legacy.calls.length,count);
+ assert.equal((await questStripeTestResponse(req('/api/reveals/scratch-record/checkout','POST',{origin}),scratch,{},legacy)).status,200);
+ assert.equal(legacy.calls.at(-1).autoTax,'true');
 });

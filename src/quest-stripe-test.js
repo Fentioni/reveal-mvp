@@ -1,8 +1,8 @@
 /**
- * Stripe TEST checkout for Reveal Quest only.
+ * Stripe TEST checkout for explicitly enabled Quest and Scratch Ticket products.
  *
  * Safe default: a disabled Stage 4B staging Worker remains non-paying. This
- * never permits live Stripe credentials, production bindings, non-Quest
+ * never permits live Stripe credentials, production bindings, unapproved
  * products or a browser-provided price. Signed webhooks are verified by the
  * preserved legacy implementation before database records are marked paid.
  */
@@ -26,14 +26,19 @@ function isolatedStaging(env){
  * Credentials are stored in Cloudflare encrypted Secrets (never GitHub).
  * Configuration is deliberately not enabled by shipping a branch change.
  */
-export function questStripeTestReady(env){
+function stripeTestCredentialsReady(env){
  return Boolean(
   isolatedStaging(env) &&
-  env.QUEST_TEST_CHECKOUT_ENABLED==='true' &&
   /^(?:sk|rk)_test_[A-Za-z0-9]+$/.test(String(env.STRIPE_SECRET_KEY||'')) &&
   /^whsec_[A-Za-z0-9]+$/.test(String(env.STRIPE_WEBHOOK_SECRET||'')) &&
   /^price_[A-Za-z0-9]+$/.test(String(env.STRIPE_PRICE_ID||''))
  );
+}
+export function questStripeTestReady(env){
+ return stripeTestCredentialsReady(env)&&env.QUEST_TEST_CHECKOUT_ENABLED==='true';
+}
+export function scratchStripeTestReady(env){
+ return stripeTestCredentialsReady(env)&&env.SCRATCH_TEST_CHECKOUT_ENABLED==='true';
 }
 function isCheckout(path){
  return /^\/api\/reveals\/([A-Za-z0-9_-]+)\/checkout\/?$/.exec(path);
@@ -42,10 +47,10 @@ function isCheckout(path){
 export async function questStripeTestResponse(request,env,ctx,originalWorker){
  const url=new URL(request.url);
  const path=url.pathname;
- if(path==='/api/quest/test-payment-status' && request.method==='GET'){
+ if(['/api/quest/test-payment-status','/api/scratch/test-payment-status'].includes(path) && request.method==='GET'){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
-    enabled:questStripeTestReady(env),automaticTax:true,
+    enabled:path.startsWith('/api/scratch/')?scratchStripeTestReady(env):questStripeTestReady(env),automaticTax:true,
     baseAmountMinor:199,currency:'gbp'});
  }
  const checkout=isCheckout(path);
@@ -53,7 +58,7 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
 
  // Other products remain payment-disabled even when test mode is enabled.
  // All webhook handling remains isolated to the Stage 4B TEST environment.
- if(!questStripeTestReady(env)){
+ if(!questStripeTestReady(env)&&!scratchStripeTestReady(env)){
   return reply({success:false,error:'Checkout is disabled in this staging environment.'},503);
  }
  if(request.method!=='POST'){
@@ -62,14 +67,25 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
  if(checkout){
   const origin=request.headers.get('origin');
   if(origin && origin!==url.origin)return reply({success:false,error:'Invalid request origin.'},403);
-  let found;
+  let allowed=false;
   try {
-   found=await env.DB.prepare('SELECT reveal_id FROM quest_configs WHERE reveal_id=?')
+   const quest=await env.DB.prepare('SELECT reveal_id FROM quest_configs WHERE reveal_id=?')
      .bind(checkout[1]).first();
+   if(quest)allowed=questStripeTestReady(env);
+   else if(scratchStripeTestReady(env)){
+    const row=await env.DB.prepare('SELECT fields_json FROM reveal_configurations WHERE reveal_id=? AND product_id=?')
+      .bind(checkout[1],'ticket-reveal').first();
+    let fields;try{fields=JSON.parse(row?.fields_json||'null');}catch{}
+    const surface=fields?.scratchSurface;
+    // Permit only a saved portrait Scratch Ticket, not concert, quiz, gender,
+    // legacy drafts or browser-supplied product identifiers.
+    allowed=surface?.variant==='ticket' && surface.style==='classic' &&
+      typeof surface.artworkId==='string' && !!surface.artworkId;
+   }
   }catch{
-   return reply({success:false,error:'Quest staging database is unavailable.'},503);
+   return reply({success:false,error:'Staging payment database is unavailable.'},503);
   }
-  if(!found)return reply({success:false,error:'Only Reveal Quest test checkout is enabled.'},403);
+  if(!allowed)return reply({success:false,error:scratchStripeTestReady(env)?'Only enabled Quest and Scratch Ticket test checkout is available.':'Only Reveal Quest test checkout is enabled.'},403);
  }
  // The original Worker:
  //  - authorises checkout by hashed purchaser token

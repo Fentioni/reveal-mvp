@@ -11,7 +11,8 @@
     "STRIPE_LIVE_MODE": "false",
     "STAGING_DISABLE_CHECKOUT": "true",
     "QUEST_TEST_CHECKOUT_ENABLED": "true",
-    "STRIPE_PRICE_ID": "price_1USbNbKEVPKWz2E9zmH0mabR"
+    "STRIPE_PRICE_ID": "price_1USbNbKEVPKWz2E9zmH0mabR",
+    "SCRATCH_TEST_CHECKOUT_ENABLED": "true"
   },
   "d1_databases": [
     {

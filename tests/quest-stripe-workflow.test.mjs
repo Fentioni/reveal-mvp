@@ -284,3 +284,75 @@ test('paid Quest replay keeps the original completed session and starts independ
   assert.equal(sql.prepare('SELECT COUNT(*) AS total FROM payments').get().total,0,'Replay does not create a payment');
  }finally{sql.close()}
 });
+
+
+test('Scratch Ticket payment lifecycle: only verified signed test payment unlocks recipient and private image',async()=>{
+ const {sql,env}=setup();
+ env.SCRATCH_TEST_CHECKOUT_ENABLED='true';
+ sql.prepare('DELETE FROM quest_configs WHERE reveal_id=?').run(revealId);
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'luxury-coral-ribbon-primary',postScratch:{templateId:'bg-luxury-coral-ribbon'}};
+ sql.prepare('INSERT INTO reveal_configurations (reveal_id,product_id,fields_json) VALUES (?,?,?)').run(revealId,'ticket-reveal',JSON.stringify({scratchSurface:surface,audio:{enabled:false}}));
+ sql.prepare('UPDATE reveals SET image_key=? WHERE id=?').run('private-test.png',revealId);
+ const image=Uint8Array.from([137,80,78,71,13,10,26,10]);
+ env.IMAGES={...env.IMAGES,async get(key){if(key!=='private-test.png')return null;return{body:image,writeHttpMetadata(h){h.set('content-type','image/png')}}}};
+ let count=0,session;
+ const old=globalThis.fetch;
+ globalThis.fetch=async(uri,options={})=>{
+  assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
+  const form=new URLSearchParams(options.body);
+  assert.equal(form.get('automatic_tax[enabled]'),'true');
+  assert.equal(form.get('billing_address_collection'),'required');
+  assert.equal(form.get('line_items[0][price]'),price);
+  const id='cs_test_scratch_'+(++count);
+  session={id,url:'https://checkout.stripe.com/c/pay/'+id,object:'checkout.session',status:'open',mode:'payment',payment_status:'unpaid',
+   livemode:false,amount_subtotal:199,amount_total:239,currency:'gbp',automatic_tax:{enabled:true,status:'complete'},
+   expires_at:Math.floor(Date.now()/1000)+3600,client_reference_id:revealId,
+   metadata:Object.fromEntries(['integration','reveal_id','payment_id','price_id','revision'].map(k=>[k,form.get('metadata['+k+']')]))};
+  return new Response(JSON.stringify(session),{headers:{'content-type':'application/json'}});
+ };
+ const req=(path,opts={})=>worker.fetch(makeReq(path,opts),env,{});
+ const owner=async()=> (await(await req('/api/reveals/'+revealId,{headers:{'X-Edit-Token':token}})).json()).reveal;
+ const locked=async()=>{
+  assert.equal((await owner()).shareUrl,undefined);
+  for(const suffix of ['', '/scratch-data','/scratch-image'])assert.equal((await req('/r/'+slug+suffix)).status,404);
+ };
+ const checkout=async()=>{
+  const r=await req('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin,'X-Edit-Token':token}});
+  assert.equal(r.status,200,await r.clone().text());assert.equal((await r.json()).checkoutUrl,session.url);
+ };
+ const failure=type=>{const e=JSON.parse(event(session));e.type=type;e.data.object.payment_status='unpaid';return JSON.stringify(e)};
+ try{
+  await locked();
+  assert.equal((await req('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin}})).status,403);
+  await checkout();await locked();
+  assert.equal((await worker.fetch(signed(failure('checkout.session.async_payment_failed')),env,{})).status,200);
+  assert.equal((await owner()).status,'confirmed');await locked();
+  await checkout();await locked();
+  assert.equal((await worker.fetch(signed(failure('checkout.session.expired')),env,{})).status,200);
+  assert.equal((await owner()).status,'confirmed');await locked();
+  await checkout();await locked();
+  // Fake, wrong-account, mismatched-amount and non-tax-enabled callbacks cannot unlock.
+  assert.equal((await req('/api/webhooks/stripe',{method:'POST',body:event(session)})).status,400);
+  assert.equal((await worker.fetch(signed(event(session),'whsec_WRONGKEY'),env,{})).status,400);
+  await worker.fetch(signed(event(session,{amount_subtotal:100})),env,{});
+  await worker.fetch(signed(event(session,{livemode:true})),env,{});
+  await worker.fetch(signed(event(session,{automatic_tax:{enabled:false}})),env,{});
+  await locked();
+  const valid=event(session);
+  assert.equal((await worker.fetch(signed(valid),env,{})).status,200);
+  assert.equal((await owner()).status,'paid');
+  assert.equal((await owner()).shareUrl,'/r/'+slug);
+  assert.equal((await req('/r/'+slug)).status,200);
+  const data=await req('/r/'+slug+'/scratch-data');
+  assert.equal(data.status,200);assert.match(data.headers.get('cache-control'),/private.*no-store/);
+  const payload=await data.json();assert.equal(payload.reveal.recipient,'Chloe');assert.equal(payload.scratchSurface.artworkId,surface.artworkId);
+  const art=await req('/r/'+slug+'/scratch-image');assert.equal(art.status,200);assert.deepEqual(new Uint8Array(await art.arrayBuffer()),image);
+  assert.equal((await req('/r/'+slug+'/scratch-data')).status,200,'paid link revisitable');
+  const paidAt=(await owner()).paidAt;
+  assert.equal((await worker.fetch(signed(valid),env,{})).status,200);
+  assert.equal((await owner()).paidAt,paidAt);
+  assert.equal(sql.prepare("SELECT COUNT(*) n FROM payments WHERE status='paid'").get().n,1);
+  const again=await req('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin,'X-Edit-Token':token}});
+  assert.equal((await again.json()).shareUrl,'/r/'+slug);assert.equal(count,3);
+ }finally{globalThis.fetch=old;sql.close()}
+});

@@ -121,7 +121,8 @@ try{
  await page.locator('#paymentAmendButton:visible').waitFor({timeout:30000});
  const confirmed=await owner();
  assert.equal(confirmed.status,'confirmed');assert.equal(confirmed.shareUrl,undefined);
- assert.equal(await page.locator('#payButton').isVisible(),false);
+ const capability=await page.request.get(origin+'/api/scratch/test-payment-status');
+ assert.equal(await page.locator('#payButton').isVisible(),capability.ok()&&(await capability.json()).enabled===true);
  assert.equal(await page.locator('#paidStage').isVisible(),false);
  await page.locator('#paymentAmendButton').click();
  await page.waitForURL('**/legacy-create?**',{timeout:30000,waitUntil:'domcontentloaded'});
