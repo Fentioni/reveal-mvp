@@ -51,7 +51,7 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
     enabled:path.startsWith('/api/scratch/')?scratchStripeTestReady(env):questStripeTestReady(env),automaticTax:true,
-    baseAmountMinor:199,currency:'gbp'});
+    baseAmountMinor:199,currency:'gbp',checkoutRevision:'stable-retry-1'});
  }
  const checkout=isCheckout(path);
  if(path!=='/api/webhooks/stripe' && !checkout)return null;

@@ -74,7 +74,7 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'true');
   assert.equal(form.get('billing_address_collection'),'required');
-  assert.match(form.get('custom_text[submit][message]'),/house or flat number or building name/);
+  assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
   assert.equal(form.get('line_items[0][quantity]'),'1');
   assert.equal(form.get('mode'),'payment');
@@ -303,7 +303,7 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
   const form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'true');
   assert.equal(form.get('billing_address_collection'),'required');
-  assert.match(form.get('custom_text[submit][message]'),/house or flat number or building name/);
+  assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
   const id='cs_test_scratch_'+(++count);
   session={id,url:'https://checkout.stripe.com/c/pay/'+id,object:'checkout.session',status:'open',mode:'payment',payment_status:'unpaid',
@@ -357,4 +357,33 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
   const again=await req('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin,'X-Edit-Token':token}});
   assert.equal((await again.json()).shareUrl,'/r/'+slug);assert.equal(count,3);
  }finally{globalThis.fetch=old;sql.close()}
+});
+
+test('checkout retries reuse identical Stripe form data and idempotency key after a network failure',async()=>{
+ const {sql,env}=setup(),original=globalThis.fetch;
+ let first,firstKey,calls=0;
+ globalThis.fetch=async(uri,options)=>{
+  calls++;
+  const form=new URLSearchParams(options.body);
+  const key=options.headers.get('Idempotency-Key');
+  if(calls===1){first=options.body;firstKey=key;throw Error('simulated connection drop');}
+  assert.equal(options.body,first,'retry must not change expires_at or any other Stripe parameter');
+  assert.equal(key,firstKey);
+  return new Response(JSON.stringify({id:'cs_test_retry123',url:'https://checkout.stripe.com/c/pay/cs_test_retry123',mode:'payment',status:'open',payment_status:'unpaid',amount_subtotal:199,amount_total:199,currency:'gbp',livemode:false,automatic_tax:{enabled:true},expires_at:Number(form.get('expires_at'))}),{headers:{'content-type':'application/json'}});
+ };
+ try{
+  const req=()=>makeReq('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin,'X-Edit-Token':token}});
+  assert.equal((await worker.fetch(req(),env,{})).status,502);
+  const before=sql.prepare('SELECT * FROM payments').get();
+  assert.equal(before.status,'pending');
+  // Wall-clock advance must not mutate the request for a pending attempt.
+  await new Promise(r=>setTimeout(r,1100));
+  const retry=await worker.fetch(req(),env,{});
+  assert.equal(retry.status,200,await retry.clone().text());
+  const after=sql.prepare('SELECT * FROM payments').get();
+  assert.equal(after.id,before.id);
+  assert.equal(sql.prepare('SELECT COUNT(*) n FROM payments').get().n,1);
+  assert.equal(after.status,'pending');
+  assert.equal((await worker.fetch(makeReq('/r/'+slug),env,{})).status,404);
+ }finally{globalThis.fetch=original;sql.close();}
 });

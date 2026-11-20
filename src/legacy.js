@@ -41,10 +41,11 @@ class HttpError extends Error {
 }
 
 class StripeApiError extends Error {
-  constructor(status, retryable) {
+  constructor(status, retryable, diagnostic = {}) {
     super('Stripe API request failed.');
     this.status = status;
     this.retryable = retryable;
+    this.diagnostic = diagnostic;
   }
 }
 
@@ -1462,7 +1463,7 @@ async function createStripeCheckout(
   );
 
   const expiresAt =
-    Math.floor(Date.now() / 1000) +
+    Math.floor(Date.parse(payment.created_at) / 1000) +
     60 * 60;
 
   const form = new URLSearchParams();
@@ -1502,9 +1503,7 @@ async function createStripeCheckout(
     'required'
   );
 
-  // Stripe's hosted autocomplete may return a street without a premise.
-  // Remind purchasers to confirm the actual billing address before paying.
-  form.set('custom_text[submit][message]', 'Check your billing address before paying, including your house or flat number or building name, if applicable.');
+  // Keep billing-address guidance in Reveal, not optional Stripe form fields.
 
   // Activated by the isolated TEST checkout wrapper.
   // Stripe determines tax from the purchaser's billing location. Never
@@ -1569,6 +1568,9 @@ async function createStripeCheckout(
       'reveal-checkout-' + payment.id
     );
   } catch (error) {
+    if (error instanceof StripeApiError) {
+      console.warn('Stripe checkout creation failed', {status:error.status,...error.diagnostic});
+    }
     if (
       error instanceof StripeApiError &&
       !error.retryable
@@ -1848,8 +1850,11 @@ async function stripeRequest(
   if (!response.ok) {
     throw new StripeApiError(
       response.status,
-      response.status === 429 ||
-        response.status >= 500
+      response.status === 429 || response.status === 409 ||
+        response.status >= 500 || data?.error?.type === 'idempotency_error',
+      {type: /^[a-z_]{1,80}$/.test(data?.error?.type||'')?data.error.type:undefined,
+       code: /^[a-z_]{1,80}$/.test(data?.error?.code||'')?data.error.code:undefined,
+       requestId: /^req_[A-Za-z0-9]+$/.test(response.headers.get('request-id')||'')?response.headers.get('request-id'):undefined}
     );
   }
 

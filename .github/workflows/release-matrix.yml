@@ -18,7 +18,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.0
-      - run: node tools/verify-release-matrix.mjs
+      - run: HOME=/root node tools/verify-release-matrix.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
@@ -35,7 +35,7 @@ jobs:
         with:
           node-version: '22'
       - run: npm install --no-save playwright@1.56.0
-      - run: SCRATCH_BROWSER=firefox node --test --test-name-pattern='paid Scratch Ticket export|paid purchaser can copy|Scratch Ticket header spans' tests/scratch-themes.browser.mjs
+      - run: HOME=/root SCRATCH_BROWSER=firefox node --test --test-name-pattern='paid Scratch Ticket export|paid purchaser can copy|Scratch Ticket header spans' tests/scratch-themes.browser.mjs
       - if: always()
         uses: actions/upload-artifact@v4
         with:
