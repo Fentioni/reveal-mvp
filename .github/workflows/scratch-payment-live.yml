@@ -2,17 +2,21 @@ name: Stage 7 Scratch Ticket Stripe TEST checkout
 on:
   push:
     branches: [feature/stage4b-cloudflare-staging]
-    paths: ['src/quest-stripe-test.js','src/legacy.js','wrangler.jsonc','tools/verify-scratch-payment-live.mjs','.github/workflows/scratch-payment-live.yml']
+    paths: ['src/quest-stripe-test.js','src/legacy.js','wrangler.jsonc','tools/verify-scratch-payment-live.mjs','tools/verify-mobile-stripe-live.mjs','public/reveal.html','.github/workflows/scratch-payment-live.yml']
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   live:
     runs-on: ubuntu-latest
-    timeout-minutes: 6
+    timeout-minutes: 10
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
       - run: node tools/verify-scratch-payment-live.mjs
+      - run: node tools/verify-mobile-stripe-live.mjs
