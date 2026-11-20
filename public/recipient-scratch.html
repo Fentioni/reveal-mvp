@@ -272,7 +272,7 @@
   <button id="concertCloseZoom" type="button">Close</button>
 </dialog>
 <script type="module">
-  import { ScratchCard } from '/scratchcard.js?v=concert-professional-8';
+  import { ScratchCard } from '/scratchcard.js?v=scratch-interaction-1';
   import {renderPostScratchFace} from '/post-scratch-face.js?v=customer-design-1';
   import {mountScratchFace,fillScratchFace,setPortraitFaceTheme,setScratchFaceImage} from '/scratch-recipient-face.js?v=actual-1';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
@@ -381,7 +381,7 @@
     cinematic = new ScratchCinematicAudio({
       enabled:soundEnabled,
       delayMs:3000,
-      onCue:() => { status.textContent = 'The cinematic drum roll has begun. Keep scratching!'; }
+      onCue:() => { if(!scratch?.completed)status.textContent = 'The cinematic drum roll has begun. Keep scratching!'; }
     });
     scratch = new ScratchCard({
       canvas:$('foilCanvas'),
@@ -393,13 +393,14 @@
       brushSize:49,
       onScratch:() => cinematic.onFirstScratch(),
       onProgress:p => {
-        $('progress').value = Math.round(p*100);
+        $('progress').value = Math.floor(p*100);
+        if(p>0 && p<1 && !cinematic.fired)status.textContent = 'Keep scratching to uncover your surprise.';
         // The link is also available below the finished card once the user
         // has substantially scratched it; Canvas overlays otherwise block taps.
-        if (bookingLink && p >= 0.7) $('bookingAction').hidden = false;
-        if(isConcert && p>=0.7){
-          $('closingDetails').style.visibility='visible';
-          $('concertFullTicketButton').hidden=false;
+        $('bookingAction').hidden = !(bookingLink && p >= 0.7);
+        if(isConcert){
+          $('closingDetails').style.visibility=p>=0.7?'visible':'hidden';
+          $('concertFullTicketButton').hidden=p<0.7;
         }
       },
       onComplete:() => { status.textContent = 'You uncovered your surprise!'; }

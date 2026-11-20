@@ -168,7 +168,7 @@
     </section>
   </main>
   <script type="module">
-    import { ScratchCard } from '/scratchcard.js?v=surface-design-v2';
+    import { ScratchCard } from '/scratchcard.js?v=scratch-interaction-1';
 
 
     // Render falling confetti ONLY in four background-only screen regions.
@@ -237,7 +237,7 @@
       foil: 'gold',
       coverStyle: 'classic',
       brushSize: 49,
-      onProgress(value) { progress.value = Math.round(value * 100); },
+      onProgress(value) { progress.value = Math.floor(value * 100); },
       onComplete() {
         underlay.setAttribute('aria-hidden','false');
         stage.classList.add('reveal-complete');

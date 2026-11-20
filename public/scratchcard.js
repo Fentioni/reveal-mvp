@@ -54,6 +54,9 @@ export class ScratchCard {
     this.gridColumns = 40;
     this.gridRows = 52;
     this.cells = new Uint8Array(this.gridColumns * this.gridRows);
+    this.scratchedCells = 0;
+    this.lastFlakeAt = -Infinity;
+    this.flakes = new Set();
     this.coverImage = null;
     // Set when one of the 20 commissioned artwork images is selected. Legacy
     // reveals with no artwork ID retain their historical illustrated surface.
@@ -62,11 +65,12 @@ export class ScratchCard {
       pointerdown: event => this.pointerDown(event),
       pointermove: event => this.pointerMove(event),
       pointerup: event => this.pointerEnd(event),
-      pointercancel: event => this.pointerEnd(event)
+      pointercancel: event => this.pointerEnd(event),
+      lostpointercapture: event => this.pointerEnd(event)
     };
     canvas.style.touchAction = interactive ? 'none' : 'auto';
     if(interactive){
-      canvas.setAttribute('aria-label', 'Scratch the surface to reveal the fictional surprise');
+      canvas.setAttribute('aria-label', 'Scratch the surface to reveal your surprise');
       for (const [name, handler] of Object.entries(this.events)) canvas.addEventListener(name, handler);
     }else{
       canvas.style.pointerEvents='none';
@@ -83,9 +87,7 @@ export class ScratchCard {
   }
 
   get progress() {
-    let scratched = 0;
-    for (const cell of this.cells) scratched += cell;
-    return scratched / this.cells.length;
+    return this.scratchedCells / this.cells.length;
   }
 
   resize() {
@@ -103,6 +105,7 @@ export class ScratchCard {
     this.canvas.height = pixelHeight;
     this.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this.cells.fill(0);
+    this.scratchedCells = 0;
     this.paintCover();
     for (const stroke of this.strokes) {
       for (let i = 0; i < stroke.length; i++) {
@@ -409,15 +412,25 @@ export class ScratchCard {
   pointerMove(event) {
     if (event.pointerId !== this.activePointer) return;
     event.preventDefault();
-    const pt = this.point(event);
+    // High-frequency pointer samples retain curved finger/pen movement rather
+    // than joining only the sparse outer browser events.
+    const samples = typeof event.getCoalescedEvents === 'function' ? event.getCoalescedEvents() : [];
     const stroke = this.strokes[this.strokes.length - 1];
-    const last = stroke[stroke.length - 1];
-    stroke.push(pt);
-    this.eraseSegment(last, pt);
+    const before = this.scratchedCells;
+    for (const sample of [...samples,event]) {
+      const pt = this.point(sample);
+      const last = stroke[stroke.length - 1];
+      if (last.x === pt.x && last.y === pt.y) continue;
+      stroke.push(pt);
+      this.eraseSegment(last,pt,false);
+    }
+    if (this.scratchedCells !== before) this.notifyScratch(stroke[stroke.length-1]);
   }
 
   pointerEnd(event) {
     if (event.pointerId !== this.activePointer) return;
+    // Some devices deliver the final movement only in pointerup.
+    if (event.type === 'pointerup' && Number.isFinite(event.clientX) && Number.isFinite(event.clientY)) this.pointerMove(event);
     this.activePointer = null;
     if (this.canvas.hasPointerCapture?.(event.pointerId)) {
       try { this.canvas.releasePointerCapture(event.pointerId); } catch {}
@@ -447,35 +460,85 @@ export class ScratchCard {
     const cols = this.gridColumns, rows = this.gridRows;
     const radiusSq = (this.brushSize / 2) ** 2;
     let changed = false;
-    for (let y = 0; y < rows; y++) {
-      for (let x = 0; x < cols; x++) {
+    // Limit coverage calculations to the brush's swept bounding box.
+    const radius=this.brushSize/2;
+    const x0=clamp(Math.floor((Math.min(ax,bx)-radius)/w*cols),0,cols-1);
+    const x1=clamp(Math.floor((Math.max(ax,bx)+radius)/w*cols),0,cols-1);
+    const y0=clamp(Math.floor((Math.min(ay,by)-radius)/h*rows),0,rows-1);
+    const y1=clamp(Math.floor((Math.max(ay,by)+radius)/h*rows),0,rows-1);
+    for (let y = y0; y <= y1; y++) {
+      for (let x = x0; x <= x1; x++) {
         const index = y * cols + x;
         if (this.cells[index]) continue;
         const cx = (x + 0.5) / cols * w, cy = (y + 0.5) / rows * h;
         if (distPointToSegmentSquared(cx, cy, ax, ay, bx, by) <= radiusSq) {
           this.cells[index] = 1;
+          this.scratchedCells++;
           changed = true;
         }
       }
     }
 
-    if (interactive && changed) {
-      const progress = this.progress;
-      this.onScratch(progress);
-      this.onProgress(progress);
-      // Completion is informational only: foil is never cleared or faded
-      // automatically. Every exposed area must be erased by a user gesture.
-      if (progress === 1 && !this.completed) {
-        this.completed = true;
-        this.onComplete();
-      }
+    if (interactive && changed) this.notifyScratch(b);
+  }
+
+  notifyScratch(point) {
+    const progress = this.progress;
+    this.emitFoilFlakes(point);
+    this.onScratch(progress);
+    this.onProgress(progress);
+    // Completion remains informational; every area is erased by user input.
+    if (progress === 1 && !this.completed) {
+      this.completed = true;
+      this.onComplete();
     }
   }
 
+  emitFoilFlakes(point) {
+    // Short, non-interactive foil flecks appear only on newly scratched
+    // areas. They never modify the cover, block a gesture or expose content.
+    if (typeof document === 'undefined' || !document.body ||
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ||
+        typeof Element === 'undefined' || !Element.prototype.animate) return;
+    const now=performance.now();
+    if(now-this.lastFlakeAt<45||this.flakes.size>=24)return;
+    this.lastFlakeAt=now;
+    const rect=this.canvas.getBoundingClientRect();
+    const colors=FOILS[this.foil];
+    for(let i=0;i<3;i++){
+      const el=document.createElement('span');
+      const dx=(Math.random()-.5)*34,dy=12+Math.random()*25;
+      Object.assign(el.style,{position:'fixed',left:(rect.left+point.x*rect.width)+'px',
+        top:(rect.top+point.y*rect.height)+'px',width:(2+i)+'px',height:(2+i%2)+'px',
+        background:colors[(i+1)%colors.length],borderRadius:'1px',pointerEvents:'none',zIndex:'40',
+        transform:'translate(-50%,-50%)',boxShadow:'0 0 1px rgba(0,0,0,.25)'});
+      el.setAttribute('aria-hidden','true');
+      document.body.append(el);
+      const effect=el.animate([{opacity:.85,transform:'translate(-50%,-50%)'},
+        {opacity:0,transform:'translate('+dx+'px,'+dy+'px) rotate('+dx*4+'deg)'}],
+        {duration:250+i*30,easing:'ease-out',fill:'forwards'});
+      this.flakes.add(el);
+      const remove=()=>{el.remove();this.flakes.delete(el);};
+      effect.onfinish=remove;effect.oncancel=remove;
+    }
+  }
+
+  clearFlakes() {
+    for(const el of this.flakes){for(const effect of el.getAnimations?.()||[])effect.cancel();el.remove();}
+    this.flakes.clear();
+    this.lastFlakeAt=-Infinity;
+  }
+
   reset() {
+    this.clearFlakes();
     this.strokes = [];
     this.cells.fill(0);
+    this.scratchedCells = 0;
     this.completed = false;
+    if(this.activePointer!==null && this.canvas.hasPointerCapture?.(this.activePointer)){
+      const id=this.activePointer;this.activePointer=null;
+      try{this.canvas.releasePointerCapture(id);}catch{}
+    }
     this.activePointer = null;
     this.paintCover();
     this.onProgress(0);
@@ -518,6 +581,12 @@ export class ScratchCard {
   }
 
   destroy() {
+    this.clearFlakes();
+    this.imageRequest++;
+    if(this.activePointer!==null&&this.canvas.hasPointerCapture?.(this.activePointer)){
+      const id=this.activePointer;this.activePointer=null;try{this.canvas.releasePointerCapture(id);}catch{}
+    }
+    this.activePointer=null;
     for (const [name, handler] of Object.entries(this.events)) {
       this.canvas.removeEventListener(name, handler);
     }

@@ -123,7 +123,7 @@ test('there is no reveal-without-scratching shortcut in the scratch engine', () 
 test('public demo uses invented ticket details, keeps commercial drafts protected', async () => {
   const demo = fs.readFileSync(path.join(root, 'public/scratch-demo.html'), 'utf8');
   const storefront = fs.readFileSync(path.join(root, 'public/storefront.js'), 'utf8');
-  assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js?v=surface-design-v2'"));
+  assert.ok(demo.includes("import { ScratchCard } from '/scratchcard.js?v=scratch-interaction-1'"));
   assert.ok(demo.includes('Fictional recipient demonstration'));
   assert.ok(demo.includes('fictional example'));
   assert.ok(demo.includes('payment is confirmed'));
@@ -334,4 +334,54 @@ test('landscape ticket is confined to concert variant in creator, review and pai
   assert.ok(recipient.includes('clip-path:polygon'));
   assert.ok(recipient.includes('recipientCardModel(data.reveal)'));
   assert.ok(recipient.includes('fillScratchFace(document,model,{concert:isConcert})'));
+});
+
+
+test('coalesced samples preserve curved movement and emit one progress event per browser move',()=>{
+  const canvas=fakeCanvas(),progress=[];
+  const card=new ScratchCard({canvas,brushSize:20,onProgress:p=>progress.push(p)});
+  card.pointerDown(eventAt(30,30));
+  const before=progress.length;
+  card.pointerMove({...eventAt(250,300),getCoalescedEvents:()=>[eventAt(250,30),eventAt(250,160)]});
+  assert.equal(progress.length,before+1);
+  const at=(x,y)=>card.cells[Math.floor(y/400*card.gridRows)*card.gridColumns+Math.floor(x/300*card.gridColumns)];
+  assert.equal(at(150,30),1);
+  assert.equal(at(250,160),1);
+  assert.equal(at(140,165),0,'no diagonal shortcut across the curve');
+  assert.equal(card.scratchedCells,card.cells.reduce((a,b)=>a+b,0));
+  card.destroy();
+});
+
+test('pointerup paints the last segment and lost capture cannot leave scratching stuck',()=>{
+  const canvas=fakeCanvas();
+  const card=new ScratchCard({canvas,brushSize:24});
+  card.pointerDown(eventAt(20,20));
+  const before=card.progress;
+  card.pointerEnd({...eventAt(280,20),type:'pointerup'});
+  assert.ok(card.progress>before);
+  card.pointerDown(eventAt(30,80));
+  card.pointerEnd({...eventAt(30,80),type:'lostpointercapture'});
+  assert.equal(card.activePointer,null);
+  const ended=card.progress;
+  card.pointerMove(eventAt(250,350));
+  assert.equal(card.progress,ended);
+  card.pointerDown({...eventAt(60,100),pointerId:2});
+  assert.equal(card.activePointer,2);
+  card.reset();
+  assert.equal(canvas.captured,null);
+  assert.equal(card.progress,0);
+  assert.equal(card.scratchedCells,0);
+  card.destroy();
+});
+
+test('resize replays scratches and preserves coverage counter without triggering animation or completion',()=>{
+  const canvas=fakeCanvas(),card=new ScratchCard({canvas,brushSize:32});
+  card.pointerDown(eventAt(30,30));card.pointerMove(eventAt(270,350));card.pointerEnd(eventAt(270,350));
+  assert.ok(card.progress>0);
+  canvas.getBoundingClientRect=()=>({left:0,top:0,width:350,height:466});
+  card.resize();
+  assert.ok(card.progress>0 && card.progress<1);
+  assert.equal(card.scratchedCells,card.cells.reduce((a,b)=>a+b,0));
+  assert.equal(card.completed,false);
+  card.destroy();
 });
