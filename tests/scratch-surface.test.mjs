@@ -195,7 +195,8 @@ test('ticket creator contains actual previews and separates the selected cover f
   assert.ok(!creator.includes('selectedScratchImage'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(!creator.includes('$("scratchStyle").value = "custom";'));
-  assert.ok(creator.includes('body.append("image", selectedImage)'));
+  assert.ok(creator.includes('await selectedImage.arrayBuffer()'));
+  assert.ok(creator.includes('body.append("image", new Blob([bytes], {type:selectedImage.type}), selectedImage.name)'));
   assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
   assert.ok(creator.includes('renderScratchOwnerPreview'));
   assert.ok(creator.includes('setScratchPreview().catch(error => show(error.message));'));
@@ -291,7 +292,8 @@ test('event upload must never switch the selected scratch artwork to a custom co
   assert.ok(creator.includes('This photo appears ONLY after scratching.'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(creator.includes('showImage(file, file.name);'));
-  assert.ok(creator.includes('body.append("image", selectedImage);'));
+  assert.ok(creator.includes('await selectedImage.arrayBuffer()'));
+  assert.ok(creator.includes('body.append("image", new Blob([bytes], {type:selectedImage.type}), selectedImage.name)'));
   assert.ok(creator.includes('surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");'));
   assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
   assert.ok(!creator.includes('selectedScratchImage'));
