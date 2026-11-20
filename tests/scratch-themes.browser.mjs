@@ -199,8 +199,10 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
 test('Scratch Ticket creator upload, save, purchaser review and amend retain independent artwork and surprise image',
  {timeout:90000},async()=>{
  let savedReveal,savedSurface,imageBytes,expectedImage,endpointError;
+ const requestTrace=[];
  const art='envelope-coral-ginkgo-alternative';
  const {server,base}=await startServer({apiHandler:async(req,res,p)=>{
+   if(p.startsWith('/api/reveals'))requestTrace.push(req.method+' '+p);
    const json=(result,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(result));return true;};
    const formData=async()=>{
      const chunks=[];for await(const chunk of req)chunks.push(chunk);
@@ -281,7 +283,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    }
    await checkCurrent();
    await page.locator('#reviewButton').click();
-   try{await page.waitForURL('**/reveal?id=image-check',{timeout:15000});}catch(error){throw endpointError||error;}
+   try{await page.waitForURL('**/reveal?id=image-check',{timeout:15000,waitUntil:'domcontentloaded'});}catch(error){throw endpointError||new Error('Review navigation failed: '+JSON.stringify({url:page.url(),requests:requestTrace,message:await page.locator('.message-box').allTextContents(),errors,saveButton:await page.locator('#reviewButton').allTextContents(),saved:!!savedReveal,surface:!!savedSurface}),{cause:error});}
    assert.ifError(endpointError);
    await page.locator('#scratchActualReview:visible').waitFor();
    await checkCurrent();
