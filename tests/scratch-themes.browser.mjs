@@ -21,9 +21,12 @@ const sample={
   eventDate:'2027-03-12',eventTime:'19:00',venue:'The Grand Hall',admit:'Two guests',
   personalMessage:'Something wonderful awaits',ticketUrl:null,hasEventImage:false}
 };
-async function startServer({archivedTemplates=[],artworkApiUnavailable=false}={}){
+async function startServer({archivedTemplates=[],artworkApiUnavailable=false,apiHandler=null}={}){
  const server=createServer(async(req,res)=>{
   const path=new URL(req.url,'http://localhost').pathname;
+  // A real HTTP endpoint is required for multipart byte assertions. WebKit's
+  // Playwright interception can omit binary Blob data from postDataBuffer().
+  if(apiHandler && await apiHandler(req,res,path))return;
   if(path==='/api/template-catalogue'){
    res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({templates:PAIRED_TEMPLATES.map(({id,name,collection})=>({id,name,collection,archived:archivedTemplates.includes(id)}))}));return;
   }
@@ -195,28 +198,29 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
 
 test('Scratch Ticket creator upload, save, purchaser review and amend retain independent artwork and surprise image',
  {timeout:90000},async()=>{
- const {server,base}=await startServer();
- const browser=await browserType.launch({headless:true});
- const staging='https://reveal-stage4b-test.michael-fenton9.workers.dev';
- try{
-   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
-   const errors=[];page.on('pageerror',e=>errors.push(e.message));
-   let savedReveal,savedSurface,imageBytes;
-   const art='envelope-coral-ginkgo-alternative';
-   await page.route(staging+'/**',async route=>{
-     const req=route.request(),u=new URL(req.url()),p=u.pathname;
-     const json=result=>route.fulfill({json:result});
-     if(p==='/api/reveals'&&req.method()==='POST'){
-       const form=await new Response(req.postDataBuffer(),{headers:{'content-type':req.headers()['content-type']}}).formData();
-       const photo=form.get('image');assert.ok(photo&&photo.size>0);
+ let savedReveal,savedSurface,imageBytes,expectedImage,endpointError;
+ const art='envelope-coral-ginkgo-alternative';
+ const {server,base}=await startServer({apiHandler:async(req,res,p)=>{
+   const json=(result,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(result));return true;};
+   const formData=async()=>{
+     const chunks=[];for await(const chunk of req)chunks.push(chunk);
+     return new Response(Buffer.concat(chunks),{headers:{'content-type':req.headers['content-type']}}).formData();
+   };
+   try{
+     if(p==='/api/reveals'&&req.method==='POST'){
+       const form=await formData();
+       const photo=form.get('image');assert.ok(photo&&photo.size>0,'HTTP server received non-empty surprise image');
+       assert.equal(photo.name,'surprise.png');
+       assert.equal(photo.type,'image/png');
        imageBytes=Buffer.from(await photo.arrayBuffer());
+       assert.deepEqual(imageBytes,expectedImage,'HTTP server received exact original image bytes');
        savedReveal={...Object.fromEntries([...form.entries()].filter(([k,v])=>typeof v==='string')),
          id:'image-check',revision:1,status:'draft',hasImage:true};
        return json({success:true,id:'image-check',revision:1,editToken:'owner-test-token'});
      }
-     if(p==='/api/reveals/image-check/scratch-surface'&&req.method()==='PUT'){
-       assert.equal(req.headers()['x-edit-token'],'owner-test-token');
-       const form=await new Response(req.postDataBuffer(),{headers:{'content-type':req.headers()['content-type']}}).formData();
+     if(p==='/api/reveals/image-check/scratch-surface'&&req.method==='PUT'){
+       assert.equal(req.headers['x-edit-token'],'owner-test-token');
+       const form=await formData();
        assert.equal(form.get('style'),'classic');
        assert.equal(form.get('artworkId'),art);
        assert.equal(form.has('coverImage'),false,'Surprise image must not be saved as cover');
@@ -229,13 +233,18 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      }
      if(p==='/api/reveals/image-check')return json({success:true,reveal:savedReveal});
      if(p==='/api/reveals/image-check/scratch-surface')return json({success:true,surface:savedSurface,audio:{enabled:false}});
-     if(p==='/api/reveals/image-check/image')return route.fulfill({contentType:'image/png',body:imageBytes});
-     if(p.endsWith('/quiz')||p.endsWith('/gender'))return route.fulfill({status:404});
+     if(p==='/api/reveals/image-check/image'){res.writeHead(200,{'content-type':'image/png'});res.end(imageBytes);return true;}
+     if(p.endsWith('/quiz')||p.endsWith('/gender'))return json({},404);
      assert.ok(!p.endsWith('/scratch-surface/image'),'Catalogue scratch cover must not retrieve a custom image');
      assert.ok(!p.startsWith('/r/'),'Purchaser must use owner-only endpoints');
-     return route.fulfill({response:await route.fetch({url:base+p+u.search})});
-   });
-   await page.goto(staging+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
+     return false;
+   }catch(error){endpointError=error;return json({success:false,error:error.message},500);}
+ }});
+ const browser=await browserType.launch({headless:true});
+ try{
+   const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+   const errors=[];page.on('pageerror',e=>errors.push(e.message));
+   await page.goto(base+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
    await page.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
    await page.locator('#scratchArtwork').selectOption(art);
@@ -248,7 +257,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
      const ctx=c.getContext('2d');ctx.fillStyle='#f12b34';ctx.fillRect(0,0,800,1000);
      return c.toDataURL('image/png').split(',')[1];
    });
-   await page.locator('#image').setInputFiles({name:'surprise.png',mimeType:'image/png',buffer:Buffer.from(data,'base64')});
+   expectedImage=Buffer.from(data,'base64');
+   await page.locator('#image').setInputFiles({name:'surprise.png',mimeType:'image/png',buffer:expectedImage});
    await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
    await page.locator('#postImageControls').waitFor();
    await page.locator('#postImageFit').selectOption('cover');
@@ -271,7 +281,8 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    }
    await checkCurrent();
    await page.locator('#reviewButton').click();
-   await page.waitForURL('**/reveal?id=image-check',{timeout:15000});
+   try{await page.waitForURL('**/reveal?id=image-check',{timeout:15000});}catch(error){throw endpointError||error;}
+   assert.ifError(endpointError);
    await page.locator('#scratchActualReview:visible').waitFor();
    await checkCurrent();
    assert.equal(await page.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
