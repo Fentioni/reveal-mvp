@@ -1021,7 +1021,7 @@
         <h2 id="paidHeading">Your reveal is ready to share</h2>
 
         <p class="state-copy">
-          Send this private recipient link to the person receiving the surprise. The link can be opened again later.
+          Send this private recipient link to the person receiving the surprise. They can open it again later. Anyone with the link can view the reveal, so share it only with the intended recipients.
         </p>
 
         <div class="share-box">
@@ -1876,7 +1876,8 @@
     }
 
     async function copyShareLink() {
-      const value = elements.shareInput.value;
+      const value = reveal?.status==='paid'?normaliseShareUrl(elements.shareInput.value):null;
+      if(!value)return;
 
       try {
         await navigator.clipboard.writeText(value);
@@ -1884,7 +1885,8 @@
         elements.shareInput.focus();
         elements.shareInput.select();
 
-        if (!document.execCommand('copy')) {
+        let copied=false;try{copied=document.execCommand('copy');}catch{}
+        if (!copied) {
           elements.copyStatus.textContent =
             'Select the link above and copy it manually.';
           return;
@@ -1940,7 +1942,7 @@
 
         const slug = /^\/r\/([A-Za-z0-9_-]+)\/?$/.exec(url.pathname)?.[1];
         if (
-          url.origin !== window.location.origin ||
+          url.origin !== window.location.origin || url.username || url.password ||
           !slug ||
           /^(null|undefined)$/i.test(slug)
         ) {

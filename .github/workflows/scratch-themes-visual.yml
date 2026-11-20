@@ -12,6 +12,7 @@ on:
       - 'public/concert-live-preview.js'
       - 'public/reveal.html'
       - 'public/recipient-scratch.html'
+      - 'public/scratch-keepsake.js'
       - 'public/scratch-recipient-face.js'
       - 'public/scratch-recipient-face.css'
       - 'public/scratch-owner-preview.js'

@@ -173,6 +173,8 @@ try{
   await creator.locator('#scratchActualRevealed .inline-photo-remove').click();
   await creator.waitForFunction(()=>!document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('[data-photo-slot] image')&&!document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('.inline-photo-remove'));
   assert.equal(await creator.locator('#postImageControls').isVisible(),false);
+  await creator.locator('#scratchActualCovered #card').waitFor({state:'attached'});
+  await creator.locator('#scratchActualRevealed #card').waitFor({state:'attached'});
   const sizes=await creator.evaluate(()=>['scratchActualCovered','scratchActualRevealed'].map(id=>{const r=document.getElementById(id).shadowRoot.querySelector('#card').getBoundingClientRect();return [r.width,r.height];}));assert.deepEqual(sizes[0],sizes[1],'Cover and editable reveal retain equal dimensions');
   // Review with all required fields absent, starting on the cover side.
   await creator.locator('[data-scratch-preview-mode="covered"]').click();

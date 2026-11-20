@@ -1075,3 +1075,107 @@ test('all four selectable concert layouts keep photo and text in locked zones at
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
+
+
+test('paid Scratch Ticket export is locked until scratching and downloads full-resolution PNG and PDF', {timeout:90000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true,reducedMotion:'reduce'});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const art=SCRATCH_ARTWORKS[0];
+  // The real background artwork is served by the local HTTP test server;
+  // the recipient route is simulated paid, with a synthetic uploaded image.
+  const photo=await readFile(resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp'));
+  await page.route('**/r/keepsake-paid/scratch-data',r=>r.fulfill({json:{...sample,scratchSurface:{...sample.scratchSurface,artworkId:art.id,postScratch:{templateId:PAIRED_TEMPLATES[0].id,layout:{eventName:{ink:'#ab1234'}}}},reveal:{...sample.reveal,hasEventImage:true}}}));
+  await page.route('**/r/keepsake-paid/scratch-image',r=>r.fulfill({contentType:'image/webp',body:photo}));
+  await page.route(base+'/r/keepsake-paid',r=>r.fulfill({contentType:'text/html',path:resolve(root,'recipient-scratch.html')}));
+  await page.goto(base+'/r/keepsake-paid');
+  await page.locator('#card.foil-ready').waitFor();
+  assert.equal(await page.locator('#keepsake').isVisible(),false);
+  assert.equal(await page.locator('#keepsakePng').getAttribute('href'),null);
+  const canvas=page.locator('#foilCanvas');
+  await canvas.scrollIntoViewIfNeeded();
+  const b=await canvas.boundingBox();
+  // Real sweeps over the entire foil, no direct alteration of the progress.
+  for(let y=2,step=0;y<b.height;y+=18,step++){
+   await page.mouse.move(b.x+(step%2?b.width-2:2),b.y+y);
+   await page.mouse.down();
+   await page.mouse.move(b.x+(step%2?2:b.width-2),b.y+y,{steps:8});
+   await page.mouse.up();
+  }
+  await page.locator('#keepsakePng:visible').waitFor({timeout:25000});
+  assert.equal(await page.locator('#progress').evaluate(e=>e.value),100);
+  const [png]=await Promise.all([page.waitForEvent('download'),page.locator('#keepsakePng').click()]);
+  assert.equal(png.suggestedFilename(),'Reveal-Keepsake.png');
+  const bytes=await readFile(await png.path());
+  assert.equal(bytes.readUInt32BE(16),1800);assert.equal(bytes.readUInt32BE(20),2400);
+  assert.ok(bytes.length>50000);
+  // Check decoded pixels, not just header or file size: artwork and the
+  // customer's included photo must both appear in the exported raster.
+  const check=await page.evaluate(async pngURL=>{
+   const img=new Image();await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;img.src=pngURL;});
+   const c=document.createElement('canvas');c.width=1800;c.height=2400;
+   const ctx=c.getContext('2d');ctx.drawImage(img,0,0);
+   const unique=new Set();for(let y=30;y<2400;y+=75)for(let x=30;x<1800;x+=75)unique.add([...ctx.getImageData(x,y,1,1).data].join(','));
+   return {colors:unique.size,width:img.naturalWidth,height:img.naturalHeight};
+  },await page.locator('#keepsakePng').getAttribute('href'));
+  assert.ok(check.colors>35,'export must contain the finished artwork, not a blank page');
+  const [pdf]=await Promise.all([page.waitForEvent('download'),page.locator('#keepsakePdf').click()]);
+  assert.equal(pdf.suggestedFilename(),'Reveal-Keepsake.pdf');
+  const raw=await readFile(await pdf.path()),str=raw.toString('latin1');
+  assert.ok(str.startsWith('%PDF-1.4'));assert.match(str,/\/MediaBox \[0 0 432 576\]/);
+  assert.match(str,/\/Width 1800 \/Height 2400/);
+  const xref=Number(/startxref\n(\d+)\n%%EOF/.exec(str)[1]);
+  assert.equal(str.slice(xref,xref+4),'xref');
+  await mkdir(output,{recursive:true});
+  await png.saveAs(resolve(output,'scratch-keepsake.png'));await pdf.saveAs(resolve(output,'scratch-keepsake.pdf'));
+  await page.locator('#replayButton').click();
+  assert.equal(await page.locator('#keepsake').isVisible(),false);
+  await page.reload();await page.locator('#card.foil-ready').waitFor();
+  assert.equal(await page.locator('#keepsake').isVisible(),false);
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();await new Promise(r=>server.close(r));}
+});
+
+test('paid purchaser can copy and share the clean opaque recipient link and download its QR; draft cannot share',{timeout:60000},async()=>{
+ const {server,base}=await startServer({simulateStagingReview:true});
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  const slug='/r/artwork-'+DEFAULT_SCRATCH_ARTWORK;
+  const clean=base+slug,ownerToken='private-owner-only-token';
+  let paid=false;
+  await page.addInitScript(token=>{
+   localStorage.setItem('reveal_edit_share-test',token);
+   Object.defineProperty(navigator,'clipboard',{configurable:true,value:{writeText:async v=>{window.qaCopied=v;}}});
+   Object.defineProperty(navigator,'share',{configurable:true,value:async v=>{window.qaShared=v;}});
+  },ownerToken);
+  await page.route('**/api/reveals/share-test',r=>r.fulfill({json:{success:true,reveal:{...sample.reveal,id:'share-test',status:paid?'paid':'draft',hasImage:false,...(paid?{shareUrl:slug+'?private=discard-me#discard'}:{})}}}));
+  await page.route('**/api/reveals/share-test/quiz',r=>r.fulfill({status:404}));
+  await page.route('**/api/reveals/share-test/gender',r=>r.fulfill({status:404}));
+  await page.route('**/api/reveals/share-test/scratch-surface',r=>r.fulfill({json:{success:true,surface:{...sample.scratchSurface,postScratch:{templateId:PAIRED_TEMPLATES[0].id}},audio:{enabled:false}}}));
+  await page.route('**/api/scratch/test-payment-status',r=>r.fulfill({json:{success:true,environment:'staging',mode:'test',enabled:true,automaticTax:true}}));
+  await page.goto(base+'/reveal?id=share-test');await page.locator('#scratchActualReview:visible').waitFor();
+  assert.equal(await page.locator('#paidStage').isVisible(),false);
+  assert.equal(await page.locator('#shareInput').inputValue(),'');
+  paid=true;await page.reload();await page.locator('#paidStage:visible').waitFor();
+  assert.equal(await page.locator('#shareInput').inputValue(),clean);
+  assert.equal(await page.locator('#openRevealButton').getAttribute('href'),clean);
+  await page.locator('#copyButton').click();assert.equal(await page.evaluate(()=>window.qaCopied),clean);
+  for(const id of ['whatsAppShare','smsShare','emailShare']){
+   const href=decodeURIComponent(await page.locator('#'+id).getAttribute('href'));
+   assert.ok(href.includes(clean));assert.ok(!href.includes(ownerToken)&&!href.includes('discard-me')&&!href.includes(sample.reveal.eventName));
+  }
+  await page.locator('#nativeShare').click();assert.equal(await page.evaluate(()=>window.qaShared.url),clean);
+  await page.locator('#qrShare').click();await page.locator('#qrCodeArea svg').waitFor();
+  assert.equal(await page.locator('#qrShare').getAttribute('aria-expanded'),'true');
+  const [qr]=await Promise.all([page.waitForEvent('download'),page.locator('#qrDownload').click()]);
+  assert.equal(qr.suggestedFilename(),'Reveal-Recipient-QR.png');
+  const bytes=await readFile(await qr.path());assert.equal(bytes.subarray(1,4).toString(),'PNG');assert.ok(bytes.length>500);
+  await page.locator('#qrShare').click();assert.equal(await page.locator('#qrPanel').isVisible(),false);
+  const recipient=await browser.newPage();await recipient.goto(clean);await recipient.locator('#card.foil-ready').waitFor();await recipient.close();
+  assert.deepEqual(errors,[]);
+ }finally{await browser.close();await new Promise(r=>server.close(r));}
+});

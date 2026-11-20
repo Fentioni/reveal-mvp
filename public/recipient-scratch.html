@@ -22,6 +22,9 @@
     font:650 .9rem system-ui;cursor:pointer}
   button:focus-visible{outline:3px solid #fff;outline-offset:3px}
   footer{margin:24px auto 0;color:#afa6a9;font-size:.74rem}
+  .keepsake{margin:22px auto 0;padding:16px;border:1px solid #d7b86f66;border-radius:14px;text-align:center;background:#171722;color:#fcf5e6}
+  .keepsake[hidden]{display:none!important}.keepsake h2{font:600 1.15rem Georgia,serif;margin:0 0 6px}.keepsake p{font-size:.82rem;margin:6px 0 12px;color:#e8d8b8}
+  .keepsake a{display:inline-flex;min-height:44px;align-items:center;justify-content:center;padding:9px 16px;border-radius:99px;border:1px solid #d7b86f;color:#fae8c3;text-decoration:none;font-weight:650}.keepsake [hidden]{display:none!important}
 
   /* Concert variant only: wide admission ticket, dashed tear-off stub.
      Content may increase the height rather than hide supplied form values. */
@@ -265,6 +268,15 @@
     <button id="soundButton" type="button" aria-pressed="true">♫ Sound on</button>
     <button id="replayButton" type="button">↻ Scratch again</button>
   </div>
+  <section id="keepsake" class="keepsake" hidden aria-labelledby="keepsakeHeading">
+    <h2 id="keepsakeHeading">Keep your surprise forever</h2>
+    <p id="keepsakeStatus" role="status">Preparing your personalised keepsake…</p>
+    <div class="buttons">
+      <a id="keepsakePng" download="Reveal-Keepsake.png" hidden>Download image (PNG)</a>
+      <a id="keepsakePdf" download="Reveal-Keepsake.pdf" hidden>Download PDF</a>
+      <button id="keepsakeRetry" type="button" hidden>Try again</button>
+    </div>
+  </section>
   <footer id="footer"></footer>
 </main>
 <dialog id="concertFullTicketDialog" aria-label="Enlarged concert ticket">
@@ -273,6 +285,7 @@
 </dialog>
 <script type="module">
   import { ScratchCard } from '/scratchcard.js?v=scratch-interaction-1';
+  import {createTicketKeepsakes} from '/scratch-keepsake.js?v=1';
   import {renderPostScratchFace} from '/post-scratch-face.js?v=short-labels-1';
   import {mountScratchFace,fillScratchFace,setPortraitFaceTheme,setScratchFaceImage} from '/scratch-recipient-face.js?v=actual-1';
   import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme,concertTicketClipPath,concertTemplateLayout} from '/concert-ticket-options.js?v=2';
@@ -291,6 +304,23 @@
   let soundEnabled = true;
   const text = (id,value) => { $(id).textContent = value ?? ''; };
   let bookingLink = '';
+  let keepsakeTask=null,keepsakeURLs=[];
+  function updateKeepsake(progress,isConcert){
+    const panel=$('keepsake');panel.hidden=isConcert||progress!==1;
+    if(!panel.hidden&&!keepsakeTask&&!keepsakeURLs.length)prepareKeepsake();
+  }
+  function prepareKeepsake(){
+    if(keepsakeTask||keepsakeURLs.length||$('keepsake').hidden)return;
+    $('keepsakeRetry').hidden=true;
+    text('keepsakeStatus','Preparing your personalised keepsake…');
+    keepsakeTask=createTicketKeepsakes($('underlay').querySelector('svg[data-post-template]')).then(files=>{
+      const png=URL.createObjectURL(files.png),pdf=URL.createObjectURL(files.pdf);
+      keepsakeURLs=[png,pdf];$('keepsakePng').href=png;$('keepsakePdf').href=pdf;
+      $('keepsakePng').hidden=false;$('keepsakePdf').hidden=false;
+      text('keepsakeStatus','Save your full-resolution image or print-ready PDF.');
+    }).catch(()=>{text('keepsakeStatus','The keepsake could not be prepared. Please try again.');$('keepsakeRetry').hidden=false;}).finally(()=>{keepsakeTask=null;});
+  }
+  $('keepsakeRetry').addEventListener('click',prepareKeepsake);
   function applyConcertTicketFields(raw) {
     const details=cleanConcertTicketDetails(raw);
     text('concertEventSubtitle',details.eventSubtitle||'');
@@ -394,6 +424,7 @@
       onScratch:() => cinematic.onFirstScratch(),
       onProgress:p => {
         $('progress').value = Math.floor(p*100);
+        updateKeepsake(p,isConcert);
         if(p>0 && p<1 && !cinematic.fired)status.textContent = 'Keep scratching to uncover your surprise.';
         // The link is also available below the finished card once the user
         // has substantially scratched it; Canvas overlays otherwise block taps.
@@ -462,6 +493,7 @@
     cinematic.reset();
     scratch.reset();
     $('bookingAction').hidden = true;
+    $('keepsake').hidden=true;
     if(document.body.dataset.ticketVariant==='concert')$('closingDetails').style.visibility='hidden';
     $('concertFullTicketButton').hidden=true;
     if($('concertFullTicketDialog').open)$('concertFullTicketDialog').close();
@@ -478,10 +510,12 @@
   window.addEventListener('pagehide', () => {
     scratch?.destroy();
     cinematic?.destroy();
+    for(const url of keepsakeURLs)URL.revokeObjectURL(url);
   });
   load().catch(error => {
     $('card').hidden = true;
     $('controls').hidden = true;
+    $('keepsake').hidden=true;
     $('progress').hidden = true;
     $('bookingAction').hidden = true;
     $('intro').textContent = 'We could not open this surprise.';
