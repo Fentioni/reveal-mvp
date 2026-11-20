@@ -172,7 +172,13 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     for(const v of [before,after]){assert.ok(Math.abs(v.width-actual.width)<=1,'Same recipient width '+JSON.stringify({v:{width:v.width},actual:actual.width}));assert.ok(Math.abs(v.height-actual.height)<=1,'Same recipient height');}
     assert.equal(before.paint,actual.paint,'Identical artwork canvas, not a separate thumbnail');
     assert.equal(await owner.locator('#scratchActualRevealed svg [data-photo-slot] image').count(),1,'One image in the designed photo frame');
-    assert.equal(await owner.locator('#scratchActualRevealed svg [data-layout-panel="image"]').count(),1,'Designed image panel is retained');
+    // The paired artwork supplies its own decoration; an extra opaque panel
+    // would obscure that artwork. The clipped photo frame itself remains.
+    assert.equal(await owner.locator('#scratchActualRevealed svg [data-layout-panel]').count(),0,'No legacy panels over paired artwork');
+    assert.equal(await recipient.locator('#card svg [data-layout-panel]').count(),0,'Recipient uses the same unoccluded artwork');
+    const clip=await owner.locator('#scratchActualRevealed svg [data-photo-slot]').getAttribute('clip-path');
+    assert.match(clip||'',/^url\(#/,'Photo remains confined to its designed frame');
+    assert.equal(await recipient.locator('#card svg [data-photo-slot] image').count(),1,'Recipient retains the photo in the same layout');
     const foil=owner.locator('#scratchActualCovered canvas');
     await foil.evaluate(e=>{e.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,clientX:50,clientY:50,pointerId:1}));e.dispatchEvent(new PointerEvent('pointermove',{bubbles:true,clientX:70,clientY:70,pointerId:1}));});
     assert.equal(await foil.evaluate(c=>c.toDataURL()),before.paint,'Owner cannot scratch even through dispatched pointer events');
