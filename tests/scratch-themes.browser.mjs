@@ -21,7 +21,7 @@ const sample={
   eventDate:'2027-03-12',eventTime:'19:00',venue:'The Grand Hall',admit:'Two guests',
   personalMessage:'Something wonderful awaits',ticketUrl:null,hasEventImage:false}
 };
-async function startServer({archivedTemplates=[],artworkApiUnavailable=false,apiHandler=null}={}){
+async function startServer({archivedTemplates=[],artworkApiUnavailable=false,apiHandler=null,simulateStagingReview=false}={}){
  const server=createServer(async(req,res)=>{
   const path=new URL(req.url,'http://localhost').pathname;
   // A real HTTP endpoint is required for multipart byte assertions. WebKit's
@@ -82,7 +82,16 @@ async function startServer({archivedTemplates=[],artworkApiUnavailable=false,api
    res.writeHead(404);res.end('Not found');return;
   }
   try{
-   const buf=await readFile(resolve(root,file.slice(1)));
+   let buf=await readFile(resolve(root,file.slice(1)));
+   // The real HTTP test runs on loopback, not the staging hostname.
+   // Emulate only the deployment identity in the served review document;
+   // never modify application code or intercept the binary upload.
+   if(simulateStagingReview && file==='/reveal.html'){
+     const gate="const isStagingTest = window.location.hostname === 'reveal-stage4b-test.michael-fenton9.workers.dev';";
+     const html=buf.toString('utf8');
+     assert.ok(html.includes(gate),'Staging review deployment gate changed');
+     buf=Buffer.from(html.replace(gate,'const isStagingTest = true;'));
+   }
    res.writeHead(200,{'content-type':type[extname(file)]||'application/octet-stream'});
    res.end(buf);
   }catch{
@@ -201,7 +210,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
  let savedReveal,savedSurface,imageBytes,expectedImage,endpointError;
  const requestTrace=[];
  const art='envelope-coral-ginkgo-alternative';
- const {server,base}=await startServer({apiHandler:async(req,res,p)=>{
+ const {server,base}=await startServer({simulateStagingReview:true,apiHandler:async(req,res,p)=>{
    if(p.startsWith('/api/reveals'))requestTrace.push(req.method+' '+p);
    const json=(result,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(result));return true;};
    const formData=async()=>{
@@ -285,7 +294,9 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    await page.locator('#reviewButton').click();
    try{await page.waitForURL('**/reveal?id=image-check',{timeout:15000,waitUntil:'domcontentloaded'});}catch(error){throw endpointError||new Error('Review navigation failed: '+JSON.stringify({url:page.url(),requests:requestTrace,message:await page.locator('.message-box').allTextContents(),errors,saveButton:await page.locator('#reviewButton').allTextContents(),saved:!!savedReveal,surface:!!savedSurface}),{cause:error});}
    assert.ifError(endpointError);
-   await page.locator('#scratchActualReview:visible').waitFor();
+   try{await page.locator('#scratchActualReview:visible').waitFor({timeout:15000});}catch(error){throw endpointError||new Error('Review render failed: '+JSON.stringify({requests:requestTrace,error:await page.locator('#errorText').allTextContents(),errors}),{cause:error});}
+   assert.ifError(endpointError);
+   assert.ok(requestTrace.includes('GET /api/reveals/image-check/scratch-surface'));
    await checkCurrent();
    assert.equal(await page.locator('.review-shell:visible,#surfaceReview:visible').count(),0);
    await page.locator('#editButton').click();
