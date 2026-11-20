@@ -1996,7 +1996,12 @@
           }
 
           if (selectedImage) {
-            body.append("image", selectedImage);
+            // Materialise the selected file before building the multipart request.
+            // WebKit may retain file-picker-backed data lazily; use a fresh,
+            // independently owned Blob with the original name and MIME type.
+            const bytes = await selectedImage.arrayBuffer();
+            if (!bytes.byteLength) throw new Error("The selected image is empty. Choose the image again.");
+            body.append("image", new Blob([bytes], {type:selectedImage.type}), selectedImage.name);
           }
 
           if (removeImage) {
