@@ -8,6 +8,7 @@ import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 const marker='paired-products.js?v=withdraw-13-20261120';
+const scratchMarker='scratchcard.js?v=scratch-interaction-1';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const coverHashes=new Map(await Promise.all(SCRATCH_ARTWORKS.map(async art=>[art.id,digest(await readFile(new URL('../public/scratch-artwork/'+art.file,import.meta.url)))])));
@@ -39,7 +40,8 @@ for(let i=0;i<35;i++){
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(res.ok&&(await res.text()).includes(marker)){
    const module=await fetch(origin+'/scratch-owner-preview.js?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)&&await allLiveCoversMatch()&&await withdrawalIsLive()){ready=true;break;}
+   const demo=await fetch(origin+'/scratch-demo?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
+   if(demo.ok&&(await demo.text()).includes(scratchMarker)&&module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)&&await allLiveCoversMatch()&&await withdrawalIsLive()){ready=true;break;}
   }
  }catch(e){console.log('Cloudflare request:',e.message);}
  await pause(7000);
@@ -52,6 +54,39 @@ console.log('LIVE ARTWORK: All '+SCRATCH_ARTWORKS.length+' cover hashes match th
 const browser=await chromium.launch({headless:true});
 try{
  await mkdir('test-output/scratch-live',{recursive:true});
+ // Verify the real public demo with genuine pointer interactions, not mock checkout.
+ for(const config of [{viewport:{width:1380,height:900},reducedMotion:'no-preference'},{viewport:{width:390,height:844},hasTouch:true,isMobile:true,reducedMotion:'reduce'}]){
+  const page=await browser.newPage(config),errors=[];
+  page.on('pageerror',e=>errors.push(e.message));
+  try{
+   const response=await page.goto(origin+'/scratch-demo?verify='+Date.now());
+   assert.ok(response.ok());assert.ok((await response.text()).includes(scratchMarker));
+   await page.locator('#scratchWindow.foil-ready #foilCanvas').waitFor({state:'visible'});
+   const canvas=page.locator('#foilCanvas'),progress=page.locator('#scratchProgress');
+   await canvas.scrollIntoViewIfNeeded();
+   const initial=await canvas.evaluate(c=>c.toDataURL());
+   let r=await canvas.boundingBox();
+   assert.ok(r && r.width>100 && r.height>100);
+   assert.equal(Number(await progress.getAttribute('value')),0);
+   if(config.hasTouch)await page.touchscreen.tap(r.x+r.width*.25,r.y+r.height*.25);
+   else await page.mouse.move(r.x+r.width*.2,r.y+r.height*.2);
+   await page.mouse.move(r.x+r.width*.2,r.y+r.height*.2);
+   await page.mouse.down();
+   await page.mouse.move(r.x+r.width*.8,r.y+r.height*.25,{steps:12});
+   await page.mouse.move(r.x+r.width*.8,r.y+r.height*.5,{steps:8});
+   await page.mouse.up();
+   const scratched=Number(await progress.evaluate(e=>e.value));
+   assert.ok(scratched>0&&scratched<100,'only part of the cover should be uncovered');
+   assert.notEqual(await canvas.evaluate(c=>c.toDataURL()),initial);
+   assert.notEqual(await canvas.evaluate(c=>getComputedStyle(c).opacity),'0');
+   await page.locator('#replayButton').click();
+   assert.equal(Number(await progress.evaluate(e=>e.value)),0);
+   assert.equal(await canvas.evaluate(c=>c.toDataURL()),initial,'Replay should restore all foil');
+   assert.deepEqual(errors,[]);
+   console.log('LIVE SCRATCH INTERACTION AND REPLAY',config.viewport.width,config.reducedMotion);
+  }finally{await page.close();}
+ }
+
  for(const viewport of [{width:1380,height:900},{width:390,height:844}]){
   const page=await browser.newPage({viewport});
   try{
