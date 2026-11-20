@@ -12,7 +12,7 @@ const root=resolve(fileURLToPath(new URL('..',import.meta.url)),'public');
 const browserType=process.env.SCRATCH_BROWSER==='webkit'?webkit:chromium;
 const browserName=process.env.SCRATCH_BROWSER==='webkit'?'webkit':'chromium';
 const output=resolve(fileURLToPath(new URL('..',import.meta.url)),'test-output','scratch-'+browserName);
-const type={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp'};
+const type={'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.webp':'image/webp','.png':'image/png','.jpg':'image/jpeg','.jpeg':'image/jpeg','.svg':'image/svg+xml','.woff2':'font/woff2'};
 const sample={
  success:true,
  scratchSurface:{artworkId:DEFAULT_SCRATCH_ARTWORK,style:'classic',foil:'gold',variant:'ticket',hasImage:false},
@@ -57,7 +57,7 @@ async function startServer(){
      res.end(await readFile(resolve(root,'concert-reveal-art',design+'.svg')));
      return;
    }
-  const slug=path.match(/^\/r\/artwork-([a-z-]+)\/scratch-data$/)?.[1];
+  const slug=path.match(/^\/r\/artwork-([a-z0-9-]+)\/scratch-data$/)?.[1];
   const art=SCRATCH_ARTWORKS.find(item=>item.id===slug);
   if(art){
    res.writeHead(200,{'content-type':'application/json','cache-control':'no-store'});
@@ -67,7 +67,9 @@ async function startServer(){
   const file=path==='/reveal'?'/reveal.html':path==='/legacy-create'?'/legacy-create.html'
     :path.match(/^\/r\/(?:artwork-[a-z-]+|concert-foil-(?:gold|silver|midnight|rose)|concert-qr)$/)?'/recipient-scratch.html'
    :path;
-  if(!['/published-template-designs.js','/template-design-schema.js','/approved-post-scratch-catalogue.js'].includes(file)&&!file.startsWith('/post-scratch-')&&!/^\/(?:legacy-create\.html|reveal\.html|recipient-scratch\.html|scratch-recipient-face\.js|scratch-recipient-face\.css|scratch-owner-preview\.js|scratch-themes\.css|scratch-artwork-catalogue\.js|concert-ticket-options\.js|concert-ticket-fields\.js|concert-live-preview\.js|concert-ticket-premium\.css|concert-layout-presets\.css|concert-reference-renderer\.js|concert-reference-renderer\.css|qr\.js|scratchcard\.js|scratch-themes\.js|scratch-theme-art\.js|scratch-audio\.js|scratch-recipient-fields\.js)$/.test(file)){
+  // Serve real same-origin public modules and styles, including transitive imports.
+  // Keep traversal and API routes excluded; mock only the explicit API contracts above.
+  if(!/^\/(?:[a-zA-Z0-9_-]+\/)*[a-zA-Z0-9_-]+\.(?:html|js|css|webp|png|jpe?g|svg|woff2?|ico)$/i.test(file)){
    res.writeHead(404);res.end('Not found');return;
   }
   try{
