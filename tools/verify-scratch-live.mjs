@@ -1,24 +1,35 @@
 // Read-only browser verification against the actual staging worker, not
 // mocked APIs. The creator is filled locally but never saved or paid.
 import assert from 'node:assert/strict';
-import {mkdir} from 'node:fs/promises';
+import {mkdir,readFile} from 'node:fs/promises';
+import {createHash} from 'node:crypto';
+import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 const marker='paired-products.js?v=2';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
+const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
+const coverHashes=new Map(await Promise.all(SCRATCH_ARTWORKS.map(async art=>[art.id,digest(await readFile(new URL('../public/scratch-artwork/'+art.file,import.meta.url)))])));
+async function liveCoverMatches(art){
+ const response=await fetch(origin+art.src+'?asset-check='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(15000)});
+ return response.ok&&digest(Buffer.from(await response.arrayBuffer()))===coverHashes.get(art.id);
+}
+const sentinels=SCRATCH_ARTWORKS.filter(a=>['luxury-platinum-spiral-primary','luxury-champagne-gold-primary'].includes(a.id));
 let ready=false;
 for(let i=0;i<35;i++){
  try{
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(res.ok&&(await res.text()).includes(marker)){
    const module=await fetch(origin+'/scratch-owner-preview.js?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')){ready=true;break;}
+   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)){ready=true;break;}
   }
  }catch(e){console.log('Cloudflare request:',e.message);}
  await pause(7000);
 }
-assert.ok(ready,'Cloudflare has not published the new layouts yet');
+assert.ok(ready,'Cloudflare has not published the expected preview and cover assets yet');
+for(const art of SCRATCH_ARTWORKS)assert.ok(await liveCoverMatches(art),'Live artwork differs from checked-in asset: '+art.id);
+console.log('LIVE ARTWORK: All '+SCRATCH_ARTWORKS.length+' cover hashes match the repository');
 const browser=await chromium.launch({headless:true});
 try{
  await mkdir('test-output/scratch-live',{recursive:true});
