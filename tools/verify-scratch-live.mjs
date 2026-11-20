@@ -11,7 +11,10 @@ let ready=false;
 for(let i=0;i<35;i++){
  try{
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-  if(res.ok&&(await res.text()).includes(marker)){ready=true;break;}
+  if(res.ok&&(await res.text()).includes(marker)){
+   const module=await fetch(origin+'/scratch-owner-preview.js?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
+   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')){ready=true;break;}
+  }
  }catch(e){console.log('Cloudflare request:',e.message);}
  await pause(7000);
 }
@@ -90,9 +93,9 @@ try{
    },template.id,{timeout:15000});
    const result=await host.evaluate(el=>{
     const root=el.shadowRoot,card=root.querySelector('#card'),svg=card.querySelector('svg'),r=card.getBoundingClientRect();
-    return {id:card.dataset.postTemplate,ratio:r.width/r.height,overflow:card.dataset.textOverflow,fields:svg.querySelectorAll('[data-field]').length,panels:svg.querySelectorAll('[data-layout-panel]').length,headings:root.querySelectorAll('h1,.eyebrow,.intro').length};
+    return {id:card.dataset.postTemplate,width:r.width,height:r.height,cssRatio:getComputedStyle(card).aspectRatio,ratio:r.width/r.height,overflow:card.dataset.textOverflow,fields:svg.querySelectorAll('[data-field]').length,panels:svg.querySelectorAll('[data-layout-panel]').length,headings:root.querySelectorAll('h1,.eyebrow,.intro').length};
    });
-   assert.equal(result.headings,0);assert.equal(result.fields,10);assert.equal(result.overflow,'');assert.ok(Math.abs(result.ratio-.75)<.001);
+   assert.equal(result.headings,0);assert.equal(result.fields,10);assert.equal(result.overflow,'');assert.ok(Math.abs(result.ratio-.75)<.001,'3:4 geometry: '+JSON.stringify(result));
    assert.equal(result.panels,0);
    const geometry=await host.evaluate(el=>{const svg=el.shadowRoot.querySelector('svg[data-post-template]'),g=svg.querySelector('[data-photo-slot]'),i=g.querySelector('image');return {w:Number(i.getAttribute('width')),h:Number(i.getAttribute('height')),x:Number(i.getAttribute('x')),y:Number(i.getAttribute('y')),fit:i.getAttribute('preserveAspectRatio'),clip:g.getAttribute('clip-path')};});
    assert.ok(geometry.w>0&&geometry.h>0);assert.ok(geometry.fit.endsWith('slice'));assert.ok(geometry.clip.startsWith('url(#'));
