@@ -13,9 +13,8 @@ try{
  assert.ok(result?.ok(),'Live staging creator responds');
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
- await page.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
- const art='envelope-coral-ginkgo-alternative';
- await page.locator('#scratchArtwork').selectOption(art);
+ await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
+ const art='luxury-coral-ribbon-primary';
  await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
  for(const [key,value] of Object.entries({recipient:'Safari QA',sender:'Reveal QA',eventName:'Automated upload test',venue:'Test venue',personalMessage:'Private staging test only'})){
   const field=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');

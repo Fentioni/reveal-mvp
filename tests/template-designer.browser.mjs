@@ -115,7 +115,7 @@ try{
  await page.locator('#token').fill(secret);await page.locator('#authSave').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('New template created.'));
  const newId=await page.locator('#template').inputValue();
- assert.match(newId,/^studio-/);assert.equal(await page.locator('#template option').count(),27);
+ assert.match(newId,/^studio-/);assert.equal(await page.locator('#template option').count(),19);
  assert.equal(await page.locator('[data-layer^="zone:"]').count(),10);
  assert.equal(await page.locator('[data-template-artwork]').count(),0);
  await page.locator('#prop-ink').fill('#445566');await page.locator('#prop-ink').dispatchEvent('change');

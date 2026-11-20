@@ -10,7 +10,7 @@ for(let n=0;n<35;n++){
 assert.ok(ready,'Template Studio is not deployed yet');
 // Visit every stored template, including archived/custom entries, to apply and verify the migration.
 const catalogueResponse=await fetch(origin+'/api/template-catalogue',{cache:'no-store'});assert.ok(catalogueResponse.ok);
-const entries=(await catalogueResponse.json()).templates;assert.equal(entries.filter(t=>!t.archived).length,26);assert.ok(entries.every(t=>t.id.startsWith('bg-')));
+const entries=(await catalogueResponse.json()).templates;assert.equal(entries.filter(t=>!t.archived).length,18);assert.ok(entries.every(t=>t.id.startsWith('bg-')));
 const hasDemo=value=>typeof value==='string'&&/michael|chloe/iu.test(value.normalize('NFKC'));
 let inspected=0,stored=0;
 for(let i=0;i<entries.length;i+=5){

@@ -1,4 +1,4 @@
-import {getPostTemplate,POST_TEMPLATES} from './post-scratch-catalogue.js?v=layout-flow-2';
+import {getPostTemplate,POST_TEMPLATES} from './post-scratch-catalogue.js?v=withdraw-13-20261120';
 export const ARTWORK_CHOICES=POST_TEMPLATES.filter(t=>t.id!=='custom-image').map(t=>({id:t.id,name:t.name}));
 export const MAX_ARTWORK_DATA=2400000;
 export const artworkSources=['original','upload',...ARTWORK_CHOICES.map(t=>t.id)];

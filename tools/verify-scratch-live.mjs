@@ -7,7 +7,7 @@ import {SCRATCH_ARTWORKS} from '../public/scratch-artwork-catalogue.js';
 import {chromium} from 'playwright';
 import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
-const marker='paired-products.js?v=2';
+const marker='paired-products.js?v=withdraw-13-20261120';
 const pause=ms=>new Promise(r=>setTimeout(r,ms));
 const digest=bytes=>createHash('sha256').update(bytes).digest('hex');
 const coverHashes=new Map(await Promise.all(SCRATCH_ARTWORKS.map(async art=>[art.id,digest(await readFile(new URL('../public/scratch-artwork/'+art.file,import.meta.url)))])));
@@ -22,19 +22,32 @@ async function allLiveCoversMatch(){
  mismatches=results.filter(([,matches])=>!matches).map(([id])=>id);
  return mismatches.length===0;
 }
+const withdrawnProducts=['wrap-rose-gold','wrap-platinum','envelope-sapphire-compass','envelope-malachite-seal','envelope-ivory-laurel','envelope-emerald-deco','envelope-coral-ginkgo','bow-sapphire'];
+const withdrawn=withdrawnProducts.flatMap(id=>id.startsWith('envelope-')?[id+'-primary',id+'-alternative']:[id+'-primary']);
+async function withdrawalIsLive(){
+ const opts={cache:'no-store',signal:AbortSignal.timeout(15000)};
+ const [a,t]=await Promise.all(['/api/scratch-artwork','/api/template-catalogue'].map(p=>fetch(origin+p+'?withdraw-check='+Date.now(),opts)));
+ if(!a.ok||!t.ok)return false;
+ const covers=(await a.json()).artworks,templates=(await t.json()).templates;
+ if(!covers||!templates||withdrawn.some(id=>covers.some(c=>c.id===id||c.file===id+'.webp'))||withdrawnProducts.some(id=>templates.some(t=>t.id==='bg-'+id)))return false;
+ const checks=await Promise.all(withdrawn.map(id=>fetch(origin+'/scratch-artwork/'+id+'.webp?withdraw-check='+Date.now(),{...opts,method:'HEAD'})));
+ return checks.every(r=>r.status===404||r.status===410||(!r.headers.get('content-type')?.startsWith('image/')&&r.ok));
+}
 let ready=false;
 for(let i=0;i<35;i++){
  try{
   const res=await fetch(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
   if(res.ok&&(await res.text()).includes(marker)){
    const module=await fetch(origin+'/scratch-owner-preview.js?verify='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(10000)});
-   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)&&await allLiveCoversMatch()){ready=true;break;}
+   if(module.ok&&(await module.text()).includes('A rendered card must never become visible or measurable')&&(await Promise.all(sentinels.map(liveCoverMatches))).every(Boolean)&&await allLiveCoversMatch()&&await withdrawalIsLive()){ready=true;break;}
   }
  }catch(e){console.log('Cloudflare request:',e.message);}
  await pause(7000);
 }
 assert.ok(ready,'Cloudflare has not published all expected assets; mismatches: '+mismatches.join(', '));
 for(const art of SCRATCH_ARTWORKS)assert.ok(await liveCoverMatches(art),'Live artwork differs from checked-in asset: '+art.id);
+assert.ok(await withdrawalIsLive(),'Rejected cover URLs or catalogue records still available');
+console.log('LIVE WITHDRAWAL: all 13 rejected files and eight paired templates absent');
 console.log('LIVE ARTWORK: All '+SCRATCH_ARTWORKS.length+' cover hashes match the repository');
 const browser=await chromium.launch({headless:true});
 try{
@@ -94,7 +107,7 @@ try{
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const template of POST_TEMPLATES.filter(t=>activeIds.includes(t.id))){
    await page.locator('#postTemplate').selectOption(template.id);
-   const expected=await page.evaluate(async id=>(await import('/paired-products.js')).coversForTemplate(id),template.id);
+   const expected=await page.evaluate(async id=>(await import('/paired-products.js?v=withdraw-13-20261120')).coversForTemplate(id),template.id);
    assert.deepEqual(await page.locator('#scratchArtwork option').evaluateAll(nodes=>nodes.map(n=>n.value)),expected);
    assert.equal(await page.locator('#pairedCoverChoice').isVisible(),expected.length===2);
    if(expected.length===2){await page.locator('#scratchArtwork').selectOption(expected[1]);await page.waitForFunction(id=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork===id,expected[1]);}

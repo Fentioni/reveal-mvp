@@ -1,4 +1,4 @@
-import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=paired-products-2';
+import {POST_TEMPLATES} from './post-scratch-catalogue.js?v=withdraw-13-20261120';
 import {defaultDesign,validateDesign,assertTemplateLayout,clone,FONTS,ARTWORK_CHOICES,MAX_ARTWORK_DATA,purgeTemplateDemoText} from './template-design-schema.js?v=clean-template-text-1';
 import {renderPostScratchTemplate,templateArtworkSource,templateFieldText} from './post-scratch-renderer.js?v=clean-template-text-1';
 const $=id=>document.getElementById(id),NS='http://www.w3.org/2000/svg';

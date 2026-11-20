@@ -1,4 +1,4 @@
-import {getPostTemplate} from './post-scratch-catalogue.js';
+import {getPostTemplate} from './post-scratch-catalogue.js?v=withdraw-13-20261120';
 import {isStudioTemplateId} from './template-design-schema.js';
 import {checkCustomerLayout} from './customer-ticket-layout.js';
 export const DEFAULT_POST_SETTINGS=Object.freeze({templateId:'bg-luxury-champagne-gold',subtitle:'',venueAddress:'',imagePosition:'xMidYMid',imageFit:'auto',imageOrientation:'auto',imageZoom:100,imagePanX:0,imagePanY:0,textContrast:'light',shade:70});
