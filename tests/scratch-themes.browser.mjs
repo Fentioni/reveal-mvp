@@ -1,4 +1,4 @@
-import {getPairedProduct,coversForTemplate} from '../public/paired-products.js';
+import {getPairedProduct,coversForTemplate,PAIRED_TEMPLATES} from '../public/paired-products.js';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
@@ -21,9 +21,15 @@ const sample={
   eventDate:'2027-03-12',eventTime:'19:00',venue:'The Grand Hall',admit:'Two guests',
   personalMessage:'Something wonderful awaits',ticketUrl:null,hasEventImage:false}
 };
-async function startServer(){
+async function startServer({archivedTemplates=[],artworkApiUnavailable=false}={}){
  const server=createServer(async(req,res)=>{
   const path=new URL(req.url,'http://localhost').pathname;
+  if(path==='/api/template-catalogue'){
+   res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({templates:PAIRED_TEMPLATES.map(({id,name,collection})=>({id,name,collection,archived:archivedTemplates.includes(id)}))}));return;
+  }
+  if(path==='/api/scratch-artwork'){
+   res.writeHead(artworkApiUnavailable?503:200,{'content-type':'application/json'});res.end(JSON.stringify(artworkApiUnavailable?{error:'Unavailable'}:{artworks:SCRATCH_ARTWORKS.map(a=>({...a,archived:false}))}));return;
+  }
   if(/^\/api\/template-designs\/[a-z-]+$/.test(path)){res.writeHead(200,{'content-type':'application/json'});res.end(JSON.stringify({revision:'base',template:null}));return;}
   const jpg=SCRATCH_ARTWORKS.find(item=>path===item.src);
   if(jpg){
@@ -306,6 +312,21 @@ test('Scratch Ticket header spans the page and fits both lines without overflow 
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
+test('creator keeps a matching cover when the initial template is archived and the artwork API is unavailable',
+ {timeout:45000},async()=>{
+ const {server,base}=await startServer({archivedTemplates:[PAIRED_TEMPLATES[0].id],artworkApiUnavailable:true});
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844}});
+  await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
+  await page.locator('#postTemplate:enabled').waitFor();
+  const template=await page.locator('#postTemplate').inputValue();
+  const artwork=await page.locator('#scratchArtwork').inputValue();
+  assert.notEqual(template,PAIRED_TEMPLATES[0].id);
+  assert.ok(coversForTemplate(template).includes(artwork),'Fallback artwork must match the selected available gift design');
+  await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,artwork);
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
 test('creator shows only paired gift products without the retired foil section on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
