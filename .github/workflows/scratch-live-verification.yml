@@ -2,7 +2,7 @@ name: Scratch Ticket live staging verification
 on:
   push:
     branches: [feature/stage4b-cloudflare-staging]
-    paths: ['public/post-scratch-*.js', 'public/legacy-create.html', 'public/scratch-owner-preview.js', 'tools/verify-scratch-live.mjs', '.github/workflows/scratch-live-verification.yml']
+    paths: ['public/scratch-artwork/**', 'public/paired-products.js', 'public/post-scratch-*.js', 'public/legacy-create.html', 'public/scratch-owner-preview.js', 'tools/verify-scratch-live.mjs', '.github/workflows/scratch-live-verification.yml']
   workflow_dispatch:
 permissions:
   contents: read
