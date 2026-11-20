@@ -11,7 +11,7 @@ class Bucket{
 }
 const secret='administrator-test-secret-long-enough';
 const req=(id,method='GET',body,auth=secret,origin='https://stage.example')=>new Request('https://stage.example/api/template-designs/'+id,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+auth,Origin:origin},...(body?{body:JSON.stringify(body)}:{})});
-test('all 26 new designs validate, with every field retained',()=>{
+test('all 18 active designs validate, with every field retained',()=>{
  for(const t of POST_TEMPLATES){const d=validateDesign(t.id,defaultDesign(t.id));assert.equal(d.zones.length,10);assert.equal(d.id,t.id);}
 });
 test('style, geometry, static text and removal are preserved without executable markup',()=>{
@@ -122,7 +122,7 @@ test('all template person headings are canonical; legacy saved designs retain ge
  const env={STAGING_DISABLE_CHECKOUT:'true',TEMPLATE_ADMIN_TOKEN:secret,IMAGES:new Bucket()};
  await env.IMAGES.put('admin-template-designs/v1/catalogue.json',JSON.stringify({custom:[{id:'retired',name:'Retired design'}],archived:[]}),{});
  const list=await (await templateDesignResponse(new Request('https://stage.example/api/template-catalogue'),env)).json();
- assert.equal(list.templates.length,26);assert.ok(list.templates.every(x=>x.id.startsWith('bg-')));
+ assert.equal(list.templates.length,18);assert.ok(list.templates.every(x=>x.id.startsWith('bg-')));
  assert.equal((await templateDesignResponse(req('travel-collage'),env)).status,404);
 
 });

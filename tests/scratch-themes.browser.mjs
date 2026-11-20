@@ -305,7 +305,7 @@ test('Scratch Ticket header spans the page and fits both lines without overflow 
  }finally{await browser.close();await new Promise(done=>server.close(done));}
 });
 
-test('creator exposes 26 paired products without an independent artwork picker on phone or desktop',
+test('creator exposes 18 paired products without an independent artwork picker on phone or desktop',
  {timeout:100000},async()=>{
  const {server,base}=await startServer();
  const browser=await browserType.launch({headless:true});
@@ -356,7 +356,7 @@ test('creator exposes 26 paired products without an independent artwork picker o
    const overflow=await page.evaluate(()=>document.documentElement.scrollWidth-innerWidth);
    assert.ok(overflow<=2,'No horizontal overflow on '+size.name+': '+overflow);
    assert.deepEqual(errors,[]);
-   await page.screenshot({path:resolve(output,size.name+'-final-26-products.png'),fullPage:true});
+   await page.screenshot({path:resolve(output,size.name+'-final-18-products.png'),fullPage:true});
    await page.close();
   }
  }finally{await browser.close();await new Promise(done=>server.close(done));}

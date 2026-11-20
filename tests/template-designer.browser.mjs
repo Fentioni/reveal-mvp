@@ -29,7 +29,7 @@ try{
  await mkdir('test-output/template-designer',{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),18);
  assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
  assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From Me');
  assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'For You');
@@ -123,11 +123,11 @@ try{
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#deleteTemplate').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Template deleted'));
- assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),18);
  const archived=await (await page.request.get(base+'/api/template-designs/'+newId)).json();
  assert.equal(archived.template.zones[0].ink,'#445566');
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option[value^="bg-"]').count(),26);
+ assert.equal(await page.locator('#template option[value^="bg-"]').count(),18);
  assert.deepEqual(errors,[]);
  await page.locator('#coverManager').click();
  await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);

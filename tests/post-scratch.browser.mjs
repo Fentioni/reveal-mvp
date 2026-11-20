@@ -93,7 +93,7 @@ try{
  });
  for(const id of templates)await gallery.locator('#template-'+id).screenshot({path:'test-output/post-scratch/'+viewport.width+'-'+id+'.png'});
  if(viewport.width===1380){
-  // A full 26-design visual proof, with the same sample data on each card.
+  // A full 18-design visual proof, with the same sample data on each card.
   await gallery.setViewportSize({width:1250,height:1150});
   await gallery.locator('#preview').evaluate(list=>{
    list.style.cssText='width:1220px;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:10px;margin:0 auto;background:#e8e5dc';
@@ -117,7 +117,7 @@ try{
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
  await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/editorial.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-champagne-gold');
+ assert.equal(await page.locator('#postTemplate option').count(),18);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-champagne-gold');
  assert.equal(await page.locator('#scratchArtwork').count(),0,'Scratch art and revealed layout are selected together as one product');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),'luxury-champagne-gold-primary');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
