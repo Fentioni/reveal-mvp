@@ -1,13 +1,15 @@
-// Real WebKit browser, real staging Worker and private staging storage.
-// Creates one unpaid synthetic draft; never confirms, pays, or publishes it.
+// Real browser, real staging Worker and private staging storage.
+// Creates one synthetic draft per browser, confirms and amends it, never pays or publishes.
 import assert from 'node:assert/strict';
-import {webkit} from 'playwright';
+import {webkit,chromium} from 'playwright';
 import {createHash} from 'node:crypto';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 const hash=b=>createHash('sha256').update(b).digest('hex');
-const browser=await webkit.launch({headless:true});
+const browserType=process.env.REVEAL_QA_BROWSER==='chromium'?chromium:webkit;
+const label=browserType===webkit?'WebKit mobile':'Chromium desktop';
+const browser=await browserType.launch({headless:true});
 try{
- const page=await browser.newPage({viewport:{width:390,height:844},deviceScaleFactor:1});
+ const page=await browser.newPage({viewport:browserType===webkit?{width:390,height:844}:{width:1380,height:900},deviceScaleFactor:1});
  const errors=[];page.on('pageerror',e=>errors.push(e.message));
  const result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
  assert.ok(result?.ok(),'Live staging creator responds');
@@ -15,6 +17,17 @@ try{
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
  const art='luxury-coral-ribbon-primary';
+ const field=(key)=>page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
+ const putField=async(key,value)=>{const target=field(key);await target.focus();await target.fill(value);};
+ // Required fields must prevent an incomplete draft from being submitted.
+ let premature=0;
+ const countPremature=req=>{if(req.url()===origin+'/api/reveals'&&req.method()==='POST')premature++;};
+ page.on('request',countPremature);
+ await field('recipient').fill('');
+ await page.locator('#reviewButton').click();
+ await page.locator('#inlineValidation:visible').waitFor();
+ assert.equal(premature,0);
+ page.off('request',countPremature);
  await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
  for(const [key,value] of Object.entries({recipient:'Safari QA',sender:'Reveal QA',eventName:'Automated upload test',venue:'Test venue',personalMessage:'Private staging test only'})){
   const field=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
@@ -54,7 +67,19 @@ try{
  assert.equal(surface.artworkId,art);assert.equal(surface.hasImage,false);
  assert.equal(surface.postScratch.imageZoom,160);assert.equal(surface.postScratch.imagePanX,25);assert.equal(surface.postScratch.imagePanY,-20);
  assert.equal(surface.postScratch.imageFit,'cover');
+ assert.equal(reveal.recipient,'Safari QA');
+ assert.equal(reveal.sender,'Reveal QA');
+ assert.equal(reveal.eventName,'Automated upload test');
+ assert.equal(reveal.venue,'Test venue');
+ assert.equal(reveal.personalMessage,'Private staging test only');
+ assert.equal(reveal.shareUrl,undefined);
+ assert.equal(await page.locator('#paidStage').isVisible(),false);
+ const unowned=await page.request.get(origin+'/api/reveals/'+saved.id);
+ assert.ok(!unowned.ok(),'Private draft must be inaccessible without the edit token');
+ const unownedImage=await page.request.get(origin+'/api/reveals/'+saved.id+'/image');
+ assert.ok(!unownedImage.ok(),'Private uploaded image must not be public');
  const geometry=async()=>page.locator('#scratchActualRevealed [data-photo-slot] image').evaluate(i=>['x','y','width','height','preserveAspectRatio'].map(k=>i.getAttribute(k)));
+ await page.locator('#scratchActualReview [data-scratch-preview-mode="revealed"]').click();
  const initial=await geometry();
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
  await page.locator('#editButton').click();
@@ -63,6 +88,60 @@ try{
  await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
  assert.deepEqual(await geometry(),initial,'Amend retains photograph composition');
  assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
+ assert.equal(await field('recipient').inputValue(),'Safari QA');
+ assert.equal(await field('eventName').inputValue(),'Automated upload test');
+ assert.equal(await page.locator('#postImageZoom').inputValue(),'160');
+ const owner=async()=>{const response=await page.request.get(origin+'/api/reveals/'+saved.id,{headers});assert.ok(response.ok());return (await response.json()).reveal;};
+ const savedSurface=async()=>{const response=await page.request.get(origin+'/api/reveals/'+saved.id+'/scratch-surface',{headers});assert.ok(response.ok());return (await response.json()).surface;};
+ const reviewAgain=async()=>{
+  const editResponse=page.waitForResponse(r=>r.url()===origin+'/api/reveals/'+saved.id&&r.request().method()==='PUT',{timeout:30000});
+  await page.locator('#reviewButton').click();
+  const result=await editResponse;assert.ok(result.ok(),'Amended draft save failed');
+  await page.waitForURL('**/reveal?id='+saved.id,{timeout:30000,waitUntil:'domcontentloaded'});
+  await page.locator('#scratchActualReview:visible').waitFor({timeout:30000});
+ };
+ await putField('eventName','Updated surprise');
+ await putField('personalMessage','Amended private message');
+ await page.locator('#postImageZoom').fill('175');
+ await reviewAgain();
+ const amended=await owner();
+ assert.equal(amended.id,saved.id);
+ assert.ok(amended.revision>reveal.revision);
+ assert.equal(amended.eventName,'Updated surprise');
+ assert.equal(amended.personalMessage,'Amended private message');
+ assert.equal(amended.hasImage,true);
+ const editedSurface=await savedSurface();
+ assert.equal(editedSurface.artworkId,art);
+ assert.equal(editedSurface.postScratch.imageZoom,175);
+ assert.equal(editedSurface.postScratch.imagePanX,25);
+ const sameImage=await page.request.get(origin+'/api/reveals/'+saved.id+'/image',{headers});
+ assert.deepEqual(await sameImage.body(),source,'Text/layout changes must not replace the image');
+ // Confirm without checkout, then use the confirmation-state Amend route.
+ await page.locator('#confirmButton').click();
+ await page.locator('#paymentAmendButton:visible').waitFor({timeout:30000});
+ const confirmed=await owner();
+ assert.equal(confirmed.status,'confirmed');assert.equal(confirmed.shareUrl,undefined);
+ assert.equal(await page.locator('#payButton').isVisible(),false);
+ assert.equal(await page.locator('#paidStage').isVisible(),false);
+ await page.locator('#paymentAmendButton').click();
+ await page.waitForURL('**/legacy-create?**',{timeout:30000,waitUntil:'domcontentloaded'});
+ await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
+ await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
+ assert.equal((await owner()).status,'draft');
+ assert.equal(await field('eventName').inputValue(),'Updated surprise');
+ assert.equal(await page.locator('#postImageZoom').inputValue(),'175');
+ await page.locator('#scratchActualRevealed .inline-photo-remove').click();
+ await page.waitForFunction(()=>!document.querySelector('#scratchActualRevealed')?.shadowRoot?.querySelector('[data-photo-slot] image'));
+ await putField('recipient','Amended recipient');
+ await reviewAgain();
+ const final=await owner();
+ assert.equal(final.status,'draft');assert.equal(final.id,saved.id);
+ assert.equal(final.recipient,'Amended recipient');assert.equal(final.eventName,'Updated surprise');
+ assert.equal(final.hasImage,false);assert.equal(final.shareUrl,undefined);
+ const removed=await page.request.get(origin+'/api/reveals/'+saved.id+'/image',{headers});
+ assert.ok(!removed.ok(),'Explicitly removed image must no longer be retrievable');
+ assert.equal((await savedSurface()).artworkId,art);
+ assert.equal(await page.locator('#paidStage').isVisible(),false);
  assert.deepEqual(errors,[]);
- console.log('PASS: Live WebKit upload, exact stored PNG bytes, private purchaser review and Amend; SHA256 '+hash(stored)+'; unpaid draft '+saved.id);
+ console.log('PASS: '+label+' live create, required fields, owner-only review, repeated Amend, confirmation-state Amend, original upload retention and image removal; SHA256 '+hash(stored)+'; unpaid test draft '+saved.id);
 }finally{await browser.close();}
