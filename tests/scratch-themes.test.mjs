@@ -39,11 +39,11 @@ test('the creator uses product-bound covers without a thematic picker',async()=>
  const paths=['public/legacy-create.html','public/reveal.html','public/recipient-scratch.html','src/scratch-surface.js','src/scratch-recipient.js'];
  const [creator,review,recipient,owner,paid]=await Promise.all(paths.map(p=>readFile(resolve(root,p),'utf8')));
  const {PAIRED_PRODUCTS,coversForTemplate}=await import('../public/paired-products.js');
- assert.equal(PAIRED_PRODUCTS.length,26);
- assert.equal(SCRATCH_ARTWORKS.length,31);
- assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,31);
+ assert.equal(PAIRED_PRODUCTS.length,18);
+ assert.equal(SCRATCH_ARTWORKS.length,18);
+ assert.equal(new Set(SCRATCH_ARTWORKS.map(i=>i.id)).size,18);
  assert.equal(DEFAULT_SCRATCH_ARTWORK,'luxury-champagne-gold-primary');
- assert.equal(PAIRED_PRODUCTS.filter(p=>coversForTemplate(p.templateId).length===2).length,5);
+ assert.equal(PAIRED_PRODUCTS.filter(p=>coversForTemplate(p.templateId).length===2).length,0);
  assert.equal(getScratchArtwork('azure-kaleidoscope'),null);
  assert.equal(getScratchArtwork('missing'),null);
  for(const art of SCRATCH_ARTWORKS) {

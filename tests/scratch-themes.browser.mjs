@@ -209,7 +209,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
  {timeout:90000},async()=>{
  let savedReveal,savedSurface,imageBytes,expectedImage,endpointError;
  const requestTrace=[];
- const art='envelope-coral-ginkgo-alternative';
+ const art='luxury-coral-ribbon-primary';
  const {server,base}=await startServer({simulateStagingReview:true,apiHandler:async(req,res,p)=>{
    if(p.startsWith('/api/reveals'))requestTrace.push(req.method+' '+p);
    const json=(result,status=200)=>{res.writeHead(status,{'content-type':'application/json','cache-control':'no-store'});res.end(JSON.stringify(result));return true;};
@@ -257,8 +257,7 @@ test('Scratch Ticket creator upload, save, purchaser review and amend retain ind
    const errors=[];page.on('pageerror',e=>errors.push(e.message));
    await page.goto(base+'/legacy-create?variant=ticket',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
-   await page.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
-   await page.locator('#scratchArtwork').selectOption(art);
+   await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
    await page.waitForFunction(id=>document.querySelector('#scratchActualCovered')?.dataset.renderedArtwork===id,art);
    for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Mick',eventName:'Jesus Christ Superstar',venue:'Theatre Royal, Drury Lane',personalMessage:'A special night'})){
     const input=page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');await input.focus();await input.fill(value);
@@ -369,7 +368,7 @@ test('creator shows only paired gift products without the retired foil section o
    page.on('pageerror',err=>errors.push(err.message));
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
-   assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
+   assert.equal(await page.locator('#postTemplate option').count(),18);assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
    assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');

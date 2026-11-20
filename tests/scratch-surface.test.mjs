@@ -500,7 +500,7 @@ test('all valid cover/template pairs persist and restore with image appearance, 
   assert.deepEqual(surface.postScratch,postScratch);assert.equal(surface.artworkId,cover.id);
   assert.deepEqual(JSON.parse(state.config.fields_json).unrelated,{keep:true});count++;
  }
- assert.equal(count,31);
+ assert.equal(count,18);
  const invalid=new FormData();for(const [k,v] of Object.entries({style:'classic',foil:'gold',variant:'ticket',artworkId:'luxury-sapphire-gold-primary',postScratch:JSON.stringify({templateId:'bg-luxury-champagne-gold'})}))invalid.set(k,v);
  assert.equal((await scratchSurfaceResponse(request('PUT',invalid),env,{},withImage)).status,400,'Cross-product cover rejected server-side');
 });

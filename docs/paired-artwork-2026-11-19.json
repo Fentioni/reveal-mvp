@@ -2,7 +2,7 @@
   "version": 1,
   "collectionDate": "2026-11-19",
   "status": "paired-catalogue",
-  "note": "26 fixed primary-cover/background pairs; five include a genuine alternative. No unpaired cover is selectable in the customer creator.",
+  "note": "18 active fixed cover/background pairs. Eight products (13 rejected scratch covers) are withdrawn; their separate reveal backgrounds are retained but not selectable.",
   "packages": [
     {
       "id": "luxury-champagne-gold",
@@ -141,23 +141,6 @@
       }
     },
     {
-      "id": "bow-sapphire",
-      "name": "Sapphire Bow",
-      "collection": "Gift boxes with bows",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/bow-sapphire-primary.webp",
-        "gitBlobSha": "a218b609d57647cc1a746b393fce48b074fecf74",
-        "bytes": 386488
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-bow-sapphire.webp",
-        "gitBlobSha": "07bca67929f9f38b42f6fb5c4bf156fc24cfac17",
-        "bytes": 154838
-      }
-    },
-    {
       "id": "bow-emerald",
       "name": "Emerald Bow",
       "collection": "Gift boxes with bows",
@@ -223,150 +206,6 @@
         "path": "/post-scratch-artwork/bg-wrap-emerald.webp",
         "gitBlobSha": "453d5af35881f7aa7d07c228ce16eeca3e1aadb0",
         "bytes": 174916
-      }
-    },
-    {
-      "id": "wrap-rose-gold",
-      "name": "Rose Gold Wrap",
-      "collection": "Gift boxes without bows",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/wrap-rose-gold-primary.webp",
-        "gitBlobSha": "92f4c1aa1f2cbdebe2abafc2bc206ac3e2c2ccd2",
-        "bytes": 591290
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-wrap-rose-gold.webp",
-        "gitBlobSha": "eea58827c950d3ca4dc271dabf273e2a4085e0e1",
-        "bytes": 141164
-      }
-    },
-    {
-      "id": "wrap-platinum",
-      "name": "Platinum Wrap",
-      "collection": "Gift boxes without bows",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/wrap-platinum-primary.webp",
-        "gitBlobSha": "16455f9bd1cbc027c5244a18ceb0279b6cccf546",
-        "bytes": 310550
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-wrap-platinum.webp",
-        "gitBlobSha": "31b79d39f8f385fc596bb348810a8b7f9d1aa6a3",
-        "bytes": 135478
-      }
-    },
-    {
-      "id": "envelope-coral-ginkgo",
-      "name": "Coral Ginkgo",
-      "collection": "Gift envelopes",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/envelope-coral-ginkgo-primary.webp",
-        "gitBlobSha": "d4c83616fc4adb962810c46c666a032b244aee6f",
-        "bytes": 818014
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-envelope-coral-ginkgo.webp",
-        "gitBlobSha": "e117ae9d959c5f027fdb0208ad3fa02e90cfddbc",
-        "bytes": 539498
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-coral-ginkgo-alternative.webp",
-        "gitBlobSha": "3d5a6b7b3ef6534608dfd85341ada66089e527e8",
-        "bytes": 1250278
-      }
-    },
-    {
-      "id": "envelope-emerald-deco",
-      "name": "Emerald Deco",
-      "collection": "Gift envelopes",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/envelope-emerald-deco-primary.webp",
-        "gitBlobSha": "a4c92c6f015e9fe5d83e0e396c3c847812af5cc6",
-        "bytes": 550282
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-envelope-emerald-deco.webp",
-        "gitBlobSha": "3cba604d36b26c545fde47815e4ea642f62409cc",
-        "bytes": 311958
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-emerald-deco-alternative.webp",
-        "gitBlobSha": "2017a19dfe375e051f1e51507cc4895f0db162ae",
-        "bytes": 1315714
-      }
-    },
-    {
-      "id": "envelope-ivory-laurel",
-      "name": "Ivory Laurel",
-      "collection": "Gift envelopes",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/envelope-ivory-laurel-primary.webp",
-        "gitBlobSha": "71a699ec9c1fb0969422b43a15085f347c6262ce",
-        "bytes": 606406
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-envelope-ivory-laurel.webp",
-        "gitBlobSha": "858a2191515c02db26ea212186b9011bfe3e5afa",
-        "bytes": 402800
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-ivory-laurel-alternative.webp",
-        "gitBlobSha": "e96aca08c7575ca61d02bb7fa226631f211acd5b",
-        "bytes": 975976
-      }
-    },
-    {
-      "id": "envelope-malachite-seal",
-      "name": "Malachite Seal",
-      "collection": "Gift envelopes",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/envelope-malachite-seal-primary.webp",
-        "gitBlobSha": "b25eb59061dcc3b23adb92cb6a316ec246fbc975",
-        "bytes": 825084
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-envelope-malachite-seal.webp",
-        "gitBlobSha": "d10eb32cb54ca9347ec73fe15b0bc3857a62d17b",
-        "bytes": 486200
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-malachite-seal-alternative.webp",
-        "gitBlobSha": "44ba38af1ba7dcf8c7994f400b19cdf960af515b",
-        "bytes": 917566
-      }
-    },
-    {
-      "id": "envelope-sapphire-compass",
-      "name": "Sapphire Compass",
-      "collection": "Gift envelopes",
-      "width": 1800,
-      "height": 2400,
-      "primary": {
-        "path": "/scratch-artwork/envelope-sapphire-compass-primary.webp",
-        "gitBlobSha": "e0c520aff6d9c0a8fd20cf567e5f85360d1bb77b",
-        "bytes": 614928
-      },
-      "revealBackground": {
-        "path": "/post-scratch-artwork/bg-envelope-sapphire-compass.webp",
-        "gitBlobSha": "8078c90415464857b9c39d179a123d16ad8cf4d5",
-        "bytes": 347072
-      },
-      "alternative": {
-        "path": "/scratch-artwork/envelope-sapphire-compass-alternative.webp",
-        "gitBlobSha": "10ceb90a75b736ab4fc8dec0f7c2f9cf2d549e0f",
-        "bytes": 528904
       }
     },
     {

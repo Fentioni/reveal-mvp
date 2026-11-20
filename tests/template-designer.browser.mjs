@@ -29,7 +29,7 @@ try{
  await mkdir('test-output/template-designer',{recursive:true});
  const page=await browser.newPage({viewport:{width:1440,height:1100}}),errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto(base+'/admin-template-designer');await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option').count(),18);
  assert.equal(await page.locator('[data-layer="zone:recipient"] span').first().textContent(),'For You');
  assert.equal(await page.locator('[data-layer="zone:senderLine"] span').first().textContent(),'From Me');
  assert.equal(await page.locator('#render [data-field="recipient"]').textContent(),'For You');
@@ -123,11 +123,11 @@ try{
  page.once('dialog',dialog=>dialog.accept());
  await page.locator('#deleteTemplate').click();
  await page.waitForFunction(()=>document.querySelector('#status').textContent.startsWith('Template deleted'));
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option').count(),18);
  const archived=await (await page.request.get(base+'/api/template-designs/'+newId)).json();
  assert.equal(archived.template.zones[0].ink,'#445566');
  await page.reload();await page.locator('[data-layer="zone:eventName"]').waitFor();
- assert.equal(await page.locator('#template option').count(),26);
+ assert.equal(await page.locator('#template option').count(),18);
  assert.deepEqual(errors,[]);
  await page.locator('#coverManager').click();
  await page.locator('#coverList .cover-item').first().waitFor();assert.equal(await page.locator('#coverList .cover-item').count(),SCRATCH_ARTWORKS.length);
@@ -209,12 +209,11 @@ try{
   assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),0);
   assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
   assert.equal(await creator.locator('#postTemplate option[value="custom-image"]').count(),0);
-  await creator.locator('#postTemplate').selectOption('bg-envelope-coral-ginkgo');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-envelope-coral-ginkgo');
+  await creator.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-coral-ribbon');
   assert.equal(await creator.locator('#scratchImageUpload').isVisible(),false);
-  assert.equal(await creator.locator('#scratchArtwork option').count(),2);
-  await creator.locator('#scratchArtwork').selectOption('envelope-coral-ginkgo-alternative');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork==='envelope-coral-ginkgo-alternative');
+  assert.equal(await creator.locator('#scratchArtwork option').count(),1);
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualCovered').dataset.renderedArtwork==='luxury-coral-ribbon-primary');
   await creator.locator('#postTemplate').selectOption('bg-luxury-champagne-gold');
   await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold');
   assert.equal(await creator.locator('#scratchArtwork').inputValue(),'luxury-champagne-gold-primary');
@@ -271,7 +270,7 @@ try{
  // Regression: stored values are not enough; each rendered glyph must
  // actually lie inside its clipping rectangle immediately after Amend.
  for(const viewport of [{width:390,height:844},{width:1380,height:900}]){
-  for(const [templateId,hasImage] of [['bg-luxury-champagne-gold',false],['bg-envelope-coral-ginkgo',true]]){
+  for(const [templateId,hasImage] of [['bg-luxury-champagne-gold',false],['bg-luxury-coral-ribbon',true]]){
    const creator=await browser.newPage({viewport}),errors=[];creator.on('pageerror',e=>errors.push(e.message));
    const data={recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'A special night',ticketUrl:'https://example.org',hasImage,status:'draft',revision:2,id:'amend-test'};
    const settings={templateId,subtitle:'Just for you',venueAddress:'London',layout:{eventName:{ink:'#ab1234',size:30,family:'Arial, sans-serif'}}};

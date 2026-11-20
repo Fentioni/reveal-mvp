@@ -4,7 +4,7 @@ import {POST_TEMPLATES} from '../public/post-scratch-catalogue.js';
 import {defaultDesign,validateDesign,assertTemplateLayout} from '../public/template-design-schema.js';
 import {photoFrame} from '../public/post-scratch-renderer.js';
 test('every template retains all ten visible fields with non-overlapping geometry',()=>{
- assert.equal(POST_TEMPLATES.length,26);
+ assert.equal(POST_TEMPLATES.length,18);
  for(const t of POST_TEMPLATES){
   const d=assertTemplateLayout(validateDesign(t.id,defaultDesign(t.id)));
   for(const orientation of ['auto','portrait','landscape'])assertTemplateLayout({...d,photo:photoFrame(d.photo,orientation)});

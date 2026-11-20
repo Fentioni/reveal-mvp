@@ -105,21 +105,21 @@ try{
  }
  await gallery.close();
  }
- // Actual creator page: 26 paired options and amend restoration.
+ // Actual creator page: 18 paired options and amend restoration.
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
- const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'envelope-coral-ginkgo-alternative',postScratch:{templateId:'bg-envelope-coral-ginkgo',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
+ const surface={variant:'ticket',style:'classic',foil:'gold',artworkId:'luxury-coral-ribbon-primary',postScratch:{templateId:'bg-luxury-coral-ribbon',subtitle:'Saved subtitle',venueAddress:'Saved address',imagePosition:'xMaxYMin',imageFit:'cover',imageOrientation:'portrait',imageZoom:175,imagePanX:20,imagePanY:-15,textContrast:'dark',shade:45}};
  await page.addInitScript(()=>localStorage.setItem('reveal_edit_saved','owner'));
  await page.route('**/api/reveals/saved',r=>r.fulfill({json:{success:true,reveal:{id:'saved',recipient:'Chloe',sender:'Michael',eventName:'Saved surprise',hasImage:true,status:'draft',revision:1}}}));
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
  await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),26);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-envelope-coral-ginkgo');assert.equal(await page.locator('#scratchArtwork').inputValue(),'envelope-coral-ginkgo-alternative');
+ assert.equal(await page.locator('#postTemplate option').count(),18);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-coral-ribbon');assert.equal(await page.locator('#scratchArtwork').inputValue(),'luxury-coral-ribbon-primary');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible,#postVenueAddress:visible').count(),0);assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
  for(const [id,value] of Object.entries({postImageFit:'cover',postImageOrientation:'portrait',postImageZoom:'175',postImagePanX:'20',postImagePanY:'-15'}))assert.equal(await page.locator('#'+id).inputValue(),value);
  await page.locator('[data-scratch-preview-mode="revealed"]').click();
- await page.locator('#scratchActualRevealed svg[data-post-template="bg-envelope-coral-ginkgo"]').waitFor({state:'attached'});
+ await page.locator('#scratchActualRevealed svg[data-post-template="bg-luxury-coral-ribbon"]').waitFor({state:'attached'});
  assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('aria-hidden'),'true');
  assert.equal(await page.locator('#scratchActualRevealed').getAttribute('aria-hidden'),null);
