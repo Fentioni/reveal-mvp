@@ -11,6 +11,7 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  for(const b of [undo,redo,reset,done])b.type='button';top.append(undo,redo,reset,done);toolbar.append(top);
  const info=el('p','Edit content directly on the ticket. Drag the move or resize handle to adjust the selected field.','customer-design-info');toolbar.append(info);
  const selected=el('p','','customer-field-name');selected.setAttribute('aria-live','polite');toolbar.append(selected);
+ const pickerHandles=el('div','','customer-picker-handles');pickerHandles.hidden=true;toolbar.append(pickerHandles);
  const grid=el('div','','customer-design-grid');toolbar.append(grid);
  const fields={};
  function entry(key,label,type,opts){
@@ -33,9 +34,13 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  function boxes(){const t=effective();return [...t.zones.filter(z=>!z.hidden),...(t.photo&&!t.photo.full?[{...t.photo,key:'image'}]:[])];}
  function current(){return boxes().find(b=>b.key===state.key);}
  function report(text){status.textContent=text;}
+ const isPicker=key=>key==='date'||key==='time';
  function syncControls(){
   const list=boxes();if(!list.some(b=>b.key===state.key))state.key=null;
-  const z=current();toolbar.hidden=!z;if(!z)return;
+  const z=current();toolbar.hidden=!z;
+  pickerHandles.hidden=!z||!isPicker(z.key);
+  for(const handle of pickerHandles.children)handle.hidden=handle.dataset.zone!==z?.key;
+  if(!z)return;
   selected.textContent=FIELD_NAMES[z.key];grid.hidden=z.key==='image';
   for(const [key,{wrap,input}] of Object.entries(fields)){
    wrap.hidden=z.key==='image';
@@ -63,16 +68,20 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
  }
  function patch(key,values){return commit({...layout(),[key]:{...(layout()[key]||{}),...values}});}
  function renderBoxes(){
-  layer.replaceChildren();
+  layer.replaceChildren();pickerHandles.replaceChildren();
   for(const zone of boxes()){
    const box=el('div','','customer-zone');box.dataset.zone=zone.key;box.dataset.selected=String(zone.key===state.key);pos(box,zone);
    // The outlines do not intercept taps. Only the two dedicated handles
    // accept pointer input, so text selection and photo upload always work.
    for(const resize of [false,true]){
-    const handle=el('button',resize?'↘':'✥',resize?'customer-resize-handle':'customer-move-handle');
+    // Native date/time controls own their full input area. Keep design handles
+    // in the selected field's toolbar instead of overlapping its picker icon.
+    const picker=isPicker(zone.key);
+    const handle=el('button',picker?(resize?'↘ Resize field':'✥ Move field'):(resize?'↘':'✥'),resize?'customer-resize-handle':'customer-move-handle');
     handle.type='button';handle.dataset.resize=resize?'1':'0';
     handle.setAttribute('aria-label',(resize?'Resize ':'Move ')+FIELD_NAMES[zone.key]);handle.title=handle.getAttribute('aria-label');
-    box.append(handle);
+    handle.dataset.zone=zone.key;
+    if(picker){handle.hidden=zone.key!==state.key;pickerHandles.append(handle);}else box.append(handle);
     let drag=null;
     handle.addEventListener('pointerdown',e=>{
      if(e.button!==0)return;e.preventDefault();e.stopPropagation();select(zone.key);
@@ -95,7 +104,8 @@ export function mountCustomerDesigner(card,main,face,edit,getInline,rebuildInlin
      const deltas={ArrowLeft:[-1,0],ArrowRight:[1,0],ArrowUp:[0,-1],ArrowDown:[0,1]};if(!deltas[e.key])return;e.preventDefault();
      const [dx,dy]=deltas[e.key],n=e.shiftKey?10:1;
      patch(zone.key,resize?{w:clamp(zone.w+dx*n,12,900-zone.x),h:clamp(zone.h+dy*n,12,1200-zone.y)}:{x:clamp(zone.x+dx*n,0,900-zone.w),y:clamp(zone.y+dy*n,0,1200-zone.h)});
-     layer.querySelector('[data-selected="true"] [data-resize="'+(resize?'1':'0')+'"]')?.focus({preventScroll:true});
+     const nextHandle=picker?pickerHandles.querySelector('[data-zone="'+zone.key+'"][data-resize="'+(resize?'1':'0')+'"]'):layer.querySelector('[data-selected="true"] [data-resize="'+(resize?'1':'0')+'"]');
+     nextHandle?.focus({preventScroll:true});
     });
    }
    layer.append(box);

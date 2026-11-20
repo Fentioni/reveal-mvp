@@ -101,3 +101,11 @@
 .customer-design-info,.customer-design-status{font-size:12px;margin:8px 0;color:#f0d6a0}.customer-design-status:empty{display:none}
 
 .customer-field-name{margin:10px 0 4px;font-size:14px;font-weight:700;color:#f5e9d0}.customer-design-grid[hidden]{display:none!important}
+
+/* Native calendar/clock icons must remain fully clickable. Only their layout
+   handles live in the selected-field toolbar, never over the actual input. */
+.customer-picker-handles{display:flex;gap:8px;margin:8px 0;flex-wrap:wrap}
+.customer-picker-handles[hidden],.customer-picker-handles button[hidden]{display:none!important}
+.customer-picker-handles button{flex:1;min-height:42px;touch-action:none;user-select:none;-webkit-user-select:none}
+.customer-picker-handles .customer-move-handle,.customer-picker-handles .customer-resize-handle{position:static;left:auto;right:auto;top:auto;bottom:auto;cursor:grab}
+.customer-picker-handles button:active{cursor:grabbing}

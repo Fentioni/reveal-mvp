@@ -14,12 +14,12 @@ try{
  let result;
  for(let i=0;i<25;i++){
   result=await page.goto(origin+'/legacy-create?variant=ticket&verify='+Date.now(),{waitUntil:'domcontentloaded'});
-  if(result?.ok()&&(await result.text()).includes('data-customer-design="integrated-2"'))break;
+  if(result?.ok()&&(await result.text()).includes('data-customer-design="picker-handles-1"'))break;
   await new Promise(r=>setTimeout(r,5000));
  }
  assert.ok(result?.ok(),'Live staging creator responds');
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
- assert.match(await result.text(),/data-customer-design="integrated-2"/,'Integrated editor must be live');
+ assert.match(await result.text(),/data-customer-design="picker-handles-1"/,'Integrated editor must be live');
  assert.equal(await page.locator('#personaliseMode,#customiseMode').count(),0);
  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
@@ -42,6 +42,35 @@ try{
  }
  // Editing text selects that exact field for formatting without any mode.
  const host=page.locator('#scratchActualRevealed'),toolbar=host.locator('.customer-design-tools');
+ // Date and time keep their entire native input exposed: neither handle
+ // may sit over the calendar/clock icon, on desktop or on touch viewports.
+ for(const [key,zoneKey,value] of [['eventDate','date','2026-12-03'],['eventTime','time','23:43']]){
+  const input=field(key);
+  await input.focus();await input.fill(value);
+  assert.equal(await input.inputValue(),value);
+  const selected=host.locator('[data-zone="'+zoneKey+'"].customer-zone');
+  assert.equal(await selected.getAttribute('data-selected'),'true');
+  assert.equal(await selected.locator('button').count(),0);
+  const controls=toolbar.locator('.customer-picker-handles');
+  const movePicker=controls.locator('[data-zone="'+zoneKey+'"][data-resize="0"]');
+  const resizePicker=controls.locator('[data-zone="'+zoneKey+'"][data-resize="1"]');
+  assert.ok(await movePicker.isVisible()&&await resizePicker.isVisible());
+  const rect=await input.boundingBox();
+  for(const handle of [movePicker,resizePicker]){
+   const b=await handle.boundingBox();
+   assert.ok(b.x+b.width<=rect.x||b.x>=rect.x+rect.width||b.y+b.height<=rect.y||b.y>=rect.y+rect.height,'native picker input must not overlap a design handle');
+  }
+  // Scroll may be needed before hit testing the native icon on a narrow screen.
+  await input.scrollIntoViewIfNeeded();
+  assert.ok(await input.evaluate(e=>{const r=e.getBoundingClientRect();return e.getRootNode().elementFromPoint(r.right-5,r.top+r.height/2)===e}),'calendar/clock side must hit the native input');
+  const original=await selected.evaluate(z=>z.style.width);
+  await resizePicker.focus();await resizePicker.press('ArrowLeft');
+  assert.notEqual(await selected.evaluate(z=>z.style.width),original);
+  await toolbar.getByRole('button',{name:'Undo',exact:true}).click();
+  assert.equal(await selected.evaluate(z=>z.style.width),original);
+  assert.equal(await input.inputValue(),value);
+  await toolbar.getByRole('button',{name:'Done',exact:true}).click();
+ }
  await field('eventName').focus();
  await toolbar.waitFor({state:'visible'});
  assert.equal(await toolbar.locator('.customer-field-name').textContent(),'Surprise title');
@@ -114,6 +143,7 @@ try{
  assert.equal(reveal.sender,'Reveal QA');
  assert.equal(reveal.eventName,'Automated upload test');
  assert.equal(reveal.venue,'Test venue');
+ assert.equal(reveal.eventDate,'2026-12-03');assert.equal(reveal.eventTime,'23:43');
  assert.equal(reveal.personalMessage,'Private staging test only');
  assert.equal(reveal.shareUrl,undefined);
  assert.equal(await page.locator('#paidStage').isVisible(),false);
