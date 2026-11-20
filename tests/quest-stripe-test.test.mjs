@@ -60,7 +60,7 @@ test('Payment capability is published safely, without credentials or tax-inclusi
   ...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false'
  },{},legacy);
  assert.equal(off.status,200);
- assert.deepEqual(await off.json(),{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:true,baseAmountMinor:199,currency:'gbp'});
+ assert.deepEqual(await off.json(),{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:true,baseAmountMinor:199,currency:'gbp',checkoutRevision:'stable-retry-1'});
  const on=await questStripeTestResponse(req('/api/quest/test-payment-status'),envBase,{},legacy);
  const onBody=await on.clone().text();
  assert.equal((await on.json()).enabled,true);
