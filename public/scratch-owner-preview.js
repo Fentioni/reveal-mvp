@@ -116,6 +116,10 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,g
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
  const ready=new Promise((resolve,reject)=>{css.onload=resolve;css.onerror=()=>reject(new Error('The actual preview styles could not be loaded.'));});
  root.append(css);
+ // A rendered card must never become visible or measurable before the shared
+ // recipient geometry has loaded. This also prevents a transient unstyled
+ // card from being mistaken for the final 3:4 preview by browser checks.
+ await ready;
  const screen=make('div','','scratch-preview-stage');
  if(creator)screen.classList.add('scratch-inline-creator');
  const main=make('main');
@@ -153,7 +157,6 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,g
    main.append(action);
   }
  }
- await ready;
  return root;
 }
 export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio,hosts,guides=false,edit=null}){
