@@ -1141,6 +1141,69 @@ test('paid Scratch Ticket export is locked until scratching and downloads full-r
  }finally{await browser.close();await new Promise(r=>server.close(r));}
 });
 
+
+test('paid custom uploaded cover scratches to Sapphire Wrap and exports real PNG/PDF on phone',
+ {timeout:95000},async()=>{
+ const {server,base}=await startServer();
+ const browser=await browserType.launch({headless:true});
+ try{
+  const page=await browser.newPage({viewport:{width:390,height:844},acceptDownloads:true,reducedMotion:'reduce'});
+  const errors=[];page.on('pageerror',e=>errors.push(e.message));
+  // Same-origin, synthetic paid recipient API; the separate payment/webhook
+  // tests own the actual fulfilment gate. This test exercises the exact paid UI.
+  const cover=await readFile(resolve(root,'post-scratch-artwork/bg-envelope-sapphire-compass.webp'));
+  const slug='paid-custom-sapphire-test';
+  const surface={...sample.scratchSurface,artworkId:null,style:'custom',
+    hasImage:true,foil:'gold',coverCrop:{zoom:150,panX:-30,panY:20},
+    postScratch:{templateId:'bg-wrap-sapphire'}};
+  await page.route('**/r/'+slug+'/scratch-data',r=>r.fulfill({
+    json:{...sample,scratchSurface:surface,reveal:{...sample.reveal,hasEventImage:false}}
+  }));
+  await page.route('**/r/'+slug+'/scratch-cover',r=>r.fulfill({contentType:'image/webp',body:cover}));
+  await page.route(base+'/r/'+slug,r=>r.fulfill({
+    path:resolve(root,'recipient-scratch.html'),contentType:'text/html'
+  }));
+  await page.goto(base+'/r/'+slug);
+  await page.locator('#card.foil-ready').waitFor({timeout:20000});
+  const before=await page.locator('#foilCanvas').evaluate(c=>c.toDataURL());
+  assert.ok(before.length>1000,'The uploaded cover must be painted on the scratch canvas');
+  assert.equal(await page.locator('#keepsake').isVisible(),false);
+  assert.equal(await page.locator('#progress').evaluate(e=>e.value),0);
+  assert.equal(await page.locator('#underlay svg[data-post-template="bg-wrap-sapphire"]').count(),1);
+  const canvas=page.locator('#foilCanvas');
+  await canvas.scrollIntoViewIfNeeded();
+  const bounds=await canvas.boundingBox();
+  for(let y=2,step=0;y<bounds.height;y+=18,step++){
+    await page.mouse.move(bounds.x+(step%2?bounds.width-2:2),bounds.y+y);
+    await page.mouse.down();
+    await page.mouse.move(bounds.x+(step%2?2:bounds.width-2),bounds.y+y,{steps:8});
+    await page.mouse.up();
+  }
+  await page.locator('#keepsakePng:visible').waitFor({timeout:35000});
+  assert.equal(await page.locator('#progress').evaluate(e=>e.value),100);
+  const [png]=await Promise.all([page.waitForEvent('download'),page.locator('#keepsakePng').click()]);
+  const b=await readFile(await png.path());
+  assert.equal(b.subarray(1,4).toString(),'PNG');
+  assert.equal(b.readUInt32BE(16),1800);
+  assert.equal(b.readUInt32BE(20),2400);
+  assert.ok(b.length>50000);
+  const [pdf]=await Promise.all([page.waitForEvent('download'),page.locator('#keepsakePdf').click()]);
+  const pd=await readFile(await pdf.path()),text=pd.toString('latin1');
+  assert.ok(text.startsWith('%PDF-1.4'));
+  assert.match(text,/\/MediaBox \[0 0 432 576\]/);
+  assert.match(text,/\/Width 1800 \/Height 2400/);
+  await mkdir(output,{recursive:true});
+  await png.saveAs(resolve(output,'paid-custom-sapphire-keepsake.png'));
+  await pdf.saveAs(resolve(output,'paid-custom-sapphire-keepsake.pdf'));
+  await page.locator('#replayButton').click();
+  assert.equal(await page.locator('#keepsake').isVisible(),false);
+  await page.reload();await page.locator('#card.foil-ready').waitFor();
+  assert.equal(await page.locator('#progress').evaluate(e=>e.value),0);
+  assert.deepEqual(errors,[]);
+  await page.close();
+ }finally{await browser.close();await new Promise(done=>server.close(done));}
+});
+
 test('paid purchaser can copy and share the clean opaque recipient link and download its QR; draft cannot share',{timeout:60000},async()=>{
  const {server,base}=await startServer({simulateStagingReview:true});
  const browser=await browserType.launch({headless:true});
