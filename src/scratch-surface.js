@@ -174,7 +174,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme:current.surface.theme,
           ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
-          hasRevealBackground:Boolean(current.backgroundAsset && current.surface.variant!=='concert'),
+          ...(current.surface.variant!=='concert'?{hasRevealBackground:Boolean(current.backgroundAsset)}:{}),
           ...(current.surface.style==='custom'?{coverCrop:current.surface.coverCrop}:{}),
           variant:current.surface.variant,
           ...(current.surface.variant!=='concert'?{postScratch:current.surface.postScratch}:{}),
@@ -375,7 +375,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',
         ...(style==='custom'?{coverCrop}:{}),variant,
         ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{postScratch}),
-        hasRevealBackground:Boolean(backgroundAssetId&&variant!=='concert')},audio});
+        ...(variant!=='concert'?{hasRevealBackground:Boolean(backgroundAssetId)}:{})},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
       if (replacementBackgroundKey) await env.IMAGES.delete(replacementBackgroundKey).catch(()=>{});
