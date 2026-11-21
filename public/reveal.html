@@ -1112,6 +1112,7 @@
     let imageObjectUrl = null;
     let paymentPolling = false;
     let surfaceObjectUrl = null;
+    let revealBackgroundObjectUrl = null;
     let staticScratchCard = null;
     let isQuizReview = false;
     let isGenderReview = false;
@@ -1406,10 +1407,20 @@
           if(surfaceObjectUrl)URL.revokeObjectURL(surfaceObjectUrl);
           surfaceObjectUrl=URL.createObjectURL(blob);
         }
+        if(revealBackgroundObjectUrl){URL.revokeObjectURL(revealBackgroundObjectUrl);revealBackgroundObjectUrl=null;}
+        if(result.surface.hasRevealBackground){
+          const backgroundResponse=await fetch('/api/reveals/'+encodeURIComponent(revealId)+'/scratch-surface/background',
+            {headers:ownerHeaders(),cache:'no-store'});
+          if(!backgroundResponse.ok)throw new Error('Your uploaded reveal background could not be loaded. Amend and try again.');
+          const backgroundBlob=await backgroundResponse.blob();
+          if(!['image/jpeg','image/png','image/webp'].includes(backgroundBlob.type))throw new Error('Unexpected reveal background format.');
+          revealBackgroundObjectUrl=URL.createObjectURL(backgroundBlob);
+        }
         if(staticScratchCard)staticScratchCard.destroy();
         staticScratchCard=await renderScratchOwnerPreview(document.getElementById('scratchActualReview'),{
           reveal,surface:result.surface,artwork,
           eventImage:reveal.hasImage?imageObjectUrl:'',
+          revealBackground:revealBackgroundObjectUrl||'',
           coverImage:hasImage?surfaceObjectUrl:'',
           audio:result.audio
         });
