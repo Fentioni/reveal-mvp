@@ -487,7 +487,9 @@ async function readForm(request) {
     FIELDS.map(([key], index) => [key, values[index]])
   );
 
-  for (const [key, label] of [
+  // Portrait Scratch Tickets may omit personalisation; older creators retain
+  // their existing required-field validation unless explicitly opted in.
+  if (form.get('allowEmptyPersonalisation') !== 'true') for (const [key, label] of [
     ['recipient', 'who the reveal is for'],
     ['sender', 'who the reveal is from'],
     ['eventName', 'the surprise or event']
