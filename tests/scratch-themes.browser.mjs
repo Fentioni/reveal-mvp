@@ -370,7 +370,9 @@ test('creator shows only paired gift products without the retired foil section o
    page.on('pageerror',err=>errors.push(err.message));
    await page.goto(base+'/legacy-create',{waitUntil:'networkidle'});
    await page.locator('#postTemplate:enabled').waitFor();
-   assert.equal(await page.locator('#postTemplate option').count(),18);assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
+   assert.equal(await page.locator('#postTemplate option').count(),19);
+   assert.equal(await page.locator('#scratchCoverSource').count(),0,'Gallery dropdown must include custom upload itself');
+   assert.equal(await page.locator('#postTemplate option:last-child').getAttribute('value'),'upload-my-own-scratch-artwork');assert.equal(await page.locator('#scratchArtwork option').count(),1);assert.equal(await page.locator('#pairedCoverChoice').isVisible(),false);
    assert.equal(await page.locator('#concertZoomButton:visible').count(),0,'Full-size ticket control is concert-only');
    assert.equal(await page.locator('.preview-details-toggle:visible,.scratch-static-frame:visible').count(),0);
    assert.equal(await page.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');

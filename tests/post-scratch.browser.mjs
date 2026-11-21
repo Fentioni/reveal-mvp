@@ -113,7 +113,7 @@ try{
  await page.route('**/api/reveals/saved/scratch-surface',r=>r.fulfill({json:{success:true,surface,audio:{enabled:false}}}));
  await page.route('**/api/reveals/saved/image',r=>r.fulfill({contentType:'image/webp',path:resolve(root,'post-scratch-artwork/bg-luxury-champagne-gold.webp')}));
  await page.goto(base+'/legacy-create.html?edit=saved');await page.locator('#reviewButton:enabled').waitFor();
- assert.equal(await page.locator('#postTemplate option').count(),18);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-coral-ribbon');assert.equal(await page.locator('#scratchArtwork').inputValue(),'luxury-coral-ribbon-primary');
+ assert.equal(await page.locator('#postTemplate option').count(),19);assert.equal(await page.locator('#postTemplate').inputValue(),'bg-luxury-coral-ribbon');assert.equal(await page.locator('#scratchArtwork').inputValue(),'luxury-coral-ribbon-primary');
  assert.equal(await page.locator('#postSubtitle').inputValue(),'Saved subtitle');
  assert.equal(await page.locator('#eventName:visible,#postSubtitle:visible,#postVenueAddress:visible').count(),0);assert.equal(await page.locator('#postVenueAddress').inputValue(),'Saved address');
  assert.equal(await page.locator('#postImagePosition').inputValue(),'xMaxYMin');assert.equal(await page.locator('#postTextContrast').inputValue(),'dark');assert.equal(await page.locator('#postShade').inputValue(),'45');
@@ -148,6 +148,7 @@ try{
  assert.equal(await page.locator('#postShade').inputValue(),'70');
  assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
  for(const option of await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value))){
+  if(option==='upload-my-own-scratch-artwork')continue; // upload uses Sapphire Wrap and its own image picker
   await page.locator('#postTemplate').selectOption(option);
   assert.equal(await page.locator('#scratchImageUpload').isVisible(),false);
   assert.equal(await page.locator('#postImageControls').isVisible(),true);

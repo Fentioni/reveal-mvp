@@ -6,7 +6,7 @@ import {mkdir} from 'node:fs/promises';
 const base='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 for(let i=0;i<36;i++){
  try{const r=await fetch(base+'/legacy-create.html?custom-ready='+Date.now(),{cache:'no-store',signal:AbortSignal.timeout(12000)});
- if(r.ok&&(await r.text()).includes('data-custom-scratch="1"'))break;}catch{}
+ if(r.ok&&(await r.text()).includes('data-custom-scratch="2"'))break;}catch{}
  if(i===35)throw Error('Custom scratch creator is not deployed.');
  await new Promise(r=>setTimeout(r,5000));
 }
@@ -22,13 +22,14 @@ for(const {name,engine,options} of modes){
   const r=await page.goto(base+'/legacy-create?variant=ticket&custom-qa='+Date.now());
   assert.ok(r.ok());
   await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
-  assert.equal(await page.locator('#scratchCoverSource').inputValue(),'gallery');
+  assert.equal(await page.locator('#scratchCoverSource').count(),0,'No extra dropdown should exist');
+  assert.equal(await page.locator('#postTemplate option:last-child').textContent(),'Upload my own scratch artwork');
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),false);
   const gallery=await page.locator('#postTemplate').inputValue();
-  await page.locator('#scratchCoverSource').selectOption('upload');
-  await page.waitForFunction(()=>document.querySelector('#postTemplate')?.value==='bg-wrap-sapphire'&&document.querySelector('#scratchCoverUploadField')?.hidden===false,{timeout:15000});
-  assert.equal(await page.locator('#postTemplate').inputValue(),'bg-wrap-sapphire');
-  assert.equal(await page.locator('#postTemplate').isDisabled(),true);
+  await page.locator('#postTemplate').selectOption('upload-my-own-scratch-artwork');
+  await page.waitForFunction(()=>document.querySelector('#postTemplate')?.value==='upload-my-own-scratch-artwork'&&document.querySelector('#scratchCoverUploadField')?.hidden===false,{timeout:15000});
+  assert.equal(await page.locator('#postTemplate').inputValue(),'upload-my-own-scratch-artwork');
+  assert.equal(await page.locator('#postTemplate').isDisabled(),false);
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),true);
   const png=await page.evaluate(()=>{
    const c=document.createElement('canvas');c.width=900;c.height=1200;
@@ -75,14 +76,14 @@ for(const {name,engine,options} of modes){
   await page.locator('#paymentAmendButton:visible').waitFor();
   await page.locator('#paymentAmendButton').click();
   await page.waitForURL('**/legacy-create?**',{timeout:30000});
-  await page.locator('#scratchCoverSource:enabled').waitFor({timeout:30000});
-  assert.equal(await page.locator('#scratchCoverSource').inputValue(),'upload');
-  assert.equal(await page.locator('#postTemplate').inputValue(),'bg-wrap-sapphire');
+  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
+  assert.equal(await page.locator('#scratchCoverSource').count(),0);
+  assert.equal(await page.locator('#postTemplate').inputValue(),'upload-my-own-scratch-artwork');
   assert.equal(await page.locator('#scratchCoverZoom').inputValue(),'150');
   assert.equal(await page.locator('#scratchCoverPanX').inputValue(),'-30');
   assert.equal(await page.locator('#scratchCoverPanY').inputValue(),'20');
   assert.match(await page.locator('#scratchCoverFileName').textContent(),/Saved uploaded artwork/);
-  await page.locator('#scratchCoverSource').selectOption('gallery');
+  await page.locator('#postTemplate').selectOption(gallery);
   assert.equal(await page.locator('#postTemplate').inputValue(),gallery);
   assert.equal(await page.locator('#postTemplate').isEnabled(),true);
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),false);

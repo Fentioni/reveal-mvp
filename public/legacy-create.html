@@ -876,14 +876,9 @@
         </noscript>
 
         <form id="revealForm">
-          <section id="scratchArtworkSection" class="field" aria-labelledby="scratchArtworkLabel" data-custom-scratch="1">
-            <label id="scratchArtworkLabel" for="scratchCoverSource">Scratch artwork</label>
-            <select id="scratchCoverSource" aria-describedby="scratchCoverSourceHelp">
-              <option value="gallery">Choose from artwork gallery</option>
-              <option value="upload">Upload my own scratch artwork</option>
-            </select>
-            <p id="scratchCoverSourceHelp" class="field-help">Choose a gallery cover or upload your own image. Both cover your surprise until scratched.</p>
-            <label for="postTemplate">Revealed design</label>
+          <section id="scratchArtworkSection" class="field" aria-labelledby="scratchArtworkLabel" data-custom-scratch="2">
+            <label id="scratchArtworkLabel" for="postTemplate">Choose your gift design</label>
+            <p class="field-help">Choose from the gallery, or select “Upload my own scratch artwork” at the bottom of this list.</p>
             <select id="postTemplate" aria-describedby="postTemplateDescription"></select>
             <p id="postTemplateDescription" class="field-help"></p>
             <div id="pairedCoverChoice" hidden>
@@ -1336,17 +1331,27 @@
     let scratchCoverObjectUrl=null;
     let hasSavedScratchCover=false;
     let galleryTemplateId='';
+    const CUSTOM_COVER_OPTION='upload-my-own-scratch-artwork';
+    const CUSTOM_COVER_TEMPLATE='bg-wrap-sapphire';
     let customerLayout={};
     const customerDesign={key:null,undo:[],redo:[]};
     const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
     const postGroups=new Map();
     let studioCatalogue=POST_TEMPLATES;
     async function refreshStudioCatalogue(){
-      try{const r=await fetch('/api/template-catalogue',{cache:'no-store'});if(!r.ok)return;const next=(await r.json()).templates;if(!Array.isArray(next))return;studioCatalogue=next.filter(t=>getPairedProduct(t.id));const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived))addPostOption(t);if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;postGuidance();}catch{}
+      try{const r=await fetch('/api/template-catalogue',{cache:'no-store'});if(!r.ok)return;const next=(await r.json()).templates;if(!Array.isArray(next))return;studioCatalogue=next.filter(t=>getPairedProduct(t.id));const selected=$('postTemplate').value;postGroups.clear();$('postTemplate').replaceChildren();for(const t of studioCatalogue.filter(t=>!t.archived))addPostOption(t);appendCustomCoverOption();if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;postGuidance();}catch{}
     }
     function addPostOption(t){const label=t.collection||'Existing templates';if(!postGroups.has(label)){const group=document.createElement('optgroup');group.label=label;$('postTemplate').append(group);postGroups.set(label,group);}const o=document.createElement('option');o.value=t.id;o.textContent=t.name;postGroups.get(label).append(o);}
+    function appendCustomCoverOption(){
+      const option=document.createElement('option');
+      option.value=CUSTOM_COVER_OPTION;
+      option.textContent='Upload my own scratch artwork';
+      $('postTemplate').append(option);
+    }
     for(const t of studioCatalogue.filter(t=>!t.archived))addPostOption(t);
-    function postSettings(){return {templateId:$('postTemplate').value,subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageOrientation:$('postImageOrientation').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value),...(Object.keys(customerLayout).length?{layout:customerLayout}:{})};}
+    appendCustomCoverOption();
+    function revealedTemplateId(){return customCoverSelected()?CUSTOM_COVER_TEMPLATE:$('postTemplate').value;}
+    function postSettings(){return {templateId:revealedTemplateId(),subtitle:$('postSubtitle').value,venueAddress:$('postVenueAddress').value,imagePosition:$('postImagePosition').value,imageFit:$('postImageFit').value,imageOrientation:$('postImageOrientation').value,imageZoom:Number($('postImageZoom').value),imagePanX:Number($('postImagePanX').value),imagePanY:Number($('postImagePanY').value),textContrast:$('postTextContrast').value,shade:Number($('postShade').value),...(Object.keys(customerLayout).length?{layout:customerLayout}:{})};}
     function restorePostSettings(value){const p=cleanPostSettings(value);customerLayout=p.layout||{};if(!Array.from($('postTemplate').options).some(o=>o.value===p.templateId)){p.templateId=$('postTemplate').options[0]?.value||POST_TEMPLATES[0].id;customerLayout={};}for(const [id,key] of Object.entries({postTemplate:'templateId',postSubtitle:'subtitle',postVenueAddress:'venueAddress',postImagePosition:'imagePosition',postImageFit:'imageFit',postImageOrientation:'imageOrientation',postImageZoom:'imageZoom',postImagePanX:'imagePanX',postImagePanY:'imagePanY',postTextContrast:'textContrast',postShade:'shade'}))$(id).value=p[key];}
     function syncPostImageEditor(){
       const available=currentVariant==='ticket',hasImage=Boolean(objectUrl);
@@ -1361,16 +1366,16 @@
     function postGuidance(){
       syncPostImageEditor();
       if(currentVariant!=='ticket')return;
-      const selectedId=$('postTemplate').value,entry=studioCatalogue.find(t=>t.id===selectedId),t=getPostTemplate(selectedId)||{...getPostTemplate(entry?.baseId||POST_TEMPLATES[0].id),id:selectedId,description:'Custom Template Studio design.'},custom=t.id==='custom-image',p=t.photo;
+      const selectedId=revealedTemplateId(),entry=studioCatalogue.find(t=>t.id===selectedId),t=getPostTemplate(selectedId)||{...getPostTemplate(entry?.baseId||POST_TEMPLATES[0].id),id:selectedId,description:'Custom Template Studio design.'},custom=t.id==='custom-image',p=t.photo;
       $('postFullImageControls').hidden=!custom;
       $('postImageZoomValue').textContent=$('postImageZoom').value+'%';
       for(const axis of ['X','Y']){const n=Number($('postImagePan'+axis).value);$('postImagePan'+axis+'Value').textContent=n===0?'Centre':(n>0?'+':'')+n;}
-      $('postTemplateDescription').textContent=t.description;
+      $('postTemplateDescription').textContent=customCoverSelected()?'Your uploaded scratch cover reveals the Sapphire Wrap design.':t.description;
       $('postShadeValue').textContent=$('postShade').value+'%';
       $('imageUploadLabel').textContent=custom?'Upload full-card image (required)':'Add Image (Optional)';
       const describe=base=>{ const p=photoFrame(base,$('postImageOrientation').value),scale=Math.max(2,640/Math.min(p.w,p.h)); $('imageUploadHelp').textContent='JPEG, PNG or WebP · maximum 10 MB · minimum 640 × 640 px. Recommended: '+Math.ceil(p.w*scale)+' × '+Math.ceil(p.h*scale)+' px. '+(p.full?'Use image fit, zoom and position to compose your full-card image.':'Adjust the size and position within the selected portrait or landscape image frame.')+' Only appears after scratching.'; };
       describe(p);
-      loadPublishedDesign(t.id).then(({template})=>{if(currentVariant==='ticket'&&$('postTemplate').value===t.id)describe(template.photo);}).catch(()=>{});
+      loadPublishedDesign(t.id).then(({template})=>{if(currentVariant==='ticket'&&revealedTemplateId()===t.id)describe(template.photo);}).catch(()=>{});
     }
     const imageEditIds=new Set(['postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade']);
     function showImageEditingPreview(){
@@ -1379,7 +1384,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){galleryTemplateId=$('postTemplate').value;fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){if(!customCoverSelected())galleryTemplateId=$('postTemplate').value;fillCoverOptions();syncScratchSource();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
@@ -1407,7 +1412,7 @@
       }
       if(customCoverSelected()){
         if(!scratchCoverObjectUrl)errors.set('scratchCoverImage',{label:'Scratch artwork',message:'Upload your scratch cover image.'});
-        if($('postTemplate').value!=='bg-wrap-sapphire')errors.set('postTemplate',{label:'Sapphire Wrap',message:'Uploaded covers must use Sapphire Wrap.'});
+        if(revealedTemplateId()!==CUSTOM_COVER_TEMPLATE)errors.set('postTemplate',{label:'Sapphire Wrap',message:'Uploaded covers must use Sapphire Wrap.'});
       }else if(!isMatchingPair($('postTemplate').value,$('scratchArtwork').value))errors.set('scratchArtwork',{label:'Matching scratch cover',message:'Choose a gift design with an available cover.'});
       if(!$('postTemplate').value)errors.set('postTemplate',{label:'Revealed template',message:'Choose a revealed template.'});
       if($('postTemplate').value==='custom-image'&&!objectUrl)errors.set('image',{label:'Photo',message:'Upload a full-card image for the Custom Image template.'});
@@ -1519,7 +1524,7 @@
 
     let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
     galleryTemplateId=$('postTemplate').value;
-    function customCoverSelected(){return currentVariant==='ticket'&&$('scratchCoverSource').value==='upload';}
+    function customCoverSelected(){return currentVariant==='ticket'&&$('postTemplate').value===CUSTOM_COVER_OPTION;}
     function coverCropSettings(){return {zoom:Number($('scratchCoverZoom').value),panX:Number($('scratchCoverPanX').value),panY:Number($('scratchCoverPanY').value)};}
     function showCoverCropValues(){
       $('scratchCoverZoomValue').textContent=$('scratchCoverZoom').value+'%';
@@ -1528,28 +1533,15 @@
     function syncScratchSource(){
       const custom=customCoverSelected(),isTicket=currentVariant==='ticket';
       $('scratchCoverUploadField').hidden=!custom;
-      $('scratchCoverSource').disabled=!isTicket||busy;
       $('scratchCoverImage').required=custom&&!scratchCoverObjectUrl;
       $('scratchArtwork').required=isTicket&&!custom;
-      $('postTemplate').disabled=custom||busy;
-      if(custom){
-        if($('postTemplate').value!=='bg-wrap-sapphire'){
-          if($('postTemplate').value)galleryTemplateId=$('postTemplate').value;
-          $('postTemplate').value='bg-wrap-sapphire';customerLayout={};
-          customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;
-        }
-        $('scratchStyle').value='custom';
-      }else if(isTicket){
-        if(galleryTemplateId&&Array.from($('postTemplate').options).some(o=>o.value===galleryTemplateId))
-          $('postTemplate').value=galleryTemplateId;
-        $('scratchStyle').value='classic';fillCoverOptions();
-      }
+      $('postTemplate').disabled=busy||!isTicket;
+      $('scratchStyle').value=custom?'custom':(isTicket?'classic':$('scratchStyle').value);
       $('pairedCoverChoice').hidden=custom||$('scratchArtwork').options.length<2;
       showCoverCropValues();
       if(custom)$('scratchCoverFileName').textContent=selectedScratchImage?.name||
         (hasSavedScratchCover?'Saved uploaded artwork ready.':'No artwork uploaded yet.');
       postGuidance();
-      if(custom)$('postTemplateDescription').textContent='Sapphire Wrap — fixed for your uploaded artwork.';
     }
     let concertTemplateId = DEFAULT_CONCERT_TEMPLATE;
     let concertRevealThemeId = DEFAULT_CONCERT_REVEAL_THEME;
@@ -1597,7 +1589,7 @@
       $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
       $("scratchArtwork").required = !isConcert&&!customCoverSelected();
-      $("scratchCoverSource").disabled=isConcert;
+      // The existing gallery/design dropdown also offers custom artwork.
       $("concertTemplateSection").hidden = !isConcert;
       $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
@@ -1643,6 +1635,7 @@
     }
     function fillCoverOptions(){
       $('scratchArtwork').replaceChildren();
+      if(customCoverSelected()){$('pairedCoverChoice').hidden=true;return;}
       const matching=coversForTemplate($('postTemplate').value);
       for(const artwork of coverCatalogue.filter(a=>!a.archived&&matching.includes(a.id)))appendCover(artwork);
       if(!Array.from($('scratchArtwork').options).some(o=>o.value===scratchArtworkId))scratchArtworkId=$('scratchArtwork').options[0]?.value||'';
@@ -1663,6 +1656,7 @@
       postGroups.clear();
       $('postTemplate').replaceChildren();
       for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);
+      appendCustomCoverOption();
       if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;
       fillCoverOptions();
       syncScratchSource();
@@ -1670,12 +1664,6 @@
     }
 
     fillCoverOptions();syncScratchSource();
-    $('scratchCoverSource').addEventListener('change',()=>{
-      if(!ready||busy)return;
-      if(customCoverSelected()){galleryTemplateId=$('postTemplate').value;$('postTemplate').value='bg-wrap-sapphire';}
-      pendingReview=false;syncScratchSource();
-      setScratchPreview().then(()=>{if(!validationAttempted||updateInlineValidation())hide();}).catch(e=>show(e.message));
-    });
     for(const id of ['scratchCoverZoom','scratchCoverPanX','scratchCoverPanY'])
       $(id).addEventListener('input',()=>{pendingReview=false;showCoverCropValues();schedulePortraitPreview();});
     $('scratchCoverImage').addEventListener('change',async()=>{
@@ -1694,7 +1682,10 @@
       if(scratchCoverObjectUrl)URL.revokeObjectURL(scratchCoverObjectUrl);
       scratchCoverObjectUrl=null;selectedScratchImage=null;hasSavedScratchCover=false;
       $('scratchCoverImage').value='';
-      $('scratchCoverSource').value='gallery';pendingReview=false;syncScratchSource();
+      const gallery=Array.from($('postTemplate').options).some(o=>o.value===galleryTemplateId)
+        ? galleryTemplateId : POST_TEMPLATES[0].id;
+      $('postTemplate').value=gallery;pendingReview=false;
+      fillCoverOptions();syncScratchSource();
       setScratchPreview().then(hide).catch(e=>show(e.message));
     });
     function selectConcertOption(group,selected){
@@ -2250,7 +2241,7 @@
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         concertLivePreview.setVariant(currentVariant);
         const savedCustom=currentVariant==='ticket'&&savedSurface.surface.style==='custom'&&savedSurface.surface.hasImage;
-        $('scratchCoverSource').value=savedCustom?'upload':'gallery';
+        if(savedCustom)$('postTemplate').value=CUSTOM_COVER_OPTION;
         $('scratchStyle').value=savedSurface.surface.variant === "concert" ? "concert" : savedCustom?'custom':'classic';
         if(savedCustom){
           const response=await fetch('/api/reveals/'+encodeURIComponent(id)+'/scratch-surface/image',

@@ -207,7 +207,9 @@ test('ticket creator contains actual previews and separates the selected cover f
   assert.ok(creator.includes('id="scratchFoil"'));
   assert.ok(creator.includes('id="image"'));
   assert.ok(creator.includes('id="scratchCoverImage"'));
-  assert.ok(creator.includes('id="scratchCoverSource"'));
+  assert.ok(!creator.includes('id="scratchCoverSource"'));
+  assert.ok(creator.includes("option.textContent='Upload my own scratch artwork'"));
+  assert.ok(creator.includes("templateId:revealedTemplateId()"));
   assert.ok(creator.includes('id="scratchCoverZoom"'));
   assert.ok(creator.includes('bg-wrap-sapphire'));
   assert.ok(!creator.includes('id="scratchUploadField"'));
@@ -225,7 +227,7 @@ test('ticket creator contains actual previews and separates the selected cover f
   assert.ok(creator.includes('renderScratchOwnerPreview'));
   assert.ok(creator.includes('setScratchPreview().catch(error => show(error.message));'));
   assert.ok(creator.includes('scratchArtworkId'));
-  assert.ok(creator.includes('scratchCoverSource'));
+  assert.ok(!creator.includes('scratchCoverSource'));
   assert.ok(creator.includes('await setScratchPreview()'));
 });
 
