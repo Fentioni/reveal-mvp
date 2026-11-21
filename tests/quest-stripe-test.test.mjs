@@ -127,7 +127,12 @@ test('Scratch test checkout is separate, requires test keys and permits only sav
  const scratch={...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false',SCRATCH_TEST_CHECKOUT_ENABLED:'true',
  DB:{...envBase.DB,prepare(sql){return{bind(...args){this.args=args;return this;},async first(){
  if(sql.includes('quest_configs'))return null;
+ if(sql.includes('reveal_assets'))return this.args[0]==='private-scratch-cover'&&this.args[1]==='custom-record'
+    ?{id:'private-scratch-cover'}:null;
  if(this.args[0]==='scratch-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'ticket',style:'classic',artworkId:'luxury-coral-ribbon-primary'}})};
+ if(this.args[0]==='custom-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'ticket',style:'custom',postScratch:{templateId:'bg-wrap-sapphire'},coverAssetId:'private-scratch-cover'}})};
+ if(this.args[0]==='missing-upload-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'ticket',style:'custom',postScratch:{templateId:'bg-wrap-sapphire'},coverAssetId:'lost-cover'}})};
+ if(this.args[0]==='wrong-template-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'ticket',style:'custom',postScratch:{templateId:'bg-wrap-emerald'},coverAssetId:'private-scratch-cover'}})};
  if(this.args[0]==='concert-record')return{fields_json:JSON.stringify({scratchSurface:{variant:'concert',style:'concert'}})};
  return null;
  }}}}};
@@ -137,10 +142,12 @@ test('Scratch test checkout is separate, requires test keys and permits only sav
  const status=await questStripeTestResponse(req('/api/scratch/test-payment-status'),scratch,{},legacy);
  assert.equal((await status.json()).enabled,true);
  const count=legacy.calls.length;
- for(const id of ['concert-record','quiz-record','missing-record']){
+ for(const id of ['concert-record','quiz-record','missing-record','missing-upload-record','wrong-template-record']){
   assert.equal((await questStripeTestResponse(req('/api/reveals/'+id+'/checkout','POST'),scratch,{},legacy)).status,403);
  }
  assert.equal(legacy.calls.length,count);
  assert.equal((await questStripeTestResponse(req('/api/reveals/scratch-record/checkout','POST',{origin}),scratch,{},legacy)).status,200);
+ assert.equal((await questStripeTestResponse(req('/api/reveals/custom-record/checkout','POST',{origin}),scratch,{},legacy)).status,200,
+   'A saved custom scratch cover with private artwork and Sapphire Wrap must be able to pay in TEST mode');
  assert.equal(legacy.calls.at(-1).autoTax,'false');
 });

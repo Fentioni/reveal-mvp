@@ -77,10 +77,21 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
       .bind(checkout[1],'ticket-reveal').first();
     let fields;try{fields=JSON.parse(row?.fields_json||'null');}catch{}
     const surface=fields?.scratchSurface;
-    // Permit only a saved portrait Scratch Ticket, not concert, quiz, gender,
-    // legacy drafts or browser-supplied product identifiers.
-    allowed=surface?.variant==='ticket' && surface.style==='classic' &&
-      typeof surface.artworkId==='string' && !!surface.artworkId;
+    // Permit only saved portrait Scratch Tickets, never concert, quiz,
+    // gender, legacy or browser-supplied product IDs. A customer's uploaded
+    // cover must be backed by an actual private R2 asset and Sapphire Wrap.
+    if(surface?.variant==='ticket'){
+      if(surface.style==='classic'){
+        allowed=typeof surface.artworkId==='string' && !!surface.artworkId;
+      }else if(surface.style==='custom' &&
+               surface.postScratch?.templateId==='bg-wrap-sapphire' &&
+               typeof surface.coverAssetId==='string' && !!surface.coverAssetId){
+        const asset=await env.DB.prepare(
+          'SELECT id FROM reveal_assets WHERE id=? AND reveal_id=? AND kind=?'
+        ).bind(surface.coverAssetId,checkout[1],'scratch-cover').first();
+        allowed=Boolean(asset);
+      }
+    }
    }
   }catch{
    return reply({success:false,error:'Staging payment database is unavailable.'},503);
