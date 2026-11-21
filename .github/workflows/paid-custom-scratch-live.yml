@@ -1,0 +1,31 @@
+name: Paid custom Scratch Ticket end-to-end TEST (99p)
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - 'tools/verify-paid-custom-scratch-live.mjs'
+      - '.github/workflows/paid-custom-scratch-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  paid-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 13
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
+      - name: One 99p test-card checkout and recipient journey
+        env:
+          REVEAL_PAID_TEST: STAGING_TEST_ONLY
+        run: node tools/verify-paid-custom-scratch-live.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paid-custom-scratch-qa-artifacts
+          path: test-output/paid-custom-scratch/
