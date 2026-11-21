@@ -69,7 +69,7 @@ INSERT OR IGNORE INTO product_themes(product_id,theme_id,is_default) VALUES
 ('exam-results','celebration',1),('graduation-reveal','celebration',1),
 ('christmas-surprise','christmas',1),('valentines-reveal','romantic',1),('easter-surprise','celebration',1),
 ('custom-reveal','custom',1),('three-question-quiz','celebration',1),('reveal-quest','travel-adventure',1);
--- Explicitly configured base price for existing ticket product ONLY.
--- Stripe is responsible for actual tax and international presentment at checkout.
+-- UK launch price for a non-VAT-registered seller; no UK VAT is charged.
+-- International consumer digital-services tax obligations require separate review.
 INSERT OR IGNORE INTO product_prices(id,product_id,currency,country_code,amount_minor,tax_behavior,active)
-VALUES ('ticket-reveal-gbp','ticket-reveal','gbp',NULL,199,'exclusive',1);
+VALUES ('ticket-reveal-gbp','ticket-reveal','gbp',NULL,99,'unspecified',1);

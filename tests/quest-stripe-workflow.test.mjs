@@ -390,3 +390,29 @@ test('checkout retries reuse identical Stripe form data and idempotency key afte
   assert.equal((await worker.fetch(makeReq('/r/'+slug),env,{})).status,404);
  }finally{globalThis.fetch=original;sql.close();}
 });
+
+test('already pending £1.99 staging test checkout is reconciled at its original amount after price change',async()=>{
+ const {sql,env}=setup();
+ env.STAGING_DISABLE_CHECKOUT='true';
+ env.STRIPE_AUTOMATIC_TAX='false';
+ const now=new Date().toISOString(),paymentId='older-price-payment';
+ const oldPrice='price_1USbNbKEVPKWz2E9zmH0mabR';
+ const session={
+  id:'cs_test_older_pending',client_reference_id:revealId,mode:'payment',status:'complete',
+  payment_status:'paid',livemode:false,object:'checkout.session',currency:'gbp',
+  automatic_tax:{enabled:true,status:'complete'},amount_subtotal:199,amount_total:239,
+  payment_intent:'pi_test_older',
+  metadata:{integration:'reveal-mvp',reveal_id:revealId,payment_id:paymentId,price_id:oldPrice,revision:'1'}
+ };
+ try{
+  sql.prepare('UPDATE reveals SET status=? WHERE id=?').run('checkout',revealId);
+  sql.prepare("INSERT INTO payments (id,reveal_id,provider,amount_minor,currency,status,checkout_session_id,created_at,updated_at) VALUES (?,?, 'stripe',199,'gbp','pending',?,?,?)")
+    .run(paymentId,revealId,session.id,now,now);
+  const accepted=await worker.fetch(signed(event(session,{amount_subtotal:199,amount_total:239,automatic_tax:{enabled:true}})),env,{});
+  assert.equal(accepted.status,200);
+  assert.equal(sql.prepare('SELECT status FROM payments WHERE id=?').get(paymentId).status,'paid');
+  assert.equal(sql.prepare('SELECT status FROM reveals WHERE id=?').get(revealId).status,'paid');
+  const bad=new Date().toISOString();
+  assert.ok(bad);
+ }finally{sql.close();}
+});
