@@ -1596,9 +1596,16 @@ async function createStripeCheckout(
       );
     }
 
+    // Only in isolated staging: expose a non-sensitive Stripe error category
+    // to help diagnose TEST checkout failures. Never reveal keys or messages.
+    const diagnostic=env.STAGING_DISABLE_CHECKOUT==='true' &&
+      error instanceof StripeApiError
+      ? ' (test API '+error.status+'/'+
+        (error.diagnostic?.code||error.diagnostic?.type||'request_error')+')'
+      : '';
     fail(
       502,
-      'Stripe could not start checkout. Please try again.'
+      'Stripe could not start checkout'+diagnostic+'. Please try again.'
     );
   }
 
@@ -1815,6 +1822,11 @@ async function stripeRequest(
       'Content-Type',
       'application/x-www-form-urlencoded'
     );
+  }
+  // Stripe Managed Payments request controls require 2025-03-31.basil or
+  // later; the account default API version may predate this parameter.
+  if (path === '/checkout/sessions' && method === 'POST') {
+    headers.set('Stripe-Version', '2025-03-31.basil');
   }
 
   if (idempotencyKey) {

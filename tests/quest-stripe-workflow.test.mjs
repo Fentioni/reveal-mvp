@@ -71,6 +71,7 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
  globalThis.fetch=async(uri,options={})=>{
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   assert.equal(options.headers.get('Authorization'),'Bearer '+env.STRIPE_SECRET_KEY);
+  assert.equal(options.headers.get('Stripe-Version'),'2025-03-31.basil');
   form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'false');
   assert.equal(form.get('managed_payments[enabled]'),'false');
