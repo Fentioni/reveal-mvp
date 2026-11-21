@@ -426,3 +426,104 @@ test('already pending £1.99 staging test checkout is reconciled at its original
   assert.ok(bad);
  }finally{sql.close();}
 });
+
+
+test('signed TEST payment unlocks only the saved custom Sapphire Wrap recipient and private R2 cover',async()=>{
+ const {sql,env}=setup();
+ const originalFetch=globalThis.fetch;
+ const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVQIHWP4z8DwHwAFgAI/ScLbtAAAAABJRU5ErkJggg==','base64');
+ const assetId='private-cover-qa',objectKey='scratch-covers/signed-qa/image.png';
+ try{
+  env.SCRATCH_TEST_CHECKOUT_ENABLED='true';
+  sql.exec('DELETE FROM quest_configs');
+  sql.exec("CREATE TABLE reveal_assets (id TEXT PRIMARY KEY, reveal_id TEXT, kind TEXT, r2_key TEXT)");
+  sql.prepare('INSERT INTO reveal_assets (id,reveal_id,kind,r2_key) VALUES (?,?,?,?)')
+    .run(assetId,revealId,'scratch-cover',objectKey);
+  const saved={scratchSurface:{
+   style:'custom',foil:'gold',variant:'ticket',theme:'luxury-elegant',
+   coverAssetId:assetId,coverCrop:{zoom:150,panX:-30,panY:20},
+   postScratch:{templateId:'bg-wrap-sapphire'}
+  },audio:{enabled:false}};
+  sql.prepare('INSERT INTO reveal_configurations(reveal_id,product_id,fields_json) VALUES (?,?,?)')
+    .run(revealId,'ticket-reveal',JSON.stringify(saved));
+  env.IMAGES={
+   bucketName:'reveal-images-stage4b',
+   async get(key){
+    assert.equal(key,objectKey);
+    return {body:new Response(bytes).body,writeHttpMetadata(h){h.set('Content-Type','image/png');}};
+   }
+  };
+  const url='/r/'+slug;
+  const before=await worker.fetch(makeReq(url+'/scratch-data'),env,{});
+  assert.equal(before.status,404,'No recipient data before Stripe payment');
+  assert.equal((await worker.fetch(makeReq(url+'/scratch-cover'),env,{})).status,404);
+  assert.equal((await worker.fetch(makeReq(url),env,{})).status,404);
+  const owner=()=>worker.fetch(makeReq('/api/reveals/'+revealId,{
+   headers:{'X-Edit-Token':token}
+  }),env,{});
+  assert.equal((await (await owner()).json()).reveal.shareUrl,undefined);
+
+  let stripeSession;
+  globalThis.fetch=async(address,{body,headers}={})=>{
+   assert.equal(String(address),'https://api.stripe.com/v1/checkout/sessions');
+   assert.equal(headers.get('Stripe-Version'),'2025-03-31.basil');
+   const form=new URLSearchParams(body);
+   assert.equal(form.get('line_items[0][price]'),price);
+   assert.equal(form.get('automatic_tax[enabled]'),'false');
+   assert.equal(form.get('managed_payments[enabled]'),'false');
+   assert.equal(form.get('adaptive_pricing[enabled]'),'false');
+   stripeSession={
+    id:'cs_test_custom_sapphire_local',url:'https://checkout.stripe.com/c/pay/cs_test_custom_sapphire_local',
+    object:'checkout.session',mode:'payment',status:'open',payment_status:'unpaid',
+    livemode:false,amount_subtotal:99,amount_total:99,currency:'gbp',
+    automatic_tax:{enabled:false},managed_payments:{enabled:false},
+    adaptive_pricing:{enabled:false},
+    expires_at:Math.floor(Date.now()/1000)+3600,client_reference_id:revealId,
+    metadata:{integration:'reveal-mvp',reveal_id:revealId,
+      payment_id:form.get('metadata[payment_id]'),
+      price_id:form.get('metadata[price_id]'),revision:'1'}
+   };
+   return new Response(JSON.stringify(stripeSession),{status:200,headers:{'content-type':'application/json'}});
+  };
+  const checkout=await worker.fetch(makeReq('/api/reveals/'+revealId+'/checkout',{
+   method:'POST',headers:{'X-Edit-Token':token,origin}
+  }),env,{});
+  assert.equal(checkout.status,200,await checkout.clone().text());
+  assert.equal((await checkout.json()).checkoutUrl,stripeSession.url);
+  assert.equal(sql.prepare('SELECT status FROM reveals WHERE id=?').get(revealId).status,'checkout');
+  assert.equal((await worker.fetch(makeReq(url+'/scratch-data'),env,{})).status,404);
+  const wrong=await worker.fetch(signed(event(stripeSession,{amount_total:119})),env,{});
+  assert.equal(wrong.status,200);
+  assert.equal((await worker.fetch(makeReq(url+'/scratch-cover'),env,{})).status,404);
+  const tax=await worker.fetch(signed(event(stripeSession,{automatic_tax:{enabled:true}})),env,{});
+  assert.equal(tax.status,200);
+  assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
+  const realEvent=event(stripeSession);
+  const fulfilled=await worker.fetch(signed(realEvent),env,{});
+  assert.equal(fulfilled.status,200);
+  assert.equal(sql.prepare('SELECT status FROM payments').get().status,'paid');
+  assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'paid');
+  const paidOwner=(await (await owner()).json()).reveal;
+  assert.equal(paidOwner.shareUrl,url);
+  assert.equal(paidOwner.status,'paid');
+  const response=await worker.fetch(makeReq(url+'/scratch-data'),env,{});
+  assert.equal(response.status,200);
+  const data=await response.json();
+  assert.equal(data.success,true);
+  assert.equal(data.scratchSurface.style,'custom');
+  assert.equal(data.scratchSurface.hasImage,true);
+  assert.equal(data.scratchSurface.postScratch.templateId,'bg-wrap-sapphire');
+  assert.deepEqual(data.scratchSurface.coverCrop,{zoom:150,panX:-30,panY:20});
+  assert.equal(data.reveal.eventName,'Surprise: a trip to Rome!');
+  const cover=await worker.fetch(makeReq(url+'/scratch-cover'),env,{});
+  assert.equal(cover.status,200);
+  assert.equal(cover.headers.get('content-type'),'image/png');
+  assert.deepEqual(Buffer.from(await cover.arrayBuffer()),bytes);
+  assert.equal((await worker.fetch(makeReq(url+'/scratch-image'),env,{})).status,404);
+  const repeated=await worker.fetch(signed(realEvent),env,{});
+  assert.equal(repeated.status,200);
+  assert.equal(sql.prepare('SELECT COUNT(*) AS n FROM payments').get().n,1);
+ }finally{
+  globalThis.fetch=originalFetch;sql.close();
+ }
+});
