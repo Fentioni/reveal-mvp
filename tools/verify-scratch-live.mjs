@@ -114,7 +114,11 @@ try{
   await page.locator('#reviewButton:enabled').waitFor({timeout:20000});
   await page.locator('#scratchActualRevealed [data-edit-field="eventName"]').waitFor({state:'visible',timeout:20000});
   assert.equal(await page.locator('#concertZoomButton:visible').count(),0);
-  const activeIds=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));assert.equal(activeIds.length,18);assert.equal(new Set(activeIds).size,18);
+  const activeIds=await page.locator('#postTemplate option').evaluateAll(nodes=>nodes.map(n=>n.value));
+  const galleryIds=activeIds.filter(value=>value!=='upload-my-own-scratch-artwork');
+  assert.equal(galleryIds.length,POST_TEMPLATES.length);
+  assert.equal(new Set(activeIds).size,activeIds.length);
+  assert.ok(activeIds.includes('upload-my-own-scratch-artwork'),'Custom scratch artwork remains available');
   assert.equal(await page.locator('#recipient:visible,#eventName:visible,#ticketUrl:visible').count(),0);
   assert.equal(await page.locator('#scratchActualRevealed [data-edit-field]').count(),10);
   assert.equal(await page.locator('#venue:visible,#postVenueAddress:visible').count(),0);
