@@ -1521,6 +1521,10 @@ async function createStripeCheckout(
   // while Reveal is not VAT registered. Review any overseas obligations before
   // enabling international sales or changing this setting.
   form.set('automatic_tax[enabled]', env.STRIPE_AUTOMATIC_TAX === 'true' ? 'true' : 'false');
+  // Managed Payments is ON by default in our Stripe sandbox. It would make
+  // Stripe merchant of record and collect VAT irrespective of the seller's
+  // own VAT registration. Explicitly use ordinary checkout for this price.
+  form.set('managed_payments[enabled]', 'false');
 
   form.set(
     'expires_at',
@@ -1606,6 +1610,7 @@ async function createStripeCheckout(
     session.status === 'open' &&
     session.payment_status === 'unpaid' &&
     validStripeAmounts(session, payment.amount_minor, env.STRIPE_AUTOMATIC_TAX === 'true') &&
+    session.managed_payments?.enabled !== true &&
     (env.STRIPE_AUTOMATIC_TAX === 'true'
       ? session.automatic_tax?.enabled === true
       : session.automatic_tax?.enabled !== true) &&
@@ -2031,6 +2036,10 @@ async function stripeWebhook(
     session.metadata?.price_id === LEGACY_STAGING_PRICE_ID &&
     payment.amount_minor === LEGACY_STAGING_AMOUNT_MINOR;
   if (!currentPrice && !olderStagingPrice) return json({received:true});
+  // Never unlock a 99p standard-checkout product from a Managed Payments
+  // event: its legal merchant/tax treatment is a different product contract.
+  if (currentPrice && session.managed_payments?.enabled === true)
+    return json({received:true});
   const taxExpected = olderStagingPrice || env.STRIPE_AUTOMATIC_TAX === 'true';
   if (taxExpected ? session.automatic_tax?.enabled !== true : session.automatic_tax?.enabled === true)
     return json({received:true});

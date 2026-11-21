@@ -73,6 +73,7 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
   assert.equal(options.headers.get('Authorization'),'Bearer '+env.STRIPE_SECRET_KEY);
   form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'false');
+  assert.equal(form.get('managed_payments[enabled]'),'false');
   assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
@@ -118,8 +119,11 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
   const wrongMode=await worker.fetch(signed(event(session,{livemode:true})),env,{});
   assert.equal(wrongMode.status,200);
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
+  const managed=await worker.fetch(signed(event(session,{managed_payments:{enabled:true}})),env,{});
+  assert.equal(managed.status,200);
   const wrongTax=await worker.fetch(signed(event(session,{automatic_tax:{enabled:true}})),env,{});
   assert.equal(wrongTax.status,200);
+  await worker.fetch(signed(event(session,{managed_payments:{enabled:true}})),env,{});
   await worker.fetch(signed(event(session,{amount_total:119})),env,{});
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
@@ -304,6 +308,7 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   const form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'false');
+  assert.equal(form.get('managed_payments[enabled]'),'false');
   assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
