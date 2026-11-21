@@ -149,7 +149,10 @@ try{
  await exp.fill('12 / 34');
  const cvc=await findInput(owner,'input[name="cardCvc"],input[autocomplete="cc-csc"],input[placeholder*="CVC"],input[aria-label*="Security code" i]');
  await cvc.fill('123');
- await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete="postal-code"],input[placeholder*="Postcode" i]','SW1A 1AA');
+ // This CI browser is geolocated in the USA; use a syntactically valid
+ // ZIP for its displayed US billing-address field. The charge remains GBP.
+ await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete*="postal-code"],input[placeholder*="ZIP" i],input[placeholder*="Postcode" i]','10001');
+ await owner.screenshot({path:'test-output/paid-custom-scratch/stripe-filled-test-card.png',fullPage:true});
  // Only Stripe test checkout, validated above; no real money/card details.
  const submit=await findInput(owner,'button[type="submit"]',25000);
  assert.ok(!(await submit.isDisabled()),'Stripe payment button disabled: '+JSON.stringify(await collectInputs(owner)).slice(0,3200));
