@@ -2111,6 +2111,7 @@
 
         if (!pendingReview) {
           const body = new FormData();
+           if(currentVariant==='ticket')body.append('allowEmptyPersonalisation','true');
 
           for (const key of fields) {
             body.append(key, $(key).value);
@@ -2167,7 +2168,15 @@
             Object.fromEntries(CONCERT_TICKET_FIELDS.map(field=>[field.id,$(field.id).value.trim()]))
           ));
         }
-        if(currentVariant==='ticket')surfaceBody.append('postScratch',JSON.stringify(postSettings()));
+        if(currentVariant==='ticket'){
+           surfaceBody.append('postScratch',JSON.stringify(postSettings()));
+           if(selectedRevealBackground){
+             const bytes=await selectedRevealBackground.arrayBuffer();
+             if(!bytes.byteLength)throw new Error('Your reveal background is empty. Choose it again.');
+             surfaceBody.append('backgroundImage',new Blob([bytes],{type:selectedRevealBackground.type}),selectedRevealBackground.name);
+           }
+           if(removeRevealBackground)surfaceBody.append('removeBackground','1');
+         }
         surfaceBody.append("artworkId", currentVariant === "ticket"&&!customCoverSelected() ? scratchArtworkId : "");
         if(customCoverSelected()){
           surfaceBody.append('coverCrop',JSON.stringify(coverCropSettings()));
@@ -2282,6 +2291,15 @@
           {headers: {"X-Edit-Token": token}}
         );
         restorePostSettings(savedSurface.surface.postScratch);
+        if(savedSurface.surface.hasRevealBackground){
+          const backgroundResponse=await fetch('/api/reveals/'+encodeURIComponent(id)+'/scratch-surface/background',
+            {cache:'no-store',headers:{'X-Edit-Token':token}});
+          if(!backgroundResponse.ok)throw new Error('Your saved reveal background could not be restored. Reload before editing.');
+          const backgroundBlob=await backgroundResponse.blob();
+          if(!['image/jpeg','image/png','image/webp'].includes(backgroundBlob.type))throw new Error('Invalid saved reveal background.');
+          revealBackgroundUrl=URL.createObjectURL(backgroundBlob);
+          hasSavedRevealBackground=true;removeRevealBackground=false;syncRevealBackground();
+        }
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         concertLivePreview.setVariant(currentVariant);
         const savedCustom=currentVariant==='ticket'&&savedSurface.surface.style==='custom'&&savedSurface.surface.hasImage;
