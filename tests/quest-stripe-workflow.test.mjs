@@ -72,7 +72,7 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   assert.equal(options.headers.get('Authorization'),'Bearer '+env.STRIPE_SECRET_KEY);
   form=new URLSearchParams(options.body);
-  assert.equal(form.get('automatic_tax[enabled]'),null);
+  assert.equal(form.get('automatic_tax[enabled]'),'false');
   assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
@@ -303,7 +303,7 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
  globalThis.fetch=async(uri,options={})=>{
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   const form=new URLSearchParams(options.body);
-  assert.equal(form.get('automatic_tax[enabled]'),null);
+  assert.equal(form.get('automatic_tax[enabled]'),'false');
   assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);

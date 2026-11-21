@@ -111,7 +111,7 @@ test('Existing staging Worker blocks checkout without credentials and does not u
 test('Non-VAT-registered checkout costs 99p and does not activate Stripe Automatic Tax',()=>{
  const legacyCode=readFileSync(new URL('../src/legacy.js',import.meta.url),'utf8');
  const review=readFileSync(new URL('../public/reveal.html',import.meta.url),'utf8');
- assert.ok(legacyCode.includes("form.set('automatic_tax[enabled]', 'true')"));
+ assert.ok(legacyCode.includes("form.set('automatic_tax[enabled]', env.STRIPE_AUTOMATIC_TAX === 'true' ? 'true' : 'false')"));
  assert.ok(legacyCode.includes("session.automatic_tax?.enabled !== true"));
  assert.ok(!legacyCode.includes("form.set(\n    'billing_address_collection',\n    'required'\n  )"));
  assert.ok(review.includes("if(isStagingTest && isQuestReview && questTestPaymentReady)"));

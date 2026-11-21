@@ -1516,11 +1516,11 @@ async function createStripeCheckout(
 
   // Keep billing-address guidance in Reveal, not optional Stripe form fields.
 
-  // Automatic Tax is off for Reveal while the UK seller is not VAT registered.
-  // Preserve an explicit opt-in only if registration obligations later change.
-  if (env.STRIPE_AUTOMATIC_TAX === 'true') {
-    form.set('automatic_tax[enabled]', 'true');
-  }
+  // Explicitly disable Automatic Tax: the Stripe account may enable tax by
+  // default even when this request omits the parameter. No UK VAT is charged
+  // while Reveal is not VAT registered. Review any overseas obligations before
+  // enabling international sales or changing this setting.
+  form.set('automatic_tax[enabled]', env.STRIPE_AUTOMATIC_TAX === 'true' ? 'true' : 'false');
 
   form.set(
     'expires_at',
