@@ -2277,6 +2277,7 @@
           }
           selectConcertOption('concertTemplateChoices',concertTemplateId);
         }
+        if(!savedCustom&&currentVariant==='ticket')galleryTemplateId=$('postTemplate').value;
         scratchArtworkId=isMatchingPair($('postTemplate').value,savedSurface.surface.artworkId)?savedSurface.surface.artworkId:'';
         fillCoverOptions();
         syncScratchSource();
