@@ -123,7 +123,7 @@ test('actual private Scratch Ticket review matches paid card markup, geometry an
     await owner.route(staging+'/**',async route=>{
       const u=new URL(route.request().url()),p=u.pathname;
       if(p.startsWith('/api/template-designs/'))return route.fulfill({json:{revision:'base',template:null}});
-      if(p==='/api/scratch/test-payment-status')return route.fulfill({json:{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:true,baseAmountMinor:199,currency:'gbp'}});
+      if(p==='/api/scratch/test-payment-status')return route.fulfill({json:{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:false,baseAmountMinor:99,currency:'gbp'}});
       if(p.startsWith('/api/')){
         ownerRequests.push(p);
         assert.equal(route.request().headers()['x-edit-token'],'owner-edit-token');
@@ -1157,7 +1157,7 @@ test('paid purchaser can copy and share the clean opaque recipient link and down
   await page.route('**/api/reveals/share-test/quiz',r=>r.fulfill({status:404}));
   await page.route('**/api/reveals/share-test/gender',r=>r.fulfill({status:404}));
   await page.route('**/api/reveals/share-test/scratch-surface',r=>r.fulfill({json:{success:true,surface:{...sample.scratchSurface,postScratch:{templateId:PAIRED_TEMPLATES[0].id}},audio:{enabled:false}}}));
-  await page.route('**/api/scratch/test-payment-status',r=>r.fulfill({json:{success:true,environment:'staging',mode:'test',enabled:true,automaticTax:true}}));
+  await page.route('**/api/scratch/test-payment-status',r=>r.fulfill({json:{success:true,environment:'staging',mode:'test',enabled:true,automaticTax:false}}));
   await page.goto(base+'/reveal?id=share-test');await page.locator('#scratchActualReview:visible').waitFor();
   assert.equal(await page.locator('#paidStage').isVisible(),false);
   assert.equal(await page.locator('#shareInput').inputValue(),'');

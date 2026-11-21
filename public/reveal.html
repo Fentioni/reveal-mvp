@@ -1601,7 +1601,8 @@
         const data = await response.json();
         questTestPaymentReady = data.environment === 'staging' &&
           data.mode === 'test' && data.enabled === true &&
-          data.automaticTax === true;
+          data.automaticTax === false && data.baseAmountMinor === 99 &&
+          data.currency === 'gbp' && data.checkoutRevision === 'no-vat-99p-1';
       }catch {
         // Fail closed: an unavailable status endpoint must not show checkout.
       }
@@ -1613,7 +1614,8 @@
         const response=await fetch('/api/scratch/test-payment-status',{cache:'no-store'});
         if(!response.ok)return;
         const data=await response.json();
-        scratchTestPaymentReady=data.environment==='staging'&&data.mode==='test'&&data.enabled===true&&data.automaticTax===true;
+        scratchTestPaymentReady=data.environment==='staging'&&data.mode==='test'&&data.enabled===true&&
+          data.automaticTax===false&&data.baseAmountMinor===99&&data.currency==='gbp'&&data.checkoutRevision==='no-vat-99p-1';
       }catch{}
     }
 

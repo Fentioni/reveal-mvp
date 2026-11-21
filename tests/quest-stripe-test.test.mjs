@@ -118,6 +118,7 @@ test('Non-VAT-registered checkout costs 99p and does not activate Stripe Automat
  assert.ok(review.includes("if(isStagingTest && isQuestReview && questTestPaymentReady)"));
  assert.ok(review.includes("isQuestReview && questTestPaymentReady"));
  assert.ok(review.includes('One-off 99p total'));
+ assert.ok(review.includes("data.automaticTax===false&&data.baseAmountMinor===99"));
  assert.ok(!review.includes('£2.39'));
 });
 
