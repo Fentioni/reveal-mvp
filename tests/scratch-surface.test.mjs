@@ -96,7 +96,7 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   const {env,legacy,state} = makeMocks();
   const before = await scratchSurfaceResponse(request(),env,{},legacy);
   assert.equal(before.status,200);
-  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS,templateId:'bg-wrap-sapphire'},coverCrop:{zoom:100,panX:0,panY:0}});
+  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const body = new FormData();
   body.append('style','theatre');body.append('foil','rose');
   const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
@@ -136,7 +136,7 @@ test('owner can store a custom scratch image privately and retrieve it with a to
   body.append('coverImage',pngFile(), 'cover.png');
   const response = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(response.status,200);
-  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,variant:'ticket',coverCrop:{zoom:100,panX:0,panY:0},postScratch:{...DEFAULT_POST_SETTINGS,templateId:'bg-wrap-sapphire'}});
   assert.equal(state.stored.size,1);
   assert.equal(state.asset.r2_key.startsWith('scratch-covers/test-reveal/'),true);
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.coverAssetId,state.asset.id);

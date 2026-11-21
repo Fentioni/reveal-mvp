@@ -140,8 +140,8 @@ test('public demo uses invented ticket details, keeps commercial drafts protecte
   for (const foil of ['gold','silver','midnight','rose'])
     assert.ok(creator.includes('data-scratch-foil="' + foil + '"'));
   assert.ok(creator.includes('id="image"'));
-  assert.ok(!creator.includes('id="scratchCoverImage"'));
-  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);
+  assert.ok(creator.includes('id="scratchCoverImage"'));
+  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,2);
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(demo.includes('Fictional demo') || demo.includes('fictional example'));
 

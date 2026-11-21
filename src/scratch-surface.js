@@ -210,7 +210,11 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       try{postScratch=checkPostSettings(JSON.parse(raw));}catch{return error('Invalid revealed template settings.');}
       if(!postScratch)return error('Invalid revealed template settings.');
       if(postScratch.layout){try{const master=await getPublishedTemplate(env,postScratch.templateId);if(!master)return error('Template unavailable.');validateCustomerLayout(master,postScratch.layout,postScratch.imageOrientation);}catch(e){return error(e.message||'Invalid customised layout.');}}
-      if(postScratch.templateId!==current.surface.postScratch?.templateId){const entries=await getTemplateCatalogue(env);if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');}
+      if(postScratch.templateId!==current.surface.postScratch?.templateId &&
+          !(style==='custom'&&postScratch.templateId===CUSTOM_TEMPLATE)){
+        const entries=await getTemplateCatalogue(env);
+        if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');
+      }
     }
     // An uploaded cover is an independent front image. Its revealed face is
     // always Sapphire Wrap, whereas gallery covers retain their strict pairs.
@@ -218,8 +222,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if(body.has('postScratch') && postScratch.templateId!==CUSTOM_TEMPLATE)
         return error('Uploaded scratch artwork must use the Sapphire Wrap reveal template.');
       postScratch={...postScratch,templateId:CUSTOM_TEMPLATE};
-      if(!(await getTemplateCatalogue(env)).some(t=>t.id===CUSTOM_TEMPLATE&&!t.archived))
-        return error('Sapphire Wrap is not currently available.');
+      if(!getPairedProduct(CUSTOM_TEMPLATE))return error('Sapphire Wrap is not currently available.');
       artworkId=null;
     }
     if(variant!=='concert'&&style!=='custom'&&(body.has('postScratch')||body.has('artworkId'))){
