@@ -1525,6 +1525,9 @@ async function createStripeCheckout(
   // Stripe merchant of record and collect VAT irrespective of the seller's
   // own VAT registration. Explicitly use ordinary checkout for this price.
   form.set('managed_payments[enabled]', 'false');
+  // UK-first fixed pricing: prevent account-default currency conversion and
+  // added FX charges from changing the advertised 99p GBP customer total.
+  form.set('adaptive_pricing[enabled]', 'false');
 
   form.set(
     'expires_at',
@@ -1618,6 +1621,7 @@ async function createStripeCheckout(
     session.payment_status === 'unpaid' &&
     validStripeAmounts(session, payment.amount_minor, env.STRIPE_AUTOMATIC_TAX === 'true') &&
     session.managed_payments?.enabled !== true &&
+    session.adaptive_pricing?.enabled !== true &&
     (env.STRIPE_AUTOMATIC_TAX === 'true'
       ? session.automatic_tax?.enabled === true
       : session.automatic_tax?.enabled !== true) &&
@@ -2050,7 +2054,7 @@ async function stripeWebhook(
   if (!currentPrice && !olderStagingPrice) return json({received:true});
   // Never unlock a 99p standard-checkout product from a Managed Payments
   // event: its legal merchant/tax treatment is a different product contract.
-  if (currentPrice && session.managed_payments?.enabled === true)
+  if (currentPrice && (session.managed_payments?.enabled === true || session.adaptive_pricing?.enabled === true))
     return json({received:true});
   const taxExpected = olderStagingPrice || env.STRIPE_AUTOMATIC_TAX === 'true';
   if (taxExpected ? session.automatic_tax?.enabled !== true : session.automatic_tax?.enabled === true)

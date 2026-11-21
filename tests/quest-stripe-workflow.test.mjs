@@ -75,6 +75,7 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
   form=new URLSearchParams(options.body);
   assert.equal(form.get('automatic_tax[enabled]'),'false');
   assert.equal(form.get('managed_payments[enabled]'),'false');
+  assert.equal(form.get('adaptive_pricing[enabled]'),'false');
   assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
@@ -122,6 +123,9 @@ test('99p Stripe test checkout with no VAT only unlocks after correctly signed w
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
   const managed=await worker.fetch(signed(event(session,{managed_payments:{enabled:true}})),env,{});
   assert.equal(managed.status,200);
+  const wrongCurrency=await worker.fetch(signed(event(session,{adaptive_pricing:{enabled:true}})),env,{});
+  assert.equal(wrongCurrency.status,200);
+  assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
   const wrongTax=await worker.fetch(signed(event(session,{automatic_tax:{enabled:true}})),env,{});
   assert.equal(wrongTax.status,200);
   await worker.fetch(signed(event(session,{managed_payments:{enabled:true}})),env,{});

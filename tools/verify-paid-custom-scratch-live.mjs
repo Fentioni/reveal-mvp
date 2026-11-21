@@ -126,24 +126,15 @@ try{
  assert.equal((await ownerData()).shareUrl,undefined,'Payment must not unlock before a signed webhook');
  pass('Owner clicked checkout; hosted Stripe TEST session opened; paid link still locked');
  await owner.screenshot({path:'test-output/paid-custom-scratch/stripe-before-payment.png',fullPage:true});
- // GitHub-hosted browser geolocates to the US; choose the legitimate GBP
- // presentation option so this exact £0.99 contract is tested without FX.
- const currencyFrame=owner.frames().find(f=>f.url().includes('currency-selector'));
- if(currencyFrame){
-  const gbp=currencyFrame.locator('label[for="currency-gbp"]');
-  if(await gbp.count())await gbp.click({timeout:12000});
-  else await currencyFrame.getByText('£0.99',{exact:false}).first().click({timeout:12000});
-  assert.equal(await currencyFrame.locator('#currency-gbp').isChecked(),true,'GBP 99p must be chosen');
-  console.log('INFO: Stripe hosted checkout set to GBP 99p');
- }
- // Stripe Checkout renders a collapsed Card payment method in its secure
- // iframe. Expand it through the ordinary customer-facing control.
+ // The fixed GBP 99p Checkout disables Stripe's auto-conversion. Select
+ // the customer-facing Card method; Stripe renders the card form only
+ // after it is expanded inside the secure payment iframe.
+ const email='qa-custom-scratch-'+Date.now()+'@example.com';
+ await (await findInput(owner,'input[type="email"],input[name="email"],input[autocomplete="email"]')).fill(email);
  const paymentFrame=owner.frames().find(f=>f.url().includes('elements-inner-habanero'));
  assert.ok(paymentFrame,'Stripe hosted payment methods did not load.');
  await paymentFrame.getByText('Card',{exact:true}).first().click({timeout:15000});
  await findInput(owner,'input[autocomplete="cc-number"],input[aria-label*="Card number" i]');
- const email='qa-custom-scratch-'+Date.now()+'@example.com';
- await (await findInput(owner,'input[type="email"],input[name="email"],input[autocomplete="email"]')).fill(email);
  await optionalFill(owner,'input[name="billingName"],input[autocomplete="cc-name"],input[placeholder*="cardholder" i]','Reveal QA');
  const card=await findInput(owner,'input[name="cardNumber"],input[autocomplete="cc-number"],input[placeholder*="1234"],input[aria-label*="Card number" i]',25000);
  await card.fill('4242424242424242');
