@@ -71,7 +71,7 @@ function mountInlineEditor(card,face,edit){
  for(const slot of face.svg.querySelectorAll('[data-slot]')){
   const meta=inlineFields[slot.dataset.slot],box=slot.querySelector(':scope > rect');
   if(!meta||!box)continue;
-  const [id,label,type,max,required]=meta,wrap=make('div','','inline-ticket-field'),control=make(type==='textarea'?'textarea':'input');
+  const [id,label,type,max,markedRequired]=meta,required=markedRequired&&!edit.optionalFields,wrap=make('div','','inline-ticket-field'),control=make(type==='textarea'?'textarea':'input');
   positionInline(wrap,box);
   wrap.dataset.inlineZone=slot.dataset.slot;control.dataset.editField=id;
   if(type!=='textarea')control.type=type;else control.rows=2;
