@@ -4,6 +4,7 @@ on:
     branches:
       - feature/scratch-template-integration
       - feature/stage4b-cloudflare-staging
+      - feature/reveal-custom-background-optional-fields
 permissions:
   contents: read
 jobs:
