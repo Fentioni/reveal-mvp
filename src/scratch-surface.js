@@ -329,7 +329,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           ...(artworkId ? {artworkId} : {}),
           ...(style==='custom'?{coverCrop}:{}),
           variant,
-          ...(variant!=='concert'?{postScratch}:{}),
+          ...(variant!=='concert'?{postScratch,...(backgroundAssetId?{revealBackgroundAssetId:backgroundAssetId}:{})}:{}),
           ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode,ticketDetails} : {}),
           coverAssetId:style==='custom' ? newAssetId : null
         },
