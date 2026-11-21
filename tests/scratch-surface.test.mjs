@@ -10,7 +10,7 @@ import worker from '../src/index.js';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 
 function makeMocks() {
-  const state = {config:null,asset:null,stored:new Map(),authorised:0};
+  const state = {config:null,asset:null,backgroundAsset:null,stored:new Map(),authorised:0};
   const db = {
     prepare(sql) {
       const statement = {
@@ -18,7 +18,7 @@ function makeMocks() {
         bind(...args) {this.args = args; return this;},
         async first() {
           if (sql.startsWith('SELECT fields_json')) return state.config;
-          if (sql.startsWith('SELECT id,r2_key')) return state.asset;
+          if (sql.startsWith('SELECT id,r2_key')) return this.args[1]==='reveal-background'?state.backgroundAsset:state.asset;
           return null;
         }
       };
@@ -28,11 +28,11 @@ function makeMocks() {
       for(const stmt of statements) {
         const {sql,args} = stmt;
         if (sql.startsWith('INSERT INTO reveal_assets')) {
-          state.asset = {id:args[0],r2_key:args[2]};
+          state[args[3]==='reveal-background'?'backgroundAsset':'asset'] = {id:args[0],r2_key:args[2]};
         } else if (sql.startsWith('UPDATE reveal_assets')) {
-          state.asset = {id:args[1],r2_key:args[0]};
+          state[args[3]==='reveal-background'?'backgroundAsset':'asset'] = {id:args[1],r2_key:args[0]};
         } else if (sql.startsWith('DELETE FROM reveal_assets')) {
-          state.asset = null;
+          state[args[2]==='reveal-background'?'backgroundAsset':'asset'] = null;
         } else if (sql.startsWith('INSERT INTO reveal_configurations')) {
           state.config = {fields_json:args[2]};
         } else {
@@ -96,17 +96,17 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   const {env,legacy,state} = makeMocks();
   const before = await scratchSurfaceResponse(request(),env,{},legacy);
   assert.equal(before.status,200);
-  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,hasRevealBackground:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const body = new FormData();
   body.append('style','theatre');body.append('foil','rose');
   const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(saved.status,200);
-  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual((await saved.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,hasRevealBackground:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const fields = JSON.parse(state.config.fields_json);
   assert.equal(fields.scratchSurface.style,'theatre');
   assert.equal(fields.scratchSurface.coverAssetId,null);
   const fetched = await scratchSurfaceResponse(request(),env,{},legacy);
-  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual((await fetched.json()).surface,{style:'theatre',foil:'rose',theme:'luxury-elegant',hasImage:false,hasRevealBackground:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
 });
 
 test('Paired cover selection is validated and persisted without exposing uploads', async () => {
@@ -136,7 +136,7 @@ test('owner can store a custom scratch image privately and retrieve it with a to
   body.append('coverImage',pngFile(), 'cover.png');
   const response = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
   assert.equal(response.status,200);
-  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,variant:'ticket',coverCrop:{zoom:100,panX:0,panY:0},postScratch:{...DEFAULT_POST_SETTINGS,templateId:'bg-wrap-sapphire'}});
+  assert.deepEqual((await response.json()).surface,{style:'custom',foil:'silver',theme:'luxury-elegant',hasImage:true,hasRevealBackground:false,variant:'ticket',coverCrop:{zoom:100,panX:0,panY:0},postScratch:{...DEFAULT_POST_SETTINGS,templateId:'bg-wrap-sapphire'}});
   assert.equal(state.stored.size,1);
   assert.equal(state.asset.r2_key.startsWith('scratch-covers/test-reveal/'),true);
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.coverAssetId,state.asset.id);
@@ -474,7 +474,7 @@ test('all 13 scratch themes persist on the same draft without changing artwork o
   const saved=await scratchSurfaceResponse(request('PUT',form),env,{},legacy);
   assert.equal(saved.status,200,theme);
   const response=await saved.json();
-  assert.deepEqual(response.surface,{style:'classic',foil:'rose',theme,hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual(response.surface,{style:'classic',foil:'rose',theme,hasImage:false,hasRevealBackground:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
   const fetched=await scratchSurfaceResponse(request('GET'),env,{},legacy);
   assert.deepEqual((await fetched.json()).surface,response.surface);
   const fields=JSON.parse(state.config.fields_json);
@@ -556,4 +556,48 @@ test('customer layout is validated, persisted and restored without mutating the 
   const bad=new FormData();bad.set('style','classic');bad.set('foil','gold');bad.set('postScratch',JSON.stringify({templateId:'bg-luxury-champagne-gold',layout:invalid}));
   const response=await scratchSurfaceResponse(request('PUT',bad),env,{},legacy);assert.equal(response.status,400);
  }
+});
+
+
+test('custom reveal background is independent, owner-private, replaceable and removable',async()=>{
+ const {state,env,legacy}=makeMocks();
+ const upload=new FormData();upload.set('style','classic');upload.set('foil','gold');
+ upload.set('backgroundImage',pngFile(1800,2400),'personal-art.png');
+ const created=await scratchSurfaceResponse(request('PUT',upload),env,{},legacy);
+ assert.equal(created.status,200);
+ assert.equal((await created.json()).surface.hasRevealBackground,true);
+ assert.equal(state.asset,null,'a background must not create a scratch-cover asset');
+ assert.ok(state.backgroundAsset.r2_key.startsWith('reveal-backgrounds/test-reveal/'));
+ const owner=await scratchSurfaceResponse(request('GET'),env,{},legacy);
+ assert.equal((await owner.json()).surface.hasRevealBackground,true);
+ const image=await scratchSurfaceResponse(request('GET',undefined,'valid-private-token','/background'),env,{},legacy);
+ assert.equal(image.status,200);
+ assert.equal(image.headers.get('content-type'),'image/png');
+ assert.equal(image.headers.get('cache-control'),'private, no-store');
+ assert.equal((await scratchSurfaceResponse(request('GET',undefined,'wrong','/background'),env,{},legacy)).status,403);
+ const key=state.backgroundAsset.r2_key;
+ const removal=new FormData();removal.set('style','classic');removal.set('foil','gold');removal.set('removeBackground','1');
+ const removed=await scratchSurfaceResponse(request('PUT',removal),env,{},legacy);
+ assert.equal((await removed.json()).surface.hasRevealBackground,false);
+ assert.equal(state.backgroundAsset,null);
+ assert.equal(state.stored.has(key),false);
+ assert.equal((await scratchSurfaceResponse(request('GET',undefined,'valid-private-token','/background'),env,{},legacy)).status,404);
+});
+
+test('Scratch Ticket creator allows empty details and overlays optional customer background',()=>{
+ const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
+ const renderer=fs.readFileSync(path.join(root,'public/post-scratch-renderer.js'),'utf8');
+ const face=fs.readFileSync(path.join(root,'public/post-scratch-face.js'),'utf8');
+ const recipient=fs.readFileSync(path.join(root,'public/recipient-scratch.html'),'utf8');
+ const worker=fs.readFileSync(path.join(root,'src/legacy.js'),'utf8');
+ assert.ok(creator.includes('id="revealBackgroundImage"'));
+ assert.ok(creator.includes("body.append('allowEmptyPersonalisation','true')"));
+ assert.ok(creator.includes("surfaceBody.append('backgroundImage'"));
+ assert.ok(creator.includes("surfaceBody.append('removeBackground','1')"));
+ assert.ok(creator.includes("required=isConcert"));
+ assert.ok(worker.includes("form.get('allowEmptyPersonalisation') !== 'true'"));
+ assert.ok(renderer.includes('options.backgroundSrc'));
+ assert.ok(renderer.includes('if(!value&&!ghost)continue'));
+ assert.ok(face.includes("backgroundSrc=''"));
+ assert.ok(recipient.includes('/scratch-background'));
 });
