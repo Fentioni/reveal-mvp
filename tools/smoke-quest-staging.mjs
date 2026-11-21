@@ -34,7 +34,7 @@ for(let attempt=0;attempt<12;attempt++){
     });
     const data=res.ok?await res.json():null;
     if(data?.environment==='staging' && data.mode==='test' && data.enabled===true &&
-      data.automaticTax===true && data.baseAmountMinor===199 && data.currency==='gbp'){
+      data.automaticTax===false && data.baseAmountMinor===99 && data.currency==='gbp' && data.checkoutRevision==='no-vat-99p-1'){
       payment=data;break;
     }
     console.log('Quest checkout readiness '+(attempt+1)+'/12: '+JSON.stringify({
@@ -44,7 +44,7 @@ for(let attempt=0;attempt<12;attempt++){
   await sleep(7000);
 }
 if(!payment)throw Error('Quest TEST checkout did not become ready. Verify staging deployment, both encrypted secrets and correct test-mode keys.');
-console.log('Quest Stripe TEST checkout is ENABLED for Reveal Quest only; non-Quest payment routes remain blocked.');
+console.log('Quest Stripe TEST checkout uses 99p standard payments with no VAT. Unapproved product routes remain blocked.');
 const blocked=await fetch(origin+'/api/reveals/not-a-quest/checkout',{method:'POST',signal:AbortSignal.timeout(10000)});
 if(blocked.status!==403)throw Error('Non-Quest checkout must remain blocked in staging.');
 console.log('Unrelated staging products cannot start checkout.');
