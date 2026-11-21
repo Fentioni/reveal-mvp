@@ -23,7 +23,7 @@ for(const {name,engine,options} of modes){
   assert.ok(r.ok());
   await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
   assert.equal(await page.locator('#scratchCoverSource').count(),0,'No extra dropdown should exist');
-  assert.equal(await page.locator('#postTemplate option:last-child').textContent(),'Upload my own scratch artwork');
+  assert.equal(await page.locator('#postTemplate > option:last-child').textContent(),'Upload my own scratch artwork');
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),false);
   const gallery=await page.locator('#postTemplate').inputValue();
   await page.locator('#postTemplate').selectOption('upload-my-own-scratch-artwork');
