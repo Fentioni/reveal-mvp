@@ -46,6 +46,7 @@ for(const {name,engine,options} of modes){
   // The existing single preview must show the customer's image as the front.
   const imageReady=()=>page.locator('#scratchActualCovered').evaluate(e=>!!e.shadowRoot?.querySelector('#foilCanvas'));
   assert.ok(await imageReady());
+  await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const [k,v] of Object.entries({eventName:'Custom Scratch QA',recipient:'Chloe',sender:'Reveal QA'})){
    const field=page.locator('#scratchActualRevealed [data-edit-field="'+k+'"]');
    await field.focus();await field.fill(v);
