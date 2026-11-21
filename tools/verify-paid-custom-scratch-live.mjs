@@ -135,10 +135,9 @@ try{
  await exp.fill('12 / 34');
  const cvc=await findInput(owner,'input[name="cardCvc"],input[autocomplete="cc-csc"],input[placeholder*="CVC"],input[aria-label*="Security code" i]');
  await cvc.fill('123');
- await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete="postal-code"],input[placeholder*="Postcode" i]','SW1A 1AA');
+ await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete="postal-code"],input[placeholder*="Postcode" i]','10001');
  // Only Stripe test checkout, validated above; no real money/card details.
- const submit=owner.locator('button[type="submit"]').filter({hasText:/Pay|Confirm/i}).first();
- await submit.waitFor({state:'visible',timeout:20000});
+ const submit=await findInput(owner,'button[type="submit"]',25000);
  assert.ok(!(await submit.isDisabled()),'Stripe payment button disabled: '+JSON.stringify(await collectInputs(owner)).slice(0,3200));
  submittedPayment=true;
  await submit.click();
