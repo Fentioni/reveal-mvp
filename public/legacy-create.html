@@ -899,6 +899,13 @@
               <input id="scratchCoverPanY" type="range" min="-100" max="100" step="5" value="0">
               <button id="scratchCoverRemove" type="button" class="button button-secondary">Remove upload and use gallery</button>
             </div>
+            <div id="revealBackgroundControls" class="scratch-cover-upload-field">
+              <label for="revealBackgroundImage">Your own revealed background (optional)</label>
+              <input id="revealBackgroundImage" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="revealBackgroundHelp">
+              <p id="revealBackgroundHelp" class="field-help">Add your own image behind the personalised fields, instead of the template background. JPEG, PNG or WebP; maximum 10 MB, minimum 640 × 640 px. Best results: 1800 × 2400 px (portrait 3:4). Only visible after scratching.</p>
+              <p id="revealBackgroundStatus" class="field-help" role="status">Using the selected template background.</p>
+              <button id="revealBackgroundRemove" type="button" class="button button-secondary" hidden>Remove background and restore template artwork</button>
+            </div>
           </section>
 
           <div id="concertPickers" class="concert-pickers">
@@ -949,6 +956,7 @@
             </div>
           </div>
           <h3 class="details-subhead">Personalise the surprise</h3>
+          <p id="ticketOptionalCopy" class="field-help">Every field is optional. Leave anything blank and it will not appear on the final reveal.</p>
           <div class="field">
             <label for="recipient">Who is it for?</label>
             <input
@@ -1330,6 +1338,10 @@
     let selectedScratchImage=null;
     let scratchCoverObjectUrl=null;
     let hasSavedScratchCover=false;
+    let selectedRevealBackground=null;
+    let revealBackgroundUrl=null;
+    let hasSavedRevealBackground=false;
+    let removeRevealBackground=false;
     let galleryTemplateId='';
     const CUSTOM_COVER_OPTION='upload-my-own-scratch-artwork';
     const CUSTOM_COVER_TEMPLATE='bg-wrap-sapphire';
@@ -1400,7 +1412,7 @@
       reveal.hasImage=Boolean(objectUrl);return {reveal,settings:postSettings()};
     }
     let validationAttempted=false,validationMessage='';
-    const requiredInline={recipient:'To',sender:'From',eventName:'Surprise title'};
+    const requiredInline={}; // The Scratch Ticket hides every unfilled field.
     function inlineErrors(){
       const errors=new Map();
       for(const [key,label] of Object.entries(requiredInline))if(!$(key).value.trim())errors.set(key,{label,message:'Enter '+(key==='recipient'?'the recipient’s name.':key==='sender'?'who the surprise is from.':'the surprise title.')});
@@ -1462,7 +1474,7 @@
     const creatorInlineEditor={
       value:key=>$(key).value,
       write:(key,value)=>{if(!ready||busy)return;$(key).value=value;pendingReview=false;preview(false);updateInlineValidation();},
-      read:currentPortraitData,onOverflow:overflow=>{inlineWarning(overflow);updateInlineValidation();},
+      read:currentPortraitData,optionalFields:true,onOverflow:overflow=>{inlineWarning(overflow);updateInlineValidation();},
       design:customerDesign,
       writeDesign:layout=>{customerLayout=layout;pendingReview=false;},
       chooseImage:()=>{if(ready&&!busy)$('image').click();},
@@ -1495,14 +1507,15 @@
       const custom=customCoverSelected(),coverImage=custom?scratchCoverObjectUrl:'';
       const surface={style:custom?'custom':'classic',foil:$('scratchFoil').value,
         artworkId:custom?null:scratchArtworkId,hasImage:custom&&Boolean(coverImage),
-        coverCrop:coverCropSettings(),variant:'ticket',postScratch:settings};
+        coverCrop:coverCropSettings(),variant:'ticket',postScratch:settings,
+        hasRevealBackground:Boolean(revealBackgroundUrl)};
       postGuidance();
       const artwork=custom?(coverImage?null:getScratchArtwork('wrap-sapphire-primary')):getScratchArtwork(scratchArtworkId);
       const image=objectUrl;
       const run=async()=>{
         if(generation!==portraitPreviewRevision||currentVariant!=='ticket')return;
         await renderScratchOwnerPreview($('scratchCreatorActual'),{
-          reveal,surface,artwork,eventImage:image,coverImage:coverImage||'',guides:true,edit:creatorInlineEditor,
+          reveal,surface,artwork,eventImage:image,revealBackground:revealBackgroundUrl||'',coverImage:coverImage||'',guides:true,edit:creatorInlineEditor,
           audio:{enabled:$('scratchAudioEnabled').checked},
           hosts:{covered:$('scratchActualCovered'),revealed:$('scratchActualRevealed'),sound:$('scratchActualSound')}
         });
@@ -1583,6 +1596,9 @@
         button.title = foilLabels[button.dataset.scratchFoil];
       }
       $('postScratchControls').hidden=isConcert;
+      $('revealBackgroundControls').hidden=isConcert;
+      $('ticketOptionalCopy').hidden=isConcert;
+      for(const key of ['recipient','sender','eventName'])$(key).required=isConcert;
       syncPostImageEditor();
       $('postSubtitleField').hidden=true;
       $('postVenueAddressField').hidden=true;
@@ -1664,6 +1680,34 @@
     }
 
     fillCoverOptions();syncScratchSource();
+    function syncRevealBackground(){
+      $('revealBackgroundStatus').textContent=revealBackgroundUrl
+        ? selectedRevealBackground?.name || (hasSavedRevealBackground?'Your saved custom reveal background is ready.':'Custom background selected.')
+        : 'Using the selected template background.';
+      $('revealBackgroundRemove').hidden=!revealBackgroundUrl;
+    }
+    syncRevealBackground();
+    $('revealBackgroundImage').addEventListener('change',async()=>{
+      if(!ready||busy)return;
+      const file=$('revealBackgroundImage').files?.[0];if(!file)return;
+      try{
+        const url=await examineScratchFile(file);
+        if(revealBackgroundUrl)URL.revokeObjectURL(revealBackgroundUrl);
+        revealBackgroundUrl=url;selectedRevealBackground=file;
+        hasSavedRevealBackground=false;removeRevealBackground=false;pendingReview=false;
+        syncRevealBackground();
+        $('scratchCreatorActual').querySelector('[data-scratch-preview-mode="revealed"]')?.click();
+        await refreshPortraitPreview();hide();
+      }catch(error){$('revealBackgroundImage').value='';show(error.message);}
+    });
+    $('revealBackgroundRemove').addEventListener('click',()=>{
+      if(!ready||busy)return;
+      if(revealBackgroundUrl)URL.revokeObjectURL(revealBackgroundUrl);
+      revealBackgroundUrl=null;selectedRevealBackground=null;hasSavedRevealBackground=false;
+      removeRevealBackground=true;pendingReview=false;
+      $('revealBackgroundImage').value='';syncRevealBackground();
+      refreshPortraitPreview().catch(error=>show(error.message));
+    });
     for(const id of ['scratchCoverZoom','scratchCoverPanX','scratchCoverPanY'])
       $(id).addEventListener('input',()=>{pendingReview=false;showCoverCropValues();schedulePortraitPreview();});
     $('scratchCoverImage').addEventListener('change',async()=>{
