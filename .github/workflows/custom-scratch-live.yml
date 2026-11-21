@@ -1,0 +1,34 @@
+name: Custom Scratch artwork live staging upload and Amend
+on:
+  push:
+    branches: [feature/stage4b-cloudflare-staging]
+    paths:
+      - 'public/legacy-create.html'
+      - 'public/scratchcard.js'
+      - 'public/scratch-owner-preview.js'
+      - 'public/reveal.html'
+      - 'src/scratch-surface.js'
+      - 'src/scratch-recipient.js'
+      - 'tools/verify-custom-scratch-live.mjs'
+      - '.github/workflows/custom-scratch-live.yml'
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  uploaded-cover:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    container:
+      image: mcr.microsoft.com/playwright:v1.56.0-noble
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: npm install --no-save playwright@1.56.0
+      - run: node tools/verify-custom-scratch-live.mjs
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: custom-scratch-mobile-desktop-review
+          path: test-output/custom-scratch/
