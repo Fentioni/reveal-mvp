@@ -52,7 +52,7 @@ export default {
       if(groupReveal) return groupReveal;
     }
 
-    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/scratch-surface(?:\/image)?\/?$/.test(path)) {
+    if (/^\/api\/reveals\/[A-Za-z0-9_-]+\/scratch-surface(?:\/(?:image|background))?\/?$/.test(path)) {
       if (env.STAGING_DISABLE_CHECKOUT !== 'true') return textError('Not available.', 404);
       return scratchSurfaceResponse(request, env, ctx, originalWorker);
     }
@@ -72,7 +72,7 @@ export default {
       if (paidQuiz) return paidQuiz;
     }
 
-    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:scratch-data|scratch-cover|scratch-image))?\/?$/.test(path)) {
+    if (/^\/r\/[A-Za-z0-9_-]+(?:\/(?:scratch-data|scratch-cover|scratch-image|scratch-background))?\/?$/.test(path)) {
       const paidScratch = await scratchRecipientResponse(request, env, ctx);
       if (paidScratch) return paidScratch;
     }
