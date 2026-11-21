@@ -25,7 +25,9 @@ for(const [name,engine,options] of cases){
   await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
   const host=page.locator('#scratchActualRevealed'),field=k=>host.locator('[data-edit-field="'+k+'"]');
   await field('eventName').waitFor({state:'visible'});
-  assert.equal(await page.locator('#postTemplate option').count(),18);
+  assert.equal(await page.locator('#postTemplate option').count(),19); // 18 gallery designs + custom upload
+  assert.equal(await page.locator('#scratchCoverSource').count(),0,'No second artwork-source dropdown');
+  assert.equal(await page.locator('#postTemplate > option:last-child').inputValue(),'upload-my-own-scratch-artwork');
   const noOverflow=async()=>assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth+1),name+' horizontal overflow');
   await noOverflow();
   for(const [key,value] of Object.entries({eventName:'Your surprise is a theatre trip',recipient:'Customer QA',sender:'Reveal QA',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',personalMessage:'Have a wonderful evening!',ticketUrl:'https://example.org/tickets'})){
