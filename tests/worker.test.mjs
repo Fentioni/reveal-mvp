@@ -79,3 +79,9 @@ test('unsupported products cannot enter legacy creator',async()=>{
   const r=await worker.fetch(q('/create/reveal-quest'),{DB:fakeDB('active')});
   assert.equal(r.status,404);
 });
+
+test('staging catalogue displays the configured fixed 99p price with no UK VAT',async()=>{
+ const r=await catalogueResponse(q('/api/catalogue/products/ticket-reveal'),{DB:fakeDB(),STRIPE_PRICE_ID:'price_1UeFxXKEVPKWz2E9MCEUN9Pw',STRIPE_AUTOMATIC_TAX:'false'});
+ const x=await r.json();assert.equal(x.price.amount_minor,99);assert.equal(x.price.tax_behavior,'unspecified');
+ assert.match(x.checkoutNote,/99p total/);
+});

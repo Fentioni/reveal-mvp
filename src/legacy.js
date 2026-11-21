@@ -3,7 +3,10 @@
 const MAX_IMAGE = 10 * 1024 * 1024;
 const MAX_BODY = MAX_IMAGE + 128 * 1024;
 const MAX_WEBHOOK_BODY = 1024 * 1024;
-const STRIPE_AMOUNT_MINOR = 199;
+const STRIPE_AMOUNT_MINOR = 99;
+// Honour signed webhooks for £1.99 staging checkouts created before the price change.
+const LEGACY_STAGING_AMOUNT_MINOR = 199;
+const LEGACY_STAGING_PRICE_ID = 'price_1USbNbKEVPKWz2E9zmH0mabR';
 const STRIPE_CURRENCY = 'gbp';
 const STRIPE_API = 'https://api.stripe.com/v1';
 const WEBHOOK_TOLERANCE_SECONDS = 300;
@@ -1091,6 +1094,16 @@ async function startCheckout(
     row.id
   );
 
+  // A pre-change pending attempt with no Stripe session must be replaced
+  // rather than reused with a different price and the same idempotency key.
+  if (payment?.status === 'pending' && payment.amount_minor !== STRIPE_AMOUNT_MINOR &&
+      !payment.checkout_session_id) {
+    await failPaymentAttempt(env, row.id, payment.id);
+    const current = await env.DB.prepare('SELECT * FROM reveals WHERE id = ?').bind(row.id).first();
+    if (!retry) return startCheckout(request, env, current, true);
+    fail(409, 'Payment price changed. Reload the page to retry.');
+  }
+
   if (payment?.status === 'paid') {
     fail(
       409,
@@ -1498,16 +1511,13 @@ async function createStripeCheckout(
   form.set('locale', 'en-GB');
   form.set('submit_type', 'pay');
 
-  form.set(
-    'billing_address_collection',
-    'required'
-  );
+  // Full billing address is not mandatory for a non-VAT-registered UK digital sale.
+  // Stripe can still request address information when a payment method needs it.
 
   // Keep billing-address guidance in Reveal, not optional Stripe form fields.
 
-  // Activated by the isolated TEST checkout wrapper.
-  // Stripe determines tax from the purchaser's billing location. Never
-  // advertise or hard-code a guessed tax-inclusive total in Reveal.
+  // Automatic Tax is off for Reveal while the UK seller is not VAT registered.
+  // Preserve an explicit opt-in only if registration obligations later change.
   if (env.STRIPE_AUTOMATIC_TAX === 'true') {
     form.set('automatic_tax[enabled]', 'true');
   }
@@ -1595,8 +1605,10 @@ async function createStripeCheckout(
     session.mode === 'payment' &&
     session.status === 'open' &&
     session.payment_status === 'unpaid' &&
-    validStripeAmounts(session) &&
-    (env.STRIPE_AUTOMATIC_TAX !== 'true' || session.automatic_tax?.enabled === true) &&
+    validStripeAmounts(session, payment.amount_minor, env.STRIPE_AUTOMATIC_TAX === 'true') &&
+    (env.STRIPE_AUTOMATIC_TAX === 'true'
+      ? session.automatic_tax?.enabled === true
+      : session.automatic_tax?.enabled !== true) &&
     session.currency === STRIPE_CURRENCY &&
     Boolean(session.livemode) ===
       stripeLiveMode(env);
@@ -1724,19 +1736,12 @@ function validCheckoutUrl(value) {
   }
 }
 
-function validStripeAmounts(session) {
-  return (
-    Number.isInteger(
-      session.amount_subtotal
-    ) &&
-    session.amount_subtotal ===
-      STRIPE_AMOUNT_MINOR &&
-    Number.isInteger(
-      session.amount_total
-    ) &&
-    session.amount_total >=
-      session.amount_subtotal
-  );
+function validStripeAmounts(session, expectedMinor, allowTax) {
+  return Number.isInteger(expectedMinor) && expectedMinor > 0 &&
+    Number.isInteger(session.amount_subtotal) &&
+    session.amount_subtotal === expectedMinor &&
+    Number.isInteger(session.amount_total) &&
+    (allowTax ? session.amount_total >= expectedMinor : session.amount_total === expectedMinor);
 }
 
 async function failPaymentAttempt(
@@ -1962,11 +1967,8 @@ async function stripeWebhook(
     // A real Stripe TEST event must also contain a TEST-mode Checkout
     // Session. An account-level event flag alone is not sufficient.
     Boolean(session.livemode) !== stripeLiveMode(env) ||
-    (env.STRIPE_AUTOMATIC_TAX === 'true' && session.automatic_tax?.enabled !== true) ||
     session.metadata?.integration !==
-      'reveal-mvp' ||
-    session.metadata?.price_id !==
-      String(env.STRIPE_PRICE_ID)
+      'reveal-mvp'
   ) {
     return json({
       received: true
@@ -2011,8 +2013,6 @@ async function stripeWebhook(
     !payment ||
     payment.checkout_session_id !==
       session.id ||
-    payment.amount_minor !==
-      STRIPE_AMOUNT_MINOR ||
     payment.currency !==
       STRIPE_CURRENCY
   ) {
@@ -2021,6 +2021,19 @@ async function stripeWebhook(
       'Webhook could not be reconciled.'
     );
   }
+
+  // Never reinterpret an older, still-pending £1.99 test purchase as 99p.
+  // Both versions must match their actual saved payment and Stripe price ID.
+  const currentPrice = session.metadata?.price_id === String(env.STRIPE_PRICE_ID) &&
+    payment.amount_minor === STRIPE_AMOUNT_MINOR;
+  const olderStagingPrice = env.STAGING_DISABLE_CHECKOUT === 'true' &&
+    !stripeLiveMode(env) &&
+    session.metadata?.price_id === LEGACY_STAGING_PRICE_ID &&
+    payment.amount_minor === LEGACY_STAGING_AMOUNT_MINOR;
+  if (!currentPrice && !olderStagingPrice) return json({received:true});
+  const taxExpected = olderStagingPrice || env.STRIPE_AUTOMATIC_TAX === 'true';
+  if (taxExpected ? session.automatic_tax?.enabled !== true : session.automatic_tax?.enabled === true)
+    return json({received:true});
 
   const timestamp = now();
 
@@ -2057,7 +2070,7 @@ async function stripeWebhook(
     ) &&
     session.payment_status ===
       'paid' &&
-    validStripeAmounts(session) &&
+    validStripeAmounts(session, payment.amount_minor, taxExpected) &&
     session.currency ===
       STRIPE_CURRENCY &&
     session.mode === 'payment';
@@ -2131,7 +2144,7 @@ async function stripeWebhook(
           paymentId,
           revealId,
           session.id,
-          STRIPE_AMOUNT_MINOR,
+          payment.amount_minor,
           STRIPE_CURRENCY
         ),
 

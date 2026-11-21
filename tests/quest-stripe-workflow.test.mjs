@@ -55,7 +55,7 @@ const makeReq=(path,options={})=>new Request(origin+path,options);
 const event=(session,overrides={})=>JSON.stringify({
  id:'evt_FAKE_'+(++event.counter),type:'checkout.session.completed',livemode:false,
  data:{object:{...session,...overrides,object:'checkout.session',mode:'payment',payment_status:'paid',
-   amount_subtotal:overrides.amount_subtotal??199,amount_total:239,currency:'gbp',
+   amount_subtotal:overrides.amount_subtotal??99,amount_total:overrides.amount_total??99,currency:'gbp',
    payment_intent:'pi_FAKE123'}}
 });
 event.counter=0;
@@ -64,7 +64,7 @@ function signed(body,signingSecret=secret){
  const signature=createHmac('sha256',signingSecret).update(timestamp+'.'+body).digest('hex');
  return makeReq('/api/webhooks/stripe',{method:'POST',headers:{'Stripe-Signature':'t='+timestamp+',v1='+signature},body});
 }
-test('Stripe test checkout with location-based tax only unlocks after correctly signed webhook',async()=>{
+test('99p Stripe test checkout with no VAT only unlocks after correctly signed webhook',async()=>{
  const {sql,env}=setup();
  const originalFetch=globalThis.fetch;
  let session=null,form=null;
@@ -72,8 +72,8 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   assert.equal(options.headers.get('Authorization'),'Bearer '+env.STRIPE_SECRET_KEY);
   form=new URLSearchParams(options.body);
-  assert.equal(form.get('automatic_tax[enabled]'),'true');
-  assert.equal(form.get('billing_address_collection'),'required');
+  assert.equal(form.get('automatic_tax[enabled]'),null);
+  assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
   assert.equal(form.get('line_items[0][quantity]'),'1');
@@ -81,8 +81,8 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   session={
    id:'cs_test_fake_123',url:'https://checkout.stripe.com/c/pay/cs_test_fake_123',
    object:'checkout.session',status:'open',mode:'payment',payment_status:'unpaid',
-   livemode:false,amount_subtotal:199,amount_total:239,currency:'gbp',
-   automatic_tax:{enabled:true,status:'complete'},
+   livemode:false,amount_subtotal:99,amount_total:99,currency:'gbp',
+   automatic_tax:{enabled:false,status:'complete'},
    expires_at:Math.floor(Date.now()/1000)+3600,
    client_reference_id:revealId,metadata:{
     integration:form.get('metadata[integration]'),reveal_id:form.get('metadata[reveal_id]'),
@@ -103,7 +103,7 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   assert.equal(response.checkoutUrl,session.url);
   const payment=sql.prepare('SELECT * FROM payments WHERE reveal_id=?').get(revealId);
   assert.equal(payment.status,'pending');
-  assert.equal(payment.amount_minor,199);
+  assert.equal(payment.amount_minor,99);
   assert.equal(payment.currency,'gbp');
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
   assert.equal((await worker.fetch(makeReq('/api/quest/'+slug+'/state'),env,{})).status,404);
@@ -118,8 +118,10 @@ test('Stripe test checkout with location-based tax only unlocks after correctly 
   const wrongMode=await worker.fetch(signed(event(session,{livemode:true})),env,{});
   assert.equal(wrongMode.status,200);
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
-  const wrongTax=await worker.fetch(signed(event(session,{automatic_tax:{enabled:false}})),env,{});
+  const wrongTax=await worker.fetch(signed(event(session,{automatic_tax:{enabled:true}})),env,{});
   assert.equal(wrongTax.status,200);
+  await worker.fetch(signed(event(session,{amount_total:119})),env,{});
+  assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
   assert.equal(sql.prepare('SELECT status FROM reveals').get().status,'checkout');
 
   const priorEventCount=sql.prepare('SELECT COUNT(*) AS count FROM stripe_events').get().count;
@@ -301,13 +303,13 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
  globalThis.fetch=async(uri,options={})=>{
   assert.equal(String(uri),'https://api.stripe.com/v1/checkout/sessions');
   const form=new URLSearchParams(options.body);
-  assert.equal(form.get('automatic_tax[enabled]'),'true');
-  assert.equal(form.get('billing_address_collection'),'required');
+  assert.equal(form.get('automatic_tax[enabled]'),null);
+  assert.equal(form.get('billing_address_collection'),null);
   assert.equal(form.has('custom_text[submit][message]'),false);
   assert.equal(form.get('line_items[0][price]'),price);
   const id='cs_test_scratch_'+(++count);
   session={id,url:'https://checkout.stripe.com/c/pay/'+id,object:'checkout.session',status:'open',mode:'payment',payment_status:'unpaid',
-   livemode:false,amount_subtotal:199,amount_total:239,currency:'gbp',automatic_tax:{enabled:true,status:'complete'},
+   livemode:false,amount_subtotal:99,amount_total:99,currency:'gbp',automatic_tax:{enabled:false,status:'complete'},
    expires_at:Math.floor(Date.now()/1000)+3600,client_reference_id:revealId,
    metadata:Object.fromEntries(['integration','reveal_id','payment_id','price_id','revision'].map(k=>[k,form.get('metadata['+k+']')]))};
   return new Response(JSON.stringify(session),{headers:{'content-type':'application/json'}});
@@ -333,12 +335,13 @@ test('Scratch Ticket payment lifecycle: only verified signed test payment unlock
   assert.equal((await worker.fetch(signed(failure('checkout.session.expired')),env,{})).status,200);
   assert.equal((await owner()).status,'confirmed');await locked();
   await checkout();await locked();
-  // Fake, wrong-account, mismatched-amount and non-tax-enabled callbacks cannot unlock.
+  // Fake, wrong-account, mismatched-amount and unexpected-tax callbacks cannot unlock.
   assert.equal((await req('/api/webhooks/stripe',{method:'POST',body:event(session)})).status,400);
   assert.equal((await worker.fetch(signed(event(session),'whsec_WRONGKEY'),env,{})).status,400);
   await worker.fetch(signed(event(session,{amount_subtotal:100})),env,{});
   await worker.fetch(signed(event(session,{livemode:true})),env,{});
-  await worker.fetch(signed(event(session,{automatic_tax:{enabled:false}})),env,{});
+  await worker.fetch(signed(event(session,{automatic_tax:{enabled:true}})),env,{});
+  await worker.fetch(signed(event(session,{amount_total:119})),env,{});
   await locked();
   const valid=event(session);
   assert.equal((await worker.fetch(signed(valid),env,{})).status,200);
@@ -369,7 +372,7 @@ test('checkout retries reuse identical Stripe form data and idempotency key afte
   if(calls===1){first=options.body;firstKey=key;throw Error('simulated connection drop');}
   assert.equal(options.body,first,'retry must not change expires_at or any other Stripe parameter');
   assert.equal(key,firstKey);
-  return new Response(JSON.stringify({id:'cs_test_retry123',url:'https://checkout.stripe.com/c/pay/cs_test_retry123',mode:'payment',status:'open',payment_status:'unpaid',amount_subtotal:199,amount_total:199,currency:'gbp',livemode:false,automatic_tax:{enabled:true},expires_at:Number(form.get('expires_at'))}),{headers:{'content-type':'application/json'}});
+  return new Response(JSON.stringify({id:'cs_test_retry123',url:'https://checkout.stripe.com/c/pay/cs_test_retry123',mode:'payment',status:'open',payment_status:'unpaid',amount_subtotal:99,amount_total:99,currency:'gbp',livemode:false,automatic_tax:{enabled:false},expires_at:Number(form.get('expires_at'))}),{headers:{'content-type':'application/json'}});
  };
  try{
   const req=()=>makeReq('/api/reveals/'+revealId+'/checkout',{method:'POST',headers:{origin,'X-Edit-Token':token}});

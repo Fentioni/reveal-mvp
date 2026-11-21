@@ -4,7 +4,7 @@ const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 const get=(path,init={})=>fetch(origin+path,{cache:'no-store',redirect:'error',signal:AbortSignal.timeout(25000),...init});
 let ready;
 for(let i=0;i<30;i++){
- try{const r=await get('/api/scratch/test-payment-status');if(r.ok){const d=await r.json();if(d.environment==='staging'&&d.mode==='test'&&d.enabled===true&&d.automaticTax===true&&d.baseAmountMinor===199&&d.currency==='gbp'&&d.checkoutRevision==='stable-retry-1'){ready=d;break;}}}catch{}
+ try{const r=await get('/api/scratch/test-payment-status');if(r.ok){const d=await r.json();if(d.environment==='staging'&&d.mode==='test'&&d.enabled===true&&d.automaticTax===false&&d.baseAmountMinor===99&&d.currency==='gbp'&&d.checkoutRevision==='no-vat-99p-1'){ready=d;break;}}}catch{}
  await new Promise(r=>setTimeout(r,5000));
 }
 assert.ok(ready,'Isolated Scratch test payment capability is unavailable; verify staging secrets and deployment.');

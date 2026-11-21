@@ -33,7 +33,7 @@ test('Quest staging test checkout is explicitly enabled in repository only for a
  assert.equal(config.vars.STRIPE_LIVE_MODE,'false');
  assert.equal(config.vars.STAGING_DISABLE_CHECKOUT,'true');
  assert.equal(config.vars.QUEST_TEST_CHECKOUT_ENABLED,'true');
- assert.equal(config.vars.STRIPE_PRICE_ID,'price_1USbNbKEVPKWz2E9zmH0mabR');
+ assert.equal(config.vars.STRIPE_PRICE_ID,'price_1UeFxXKEVPKWz2E9MCEUN9Pw');
  assert.notEqual(config.d1_databases[0].database_name,'reveal-db');
  assert.equal(questStripeTestReady({...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false'}),false);
  assert.equal(questStripeTestReady({...envBase,QUEST_TEST_CHECKOUT_ENABLED:undefined}),false);
@@ -60,7 +60,7 @@ test('Payment capability is published safely, without credentials or tax-inclusi
   ...envBase,QUEST_TEST_CHECKOUT_ENABLED:'false'
  },{},legacy);
  assert.equal(off.status,200);
- assert.deepEqual(await off.json(),{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:true,baseAmountMinor:199,currency:'gbp',checkoutRevision:'stable-retry-1'});
+ assert.deepEqual(await off.json(),{success:true,environment:'staging',mode:'test',enabled:false,automaticTax:false,baseAmountMinor:99,currency:'gbp',checkoutRevision:'no-vat-99p-1'});
  const on=await questStripeTestResponse(req('/api/quest/test-payment-status'),envBase,{},legacy);
  const onBody=await on.clone().text();
  assert.equal((await on.json()).enabled,true);
@@ -85,7 +85,7 @@ test('Quest checkout requires valid origin and server-side record lookup',async(
   'X-Edit-Token':'fake-owner-token',origin
  }),envBase,{},legacy);
  assert.equal(valid.status,200);
- assert.equal(legacy.calls.at(-1).autoTax,'true');
+ assert.equal(legacy.calls.at(-1).autoTax,'false');
  assert.equal(legacy.calls.at(-1).method,'POST');
 });
 test('Webhooks fail closed when disabled and never forward to legacy with missing Stripe TEST keys',async()=>{
@@ -97,7 +97,7 @@ test('Webhooks fail closed when disabled and never forward to legacy with missin
  assert.equal(legacy.calls.length,count);
  const allowed=await questStripeTestResponse(req('/api/webhooks/stripe','POST'),envBase,{},legacy);
  assert.equal(allowed.status,200);
- assert.equal(legacy.calls.at(-1).autoTax,'true');
+ assert.equal(legacy.calls.at(-1).autoTax,'false');
  assert.equal(legacy.calls.at(-1).url,origin+'/api/webhooks/stripe');
 });
 test('Existing staging Worker blocks checkout without credentials and does not unlock other products',async()=>{
@@ -108,15 +108,15 @@ test('Existing staging Worker blocks checkout without credentials and does not u
  const webhook=await worker.fetch(req('/api/webhooks/stripe','POST'),off,{});
  assert.equal(webhook.status,503);
 });
-test('Checkout uses Stripe Automatic Tax and remains at £1.99 before location-specific tax',()=>{
+test('Non-VAT-registered checkout costs 99p and does not activate Stripe Automatic Tax',()=>{
  const legacyCode=readFileSync(new URL('../src/legacy.js',import.meta.url),'utf8');
  const review=readFileSync(new URL('../public/reveal.html',import.meta.url),'utf8');
  assert.ok(legacyCode.includes("form.set('automatic_tax[enabled]', 'true')"));
- assert.ok(legacyCode.includes("(env.STRIPE_AUTOMATIC_TAX !== 'true' || session.automatic_tax?.enabled === true)"));
- assert.ok(legacyCode.includes("form.set(\n    'billing_address_collection',\n    'required'\n  )"));
+ assert.ok(legacyCode.includes("session.automatic_tax?.enabled !== true"));
+ assert.ok(!legacyCode.includes("form.set(\n    'billing_address_collection',\n    'required'\n  )"));
  assert.ok(review.includes("if(isStagingTest && isQuestReview && questTestPaymentReady)"));
  assert.ok(review.includes("isQuestReview && questTestPaymentReady"));
- assert.ok(review.includes('base price £1.99'));
+ assert.ok(review.includes('One-off 99p total'));
  assert.ok(!review.includes('£2.39'));
 });
 
@@ -140,5 +140,5 @@ test('Scratch test checkout is separate, requires test keys and permits only sav
  }
  assert.equal(legacy.calls.length,count);
  assert.equal((await questStripeTestResponse(req('/api/reveals/scratch-record/checkout','POST',{origin}),scratch,{},legacy)).status,200);
- assert.equal(legacy.calls.at(-1).autoTax,'true');
+ assert.equal(legacy.calls.at(-1).autoTax,'false');
 });

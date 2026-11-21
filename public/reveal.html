@@ -986,7 +986,7 @@
 
         <div id="paymentPricePanel" class="price-panel">
           <span class="price-label">One-off payment<br>No subscription</span>
-          <strong class="price">At checkout</strong>
+          <strong class="price">£0.99 total</strong>
         </div>
 
         <ul id="paymentIncludedList" class="included-list">
@@ -1644,7 +1644,7 @@
         elements.paymentHeading.textContent = reveal.status === 'checkout'
           ? 'Continue test checkout' : 'Test your Quest purchase';
         elements.paymentCopy.textContent =
-          'Test-mode payment only. One-off base price £1.99; Stripe calculates applicable tax based on billing location. No real charge or subscription.';
+          'Stripe TEST mode only. One-off 99p total, with no UK VAT added. No real charge or subscription.';
         elements.payButton.textContent = 'Continue to Stripe test checkout';
         elements.paymentSecurityNote.textContent =
           'Stripe TEST mode only. Your Quest remains locked until a signed test webhook confirms payment.';
@@ -1654,9 +1654,9 @@
       if(isStagingTest && scratchTestPaymentReady){
         elements.paymentBadge.textContent='Stripe TEST mode';
         elements.paymentHeading.textContent=reveal.status==='checkout'?'Continue test checkout':'Test your Scratch Ticket purchase';
-        elements.paymentCopy.textContent='Test-mode payment only. One-off base price £1.99; Stripe calculates applicable tax based on billing location. No real charge or subscription.';
+        elements.paymentCopy.textContent='Stripe TEST mode only. One-off 99p total, with no UK VAT added. No real charge or subscription.';
         elements.payButton.textContent='Continue to Stripe test checkout';
-        elements.paymentSecurityNote.textContent='Stripe TEST mode only. Check that your billing address includes your house name or number after postcode lookup. Your scratch reveal remains locked until a signed test webhook confirms payment.';
+        elements.paymentSecurityNote.textContent='Stripe TEST mode only. Your scratch reveal remains locked until a signed test webhook confirms payment.';
         return;
       }
 

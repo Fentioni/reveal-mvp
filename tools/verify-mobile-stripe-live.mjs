@@ -5,7 +5,7 @@ import {webkit,devices} from 'playwright';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 const ready=await fetch(origin+'/api/scratch/test-payment-status',{cache:'no-store'});
 assert.ok(ready.ok);const capability=await ready.json();
-assert.equal(capability.checkoutRevision,'stable-retry-1');assert.equal(capability.mode,'test');assert.equal(capability.enabled,true);
+assert.equal(capability.checkoutRevision,'no-vat-99p-1');assert.equal(capability.mode,'test');assert.equal(capability.enabled,true);assert.equal(capability.baseAmountMinor,99);assert.equal(capability.automaticTax,false);
 const browser=await webkit.launch({headless:true});
 let saved;
 const page=await browser.newPage({...devices['iPhone SE'],viewport:{width:320,height:568}});

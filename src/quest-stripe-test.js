@@ -50,8 +50,8 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
  if(['/api/quest/test-payment-status','/api/scratch/test-payment-status'].includes(path) && request.method==='GET'){
   if(!isolatedStaging(env))return reply({success:false,error:'Not available.'},404);
   return reply({success:true,environment:'staging',mode:'test',
-    enabled:path.startsWith('/api/scratch/')?scratchStripeTestReady(env):questStripeTestReady(env),automaticTax:true,
-    baseAmountMinor:199,currency:'gbp',checkoutRevision:'stable-retry-1'});
+    enabled:path.startsWith('/api/scratch/')?scratchStripeTestReady(env):questStripeTestReady(env),automaticTax:false,
+    baseAmountMinor:99,currency:'gbp',checkoutRevision:'no-vat-99p-1'});
  }
  const checkout=isCheckout(path);
  if(path!=='/api/webhooks/stripe' && !checkout)return null;
@@ -89,10 +89,10 @@ export async function questStripeTestResponse(request,env,ctx,originalWorker){
  }
  // The original Worker:
  //  - authorises checkout by hashed purchaser token
- //  - enforces £1.99 base amount/currency and Stripe hosted-checkout URL
+ //  - enforces the 99p fixed amount/currency and Stripe hosted-checkout URL
  //  - verifies the webhook HMAC, timestamp, test livemode and idempotency
  //  - reconciles amount, payment ID and Stripe session against D1
  //  - marks paid ONLY following Stripe's verified completion notification
- // Set Stripe Automatic Tax for this forwarded request only.
- return originalWorker.fetch(request,{...env,STRIPE_AUTOMATIC_TAX:'true'},ctx);
+ // Reveal does not charge UK VAT until the seller registers with HMRC.
+ return originalWorker.fetch(request,{...env,STRIPE_AUTOMATIC_TAX:'false'},ctx);
 }

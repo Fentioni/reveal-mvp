@@ -17,12 +17,18 @@ const readOne = async (db, sql, params = []) => {
   return (params.length ? statement.bind(...params) : statement).first();
 };
 
-const prices = async (db, productId, currency) => {
+const prices = async (db, productId, currency, env) => {
   const entries = await readAll(db,
     `SELECT currency,amount_minor,tax_behavior,country_code
        FROM product_prices
       WHERE product_id=? AND active=1 AND currency=? AND country_code IS NULL
       ORDER BY created_at DESC LIMIT 1`, [productId,currency]);
+  // Staging must show the same fixed total as its configured Stripe Price.
+  // Historical D1 catalogue rows may still contain the former £1.99 draft.
+  if (productId === 'ticket-reveal' && currency === 'gbp' &&
+      env?.STRIPE_PRICE_ID === 'price_1UeFxXKEVPKWz2E9MCEUN9Pw' && env?.STRIPE_AUTOMATIC_TAX === 'false') {
+    return {currency:'gbp',amount_minor:99,tax_behavior:'unspecified',country_code:null};
+  }
   return entries[0] ?? null;
 };
 
@@ -77,11 +83,11 @@ export async function catalogueResponse(request, env) {
         `SELECT c.slug,c.name FROM category_products cp JOIN categories c ON c.id=cp.category_id
           WHERE cp.product_id=? AND c.active=1 ORDER BY cp.sort_order`,[product.id]);
       const configured = await configForProduct(env.DB,product.id);
-      const price = await prices(env.DB,product.id,currency);
+      const price = await prices(env.DB,product.id,currency,env);
       response = answer({product:{slug:product.slug,name:product.name,description:product.description,status:product.status},
         categories,...configured,price,
         canCreate:product.status==='active' && product.slug==='ticket-reveal',
-        checkoutNote:'Prices shown are base prices. The final payable total, local currency and applicable taxes are confirmed securely at Stripe Checkout.'});
+        checkoutNote:env.STRIPE_PRICE_ID === 'price_1UeFxXKEVPKWz2E9MCEUN9Pw' && env.STRIPE_AUTOMATIC_TAX === 'false' ? 'One-off 99p total for UK customers. No UK VAT is added.' : 'The final payable amount is confirmed securely at Stripe Checkout.'});
     } else {
       response = answer({error:'Catalogue route not found'},404);
     }
