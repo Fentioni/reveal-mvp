@@ -146,15 +146,15 @@ export function templateArtworkSource(template){
 function drawArtwork(svg,template,options){
  const source=options.backgroundSrc||templateArtworkSource(template);
  // A backing colour fills letterbox gaps; never stretch artwork.
- if(!source||template.artworkSource&&template.artworkSource!=='original')mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
- if(source)mk('image',{'data-template-artwork':'true',href:source,x:0,y:0,width:900,height:1200,preserveAspectRatio:template.artworkFit==='cover'?'xMidYMid slice':'xMidYMid meet'},svg);
+ if(!source||options.backgroundSrc||template.artworkSource&&template.artworkSource!=='original')mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
+ if(source)mk('image',{'data-template-artwork':'true',href:source,x:0,y:0,width:900,height:1200,preserveAspectRatio:options.backgroundSrc||template.artworkFit==='cover'?'xMidYMid slice':'xMidYMid meet'},svg);
 }
 export function renderPostScratchTemplate(container,template,data={},options={}){
  if(!template||!Array.isArray(template.zones))throw new Error('Choose a valid template.');
  template=options.layout?applyCustomerLayout(template,options.layout,options.imageOrientation):orientTemplate(template,options.imageOrientation);
  const values=displayFields(template,data);
  for(const zone of template.zones){
-  if(zone.textMode==='fixed'&&typeof zone.templateText==='string'&&(zone.key!=='link'||safeLink(data.ticketUrl)||options.preview))values[zone.key]=zone.templateText;
+  if(zone.textMode==='fixed'&&typeof zone.templateText==='string'&&val(values[zone.key])&&(zone.key!=='link'||safeLink(data.ticketUrl)))values[zone.key]=zone.templateText;
  }
  const src=options.imageSrc||'';const preview=options.preview===true;const id='post-scratch-'+(++uid);
  const svg=mk('svg',{viewBox:'0 0 900 1200',width:1800,height:2400,role:'img','aria-label':values.eventName||'Personalised reveal',xmlns:NS,'data-post-template':template.id,style:'display:block;width:100%;height:auto;aspect-ratio:3/4;overflow:hidden;'});
@@ -164,7 +164,7 @@ export function renderPostScratchTemplate(container,template,data={},options={})
   const tone=darkText?'#ffffff':'#10131b';
   const shade=Number.isFinite(Number(options.shade))?Math.max(0,Math.min(.9,Number(options.shade)/100)):.7;
   mk('rect',{x:0,y:0,width:900,height:1200,fill:darkText?'#e2e5e7':'#344454'},svg);
-  if(templateArtworkSource(template))drawArtwork(svg,template,options);
+  if(options.backgroundSrc||templateArtworkSource(template))drawArtwork(svg,template,options);
   else if(template.showBackground===false)mk('rect',{x:0,y:0,width:900,height:1200,fill:template.backgroundFill||'#ffffff'},svg);
   if(src){
    const photoId=id+'-full-photo',clip=mk('clipPath',{id:photoId},defs);
