@@ -110,18 +110,19 @@ try{
   const wait=owner.waitForResponse(x=>x.url()===origin+'/api/reveals/'+saved.id+'/checkout'&&x.request().method()==='POST',{timeout:25000});
   await owner.locator('#payButton:visible').click();
   const result=await wait;
-  if(result.ok()){checkout=await result.json();break;}
+  if(result.ok()){checkout={accepted:true};break;}
   const body=(await result.json()).error;
   if(result.status()===403&&/only enabled|test checkout/i.test(String(body))){
    console.log('INFO: staging Worker checkout gate still deploying; retrying');await owner.waitForTimeout(4500);continue;
   }
   throw Error('Staging checkout denied '+result.status()+': '+body);
  }
- assert.ok(checkout?.checkoutUrl,'Updated custom-artwork payment gate did not deploy.');
- checkoutUrl=checkout.checkoutUrl;
+ assert.ok(checkout?.accepted,'Updated custom-artwork payment gate did not deploy.');
+ // Hosted navigation may discard the response body before Playwright reads it.
+ await owner.waitForURL(u=>u.hostname==='checkout.stripe.com',{timeout:30000,waitUntil:'domcontentloaded'});
+ checkoutUrl=owner.url();
  const stripe=new URL(checkoutUrl);
  assert.equal(stripe.hostname,'checkout.stripe.com');assert.match(stripe.pathname,/cs_test_/);
- await owner.waitForURL(u=>u.hostname==='checkout.stripe.com',{timeout:30000,waitUntil:'domcontentloaded'});
  assert.equal((await ownerData()).shareUrl,undefined,'Payment must not unlock before a signed webhook');
  pass('Owner clicked checkout; hosted Stripe TEST session opened; paid link still locked');
  await owner.screenshot({path:'test-output/paid-custom-scratch/stripe-before-payment.png',fullPage:true});
