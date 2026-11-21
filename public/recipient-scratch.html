@@ -367,7 +367,7 @@
     if(isConcert) $('card').style.borderColor =
       {gold:'#d3a752',silver:'#d2dce7',midnight:'#6079d4',rose:'#d69cac'}[data.scratchSurface.foil] || '#d3a752';
     document.querySelector('.eyebrow').textContent = isConcert ? 'Concert ticket' : (artwork ? 'A special scratch reveal' : visualTheme.icon+' '+visualTheme.label+' reveal');
-    text('title','A surprise for ' + model.recipient);
+    text('title',model.recipient ? 'A surprise for ' + model.recipient : 'A surprise awaits');
     text('name',model.recipient);
     text('eventName',model.eventName);
     text('headline', data.scratchSurface.variant === 'concert' ? 'The big night awaits!' : 'Your special surprise');
@@ -404,7 +404,8 @@
       });
     }
     $('card').hidden=false;
-    if(!isConcert)await renderPostScratchFace($('card'),data.reveal,data.scratchSurface.postScratch,model.hasEventImage?'/r/'+encodeURIComponent(slug)+'/scratch-image':'');
+    if(!isConcert)await renderPostScratchFace($('card'),data.reveal,data.scratchSurface.postScratch,model.hasEventImage?'/r/'+encodeURIComponent(slug)+'/scratch-image':'',
+      {backgroundSrc:data.scratchSurface.hasRevealBackground?'/r/'+encodeURIComponent(slug)+'/scratch-background':''});
     $('intro').textContent = 'Scratch the surface with your finger or mouse. Every piece of foil stays until you remove it.';
     $('card').hidden = false;
 
