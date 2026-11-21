@@ -98,7 +98,7 @@ def assert_catalogue(db, expected_categories, expected_mechanics, expected_theme
         assert db.execute('SELECT COUNT(*) FROM products WHERE id=?', (obsolete,)).fetchone()[0] == 0
     assert db.execute("SELECT COUNT(*) FROM products WHERE id='ticket-reveal'").fetchone()[0] == 1
     assert db.execute("SELECT product_id,currency,amount_minor FROM product_prices").fetchone() == (
-        'ticket-reveal', 'gbp', 199
+        'ticket-reveal', 'gbp', 99
     )
     assert_integrity(db)
 
