@@ -152,6 +152,12 @@ try{
  // This CI browser is geolocated in the USA; use a syntactically valid
  // ZIP for its displayed US billing-address field. The charge remains GBP.
  await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete*="postal-code"],input[placeholder*="ZIP" i],input[placeholder*="Postcode" i]','10001');
+ // Stripe prechecks Link's optional "Save my information" checkbox. Without a
+ // mobile number that opt-in can stop the submit before any PaymentIntent.
+ // This is a one-off QA purchase, so decline the optional account creation.
+ const saveDetails=await findInput(owner,'input[name="linkOptIn"]',5000);
+ if(await saveDetails.isChecked())await saveDetails.uncheck({timeout:8000});
+ assert.equal(await saveDetails.isChecked(),false);
  await owner.screenshot({path:'test-output/paid-custom-scratch/stripe-filled-test-card.png',fullPage:true});
  // Only Stripe test checkout, validated above; no real money/card details.
  const submit=await findInput(owner,'button[type="submit"]',25000);
