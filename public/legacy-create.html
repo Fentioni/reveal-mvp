@@ -164,6 +164,14 @@
     .scratch-art-icon.festival{background:linear-gradient(140deg,#123955 5%,#3b74a2 37%,#b3457f 68%,#efb36a)}
     .scratch-art-icon.backstage{background:linear-gradient(140deg,#141326 5%,#5b193c 43%,#e1b776 52%,#301529 75%)}
     .scratch-art-option[hidden]{display:none!important}
+
+    .scratch-cover-upload-field{display:grid;gap:9px;padding:12px 14px;border:1px solid #b3b8c6;border-radius:12px;margin-top:12px;background:rgba(125,125,154,.07)}
+    .scratch-cover-upload-field[hidden]{display:none!important}
+    .scratch-cover-upload-field label{font-weight:650}
+    .scratch-cover-upload-field input[type=file]{width:100%;max-width:100%}
+    .scratch-cover-upload-field input[type=range]{width:100%;accent-color:#9c79bd;min-height:32px}
+    .scratch-cover-upload-field output{float:right;font-variant-numeric:tabular-nums}
+    .scratch-cover-upload-field button{width:100%;min-height:44px}
     .scratch-art-icon.custom{background:linear-gradient(135deg,#40334e,#a293b3)}
     .scratch-art-option strong{display:block;font-weight:700;font-size:.83rem}
     .scratch-art-option small{display:block;margin:3px 0 0;text-align:left;font-size:.71rem;color:#736450;line-height:1.3}
@@ -869,14 +877,32 @@
 
         <form id="revealForm">
           <section id="scratchArtworkSection" class="field" aria-labelledby="scratchArtworkLabel">
-            <label id="scratchArtworkLabel" for="postTemplate">Choose your gift design</label>
-            <p class="field-help">Each gift design includes its own matching scratch artwork and editable revealed template.</p>
+            <label id="scratchArtworkLabel" for="scratchCoverSource">Scratch artwork</label>
+            <select id="scratchCoverSource" aria-describedby="scratchCoverSourceHelp">
+              <option value="gallery">Choose from artwork gallery</option>
+              <option value="upload">Upload my own scratch artwork</option>
+            </select>
+            <p id="scratchCoverSourceHelp" class="field-help">Choose a gallery cover or upload your own image. Both cover your surprise until scratched.</p>
+            <label for="postTemplate">Revealed design</label>
             <select id="postTemplate" aria-describedby="postTemplateDescription"></select>
             <p id="postTemplateDescription" class="field-help"></p>
             <div id="pairedCoverChoice" hidden>
               <label for="scratchArtwork">Scratch cover</label>
               <select id="scratchArtwork" name="scratchArtwork" required aria-describedby="scratchArtworkHelp"></select>
               <p id="scratchArtworkHelp" class="field-help">Choose the original or alternative cover for this design.</p>
+            </div>
+            <div id="scratchCoverUploadField" class="scratch-cover-upload-field" hidden>
+              <label for="scratchCoverImage">Upload your scratch cover</label>
+              <input id="scratchCoverImage" type="file" accept="image/jpeg,image/png,image/webp" aria-describedby="scratchCoverHelp">
+              <p id="scratchCoverHelp" class="field-help">JPEG, PNG or WebP · maximum 10 MB · at least 640 × 640 pixels. Best results: 1800 × 2400 pixels (portrait 3:4). The image fills the card and is cropped as needed. Sapphire Wrap is the reveal underneath.</p>
+              <p id="scratchCoverFileName" role="status" class="field-help">No artwork uploaded yet.</p>
+              <label for="scratchCoverZoom">Zoom <output id="scratchCoverZoomValue">100%</output></label>
+              <input id="scratchCoverZoom" type="range" min="100" max="250" step="5" value="100">
+              <label for="scratchCoverPanX">Horizontal position <output id="scratchCoverPanXValue">Centre</output></label>
+              <input id="scratchCoverPanX" type="range" min="-100" max="100" step="5" value="0">
+              <label for="scratchCoverPanY">Vertical position <output id="scratchCoverPanYValue">Centre</output></label>
+              <input id="scratchCoverPanY" type="range" min="-100" max="100" step="5" value="0">
+              <button id="scratchCoverRemove" type="button" class="button button-secondary">Remove upload and use gallery</button>
             </div>
           </section>
 
@@ -1306,6 +1332,10 @@
     let removeImage = false;
     let objectUrl = null;
     let pendingReview = false;
+    let selectedScratchImage=null;
+    let scratchCoverObjectUrl=null;
+    let hasSavedScratchCover=false;
+    let galleryTemplateId='';
     let customerLayout={};
     const customerDesign={key:null,undo:[],redo:[]};
     const postIds=['postTemplate','postSubtitle','postVenueAddress','postImagePosition','postImageFit','postImageOrientation','postImageZoom','postImagePanX','postImagePanY','postTextContrast','postShade'];
@@ -1349,7 +1379,7 @@
         if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]').click();
       }
     }
-    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
+    for(const key of postIds)$(key).addEventListener('input',()=>{pendingReview=false;if(key==='postTemplate'&&currentVariant==='ticket'){galleryTemplateId=$('postTemplate').value;fillCoverOptions();customerLayout={};customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;const section=$('scratchCreatorActual');if(section.dataset.previewMode!=='revealed')section.querySelector('[data-scratch-preview-mode="revealed"]')?.click();}if(imageEditIds.has(key))showImageEditingPreview();postGuidance();updateInlineValidation();schedulePortraitPreview();});
     function resetPostImageGeometry(){
       for(const [id,value] of Object.entries({postImageFit:'auto',postImageOrientation:'auto',postImagePosition:'xMidYMid',postImageZoom:100,postImagePanX:0,postImagePanY:0}))$(id).value=value;
     }
@@ -1375,7 +1405,10 @@
         const invalid=key==='ticketUrl'?normalizeBookingLink(value)===null:!field.checkValidity();
         if(invalid)errors.set(key,{label:key==='ticketUrl'?'Event link':key==='eventDate'?'Date':key==='eventTime'?'Time':'Field',message:key==='ticketUrl'?'Enter a valid web address, for example www.example.com.':'Check the entered value.'});
       }
-      if(!isMatchingPair($('postTemplate').value,$('scratchArtwork').value))errors.set('scratchArtwork',{label:'Matching scratch cover',message:'Choose a gift design with an available cover.'});
+      if(customCoverSelected()){
+        if(!scratchCoverObjectUrl)errors.set('scratchCoverImage',{label:'Scratch artwork',message:'Upload your scratch cover image.'});
+        if($('postTemplate').value!=='bg-wrap-sapphire')errors.set('postTemplate',{label:'Sapphire Wrap',message:'Uploaded covers must use Sapphire Wrap.'});
+      }else if(!isMatchingPair($('postTemplate').value,$('scratchArtwork').value))errors.set('scratchArtwork',{label:'Matching scratch cover',message:'Choose a gift design with an available cover.'});
       if(!$('postTemplate').value)errors.set('postTemplate',{label:'Revealed template',message:'Choose a revealed template.'});
       if($('postTemplate').value==='custom-image'&&!objectUrl)errors.set('image',{label:'Photo',message:'Upload a full-card image for the Custom Image template.'});
       return errors;
@@ -1399,7 +1432,7 @@
         if(absent&&errors.has(key)){backing.dataset.creatorInvalid='true';backing.setAttribute('aria-invalid','true');}
         else{delete backing.dataset.creatorInvalid;backing.removeAttribute('aria-invalid');}
       }
-      for(const key of ['scratchArtwork','postTemplate','image']){
+      for(const key of ['scratchArtwork','postTemplate','image','scratchCoverImage']){
         const control=$(key),invalid=errors.has(key);
         if(invalid)control.dataset.creatorInvalid='true';else delete control.dataset.creatorInvalid;
         control.setAttribute('aria-invalid',String(invalid));
@@ -1454,14 +1487,17 @@
       const generation=++portraitPreviewRevision;
       if(currentVariant!=='ticket')return Promise.resolve();
       const {reveal,settings}=currentPortraitData();
-      const surface={style:'classic',foil:$('scratchFoil').value,artworkId:scratchArtworkId,hasImage:false,variant:'ticket',postScratch:settings};
+      const custom=customCoverSelected(),coverImage=custom?scratchCoverObjectUrl:'';
+      const surface={style:custom?'custom':'classic',foil:$('scratchFoil').value,
+        artworkId:custom?null:scratchArtworkId,hasImage:custom&&Boolean(coverImage),
+        coverCrop:coverCropSettings(),variant:'ticket',postScratch:settings};
       postGuidance();
-      const artwork=getScratchArtwork(scratchArtworkId);
+      const artwork=custom?(coverImage?null:getScratchArtwork('wrap-sapphire-primary')):getScratchArtwork(scratchArtworkId);
       const image=objectUrl;
       const run=async()=>{
         if(generation!==portraitPreviewRevision||currentVariant!=='ticket')return;
         await renderScratchOwnerPreview($('scratchCreatorActual'),{
-          reveal,surface,artwork,eventImage:image,coverImage:'',guides:true,edit:creatorInlineEditor,
+          reveal,surface,artwork,eventImage:image,coverImage:coverImage||'',guides:true,edit:creatorInlineEditor,
           audio:{enabled:$('scratchAudioEnabled').checked},
           hosts:{covered:$('scratchActualCovered'),revealed:$('scratchActualRevealed'),sound:$('scratchActualSound')}
         });
@@ -1480,7 +1516,41 @@
         portraitPreviewTimer=setTimeout(()=>refreshPortraitPreview().catch(error=>show(error.message)),100);
     }
     let scratchSelectionSequence = 0;
+
     let scratchArtworkId = DEFAULT_SCRATCH_ARTWORK;
+    galleryTemplateId=$('postTemplate').value;
+    function customCoverSelected(){return currentVariant==='ticket'&&$('scratchCoverSource').value==='upload';}
+    function coverCropSettings(){return {zoom:Number($('scratchCoverZoom').value),panX:Number($('scratchCoverPanX').value),panY:Number($('scratchCoverPanY').value)};}
+    function showCoverCropValues(){
+      $('scratchCoverZoomValue').textContent=$('scratchCoverZoom').value+'%';
+      for(const id of ['PanX','PanY']){const n=Number($('scratchCover'+id).value);$('scratchCover'+id+'Value').textContent=n===0?'Centre':(n>0?'+':'')+n;}
+    }
+    function syncScratchSource(){
+      const custom=customCoverSelected(),isTicket=currentVariant==='ticket';
+      $('scratchCoverUploadField').hidden=!custom;
+      $('scratchCoverSource').disabled=!isTicket||busy;
+      $('scratchCoverImage').required=custom&&!scratchCoverObjectUrl;
+      $('scratchArtwork').required=isTicket&&!custom;
+      $('postTemplate').disabled=custom||busy;
+      if(custom){
+        if($('postTemplate').value!=='bg-wrap-sapphire'){
+          if($('postTemplate').value)galleryTemplateId=$('postTemplate').value;
+          $('postTemplate').value='bg-wrap-sapphire';customerLayout={};
+          customerDesign.undo=[];customerDesign.redo=[];customerDesign.key=null;
+        }
+        $('scratchStyle').value='custom';
+      }else if(isTicket){
+        if(galleryTemplateId&&Array.from($('postTemplate').options).some(o=>o.value===galleryTemplateId))
+          $('postTemplate').value=galleryTemplateId;
+        $('scratchStyle').value='classic';fillCoverOptions();
+      }
+      $('pairedCoverChoice').hidden=custom||$('scratchArtwork').options.length<2;
+      showCoverCropValues();
+      if(custom)$('scratchCoverFileName').textContent=selectedScratchImage?.name||
+        (hasSavedScratchCover?'Saved uploaded artwork ready.':'No artwork uploaded yet.');
+      postGuidance();
+      if(custom)$('postTemplateDescription').textContent='Sapphire Wrap — fixed for your uploaded artwork.';
+    }
     let concertTemplateId = DEFAULT_CONCERT_TEMPLATE;
     let concertRevealThemeId = DEFAULT_CONCERT_REVEAL_THEME;
     function setCreatorVariant(variant, initialiseChoice = false) {
@@ -1526,7 +1596,8 @@
       $('postVenueAddressField').hidden=true;
       $('admit').closest('.field').hidden=!isConcert;
       $("scratchArtworkSection").hidden = isConcert;
-      $("scratchArtwork").required = !isConcert;
+      $("scratchArtwork").required = !isConcert&&!customCoverSelected();
+      $("scratchCoverSource").disabled=isConcert;
       $("concertTemplateSection").hidden = !isConcert;
       $("concertTicketDetailsSection").hidden = !isConcert;
       const upload=form.querySelector(".scratch-one-upload");
@@ -1576,7 +1647,7 @@
       for(const artwork of coverCatalogue.filter(a=>!a.archived&&matching.includes(a.id)))appendCover(artwork);
       if(!Array.from($('scratchArtwork').options).some(o=>o.value===scratchArtworkId))scratchArtworkId=$('scratchArtwork').options[0]?.value||'';
       $('scratchArtwork').value=scratchArtworkId;
-      $('pairedCoverChoice').hidden=$('scratchArtwork').options.length<2;
+      $('pairedCoverChoice').hidden=customCoverSelected()||$('scratchArtwork').options.length<2;
     }
     async function refreshCoverCatalogue(){
       // Keep the selected product and cover in sync even when the artwork API
@@ -1594,10 +1665,38 @@
       for(const t of studioCatalogue.filter(t=>!t.archived&&coversForTemplate(t.id).some(id=>coverCatalogue.some(a=>a.id===id&&!a.archived))))addPostOption(t);
       if(Array.from($('postTemplate').options).some(o=>o.value===selected))$('postTemplate').value=selected;
       fillCoverOptions();
-      postGuidance();
+      syncScratchSource();
       if(currentVariant==='ticket'&&!$('postTemplate').options.length)throw new Error('No gift designs are currently available. Please try again later.');
     }
-    fillCoverOptions();
+
+    fillCoverOptions();syncScratchSource();
+    $('scratchCoverSource').addEventListener('change',()=>{
+      if(!ready||busy)return;
+      if(customCoverSelected()){galleryTemplateId=$('postTemplate').value;$('postTemplate').value='bg-wrap-sapphire';}
+      pendingReview=false;syncScratchSource();
+      setScratchPreview().then(()=>{if(!validationAttempted||updateInlineValidation())hide();}).catch(e=>show(e.message));
+    });
+    for(const id of ['scratchCoverZoom','scratchCoverPanX','scratchCoverPanY'])
+      $(id).addEventListener('input',()=>{pendingReview=false;showCoverCropValues();schedulePortraitPreview();});
+    $('scratchCoverImage').addEventListener('change',async()=>{
+      if(!ready||busy)return;
+      const file=$('scratchCoverImage').files?.[0];if(!file)return;
+      try{
+        const url=await examineScratchFile(file);
+        if(scratchCoverObjectUrl)URL.revokeObjectURL(scratchCoverObjectUrl);
+        scratchCoverObjectUrl=url;selectedScratchImage=file;hasSavedScratchCover=false;
+        pendingReview=false;syncScratchSource();await setScratchPreview();
+        if(!validationAttempted||updateInlineValidation())hide();
+      }catch(e){$('scratchCoverImage').value='';show(e.message);}
+    });
+    $('scratchCoverRemove').addEventListener('click',()=>{
+      if(!ready||busy)return;
+      if(scratchCoverObjectUrl)URL.revokeObjectURL(scratchCoverObjectUrl);
+      scratchCoverObjectUrl=null;selectedScratchImage=null;hasSavedScratchCover=false;
+      $('scratchCoverImage').value='';
+      $('scratchCoverSource').value='gallery';pendingReview=false;syncScratchSource();
+      setScratchPreview().then(hide).catch(e=>show(e.message));
+    });
     function selectConcertOption(group,selected){
       for(const button of $(group).querySelectorAll('button'))
         button.setAttribute('aria-pressed',String(button.dataset.value===selected));
@@ -1670,7 +1769,7 @@
         control.disabled = locked;
       }
 
-      if(!locked)syncPostImageEditor();
+      if(!locked){syncPostImageEditor();syncScratchSource();}
       $('scratchCreatorActual').inert=locked;
       form.setAttribute("aria-busy", String(busy));
     }
@@ -1906,6 +2005,7 @@
       setScratchPreview().catch(error => show(error.message));
     });
     window.addEventListener("pagehide", () => {
+      if(scratchCoverObjectUrl)URL.revokeObjectURL(scratchCoverObjectUrl);
       clearTimeout(portraitPreviewTimer);
       disposeScratchOwnerPreview($("scratchCreatorActual"));
       scratchPreview.destroy();
@@ -2022,7 +2122,7 @@
 
         const surfaceBody = new FormData();
         surfaceBody.append("variant", currentVariant);
-        surfaceBody.append("style", currentVariant === "concert" ? "concert" : "classic");
+        surfaceBody.append("style", currentVariant === "concert" ? "concert" : customCoverSelected() ? "custom" : "classic");
         surfaceBody.append("foil", $("scratchFoil").value);
         if(currentVariant==='concert'){
           surfaceBody.append('ticketTemplate',concertTemplateId);
@@ -2033,7 +2133,15 @@
           ));
         }
         if(currentVariant==='ticket')surfaceBody.append('postScratch',JSON.stringify(postSettings()));
-        surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");
+        surfaceBody.append("artworkId", currentVariant === "ticket"&&!customCoverSelected() ? scratchArtworkId : "");
+        if(customCoverSelected()){
+          surfaceBody.append('coverCrop',JSON.stringify(coverCropSettings()));
+          if(selectedScratchImage){
+            const bytes=await selectedScratchImage.arrayBuffer();
+            if(!bytes.byteLength)throw new Error('Your scratch artwork file is empty. Choose it again.');
+            surfaceBody.append('coverImage',new Blob([bytes],{type:selectedScratchImage.type}),selectedScratchImage.name);
+          }
+        }
         surfaceBody.append("audioEnabled", String($("scratchAudioEnabled").checked));
         await api("/api/reveals/" + encodeURIComponent(id) + "/scratch-surface", {
           method: "PUT",
@@ -2141,7 +2249,22 @@
         restorePostSettings(savedSurface.surface.postScratch);
         setCreatorVariant(savedSurface.surface.variant || "ticket");
         concertLivePreview.setVariant(currentVariant);
-        $("scratchStyle").value = savedSurface.surface.variant === "concert" ? "concert" : "classic";
+        const savedCustom=currentVariant==='ticket'&&savedSurface.surface.style==='custom'&&savedSurface.surface.hasImage;
+        $('scratchCoverSource').value=savedCustom?'upload':'gallery';
+        $('scratchStyle').value=savedSurface.surface.variant === "concert" ? "concert" : savedCustom?'custom':'classic';
+        if(savedCustom){
+          const response=await fetch('/api/reveals/'+encodeURIComponent(id)+'/scratch-surface/image',
+            {cache:'no-store',headers:{'X-Edit-Token':token}});
+          if(!response.ok)throw new Error('Your uploaded scratch artwork could not be restored. Reload before editing.');
+          const blob=await response.blob();
+          if(!['image/jpeg','image/png','image/webp'].includes(blob.type))throw new Error('Invalid saved scratch artwork.');
+          scratchCoverObjectUrl=URL.createObjectURL(blob);hasSavedScratchCover=true;
+          for(const [control,value] of Object.entries({
+            scratchCoverZoom:savedSurface.surface.coverCrop?.zoom??100,
+            scratchCoverPanX:savedSurface.surface.coverCrop?.panX??0,
+            scratchCoverPanY:savedSurface.surface.coverCrop?.panY??0
+          }))$(control).value=String(value);
+        }
         $("scratchFoil").value = savedSurface.surface.foil;
         if(savedSurface.surface.variant==='concert'){
           const savedLayout=concertTemplateLayout(savedSurface.surface.ticketTemplate);
@@ -2156,10 +2279,11 @@
         }
         scratchArtworkId=isMatchingPair($('postTemplate').value,savedSurface.surface.artworkId)?savedSurface.surface.artworkId:'';
         fillCoverOptions();
+        syncScratchSource();
         $("scratchAudioEnabled").checked = savedSurface.audio?.enabled !== false;
         // Incorrect old dual-use uploads return to the catalogue on amend.
         // Existing paid tickets are not rewritten.
-        const replacedLegacyCover=currentVariant==='ticket'&&savedSurface.surface.hasImage;
+        const replacedLegacyCover=false; // custom uploads are now a supported feature
 
         for (const key of fields) {
           $(key).value = reveal[key] || "";
@@ -2208,7 +2332,7 @@
           }
         }
 
-        if(replacedLegacyCover)show("Your previous draft used the uploaded surprise image as its scratch cover. Choose your preferred scratch-card artwork above; the photo now appears only after scratching.","info");
+        // Custom uploaded covers are retained in the amended preview.
         // Render only after all saved fields and the optional photo are hydrated.
         // Reposition the correct variant before the final SVG/Canvas measurements.
         positionScratchSurface();

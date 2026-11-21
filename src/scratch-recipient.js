@@ -60,6 +60,11 @@ export async function scratchRecipientResponse(request, env, ctx) {
         scratchSurface:{style:settings.style,foil:settings.foil,
            ...(await resolveStoredArtwork(env,settings.artworkId)?{artworkId:settings.artworkId}:{}),
            theme:THEMES.has(settings.theme)?settings.theme:'luxury-elegant',hasImage:hasCover,
+           ...(hasCover?{coverCrop:{
+             zoom:Number.isFinite(settings.coverCrop?.zoom)&&settings.coverCrop.zoom>=100&&settings.coverCrop.zoom<=250?settings.coverCrop.zoom:100,
+             panX:Number.isFinite(settings.coverCrop?.panX)&&Math.abs(settings.coverCrop.panX)<=100?settings.coverCrop.panX:0,
+             panY:Number.isFinite(settings.coverCrop?.panY)&&Math.abs(settings.coverCrop.panY)<=100?settings.coverCrop.panY:0
+           }}:{}),
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
            ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch)}:{}),
            ...(settings.variant === 'concert' ? {

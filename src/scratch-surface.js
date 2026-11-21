@@ -12,6 +12,14 @@ import {resolveStoredArtwork,availableScratchArtwork} from './scratch-artwork-ad
 import {checkConcertTicketDetails,cleanConcertTicketDetails} from '../public/concert-ticket-fields.js';
 import {DEFAULT_CONCERT_TEMPLATE,DEFAULT_CONCERT_REVEAL_THEME,isConcertTemplate,isConcertRevealTheme} from '../public/concert-ticket-options.js';
 const MAX_IMAGE = 10 * 1024 * 1024;
+const CUSTOM_TEMPLATE = 'bg-wrap-sapphire';
+const validCoverCrop=input=>input&&typeof input==='object'&&!Array.isArray(input)&&
+ Number.isFinite(input.zoom)&&input.zoom>=100&&input.zoom<=250&&
+ Number.isFinite(input.panX)&&input.panX>=-100&&input.panX<=100&&
+ Number.isFinite(input.panY)&&input.panY>=-100&&input.panY<=100;
+const cleanCoverCrop=input=>validCoverCrop(input)
+ ?{zoom:input.zoom,panX:input.panX,panY:input.panY}
+ :{zoom:100,panX:0,panY:0};
 const IMAGE_TYPES = Object.freeze({
   'image/jpeg': '.jpg',
   'image/png': '.png',
@@ -71,6 +79,7 @@ async function details(env, id) {
     theme: THEMES.has(saved.theme) ? saved.theme : DEFAULT_THEME,
     ...(await resolveStoredArtwork(env,saved.artworkId) ? {artworkId:saved.artworkId} : {}),
     coverAssetId: asset ? asset.id : null,
+    ...(saved.style==='custom' ? {coverCrop:cleanCoverCrop(saved.coverCrop)} : {}),
     variant: saved.variant === 'concert' ? 'concert' : 'ticket',
     ...(saved.variant !== 'concert' ? {postScratch:cleanPostSettings(saved.postScratch)} : {}),
     ...(saved.variant === 'concert' ? {
@@ -150,6 +159,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme:current.surface.theme,
           ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
+          ...(current.surface.style==='custom'?{coverCrop:current.surface.coverCrop}:{}),
           variant:current.surface.variant,
           ...(current.surface.variant!=='concert'?{postScratch:current.surface.postScratch}:{}),
           ...(current.surface.variant === 'concert' ? {
@@ -202,12 +212,30 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if(postScratch.layout){try{const master=await getPublishedTemplate(env,postScratch.templateId);if(!master)return error('Template unavailable.');validateCustomerLayout(master,postScratch.layout,postScratch.imageOrientation);}catch(e){return error(e.message||'Invalid customised layout.');}}
       if(postScratch.templateId!==current.surface.postScratch?.templateId){const entries=await getTemplateCatalogue(env);if(!entries.some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available revealed template.');}
     }
-    if(variant!=='concert'&&(body.has('postScratch')||body.has('artworkId'))){
+    // An uploaded cover is an independent front image. Its revealed face is
+    // always Sapphire Wrap, whereas gallery covers retain their strict pairs.
+    if(variant!=='concert' && style==='custom'){
+      if(body.has('postScratch') && postScratch.templateId!==CUSTOM_TEMPLATE)
+        return error('Uploaded scratch artwork must use the Sapphire Wrap reveal template.');
+      postScratch={...postScratch,templateId:CUSTOM_TEMPLATE};
+      if(!(await getTemplateCatalogue(env)).some(t=>t.id===CUSTOM_TEMPLATE&&!t.archived))
+        return error('Sapphire Wrap is not currently available.');
+      artworkId=null;
+    }
+    if(variant!=='concert'&&style!=='custom'&&(body.has('postScratch')||body.has('artworkId'))){
       const product=getPairedProduct(postScratch.templateId);
       if(!product||!(await getTemplateCatalogue(env)).some(t=>t.id===postScratch.templateId&&!t.archived))return error('Choose an available complete gift design.');
       if(requestedArtwork===null&&!isMatchingPair(postScratch.templateId,artworkId))artworkId=product.primary.id;
       if(!isMatchingPair(postScratch.templateId,artworkId))return error('The scratch cover must belong to the selected gift design.');
       if(!await availableScratchArtwork(env,artworkId))return error('The matching scratch cover is unavailable.');
+    }
+    const cropRaw=body.get('coverCrop');
+    let coverCrop=cleanCoverCrop(current.surface.coverCrop);
+    if(cropRaw!==null){
+      if(typeof cropRaw!=='string'||cropRaw.length>250)return error('Invalid scratch artwork positioning.');
+      let value;try{value=JSON.parse(cropRaw);}catch{return error('Invalid scratch artwork positioning.');}
+      if(!validCoverCrop(value))return error('Zoom must be 100–250% and position between -100 and 100.');
+      coverCrop=cleanCoverCrop(value);
     }
     const uploaded = body.get('coverImage');
     const enabledText = body.get('audioEnabled');
@@ -260,6 +288,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           foil,
           theme,
           ...(artworkId ? {artworkId} : {}),
+          ...(style==='custom'?{coverCrop}:{}),
           variant,
           ...(variant!=='concert'?{postScratch}:{}),
           ...(variant === 'concert' ? {ticketTemplate,revealTheme,linkMode,ticketDetails} : {}),
@@ -290,7 +319,8 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
-      return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',variant,
+      return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',
+        ...(style==='custom'?{coverCrop}:{}),variant,
         ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{postScratch})},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});

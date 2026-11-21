@@ -96,7 +96,7 @@ test('owner can save classic/occasion scratch style without an uploaded image', 
   const {env,legacy,state} = makeMocks();
   const before = await scratchSurfaceResponse(request(),env,{},legacy);
   assert.equal(before.status,200);
-  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS}});
+  assert.deepEqual((await before.json()).surface,{style:'classic',foil:'gold',theme:'luxury-elegant',hasImage:false,variant:'ticket',postScratch:{...DEFAULT_POST_SETTINGS,templateId:'bg-wrap-sapphire'},coverCrop:{zoom:100,panX:0,panY:0}});
   const body = new FormData();
   body.append('style','theatre');body.append('foil','rose');
   const saved = await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
@@ -155,6 +155,27 @@ test('owner can store a custom scratch image privately and retrieve it with a to
   assert.equal(JSON.parse(state.config.fields_json).scratchSurface.coverAssetId,null);
 });
 
+test('customer scratch artwork uses Sapphire Wrap, saves crop and never accepts a mismatched template',async()=>{
+ const {env,legacy,state}=makeMocks();
+ const body=new FormData();body.set('style','custom');body.set('foil','gold');
+ body.set('artworkId','');body.set('postScratch',JSON.stringify({templateId:'bg-wrap-sapphire'}));
+ body.set('coverCrop',JSON.stringify({zoom:150,panX:-45,panY:30}));
+ body.set('coverImage',pngFile(1800,2400),'my-cover.png');
+ const created=await scratchSurfaceResponse(request('PUT',body),env,{},legacy);
+ assert.equal(created.status,200,await created.clone().text());
+ const surface=(await created.json()).surface;
+ assert.equal(surface.hasImage,true);assert.equal(surface.postScratch.templateId,'bg-wrap-sapphire');
+ assert.deepEqual(surface.coverCrop,{zoom:150,panX:-45,panY:30});
+ assert.equal(JSON.parse(state.config.fields_json).scratchSurface.artworkId,undefined);
+ assert.equal((await scratchSurfaceResponse(request(),env,{},legacy)).status,200);
+ const bad=new FormData();bad.set('style','custom');bad.set('foil','gold');
+ bad.set('postScratch',JSON.stringify({templateId:'bg-luxury-champagne-gold'}));
+ assert.equal((await scratchSurfaceResponse(request('PUT',bad),env,{},legacy)).status,400);
+ const invalid=new FormData();invalid.set('style','custom');invalid.set('foil','gold');invalid.set('coverCrop',JSON.stringify({zoom:350,panX:0,panY:0}));
+ assert.equal((await scratchSurfaceResponse(request('PUT',invalid),env,{},legacy)).status,400);
+ assert.equal(state.stored.size,1);
+});
+
 test('custom cover upload rejects undersized and spoofed images', async () => {
   const {env,legacy,state}=makeMocks();
   const small = new FormData();
@@ -185,23 +206,26 @@ test('ticket creator contains actual previews and separates the selected cover f
   assert.ok(creator.includes('id="scratchStyle"'));
   assert.ok(creator.includes('id="scratchFoil"'));
   assert.ok(creator.includes('id="image"'));
-  assert.ok(!creator.includes('id="scratchCoverImage"'));
+  assert.ok(creator.includes('id="scratchCoverImage"'));
+  assert.ok(creator.includes('id="scratchCoverSource"'));
+  assert.ok(creator.includes('id="scratchCoverZoom"'));
+  assert.ok(creator.includes('bg-wrap-sapphire'));
   assert.ok(!creator.includes('id="scratchUploadField"'));
   const form = creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
-  assert.equal((form.match(/type="file"/g) || []).length,1,
-    'ticket creator must have one image selector');
+  assert.equal((form.match(/type="file"/g) || []).length,2,
+    'event image and scratch-cover image have separate selectors');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
-  assert.ok(!creator.includes('selectedScratchImage'));
+  assert.ok(creator.includes('selectedScratchImage'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(!creator.includes('$("scratchStyle").value = "custom";'));
   assert.ok(creator.includes('await selectedImage.arrayBuffer()'));
   assert.ok(creator.includes('body.append("image", new Blob([bytes], {type:selectedImage.type}), selectedImage.name)'));
-  assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
+  assert.ok(creator.includes("surfaceBody.append('coverImage'"));
   assert.ok(creator.includes('renderScratchOwnerPreview'));
   assert.ok(creator.includes('setScratchPreview().catch(error => show(error.message));'));
   assert.ok(creator.includes('scratchArtworkId'));
-  assert.ok(creator.includes('replacedLegacyCover'));
+  assert.ok(creator.includes('scratchCoverSource'));
   assert.ok(creator.includes('await setScratchPreview()'));
 });
 
@@ -287,16 +311,16 @@ test('invalid audio setting rejected and no D1 writes occur', async () => {
 test('event upload must never switch the selected scratch artwork to a custom cover', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   const form=creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
-  assert.equal((form.match(/type="file"/g)||[]).length,1);
+  assert.equal((form.match(/type="file"/g)||[]).length,2);
   assert.ok(form.includes('id="image"'));
   assert.ok(creator.includes('This photo appears ONLY after scratching.'));
   assert.ok(creator.includes('selectedImage = file;'));
   assert.ok(creator.includes('showImage(file, file.name);'));
   assert.ok(creator.includes('await selectedImage.arrayBuffer()'));
   assert.ok(creator.includes('body.append("image", new Blob([bytes], {type:selectedImage.type}), selectedImage.name)'));
-  assert.ok(creator.includes('surfaceBody.append("artworkId", currentVariant === "ticket" ? scratchArtworkId : "");'));
-  assert.ok(!creator.includes('surfaceBody.append("coverImage"'));
-  assert.ok(!creator.includes('selectedScratchImage'));
+  assert.ok(creator.includes('surfaceBody.append("artworkId", currentVariant === "ticket"&&!customCoverSelected() ? scratchArtworkId : "");'));
+  assert.ok(creator.includes("surfaceBody.append('coverImage'"));
+  assert.ok(creator.includes('selectedScratchImage'));
   assert.ok(creator.includes('await refreshPortraitPreview()'));
 });
 
@@ -423,10 +447,10 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(!creator.includes('data-show-for="concert"'),'Concert theme buttons must be removed');
   assert.ok(creator.includes('$("scratchArtGrid")') === false);
   assert.ok(creator.includes('$("scratchFoilGrid").hidden = !isConcert;'));
-  assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : "classic")'));
+  assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : customCoverSelected() ? "custom" : "classic")'));
   assert.ok(creator.includes('currentVariant === "concert" ? "concert" : "classic"'));
   assert.ok(creator.includes('id="image"'));
-  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,1);
+  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,2);
   assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
   assert.ok(review.includes("isConcert ? 'concert'"),'Concert review must render the colour-only cover');
   assert.ok(storefront.includes("href:'/legacy-create?variant=concert'"));

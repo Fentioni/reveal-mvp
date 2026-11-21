@@ -1388,7 +1388,7 @@
       );
       const result = await readJson(response);
       const {style,foil,hasImage} = result.surface;
-      if(isStagingTest && result.surface.variant==='ticket' && result.surface.artworkId)await loadScratchPaymentStatus();
+      if(isStagingTest && result.surface.variant==='ticket' && (result.surface.artworkId||hasImage))await loadScratchPaymentStatus();
       const chosenTheme = result.surface.theme || DEFAULT_SCRATCH_THEME;
       const artwork = getScratchArtwork(result.surface.artworkId);
       if (!artwork && result.surface.variant !== 'concert') applyScratchTheme(document,chosenTheme,'review');
@@ -1511,6 +1511,7 @@
         ticketTemplate:isConcert ? result.surface.ticketTemplate || DEFAULT_CONCERT_TEMPLATE : DEFAULT_CONCERT_TEMPLATE,
         coverStyle:isConcert ? 'concert' : style === 'custom' ? 'classic' : style});
       staticScratchCard.artworkId = artwork?.id || null;
+      staticScratchCard.setCoverCrop(result.surface.coverCrop);
       staticScratchCard.canvas.style.pointerEvents = 'none';
       if (isConcert) {
         // Concert finish stays colour-only, including for older festival/backstage drafts.

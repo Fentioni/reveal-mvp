@@ -180,6 +180,7 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
   interactive:false
  });
  card.artworkId=artwork?.id||null;
+ card.setCoverCrop(surface.coverCrop);
  const image=surface.hasImage?coverImage:artwork?.src;
  if(!surface.hasImage&&!artwork&&surface.artworkId)throw new Error('Your selected scratch artwork is not available.');
  if(surface.hasImage&&!image)throw new Error('The saved scratch image could not be loaded.');

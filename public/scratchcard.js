@@ -58,6 +58,7 @@ export class ScratchCard {
     this.lastFlakeAt = -Infinity;
     this.flakes = new Set();
     this.coverImage = null;
+    this.coverCrop = {zoom:100,panX:0,panY:0};
     // Set when one of the 20 commissioned artwork images is selected. Legacy
     // reveals with no artwork ID retain their historical illustrated surface.
     this.artworkId = null;
@@ -157,9 +158,13 @@ export class ScratchCard {
     if (!this.coverImage && !this.artworkId) this.drawArtwork();
 
     if (this.coverImage?.complete && this.coverImage.naturalWidth) {
-      const image = this.coverImage, scale = Math.max(w / image.naturalWidth, h / image.naturalHeight);
-      const iw = image.naturalWidth * scale, ih = image.naturalHeight * scale;
-      ctx.drawImage(image, (w - iw) / 2, (h - ih) / 2, iw, ih);
+      const image = this.coverImage;
+      const zoom=Math.min(250,Math.max(100,Number(this.coverCrop?.zoom)||100))/100;
+      const scale=Math.max(w/image.naturalWidth,h/image.naturalHeight)*zoom;
+      const iw=image.naturalWidth*scale,ih=image.naturalHeight*scale;
+      const dx=(w-iw)/2 + (Math.max(-100,Math.min(100,Number(this.coverCrop?.panX)||0))/100)*(iw-w)/2;
+      const dy=(h-ih)/2 + (Math.max(-100,Math.min(100,Number(this.coverCrop?.panY)||0))/100)*(ih-h)/2;
+      ctx.drawImage(image,dx,dy,iw,ih);
       if (this.artworkId) {
         // Show the approved image essentially unchanged; a minimal foil sheen
         // still gives the four existing finishes a role without masking art.
@@ -559,6 +564,15 @@ export class ScratchCard {
     if (!SURFACE_STYLES.includes(style)) throw new RangeError('Unknown scratch surface style: ' + style);
     this.coverStyle = style;
     this.reset();
+  }
+
+  setCoverCrop(crop){
+    this.coverCrop={
+      zoom:Math.min(250,Math.max(100,Number(crop?.zoom)||100)),
+      panX:Math.max(-100,Math.min(100,Number(crop?.panX)||0)),
+      panY:Math.max(-100,Math.min(100,Number(crop?.panY)||0))
+    };
+    this.paintCover();
   }
 
   setCoverImage(url) {
