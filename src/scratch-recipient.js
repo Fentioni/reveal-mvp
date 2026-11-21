@@ -21,7 +21,7 @@ const THEMES = new Set(['adventure','travel','magical','sports','music','theatre
 
 export async function scratchRecipientResponse(request, env, ctx) {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(scratch-data|scratch-cover|scratch-image))?\/?$/);
+  const match = url.pathname.match(/^\/r\/([A-Za-z0-9_-]+)(?:\/(scratch-data|scratch-cover|scratch-image|scratch-background))?\/?$/);
   if (!match) return null;
   // Existing legacy /r route remains untouched outside the staging Worker.
   if (env.STAGING_DISABLE_CHECKOUT !== 'true') return null;
@@ -66,7 +66,8 @@ export async function scratchRecipientResponse(request, env, ctx) {
              panY:Number.isFinite(settings.coverCrop?.panY)&&Math.abs(settings.coverCrop.panY)<=100?settings.coverCrop.panY:0
            }}:{}),
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
-           ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch)}:{}),
+           ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch),
+             hasRevealBackground:Boolean(await env.DB.prepare('SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1').bind(row.id,'reveal-background').first())}:{}),
            ...(settings.variant === 'concert' ? {
              ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
              revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
@@ -104,6 +105,21 @@ export async function scratchRecipientResponse(request, env, ctx) {
           'x-content-type-options':'nosniff','referrer-policy':'no-referrer'
         }
       });
+    }
+    if (action === 'scratch-background') {
+      if (settings.variant==='concert'||!env.IMAGES) return hide();
+      const asset=await env.DB.prepare('SELECT r2_key FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1')
+        .bind(row.id,'reveal-background').first();
+      if(!asset)return hide();
+      const object=await env.IMAGES.get(asset.r2_key);
+      if(!object)return hide();
+      const metadata=new Headers();object.writeHttpMetadata(metadata);
+      const type=metadata.get('Content-Type');
+      if(!IMAGE_TYPES.has(type))return hide();
+      return new Response(request.method==='HEAD'?null:object.body,{headers:{
+        'content-type':type,'cache-control':'private, no-store','x-content-type-options':'nosniff',
+        'referrer-policy':'no-referrer'
+      }});
     }
     if (action === 'scratch-cover') {
       if (settings.style !== 'custom' || !settings.coverAssetId || !env.IMAGES) return hide();
