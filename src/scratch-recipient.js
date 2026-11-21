@@ -67,7 +67,7 @@ export async function scratchRecipientResponse(request, env, ctx) {
            }}:{}),
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
            ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch),
-             ...(await env.DB.prepare('SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1').bind(row.id,'reveal-background').first()?{hasRevealBackground:true}:{})}:{}),
+             ...(settings.revealBackgroundAssetId?{hasRevealBackground:true}:{})}:{}),
            ...(settings.variant === 'concert' ? {
              ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
              revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
@@ -107,9 +107,9 @@ export async function scratchRecipientResponse(request, env, ctx) {
       });
     }
     if (action === 'scratch-background') {
-      if (settings.variant==='concert'||!env.IMAGES) return hide();
-      const asset=await env.DB.prepare('SELECT r2_key FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1')
-        .bind(row.id,'reveal-background').first();
+      if (settings.variant==='concert'||!settings.revealBackgroundAssetId||!env.IMAGES) return hide();
+      const asset=await env.DB.prepare('SELECT r2_key FROM reveal_assets WHERE id=? AND reveal_id=? AND kind=?')
+        .bind(settings.revealBackgroundAssetId,row.id,'reveal-background').first();
       if(!asset)return hide();
       const object=await env.IMAGES.get(asset.r2_key);
       if(!object)return hide();
