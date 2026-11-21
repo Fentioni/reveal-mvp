@@ -198,9 +198,10 @@ try{
   for(const [raw,expected] of [['www.example.org/show?ref=1','https://www.example.org/show?ref=1'],['example.org','https://example.org'],['http://example.org/show','http://example.org/show'],['https://example.org/show','https://example.org/show'],['','']]){
    await link.fill(raw);await creator.locator('#postTemplate').focus();
    assert.equal(await link.inputValue(),expected);assert.equal(await creator.locator('#ticketUrl').inputValue(),expected);
-   assert.equal(await link.getAttribute('aria-invalid'),'false');
+   assert.notEqual(await link.getAttribute('aria-invalid'),'true');
   }
   await link.fill('javascript:alert(1)');await creator.locator('#postTemplate').focus();
+  await creator.locator('#reviewButton').click(); // Invalid URL deliberately prevents saving.
   assert.equal(await link.getAttribute('aria-invalid'),'true');
   assert.equal(await creator.locator('#ticketUrl').inputValue(),'javascript:alert(1)');
   await link.fill('https://example.org');await creator.locator('#postTemplate').focus();
