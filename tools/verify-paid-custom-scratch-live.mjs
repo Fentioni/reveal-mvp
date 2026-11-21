@@ -22,7 +22,7 @@ let saved,submittedPayment=false,checkoutUrl='',recipientUrl='';
 const pass=message=>{steps.push(message);console.log('PASS: '+message);};
 const issues=[];owner.on('pageerror',e=>issues.push(e.message));
 async function assertResponse(promise,label){
- const r=await promise;assert.ok(r.ok(),label+': '+r.status()+' '+(await r.clone().text()).slice(0,360));
+ const r=await promise;if(!r.ok())throw Error(label+': '+r.status()+' '+(await r.text()).slice(0,360));
  return r.json();
 }
 async function collectInputs(page){
