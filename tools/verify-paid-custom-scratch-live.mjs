@@ -8,11 +8,18 @@ import {chromium,webkit,devices} from 'playwright';
 import {readFile,mkdir} from 'node:fs/promises';
 const origin='https://reveal-stage4b-test.michael-fenton9.workers.dev';
 if(process.env.REVEAL_PAID_TEST!=='STAGING_TEST_ONLY')throw Error('Explicit staging-only opt-in required.');
-const res=await fetch(origin+'/api/scratch/test-payment-status',{cache:'no-store',signal:AbortSignal.timeout(15000)});
-assert.equal(res.status,200);const cfg=await res.json();
+let cfg=null;
+for(let i=0;i<40;i++){
+ try {
+  const res=await fetch(origin+'/api/scratch/test-payment-status',{cache:'no-store',signal:AbortSignal.timeout(12000)});
+  if(res.ok){const data=await res.json();if(data.fixedGbp===true){cfg=data;break;}}
+ }catch{}
+ await new Promise(done=>setTimeout(done,5000));
+}
+assert.ok(cfg,'The fixed GBP staging Worker is not deployed yet.');
 assert.equal(cfg.environment,'staging');assert.equal(cfg.mode,'test');assert.equal(cfg.enabled,true);
 assert.equal(cfg.baseAmountMinor,99);assert.equal(cfg.currency,'gbp');assert.equal(cfg.automaticTax,false);
-assert.equal(cfg.checkoutRevision,'no-vat-99p-1');
+assert.equal(cfg.fixedGbp,true);assert.equal(cfg.checkoutRevision,'no-vat-99p-1');
 await mkdir('test-output/paid-custom-scratch',{recursive:true});
 const browser=await chromium.launch({headless:true});
 const purchaser=await browser.newContext({viewport:{width:1280,height:900},acceptDownloads:true,reducedMotion:'reduce'});
