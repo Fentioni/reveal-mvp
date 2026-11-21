@@ -110,7 +110,7 @@ function mountInlineEditor(card,face,edit){
  }
  card.append(overlay);return overlay;
 }
-async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,guides=false,edit=null,creator=false}){
+async function stage(host,model,{cover,theme,artwork,eventImage,revealBackground,reveal,surface,guides=false,edit=null,creator=false}){
  const root=host.shadowRoot||host.attachShadow({mode:'open'});
  root.replaceChildren();
  const css=document.createElement('link');css.rel='stylesheet';css.href=stylesheet;
@@ -127,7 +127,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,g
  const card=make('div','','card');
  card.id='card';
  main.append(card);
- const face=await renderPostScratchFace(card,reveal,surface.postScratch,eventImage,{guides:!cover&&guides});
+ const face=await renderPostScratchFace(card,reveal,surface.postScratch,eventImage,{guides:!cover&&guides,backgroundSrc:revealBackground||''});
  if(!artwork){
   setPortraitFaceTheme(card,theme.id);
   screen.classList.add('scratch-preview-themed');
@@ -159,7 +159,7 @@ async function stage(host,model,{cover,theme,artwork,eventImage,reveal,surface,g
  }
  return root;
 }
-export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,coverImage,audio,hosts,guides=false,edit=null}){
+export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,eventImage,revealBackground='',coverImage,audio,hosts,guides=false,edit=null}){
  const model=recipientCardModel({...reveal,hasEventImage:reveal.hasImage===true});
  if(model.hasEventImage&&!eventImage)throw new Error('The saved event image could not be loaded. Please retry or amend the reveal.');
  const theme=getScratchTheme(surface.theme||DEFAULT_SCRATCH_THEME);
@@ -170,8 +170,8 @@ export async function renderScratchOwnerPreview(section,{reveal,surface,artwork,
  setupPreviewSwitch(section,covered,revealed);
  section.hidden=false;
  const [coverRoot]=await Promise.all([
-  stage(covered,model,{cover:true,theme,artwork,eventImage,reveal,surface,creator:!!edit}),
-  stage(revealed,model,{cover:false,theme,artwork,eventImage,reveal,surface,guides,edit,creator:!!edit})
+  stage(covered,model,{cover:true,theme,artwork,eventImage,revealBackground,reveal,surface,creator:!!edit}),
+  stage(revealed,model,{cover:false,theme,artwork,eventImage,revealBackground,reveal,surface,guides,edit,creator:!!edit})
  ]);
  const card=new ScratchCard({
   canvas:coverRoot.getElementById('foilCanvas'),
