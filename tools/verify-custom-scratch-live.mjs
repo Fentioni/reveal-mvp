@@ -45,8 +45,9 @@ for(const {name,engine,options} of modes){
   await page.locator('[data-scratch-preview-mode="covered"]').click();
   await page.locator('#scratchActualCovered #foilCanvas').waitFor({state:'attached'});
   // The existing single preview must show the customer's image as the front.
-  const imageReady=()=>page.locator('#scratchActualCovered').evaluate(e=>!!e.shadowRoot?.querySelector('#foilCanvas'));
-  assert.ok(await imageReady());
+  // Upload/zoom triggers asynchronous canvas redraws. Check the settled
+  // preview rather than sampling during a DOM replacement frame.
+  await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualCovered')?.shadowRoot?.querySelector('#foilCanvas')?.width),{timeout:15000});
   await page.locator('[data-scratch-preview-mode="revealed"]').click();
   for(const [k,v] of Object.entries({eventName:'Custom Scratch QA',recipient:'Chloe',sender:'Reveal QA'})){
    const field=page.locator('#scratchActualRevealed [data-edit-field="'+k+'"]');

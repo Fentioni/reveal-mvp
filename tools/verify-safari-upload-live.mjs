@@ -159,9 +159,10 @@ try{
  assert.equal(await page.locator('#scratchActualCovered').getAttribute('data-rendered-artwork'),art);
  await page.locator('#editButton').click();
  await page.waitForURL('**/legacy-create?**',{timeout:30000,waitUntil:'domcontentloaded'});
- await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
+ await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
  await page.waitForFunction(()=>Boolean(document.querySelector('#scratchActualRevealed')?.dataset.renderedImage));
  assert.deepEqual(await geometry(),initial,'Amend retains photograph composition');
+ assert.equal(await page.locator('#scratchCoverSource').inputValue(),'gallery');
  assert.equal(await page.locator('#scratchArtwork').inputValue(),art);
  assert.equal(await field('recipient').inputValue(),'Safari QA');
  assert.equal(await field('eventName').inputValue(),'Automated upload test');
