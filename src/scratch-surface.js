@@ -64,11 +64,13 @@ function parseFields(row) {
   }
 }
 async function details(env, id) {
-  const [config, asset] = await Promise.all([
+  const [config, asset, backgroundAsset] = await Promise.all([
     env.DB.prepare('SELECT fields_json FROM reveal_configurations WHERE reveal_id=? AND product_id=?')
       .bind(id, 'ticket-reveal').first(),
     env.DB.prepare('SELECT id,r2_key FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1')
-      .bind(id,'scratch-cover').first()
+      .bind(id,'scratch-cover').first(),
+    env.DB.prepare('SELECT id,r2_key FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1')
+      .bind(id,'reveal-background').first()
   ]);
   const fields = parseFields(config);
   const saved = fields.scratchSurface && typeof fields.scratchSurface === 'object'
@@ -90,7 +92,7 @@ async function details(env, id) {
     } : {})
   };
   const audio = {...DEFAULT_AUDIO,enabled:fields.audio?.enabled !== false};
-  return {fields, surface, asset, audio};
+  return {fields, surface, asset, backgroundAsset, audio};
 }
 
 
@@ -112,7 +114,7 @@ async function validateImage(file) {
 
 export async function scratchSurfaceResponse(request, env, ctx, originalWorker) {
   const url = new URL(request.url);
-  const match = url.pathname.match(/^\/api\/reveals\/([A-Za-z0-9_-]+)\/scratch-surface(?:\/(image))?\/?$/);
+  const match = url.pathname.match(/^\/api\/reveals\/([A-Za-z0-9_-]+)\/scratch-surface(?:\/(image|background))?\/?$/);
   if (!match) return null;
   if (!env.DB || !env.IMAGES) return error('Scratch-surface storage unavailable.', 503);
   const [,id,action] = match;
@@ -150,6 +152,19 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         'referrer-policy':'no-referrer'
       }});
     }
+    if (action === 'background') {
+      if (!current.backgroundAsset) return error('Background not found.',404);
+      const object = await env.IMAGES.get(current.backgroundAsset.r2_key);
+      if (!object) return error('Background not found.',404);
+      const metadata = new Headers();object.writeHttpMetadata(metadata);
+      const type = metadata.get('Content-Type');
+      if (!Object.hasOwn(IMAGE_TYPES,type)) return error('Unsupported saved background.',415);
+      return new Response(object.body,{headers:{
+        'content-type':type,'cache-control':'private, no-store',
+        'x-content-type-options':'nosniff','content-disposition':'inline',
+        'referrer-policy':'no-referrer'
+      }});
+    }
     if (request.method === 'GET') {
       return json({
         success:true,
@@ -159,6 +174,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
           theme:current.surface.theme,
           ...(current.surface.artworkId ? {artworkId:current.surface.artworkId} : {}),
           hasImage:Boolean(current.asset && current.surface.style==='custom'),
+          hasRevealBackground:Boolean(current.backgroundAsset && current.surface.variant!=='concert'),
           ...(current.surface.style==='custom'?{coverCrop:current.surface.coverCrop}:{}),
           variant:current.surface.variant,
           ...(current.surface.variant!=='concert'?{postScratch:current.surface.postScratch}:{}),
@@ -176,7 +192,7 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     if (!request.headers.get('Content-Type')?.toLowerCase().startsWith('multipart/form-data')) {
       return error('Submit surface details using multipart form data.',415);
     }
-    if (Number(request.headers.get('Content-Length')) > MAX_IMAGE + 65536) {
+    if (Number(request.headers.get('Content-Length')) > 2 * MAX_IMAGE + 65536) {
       return error('Upload is too large.',413);
     }
     const body = await request.formData();
@@ -241,6 +257,13 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       coverCrop=cleanCoverCrop(value);
     }
     const uploaded = body.get('coverImage');
+    const backgroundUpload=body.get('backgroundImage');
+    const removeBackground=body.get('removeBackground')==='1';
+    if(backgroundUpload!==null&&(typeof backgroundUpload==='string'||typeof backgroundUpload.size!=='number'))return error('Invalid revealed background image.');
+    if(body.has('removeBackground')&&!['0','1'].includes(body.get('removeBackground')))return error('Invalid background removal setting.');
+    const backgroundFile=backgroundUpload?.size?backgroundUpload:null;
+    if(variant==='concert'&&backgroundFile)return error('Revealed backgrounds apply to portrait scratch tickets only.');
+    if(backgroundFile){const backgroundError=await validateImage(backgroundFile);if(backgroundError)return backgroundError;}
     const enabledText = body.get('audioEnabled');
     if (enabledText !== null && enabledText !== 'true' && enabledText !== 'false') {
       return error('Invalid audio setting.');
@@ -271,6 +294,10 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
     let replacementKey = null;
     let newAssetId = current.asset?.id || null;
     const oldKey = current.asset?.r2_key || null;
+    const keepBackground=variant!=='concert'&&!backgroundFile&&!removeBackground&&Boolean(current.backgroundAsset);
+    let replacementBackgroundKey=null;
+    let backgroundAssetId=current.backgroundAsset?.id||null;
+    const oldBackgroundKey=current.backgroundAsset?.r2_key||null;
 
     try {
       if (file) {
@@ -283,6 +310,15 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       } else if (!keepExisting) {
         newAssetId = null;
       }
+
+      if(backgroundFile){
+        replacementBackgroundKey='reveal-backgrounds/'+id+'/'+crypto.randomUUID()+IMAGE_TYPES[backgroundFile.type];
+        await env.IMAGES.put(replacementBackgroundKey,await backgroundFile.arrayBuffer(),{
+          httpMetadata:{contentType:backgroundFile.type},
+          customMetadata:{revealId:id,kind:'reveal-background',uploadedAt:timestamp()}
+        });
+        if(!backgroundAssetId)backgroundAssetId=crypto.randomUUID();
+      }else if(!keepBackground){backgroundAssetId=null;}
 
       const fields = {
         ...current.fields,
@@ -313,6 +349,18 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
         statements.push(env.DB.prepare('DELETE FROM reveal_assets WHERE id=? AND reveal_id=? AND kind=?')
           .bind(current.asset.id,id,'scratch-cover'));
       }
+      if(replacementBackgroundKey){
+        if(current.backgroundAsset){
+          statements.push(env.DB.prepare('UPDATE reveal_assets SET r2_key=? WHERE id=? AND reveal_id=? AND kind=?')
+            .bind(replacementBackgroundKey,current.backgroundAsset.id,id,'reveal-background'));
+        }else{
+          statements.push(env.DB.prepare('INSERT INTO reveal_assets(id,reveal_id,r2_key,kind,created_at) VALUES (?,?,?,?,?)')
+            .bind(backgroundAssetId,id,replacementBackgroundKey,timestamp()));
+        }
+      }else if(!keepBackground&&current.backgroundAsset){
+        statements.push(env.DB.prepare('DELETE FROM reveal_assets WHERE id=? AND reveal_id=? AND kind=?')
+          .bind(current.backgroundAsset.id,id,'reveal-background'));
+      }
       statements.push(env.DB.prepare(
         'INSERT INTO reveal_configurations(reveal_id,product_id,fields_json,created_at,updated_at) VALUES (?,?,?,?,?) ' +
         'ON CONFLICT(reveal_id) DO UPDATE SET fields_json=excluded.fields_json, updated_at=excluded.updated_at'
@@ -322,11 +370,15 @@ export async function scratchSurfaceResponse(request, env, ctx, originalWorker) 
       if (oldKey && oldKey !== replacementKey && !keepExisting) {
         await env.IMAGES.delete(oldKey).catch(() => {});
       }
+      if(oldBackgroundKey&&oldBackgroundKey!==replacementBackgroundKey&&!keepBackground)
+        await env.IMAGES.delete(oldBackgroundKey).catch(()=>{});
       return json({success:true,surface:{style,foil,theme,...(artworkId?{artworkId}:{}),hasImage:style==='custom',
         ...(style==='custom'?{coverCrop}:{}),variant,
-        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{postScratch})},audio});
+        ...(variant==='concert'?{ticketTemplate,revealTheme,linkMode,ticketDetails}:{postScratch}),
+        hasRevealBackground:Boolean(backgroundAssetId&&variant!=='concert')},audio});
     } catch (cause) {
       if (replacementKey) await env.IMAGES.delete(replacementKey).catch(() => {});
+      if (replacementBackgroundKey) await env.IMAGES.delete(replacementBackgroundKey).catch(()=>{});
       throw cause;
     }
   } catch {
