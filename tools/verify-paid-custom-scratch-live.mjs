@@ -130,7 +130,10 @@ try{
  // presentation option so this exact £0.99 contract is tested without FX.
  const currencyFrame=owner.frames().find(f=>f.url().includes('currency-selector'));
  if(currencyFrame){
-  await currencyFrame.locator('#currency-gbp').check({force:true,timeout:12000});
+  const gbp=currencyFrame.locator('label[for="currency-gbp"]');
+  if(await gbp.count())await gbp.click({timeout:12000});
+  else await currencyFrame.getByText('£0.99',{exact:false}).first().click({timeout:12000});
+  assert.equal(await currencyFrame.locator('#currency-gbp').isChecked(),true,'GBP 99p must be chosen');
   console.log('INFO: Stripe hosted checkout set to GBP 99p');
  }
  // Stripe Checkout renders a collapsed Card payment method in its secure
