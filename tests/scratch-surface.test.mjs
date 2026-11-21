@@ -28,9 +28,9 @@ function makeMocks() {
       for(const stmt of statements) {
         const {sql,args} = stmt;
         if (sql.startsWith('INSERT INTO reveal_assets')) {
-          state[args[3]==='reveal-background'?'backgroundAsset':'asset'] = {id:args[0],r2_key:args[2]};
+          state[args[2].startsWith('reveal-backgrounds/')?'backgroundAsset':'asset'] = {id:args[0],r2_key:args[2]};
         } else if (sql.startsWith('UPDATE reveal_assets')) {
-          state[args[3]==='reveal-background'?'backgroundAsset':'asset'] = {id:args[1],r2_key:args[0]};
+          state[args[0].startsWith('reveal-backgrounds/')?'backgroundAsset':'asset'] = {id:args[1],r2_key:args[0]};
         } else if (sql.startsWith('DELETE FROM reveal_assets')) {
           state[args[2]==='reveal-background'?'backgroundAsset':'asset'] = null;
         } else if (sql.startsWith('INSERT INTO reveal_configurations')) {
@@ -214,8 +214,8 @@ test('ticket creator contains actual previews and separates the selected cover f
   assert.ok(creator.includes('bg-wrap-sapphire'));
   assert.ok(!creator.includes('id="scratchUploadField"'));
   const form = creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
-  assert.equal((form.match(/type="file"/g) || []).length,2,
-    'event image and scratch-cover image have separate selectors');
+  assert.equal((form.match(/type="file"/g) || []).length,3,
+    'event photo, scratch-cover image and revealed background have separate selectors');
   assert.ok(creator.includes('id="scratchSurfacePreview"'));
   assert.ok(creator.includes('scratchPreview.canvas.style.pointerEvents = "none"'));
   assert.ok(creator.includes('selectedScratchImage'));
@@ -313,7 +313,7 @@ test('invalid audio setting rejected and no D1 writes occur', async () => {
 test('event upload must never switch the selected scratch artwork to a custom cover', () => {
   const creator=fs.readFileSync(path.join(root,'public/legacy-create.html'),'utf8');
   const form=creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>'));
-  assert.equal((form.match(/type="file"/g)||[]).length,2);
+  assert.equal((form.match(/type="file"/g)||[]).length,3);
   assert.ok(form.includes('id="image"'));
   assert.ok(creator.includes('This photo appears ONLY after scratching.'));
   assert.ok(creator.includes('selectedImage = file;'));
@@ -452,7 +452,7 @@ test('concert creator has concert-only art options while reusing original ticket
   assert.ok(creator.includes('surfaceBody.append("style", currentVariant === "concert" ? "concert" : customCoverSelected() ? "custom" : "classic")'));
   assert.ok(creator.includes('currentVariant === "concert" ? "concert" : customCoverSelected() ? "custom" : "classic"'));
   assert.ok(creator.includes('id="image"'));
-  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,2);
+  assert.equal((creator.slice(creator.indexOf('<form id="revealForm">'),creator.indexOf('</form>')).match(/type="file"/g)||[]).length,3);
   assert.ok(creator.includes('"/reveal?id=" + encodeURIComponent(id)'));
   assert.ok(review.includes("isConcert ? 'concert'"),'Concert review must render the colour-only cover');
   assert.ok(storefront.includes("href:'/legacy-create?variant=concert'"));
