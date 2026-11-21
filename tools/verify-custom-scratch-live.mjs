@@ -21,11 +21,12 @@ for(const {name,engine,options} of modes){
  try{
   const r=await page.goto(base+'/legacy-create?variant=ticket&custom-qa='+Date.now());
   assert.ok(r.ok());
-  await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
+  await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
   assert.equal(await page.locator('#scratchCoverSource').inputValue(),'gallery');
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),false);
   const gallery=await page.locator('#postTemplate').inputValue();
   await page.locator('#scratchCoverSource').selectOption('upload');
+  await page.waitForFunction(()=>document.querySelector('#postTemplate')?.value==='bg-wrap-sapphire'&&document.querySelector('#scratchCoverUploadField')?.hidden===false,{timeout:15000});
   assert.equal(await page.locator('#postTemplate').inputValue(),'bg-wrap-sapphire');
   assert.equal(await page.locator('#postTemplate').isDisabled(),true);
   assert.equal(await page.locator('#scratchCoverUploadField').isVisible(),true);

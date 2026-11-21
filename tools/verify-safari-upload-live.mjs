@@ -21,7 +21,7 @@ try{
  assert.match(await result.text(),/selectedImage\.arrayBuffer\(\)/,'Byte-backed upload patch is deployed');
  assert.match(await result.text(),/data-customer-design="short-labels-1"/,'Integrated editor must be live');
  assert.equal(await page.locator('#personaliseMode,#customiseMode').count(),0);
- await page.locator('#postTemplate:enabled').waitFor({timeout:30000});
+ await page.locator('#reviewButton:enabled').waitFor({timeout:30000});
  await page.locator('#postTemplate').selectOption('bg-luxury-coral-ribbon');
  const art='luxury-coral-ribbon-primary';
  const field=(key)=>page.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
