@@ -176,23 +176,19 @@ try{
   await creator.locator('#scratchActualCovered #card').waitFor({state:'attached'});
   await creator.locator('#scratchActualRevealed #card').waitFor({state:'attached'});
   const sizes=await creator.evaluate(()=>['scratchActualCovered','scratchActualRevealed'].map(id=>{const r=document.getElementById(id).shadowRoot.querySelector('#card').getBoundingClientRect();return [r.width,r.height];}));assert.deepEqual(sizes[0],sizes[1],'Cover and editable reveal retain equal dimensions');
-  // Review with all required fields absent, starting on the cover side.
+  // Empty Scratch Ticket fields are optional; editing guides remain available
+  // without adding labels or empty text to the final recipient artwork.
   await creator.locator('[data-scratch-preview-mode="covered"]').click();
-  await creator.locator('#reviewButton').click();
   const host=creator.locator('#scratchActualRevealed');
-  assert.match(await creator.locator('#messageBox').textContent(),/to|recipient/i);
-  assert.equal(await creator.locator('#scratchCreatorActual').getAttribute('data-preview-mode'),'revealed');
-  assert.deepEqual((await host.locator('[data-edit-field][aria-invalid="true"]').evaluateAll(nodes=>nodes.map(n=>n.dataset.editField))).sort(),['eventName','recipient','sender']);
-  assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),3);
-  assert.equal(await host.locator('.inline-ticket-field[data-invalid]').first().evaluate(e=>getComputedStyle(e).outlineStyle),'solid');
-  assert.equal(await creator.evaluate(()=>document.querySelector('#scratchActualRevealed').shadowRoot.activeElement?.dataset.editField),'recipient');
+  assert.equal(await creator.locator('#inlineValidation:visible').count(),0);
+  assert.equal(await host.locator('[data-edit-field][required]').count(),0);
+  await creator.locator('[data-scratch-preview-mode="revealed"]').click();
   await host.locator('[data-edit-field="recipient"]').fill('Chloe');
-  assert.equal(await host.locator('[data-edit-field="recipient"]').getAttribute('aria-invalid'),'false');
-  assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),2);
+  assert.equal(await host.locator('.inline-ticket-field[data-invalid]').count(),0);
   await creator.locator('#postTemplate').selectOption('bg-luxury-sapphire-gold');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-sapphire-gold'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-sapphire-gold');
   await creator.locator('#postTemplate').selectOption('bg-luxury-champagne-gold');
-  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold'&&document.querySelector('#scratchActualRevealed').shadowRoot.querySelectorAll('.inline-ticket-field[data-invalid]').length===2);
+  await creator.waitForFunction(()=>document.querySelector('#scratchActualRevealed').shadowRoot?.querySelector('#card')?.dataset.postTemplate==='bg-luxury-champagne-gold');
   for(const [key,value] of Object.entries({recipient:'Chloe',sender:'Michael',eventName:'Theatre Night',postSubtitle:'Just for you',eventDate:'2027-04-10',eventTime:'19:30',venue:'Theatre Royal',postVenueAddress:'London',personalMessage:'A special night',ticketUrl:'https://example.org'})){
    const input=creator.locator('#scratchActualRevealed [data-edit-field="'+key+'"]');
    if(['eventDate','eventTime'].includes(key))await input.focus();else await input.click();await input.fill(value);
