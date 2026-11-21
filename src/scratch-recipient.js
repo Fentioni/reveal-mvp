@@ -67,7 +67,7 @@ export async function scratchRecipientResponse(request, env, ctx) {
            }}:{}),
            variant:settings.variant === 'concert' ? 'concert' : 'ticket',
            ...(settings.variant!=='concert'?{postScratch:cleanPostSettings(settings.postScratch),
-             hasRevealBackground:Boolean(await env.DB.prepare('SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1').bind(row.id,'reveal-background').first())}:{}),
+             ...(await env.DB.prepare('SELECT id FROM reveal_assets WHERE reveal_id=? AND kind=? LIMIT 1').bind(row.id,'reveal-background').first()?{hasRevealBackground:true}:{})}:{}),
            ...(settings.variant === 'concert' ? {
              ticketTemplate:isConcertTemplate(settings.ticketTemplate) ? settings.ticketTemplate : DEFAULT_CONCERT_TEMPLATE,
              revealTheme:isConcertRevealTheme(settings.revealTheme) ? settings.revealTheme : DEFAULT_CONCERT_REVEAL_THEME,
