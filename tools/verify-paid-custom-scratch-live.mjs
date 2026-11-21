@@ -126,6 +126,19 @@ try{
  assert.equal((await ownerData()).shareUrl,undefined,'Payment must not unlock before a signed webhook');
  pass('Owner clicked checkout; hosted Stripe TEST session opened; paid link still locked');
  await owner.screenshot({path:'test-output/paid-custom-scratch/stripe-before-payment.png',fullPage:true});
+ // GitHub-hosted browser geolocates to the US; choose the legitimate GBP
+ // presentation option so this exact £0.99 contract is tested without FX.
+ const currencyFrame=owner.frames().find(f=>f.url().includes('currency-selector'));
+ if(currencyFrame){
+  await currencyFrame.locator('#currency-gbp').check({force:true,timeout:12000});
+  console.log('INFO: Stripe hosted checkout set to GBP 99p');
+ }
+ // Stripe Checkout renders a collapsed Card payment method in its secure
+ // iframe. Expand it through the ordinary customer-facing control.
+ const paymentFrame=owner.frames().find(f=>f.url().includes('elements-inner-habanero'));
+ assert.ok(paymentFrame,'Stripe hosted payment methods did not load.');
+ await paymentFrame.getByText('Card',{exact:true}).first().click({timeout:15000});
+ await findInput(owner,'input[autocomplete="cc-number"],input[aria-label*="Card number" i]');
  const email='qa-custom-scratch-'+Date.now()+'@example.com';
  await (await findInput(owner,'input[type="email"],input[name="email"],input[autocomplete="email"]')).fill(email);
  await optionalFill(owner,'input[name="billingName"],input[autocomplete="cc-name"],input[placeholder*="cardholder" i]','Reveal QA');
@@ -135,7 +148,7 @@ try{
  await exp.fill('12 / 34');
  const cvc=await findInput(owner,'input[name="cardCvc"],input[autocomplete="cc-csc"],input[placeholder*="CVC"],input[aria-label*="Security code" i]');
  await cvc.fill('123');
- await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete="postal-code"],input[placeholder*="Postcode" i]','10001');
+ await optionalFill(owner,'input[name="billingPostalCode"],input[autocomplete="postal-code"],input[placeholder*="Postcode" i]','SW1A 1AA');
  // Only Stripe test checkout, validated above; no real money/card details.
  const submit=await findInput(owner,'button[type="submit"]',25000);
  assert.ok(!(await submit.isDisabled()),'Stripe payment button disabled: '+JSON.stringify(await collectInputs(owner)).slice(0,3200));
